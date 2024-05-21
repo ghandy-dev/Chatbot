@@ -27,7 +27,7 @@ jobs:
 
      # change href
      - name: Change base-tag href
-       run: sed -i 's/<base href="\/" \/>/<base href="\/Chatbot\/" \/>/g' ./src/Chatbot.Fornax/wwwroot/index.html
+       run: sed -i 's/<base href="\/"\/>/<base href="\/Chatbot\/"\/>/g' ./src/Chatbot.Fornax/wwwroot/index.html
 
      # page to handle 404's when resource not found
      - name: copy index.html to 404.html
