@@ -24,7 +24,11 @@ jobs:
      # build static HTML pages
      - name: Run .NET Project
        run: dotnet run --project ./src/Chatbot.Fornax/Chatbot.Fornax.fsproj build
-       
+
+     # change href
+     - name: Change base-tag href
+       run: sed -i 's/<base href="\/" \/>/<base href="\/Chatbot\/" \/>/g' ./src/Chatbot.Fornax/wwwroot/index.html
+
      # page to handle 404's when resource not found
      - name: copy index.html to 404.html
        run: cp ./src/Chatbot.Fornax/wwwroot/index.html ./src/Chatbot.Fornax/wwwroot/404.html
