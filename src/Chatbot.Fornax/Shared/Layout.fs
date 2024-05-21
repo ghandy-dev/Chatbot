@@ -18,7 +18,7 @@ let layout (ctx: SiteContents) childContent =
             title [] [ !! $"{title'} - {desc}" ]
             // link [ Rel "icon" ; Type "image/png" ; Sizes "32x32" ; Href "/images/favicon.png" ]
             link [ Rel "stylesheet" ; Href "https://fonts.googleapis.com/css?family=Open+Sans" ]
-            link [ Rel "stylesheet" ; Type "text/css" ; Href "/style/style.css" ]
+            link [ Rel "stylesheet" ; Type "text/css" ; Href "style/style.css" ]
 
         ]
         body [] [ childContent ]
