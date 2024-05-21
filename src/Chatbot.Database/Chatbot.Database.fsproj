@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Entities.fs" />
+    <Compile Include="DatabaseResult.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="DB.fs" />
+    <Compile Include="ChannelRepository.fs" />
+    <Compile Include="RpsRepository.fs" />
+    <Compile Include="UserRepository.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper.FSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>

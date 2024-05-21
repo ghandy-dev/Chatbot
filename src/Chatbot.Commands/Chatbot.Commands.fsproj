@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Types.fs" />
+    <Compile Include="DallE/Types.fs" />
+    <Compile Include="DallE/Api.fs" />
+    <Compile Include="DallE/DallE.fs" />
+    <Compile Include="FaceIt/Types.fs" />
+    <Compile Include="FaceIt/Api.fs" />
+    <Compile Include="FaceIt/FaceIt.fs" />
+    <Compile Include="Reddit/Types.fs" />
+    <Compile Include="Reddit/Api.fs" />
+    <Compile Include="Reddit/Reddit.fs" />
+    <Compile Include="Braille.fs" />
+    <Compile Include="TextTransform.fs" />
+    <Compile Include="RandomClip.fs" />
+    <Compile Include="Stream.fs" />
+    <Compile Include="UserChatColor.fs" />
+    <Compile Include="UserId.fs" />
+    <Compile Include="LeaveChannel.fs" />
+    <Compile Include="JoinChannel.fs" />
+    <Compile Include="CatFact.fs" />
+    <Compile Include="Calculator.fs" />
+    <Compile Include="EightBall.fs" />
+    <Compile Include="RockPaperScissors.fs" />
+    <Compile Include="RNG.fs" />
+    <Compile Include="Ping.fs" />
+    <Compile Include="Time.fs" />
+    <Compile Include="Vod.fs" />
+    <Compile Include="Echo.fs" />
+    <Compile Include="xd.fs" />
+    <Compile Include="Commands.fs" />
+    <Compile Include="CommandHandler.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FParsec" Version="2.0.0-beta2" />
+    <PackageReference Include="FSharp.SystemTextJson" Version="1.1.23" />
+    <PackageReference Include="FsHttp" Version="12.0.0" />
+    <PackageReference Include="SkiaSharp" Version="2.88.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chatbot.Core\Chatbot.Core.fsproj" />
+    <ProjectReference Include="..\Chatbot.Database\Chatbot.Database.fsproj" />
+  </ItemGroup>
+
+</Project>

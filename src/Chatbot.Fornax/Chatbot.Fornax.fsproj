@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+      <Compile Include="Types.fs" />
+      <Compile Include="Loaders/GlobalLoader.fs" />
+      <Compile Include="Shared/Layout.fs" />
+      <Compile Include="Pages/Index.fs" />
+      <Compile Include="Config.fs" />
+      <Compile Include="Build.fs" />
+      <Compile Include="Serve.fs" />
+      <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chatbot.Commands\Chatbot.Commands.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fornax.Core" Version="0.15.1" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": ".NET Core Launch (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/Chatbot/bin/Debug/net8.0/Chatbot.dll",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "--AccessToken=",
+            ],
+            "stopAtEntry": false,
+            "console": "internalConsole",
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach"
+        },
+    ]
+}
