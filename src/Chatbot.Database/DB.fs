@@ -12,7 +12,7 @@ module DB =
     open Chatbot.Database
 
     [<Literal>]
-    let private connectionString = "Data Source=" + __SOURCE_DIRECTORY__ + @"\chat.db;Version=3;"
+    let private connectionString = "Data Source=" + __SOURCE_DIRECTORY__ + @"\chat.db;"
 
     OptionTypes.register ()
     DefaultTypeMap.MatchNamesWithUnderscores <- true
