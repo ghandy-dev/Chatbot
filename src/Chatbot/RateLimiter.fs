@@ -2,14 +2,22 @@ module Chatbot.MessageLimiter
 
 open System
 
-[<Literal>]
-let MessagesPerMinute_Chat = 40
+module Rates =
 
-[<Literal>]
-let MessagesPerMinute_Whispers = 100
+    [<Literal>]
+    let MessageLimit_Chat = 20 // per 30 seconds
+    [<Literal>]
+    let Interval_Chat = 30s
 
-type RateLimiter(messagesPerMinute: int) =
-    let maxMessagesPerMinute = messagesPerMinute
+    [<Literal>]
+    let MessageLimit_Whispers = 100
+    [<Literal>]
+    let Interval_Whispers = 60s
+
+
+type RateLimiter(messagesPerInterval, interval: int16) =
+
+    let interval = interval |> int
     let mutable messageCount = 0
     let mutable lastMessageTimestamp = DateTime.UtcNow
 
@@ -25,14 +33,14 @@ type RateLimiter(messagesPerMinute: int) =
         and set (value) = lastMessageTimestamp <- value
 
 
-    member this.TimeUntilReset = this.TimeSinceLastReset - 60
+    member this.TimeUntilReset = this.TimeSinceLastReset - interval
 
     member this.CanSend () =
-        if this.TimeSinceLastReset > 60 then
+        if this.TimeSinceLastReset > interval then
             messageCount <- 1
             lastMessageTimestamp <- DateTime.Now
             true
-        elif this.MessageCount < maxMessagesPerMinute then
+        elif this.MessageCount < messagesPerInterval then
             messageCount <- messageCount + 1
             lastMessageTimestamp <- DateTime.Now
             true

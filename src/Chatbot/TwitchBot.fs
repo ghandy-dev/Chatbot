@@ -53,8 +53,8 @@ let authenticate (client: IrcClient) =
 
 let createBot (client: IrcClient) cancellationToken =
 
-    let chatRateLimiter = RateLimiter(MessagesPerMinute_Chat)
-    let whisperRateLimiter = RateLimiter(MessagesPerMinute_Whispers)
+    let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
+    let whisperRateLimiter = RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
 
     let rec ircReader (client: IrcClient) (mb: MailboxProcessor<_>) (state: State) =
         async {
@@ -85,14 +85,10 @@ let createBot (client: IrcClient) cancellationToken =
                         | _ -> ()
                     }
 
-                let rec send (message: string) (client: IrcClient) =
+                let send (message: string) (client: IrcClient) =
                     async {
                         if chatRateLimiter.CanSend() then
                             do! client.SendAsync(message)
-                        else
-                            let sleepDuration = max (chatRateLimiter.TimeUntilReset) 0
-                            do! Async.Sleep(sleepDuration)
-                            return! send message client
                     }
 
                 let rec loop (client: IrcClient) =
