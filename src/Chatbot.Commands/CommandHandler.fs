@@ -66,7 +66,7 @@ let private formatResponse (response: string) =
     else
         response
 
-let executeAndFormatResponse command parameters context =
+let private executeAndFormatResponse command parameters context =
     async {
         match! executeCommand command parameters context with
         | Ok outcome ->
