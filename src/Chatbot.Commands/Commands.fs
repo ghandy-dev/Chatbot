@@ -27,7 +27,7 @@ module Commands =
             Command.createCommand ("userid", [ "uid" ], "Get a user's twitch id.", AsyncFunctionWithArgsAndContext userId, 10000, false)
             Command.createCommand ("randomclip", [ "rc" ], "Get a random clip from the current channel or specified channel.", AsyncFunctionWithArgsAndContext randomClip, 10000, false)
             Command.createCommand ("reddit", [], "Get a trending post from a subreddit.", AsyncFunctionWithArgs reddit, 15000, false)
-            Command.createCommand ("faceit", [], "Get recent Win/Loss stats for players in FaceIt CSGO.", AsyncFunctionWithArgs faceit, 20000, false)
+            Command.createCommand ("faceit", [], "Get recent Win/Loss stats for players in FaceIt CS2.", AsyncFunctionWithArgs faceit, 20000, false)
             Command.createCommand ("texttransform", [ "tt" ], "Transform text input to a different form.", SyncFunctionWithArgs texttransform, 10000, false)
             Command.createCommand ("namecolor", [ "color" ], "Get the color of a user's name in chat.", AsyncFunctionWithArgsAndContext namecolor, 15000, false)
             Command.createCommand ("vod", [], "Get the most recent vod for a channel.", AsyncFunctionWithArgs vod, 15000, false)

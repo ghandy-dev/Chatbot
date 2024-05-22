@@ -120,7 +120,7 @@ module FaceIt =
                                     | Ok p -> Some p
                                     | Error _ -> None
                                 )
-                                |> Array.averageBy (fun p -> p.Games["csgo"].FaceItElo |> float)
+                                |> Array.averageBy (fun p -> p.Games["cs2"].FaceItElo |> float)
                             )
 
                         let message =

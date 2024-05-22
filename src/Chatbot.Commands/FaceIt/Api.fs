@@ -15,12 +15,12 @@ module FaceIt =
     [<Literal>]
     let private apiUrl = "https://open.faceit.com/data/v4"
 
-    let private playerByName nickname = $"/players?nickname={nickname}"
-    let private playerById playerId = $"/players/{playerId}"
-    let private playerStats playerId gameId = $"/players/{playerId}/stats/{gameId}"
+    let private playerByName nickname = $"players?nickname={nickname}"
+    let private playerById playerId = $"players/{playerId}"
+    let private playerStats playerId gameId = $"players/{playerId}/stats/{gameId}"
 
     let private playerHistory playerId gameId limit =
-        $"/players/{playerId}/history?game={gameId}&limit={limit}"
+        $"players/{playerId}/history?game={gameId}&limit={limit}"
 
     let private matches matchId = $"/matches/{matchId}"
 
@@ -43,30 +43,30 @@ module FaceIt =
 
     let getPlayer player =
         async {
-            let url = $"{apiUrl}{playerByName player}"
+            let url = $"{apiUrl}/{playerByName player}"
             return! getFromJsonAsync<Player> url
         }
 
     let getPlayerById playerId =
         async {
-            let url = $"{apiUrl}{playerById playerId}"
+            let url = $"{apiUrl}/{playerById playerId}"
             return! getFromJsonAsync<Player> url
         }
 
     let getPlayerStats playerId =
         async {
-            let url = $"""apiUrl{playerStats playerId "csgo"}"""
+            let url = $"""{apiUrl}/{playerStats playerId "cs2"}"""
             return! getFromJsonAsync<PlayerStats> url
         }
 
     let getPlayerMatchHistory playerId limit =
         async {
-            let url = $"""apiUrl{playerHistory playerId "csgo" limit}"""
+            let url = $"""{apiUrl}/{playerHistory playerId "cs2" limit}"""
             return! getFromJsonAsync<PlayerMatchHistory> url
         }
 
     let getMatch matchId =
         async {
-            let url = $"{apiUrl}{matches matchId}"
+            let url = $"{apiUrl}/{matches matchId}"
             return! getFromJsonAsync<Match> url
         }
