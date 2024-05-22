@@ -53,7 +53,7 @@ let private executeCommand command parameters context =
     }
 
 let private parseCommandAndParameters (message: string) =
-    let parts = message.Split(" ") |> List.ofArray
+    let parts = message.Split(" ", StringSplitOptions.RemoveEmptyEntries) |> List.ofArray
 
     let command = parts[0]
     let parameters = if parts.Length > 1 then parts[1..] else []
