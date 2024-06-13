@@ -53,7 +53,8 @@ let private executeCommand command parameters context =
     }
 
 let private parseCommandAndParameters (message: string) =
-    let parts = message.Split(" ", StringSplitOptions.RemoveEmptyEntries) |> List.ofArray
+    let parts =
+        message.Split(" ", StringSplitOptions.RemoveEmptyEntries) |> List.ofArray
 
     let command = parts[0]
     let parameters = if parts.Length > 1 then parts[1..] else []
@@ -90,12 +91,16 @@ let handleCommand userId username source message =
 
                 let context = Context.createContext userId username user.IsAdmin source
 
-                let! response =
-                    match command, user with
-                    | c, user when c.AdminOnly && user.IsAdmin -> executeAndFormatResponse c parameters context
-                    | c, _ -> executeAndFormatResponse c parameters context
+                try
+                    let! response =
+                        match command, user with
+                        | c, user when c.AdminOnly && user.IsAdmin -> executeAndFormatResponse c parameters context
+                        | c, _ -> executeAndFormatResponse c parameters context
 
-                return Some response
+                    return Some response
+                with ex ->
+                    logger.LogError($"Error occured running command: {command} {context} {parameters}", ex)
+                    return None
             else
                 return None
     }
