@@ -104,6 +104,53 @@ module Braille =
 
         sb.ToString()
 
+    let private png: byte[] = [| 0x89uy ; 0x50uy ; 0x4Euy ; 0x47uy |]
+
+    let private jpg: byte[] = [|
+        0xFFuy
+        0xD8uy
+        0xFFuy
+        0xE0uy
+        0x00uy
+        0x10uy
+        0x4Auy
+        0x46uy
+        0x49uy
+        0x46uy
+    |]
+
+    let private bmp: byte[] = [| 0x42uy ; 0x4Duy |]
+
+    let private webp: (byte[] * byte[]) =
+        [| 0x52uy ; 0x49uy ; 0x46uy ; 0x46uy |], [| 0x57uy ; 0x45uy ; 0x42uy ; 0x50uy |]
+
+    let private isPng (bytes: byte[]) =
+        if bytes.Length > 3 && bytes[0..3] = png then
+            true
+        else
+            false
+
+    let private isJpg (bytes: byte[]) =
+        if bytes.Length > 8 && bytes[0..8] = jpg then
+            true
+        else
+            false
+
+    let private isBmp (bytes: byte[]) =
+        if bytes.Length > 1 && bytes[0..1] = bmp then
+            true
+        else
+            false
+
+    let private isWebp (bytes: byte[]) =
+        if bytes.Length > 11 && (bytes[0..3], bytes[8..11]) = webp then
+            true
+        else
+            false
+
+    let private isImage (bytes: byte[]) =
+        isPng bytes || isJpg bytes || isBmp bytes || isWebp bytes
+
     let private getImage url =
         async {
             use! response =
@@ -115,16 +162,19 @@ module Braille =
 
             let pattern = @"^image\/(jpeg|jpg|jfif|pjpeg|pjp|png|bmp|webp|avif|apng)$"
 
-            if
-                not <| RegularExpressions.Regex.IsMatch(response.originalHttpResponseMessage.Content.Headers.ContentType.MediaType, pattern)
-            then
-                return None
-            else
-                match toResult response with
-                | Ok response ->
-                    let! bytes = response |> toBytesAsync
+            match toResult response with
+            | Ok response ->
+                let! bytes = response |> toBytesAsync
+
+                if
+                    response.originalHttpResponseMessage.Content.Headers.Contains("Content-Type")
+                    && RegularExpressions.Regex.IsMatch(response.originalHttpResponseMessage.Content.Headers.ContentType.MediaType, pattern)
+                    || isImage bytes
+                then
                     return Some bytes
-                | Error _ -> return None
+                else
+                    return None
+            | Error _ -> return None
         }
 
     let private internalBraille url setting =
