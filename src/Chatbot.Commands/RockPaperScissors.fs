@@ -32,8 +32,8 @@ module RockPaperScissors =
                         match! RpsRepository.getById (context.UserId |> int) with
                         | None ->
                             match! RpsRepository.add (RpsStats.newStats (context.UserId |> int)) with
-                            | Failure ex -> return Error ex.Message
-                            | Success _ ->
+                            | DatabaseResult.Failure ex -> return Error ex.Message
+                            | DatabaseResult.Success _ ->
                                 match! RpsRepository.getById (context.UserId |> int) with
                                 | Some stats -> return Ok stats
                                 | None -> return Error "Couldn't retrieve stats"
