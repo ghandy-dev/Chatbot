@@ -3,9 +3,10 @@ namespace Chatbot.Commands
 [<AutoOpen>]
 module Braille =
 
-    open System
     open System.Text
+
     open SkiaSharp
+
     open FsHttp
     open FsHttp.Request
     open FsHttp.Response
