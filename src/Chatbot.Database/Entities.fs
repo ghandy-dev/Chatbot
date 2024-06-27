@@ -22,3 +22,10 @@ module Entities =
         channel_id: int
         channel_name: string
     }
+
+    type internal Alias = {
+        alias_id: int
+        user_id: int
+        name: string
+        command: string
+    }

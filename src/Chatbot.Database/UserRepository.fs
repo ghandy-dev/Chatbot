@@ -44,7 +44,7 @@ module UserRepository =
                     |> connection.InsertAsync
                     |> Async.AwaitTask
 
-                return Success rowsAffected
+                return DatabaseResult.Success rowsAffected
             with ex ->
-                return Failure ex
+                return DatabaseResult.Failure ex
         }

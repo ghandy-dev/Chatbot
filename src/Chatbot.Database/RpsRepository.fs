@@ -50,9 +50,9 @@ module RpsRepository =
                     |> connection.InsertAsync
                     |> Async.AwaitTask
 
-                return Success rowsAffected
+                return DatabaseResult.Success rowsAffected
             with ex ->
-                return Failure ex
+                return DatabaseResult.Failure ex
         }
 
     let update (stats: RpsStats) =
@@ -70,7 +70,7 @@ module RpsRepository =
                     |> connection.UpdateAsync<Entities.RpsStats>
                     |> Async.AwaitTask
 
-                return Success rowsAffected
+                return DatabaseResult.Success rowsAffected
             with ex ->
-                return Failure ex
+                return DatabaseResult.Failure ex
         }

@@ -68,9 +68,9 @@ module ChannelRepository =
                     |> connection.InsertAsync
                     |> Async.AwaitTask
 
-                return Success rowsAffected
+                return DatabaseResult.Success rowsAffected
             with ex ->
-                return Failure ex
+                return DatabaseResult.Failure ex
         }
 
     let delete (channelId: int) =
@@ -84,7 +84,7 @@ module ChannelRepository =
                     |> connection.DeleteAsync
                     |> Async.AwaitTask
 
-                return Success rowsAffected
+                return DatabaseResult.Success rowsAffected
             with ex ->
-                return Failure ex
+                return DatabaseResult.Failure ex
         }
