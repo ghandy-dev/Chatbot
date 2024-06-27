@@ -58,3 +58,15 @@ module Types =
             ChannelId = channelId
             ChannelName = channelName
         }
+
+    type Alias = {
+        UserId: int
+        Name: string
+        Command: string
+    } with
+
+        static member create userId name command = {
+            UserId = userId
+            Name = name
+            Command = command
+        }

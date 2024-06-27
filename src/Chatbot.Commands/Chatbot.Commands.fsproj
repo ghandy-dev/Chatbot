@@ -33,6 +33,7 @@
     <Compile Include="Vod.fs" />
     <Compile Include="Echo.fs" />
     <Compile Include="xd.fs" />
+    <Compile Include="Alias.fs" />
     <Compile Include="Commands.fs" />
     <Compile Include="CommandHandler.fs" />
   </ItemGroup>
