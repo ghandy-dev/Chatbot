@@ -68,7 +68,7 @@ module Reddit =
             | Ok response ->
                 let! posts = response |> deserializeJsonAsync<'a>
                 return Ok posts
-            | Error e -> return Error $"Http response did not indicate success. {e.statusCode} {e.reasonPhrase}"
+            | Error e -> return Error $"Http response did not indicate success. {(int)e.statusCode} {e.reasonPhrase}"
         }
 
     let getPosts subreddit sorting accessToken =

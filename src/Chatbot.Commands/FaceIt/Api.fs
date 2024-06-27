@@ -38,7 +38,7 @@ module FaceIt =
             | Ok response ->
                 let! deserialized = response |> deserializeJsonAsync<'a>
                 return Ok deserialized
-            | Error e -> return Error $"Http response did not indicate success. {e.statusCode} {e.reasonPhrase}"
+            | Error e -> return Error $"Http response did not indicate success. {(int)e.statusCode} {e.reasonPhrase}"
         }
 
     let getPlayer player =
