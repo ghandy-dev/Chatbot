@@ -37,6 +37,7 @@ module Commands =
             Command.createCommand ("pipe", [], "Pipe the result of a command to the next.", SyncFunctionWithArgs pipe, 10000, false)
             Command.createCommand ("randomline", [ "rl" ], "Get a random line from a user in the current channel.", AsyncFunctionWithArgsAndContext randomLine, 10000, false)
             Command.createCommand ("randomquote", [ "rq" ], "Get a random quote from a random user in the current channel.", AsyncFunctionWithArgsAndContext randomQuote, 10000, false)
+            Command.createCommand ("pick", [ ], "Picks a single item out of a sequence.", AsyncFunctionWithArgsAndContext randomQuote, 10000, false)
         ]
         |> List.map toKeyValue
         |> List.collect id

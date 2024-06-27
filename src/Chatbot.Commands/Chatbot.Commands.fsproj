@@ -35,6 +35,7 @@
     <Compile Include="Vod.fs" />
     <Compile Include="Echo.fs" />
     <Compile Include="xd.fs" />
+    <Compile Include="Pick.fs" />
     <Compile Include="Pipe.fs" />
     <Compile Include="Alias.fs" />
     <Compile Include="Commands.fs" />
