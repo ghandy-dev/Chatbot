@@ -34,5 +34,5 @@ module Reddit =
                     |> List.filter (fun p -> p.Data.Over18 = false && p.Data.IsSelf = false)
                     |> fun ps -> ps[System.Random.Shared.Next(ps.Length)].Data
 
-                return Ok <| Message $"r/{post.Subreddit} \"{post.Title}\" (+/- {post.Score}) {post.Url}"
+                return Ok <| Message $"r/{post.Subreddit} \"{System.Web.HttpUtility.HtmlDecode post.Title}\" (+{post.Score}) {post.Url}"
         }
