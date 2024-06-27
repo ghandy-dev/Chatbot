@@ -34,7 +34,7 @@ let private getUser userId username =
         | Some user -> return user
     }
 
-let private isCooldownExpired user command =
+let private isCooldownExpired user (command: Command) =
     let lastCommandTime =
         users.GetOrAdd((user, command.Name), (fun _ -> DateTime.MinValue.ToUniversalTime()))
 
@@ -67,17 +67,7 @@ let private formatResponse (response: string) =
     else
         response
 
-let private executeAndFormatResponse command parameters context =
-    async {
-        match! executeCommand command parameters context with
-        | Ok outcome ->
-            match outcome with
-            | BotAction(action, message) -> return BotAction(action, formatResponse message)
-            | Message message -> return Message <| formatResponse message
-        | Error err -> return Message <| formatResponse err
-    }
-
-let handleCommand userId username source message =
+let rec handleCommand userId username source message =
     async {
         let commandName, parameters = parseCommandAndParameters message
 
@@ -92,12 +82,43 @@ let handleCommand userId username source message =
                 let context = Context.createContext userId username user.IsAdmin source
 
                 try
-                    let! response =
-                        match command, user with
-                        | c, user when c.AdminOnly && user.IsAdmin -> executeAndFormatResponse c parameters context
-                        | c, _ -> executeAndFormatResponse c parameters context
+                    if (command.AdminOnly && not user.IsAdmin) then
+                        return None
+                    else
+                        let! response =
+                            async {
+                                match! executeCommand command parameters context with
+                                | Ok commandOutcome ->
+                                    match commandOutcome with
+                                    | BotAction(action, message) -> return Some <| BotAction(action, formatResponse message)
+                                    | Message message -> return Some <| (Message <| formatResponse message)
+                                    | RunAlias command ->
+                                        match! handleCommand userId username source command with
+                                        | None -> return None
+                                        | Some (response) -> return Some response
+                                    | Pipe commands ->
+                                        let rec executePipe (acc: string) commands =
+                                            printf "commands: %A" commands
+                                            match commands with
+                                            | [] -> async { return Some <| Message acc }
+                                            | c :: cs ->
+                                                printf "commands2: %s, %A" c cs
+                                                async {
+                                                    match! handleCommand userId username source $"{c} {acc}" with
+                                                    | None -> return None
+                                                    | Some (Message intermediateResult) ->
+                                                        printfn "%s" intermediateResult
+                                                        match! executePipe intermediateResult cs with
+                                                        | None -> return None
+                                                        | Some result -> return Some result
+                                                    | Some result -> return Some result
+                                                }
 
-                    return Some response
+                                        return! executePipe "" commands
+                                | Error err -> return Some <| (Message <| formatResponse err)
+                            }
+
+                        return response
                 with ex ->
                     logger.LogError($"Error occured running command: {command} {context} {parameters}", ex)
                     return None

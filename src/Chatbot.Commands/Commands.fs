@@ -33,6 +33,10 @@ module Commands =
             Command.createCommand ("vod", [], "Get the most recent vod for a channel.", AsyncFunctionWithArgs vod, 15000, false)
             Command.createCommand ("stream", [], "Get stream information for a channel - Title, viewcount, current category, uptime.", AsyncFunctionWithArgs stream, 15000, false)
             Command.createCommand ("braille", [], "Convert an image to braille acsii art.", AsyncFunctionWithArgs braille, 15000, false)
+            Command.createCommand ("alias", [ $"{Chatbot.Configuration.Bot.config.CommandPrefix}" ], "Run a custom command.", AsyncFunctionWithArgsAndContext alias, 5000, false)
+            Command.createCommand ("pipe", [], "Pipe the result of a command to the next.", SyncFunctionWithArgs pipe, 10000, false)
+            Command.createCommand ("randomline", [ "rl" ], "Get a random line from a user in the current channel.", AsyncFunctionWithArgsAndContext randomLine, 10000, false)
+            Command.createCommand ("randomquote", [ "rq" ], "Get a random quote from a random user in the current channel.", AsyncFunctionWithArgsAndContext randomQuote, 10000, false)
         ]
         |> List.map toKeyValue
         |> List.collect id

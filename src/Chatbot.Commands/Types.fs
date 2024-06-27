@@ -23,6 +23,7 @@ type BotCommand =
 type CommandOutcome =
     | Message of string
     | RunAlias of string
+    | Pipe of string list
     | BotAction of BotCommand * string
 
 type CommandResult = Result<CommandOutcome, string>
