@@ -107,7 +107,6 @@ let rec handleCommand userId username source message =
                                                     match! handleCommand userId username source $"{c} {acc}" with
                                                     | None -> return None
                                                     | Some (Message intermediateResult) ->
-                                                        printfn "%s" intermediateResult
                                                         match! executePipe intermediateResult cs with
                                                         | None -> return None
                                                         | Some result -> return Some result
