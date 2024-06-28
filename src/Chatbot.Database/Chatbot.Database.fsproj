@@ -20,4 +20,8 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Chatbot.Core\Chatbot.Core.fsproj" />
+  </ItemGroup>
+
 </Project>

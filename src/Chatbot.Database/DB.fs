@@ -6,19 +6,18 @@ module DB =
     open Microsoft.Data.Sqlite
 
     open Dapper
-    open Dapper.FSharp
     open Dapper.FSharp.SQLite
 
     open Chatbot.Database
 
-    [<Literal>]
-    let private connectionString = "Data Source=" + __SOURCE_DIRECTORY__ + @"\chat.db;"
+    let private connectionString = Chatbot.Configuration.ConnectionStrings.config.Database
 
     OptionTypes.register ()
     DefaultTypeMap.MatchNamesWithUnderscores <- true
 
     let internal connection: IDbConnection =
         let conn = new SqliteConnection(connectionString)
+        conn.Open()
         conn
 
     let internal users = table'<Entities.User> "users"

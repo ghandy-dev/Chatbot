@@ -31,6 +31,8 @@ let privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProcessor<Clie
                             Message = message
                         }
                     )
+                | RunAlias _
+                | Pipe _ -> failwith $"{nameof(RunAlias)} / {nameof(Pipe)} shouldn't hit here!"
             | None -> ()
         | false -> ()
     }
@@ -62,6 +64,8 @@ let whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProcessor<_>) 
                             Message = message
                         }
                     )
+                | RunAlias _
+                | Pipe _ -> failwith $"{nameof(RunAlias)} / {nameof(Pipe)} shouldn't hit here!"
             | None -> ()
         | false -> ()
     }

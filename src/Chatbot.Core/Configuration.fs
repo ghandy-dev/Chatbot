@@ -1,22 +1,36 @@
 ﻿namespace Chatbot
 
-module Assembly =
-
-    type Placeholder = Placeholder
+// module Assembly =
+//
+//     type Placeholder = Placeholder
 
 module Configuration =
 
     open Microsoft.Extensions.Configuration
 
+    DotEnv.load () |> Async.RunSynchronously
+
     let configuration =
         ConfigurationBuilder()
             .AddEnvironmentVariables()
             .AddJsonFile("appsettings.json", false, true)
-            .AddUserSecrets(System.Reflection.Assembly.GetExecutingAssembly(), optional = true, reloadOnChange = false)
-            .AddCommandLine(System.Environment.GetCommandLineArgs())
+            .AddEnvironmentVariables()
+            // .AddUserSecrets(System.Reflection.Assembly.GetExecutingAssembly(), optional = true, reloadOnChange = false)
+            // .AddCommandLine(System.Environment.GetCommandLineArgs())
             .Build()
 
     let accessToken = configuration.GetValue<string>("AccessToken")
+
+    module ConnectionStrings =
+
+        [<CLIMutable>]
+        type ConnectionStrings = {
+            Database: string
+            Irc: string
+        }
+
+        let config = configuration.GetSection("ConnectionStrings").Get<ConnectionStrings>()
+
 
     module Twitch =
 
@@ -26,7 +40,7 @@ module Configuration =
             ClientSecret: string
         }
 
-        let config = configuration.GetSection("TwitchConfig").Get<TwitchConfig>()
+        let config = configuration.GetSection("Twitch").Get<TwitchConfig>()
 
     module Bot =
 
@@ -39,16 +53,6 @@ module Configuration =
 
         let config = configuration.GetSection("BotConfig").Get<BotConfig>()
 
-    module Connection =
-
-        [<CLIMutable>]
-        type ConnectionConfig = {
-            Host: string
-            Port: int
-        }
-
-        let config = configuration.GetSection("Connection").Get<ConnectionConfig>()
-
     module Reddit =
 
         [<CLIMutable>]
@@ -58,18 +62,18 @@ module Configuration =
             UserAgent: string
         }
 
-        let config = configuration.GetSection("RedditConfig").Get<RedditConfig>()
+        let config = configuration.GetSection("Reddit").Get<RedditConfig>()
 
     module FaceIt =
 
         [<CLIMutable>]
         type FaceItConfig = { ApiKey: string }
 
-        let config = configuration.GetSection("FaceItConfig").Get<FaceItConfig>()
+        let config = configuration.GetSection("FaceIt").Get<FaceItConfig>()
 
     module DallE =
 
         [<CLIMutable>]
         type DallEConfig = { ApiKey: string }
 
-        let config = configuration.GetSection("DallEConfig").Get<DallEConfig>()
+        let config = configuration.GetSection("DallE").Get<DallEConfig>()

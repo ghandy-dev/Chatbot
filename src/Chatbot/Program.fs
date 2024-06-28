@@ -5,7 +5,7 @@ module Program =
     open System
     open System.Threading
 
-    let logger = Logging.createNamedLogger "Program"
+    let logger = Logging.createNamedLogger "Program" (Some Logging.LogLevel.Trace)
     let cancellationTokenSource = new CancellationTokenSource()
     let cancellationToken = cancellationTokenSource.Token
 
@@ -17,16 +17,17 @@ module Program =
         )
 
     [<EntryPoint>]
-    let main _ =
+    let main args =
         try
             try
-                logger.LogInfo "Starting bot..."
+                logger.LogInfo "Starting..."
                 Bot.run cancellationToken
                 Async.AwaitWaitHandle cancellationToken.WaitHandle |> ignore
-                logger.LogInfo "Bot stopped."
             with ex ->
                 logger.LogError("Exception caught.", ex)
         finally
             cancellationTokenSource.Token.WaitHandle.WaitOne() |> ignore
+
+        logger.LogInfo "Stopped."
 
         0

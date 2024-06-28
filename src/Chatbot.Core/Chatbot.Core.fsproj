@@ -2,10 +2,11 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <UserSecretsId>269b8378-58ef-43af-92df-fc5b0cde0f26</UserSecretsId>
+    <!-- <UserSecretsId>269b8378-58ef-43af-92df-fc5b0cde0f26</UserSecretsId> -->
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="DotEnv.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Result.fs" />
@@ -24,6 +25,7 @@
   <ItemGroup>
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
 
@@ -35,10 +37,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.0" />
     <PackageReference Include="TTVSharp.Helix" Version="0.0.9" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Chatbot.Database\Chatbot.Database.fsproj" />
   </ItemGroup>
 
 </Project>

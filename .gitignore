@@ -486,3 +486,6 @@ Scripts
 !*/Chatbot.Commands/Logs
 !*/Chatbot.Database/Scripts
 **/SeedData
+.env
+*.tar
+data/

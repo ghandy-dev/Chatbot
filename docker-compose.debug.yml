@@ -1,0 +1,22 @@
+services:
+  chatbot:
+    image: chatbot
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - configuration=Debug
+    volumes:
+      - ~/.vsdbg:/remote_debugger:rw
+      - type: bind
+        source: ./data
+        target: /app/data
+    env_file:
+      - ./.env
+
+    networks:
+      - private_network
+
+networks:
+  private_network:
+    driver: bridge

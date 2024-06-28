@@ -9,7 +9,7 @@
                 "build",
                 "${workspaceFolder}/src/Chatbot/Chatbot.fsproj",
                 "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary",
+                "/consoleloggerparameters:NoSummary"
             ],
             "group": "build",
             "presentation": {
@@ -17,5 +17,65 @@
             },
             "problemMatcher": "$msCompile"
         },
-	]
+        {
+            "type": "docker-build",
+            "label": "docker-build: debug",
+            "dependsOn": [
+                "build"
+            ],
+            "dockerBuild": {
+                "tag": "chatbot:dev",
+                "target": "base",
+                "dockerfile": "${workspaceFolder}/src/Chatbot/Dockerfile",
+                "context": "${workspaceFolder}",
+                "pull": true
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/Chatbot/Chatbot.fsproj"
+            }
+        },
+        {
+            "type": "docker-build",
+            "label": "docker-build: release",
+            "dependsOn": [
+                "build"
+            ],
+            "dockerBuild": {
+                "tag": "chatbot:latest",
+                "dockerfile": "${workspaceFolder}/src/Chatbot/Dockerfile",
+                "context": "${workspaceFolder}",
+                "platform": {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                "pull": true
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/Chatbot/Chatbot.fsproj"
+            }
+        },
+        {
+            "type": "docker-run",
+            "label": "docker-run: debug",
+            "dependsOn": [
+                "docker-build: debug"
+            ],
+            "dockerRun": {},
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/Chatbot/Chatbot.fsproj",
+                "enableDebugging": true
+            }
+        },
+        {
+            "type": "docker-run",
+            "label": "docker-run: release",
+            "dependsOn": [
+                "docker-build: release"
+            ],
+            "dockerRun": {},
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/Chatbot/Chatbot.fsproj"
+            }
+        }
+    ]
 }

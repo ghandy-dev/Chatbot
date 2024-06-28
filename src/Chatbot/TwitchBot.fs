@@ -38,11 +38,13 @@ let init () =
     }
 
 let createIrcClient () =
-    new IrcClient(connectionConfig.Host, connectionConfig.Port)
+    new IrcClient(fst ircConnection, snd ircConnection |> int)
 
 let authenticate (client: IrcClient) =
     async {
+        logger.LogTrace "Authenticating..."
         if (botConfig.Capabilities.Length > 0) then
+            logger.LogTrace "Requesting Capabilities..."
             let capabilities = String.concat " " botConfig.Capabilities
             do! client.WriteAsync($"CAP REQ :{capabilities}")
 
@@ -52,6 +54,8 @@ let authenticate (client: IrcClient) =
     }
 
 let createBot (client: IrcClient) cancellationToken =
+
+    logger.LogTrace "Creating bot..."
 
     let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
     let whisperRateLimiter = RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
@@ -74,15 +78,20 @@ let createBot (client: IrcClient) cancellationToken =
             async {
 
                 let start (client: IrcClient) =
+                    logger.LogTrace "Starting bot..."
                     async {
+                        logger.LogTrace "Initialising state..."
                         let! state = init ()
+
+                        logger.LogTrace "Joining channels..."
                         do! client.JoinChannels state.Channels
 
+                        logger.LogTrace "Starting reader..."
                         let! result = ircReader client mb state |> Async.StartChild |> Async.Catch
 
                         match result with
+                        | Choice1Of2 _ -> logger.LogTrace "Reader returned."
                         | Choice2Of2 ex -> logger.LogError($"Exception occurred in {nameof (ircReader)}", ex)
-                        | _ -> ()
                     }
 
                 let send (message: string) (client: IrcClient) =

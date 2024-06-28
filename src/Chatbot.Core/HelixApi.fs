@@ -1,10 +1,12 @@
 namespace Chatbot
 
 open TTVSharp.Helix
-open Chatbot.Configuration
-open Microsoft.Extensions.Options
 
 module HelixApi =
+
+    open Chatbot.Configuration
+
+    open Microsoft.Extensions.Options
 
     let options =
         Options.Create<HelixApiOptions>(new HelixApiOptions(ClientId = Twitch.config.ClientId, ClientSecret = Twitch.config.ClientSecret))

@@ -48,9 +48,9 @@ module RockPaperScissors =
                         | 3 -> ($"it's a draw! +{score} points", stats.addDraw ())
                         | _ -> ($"you lose! +{score} points", stats.addLoss ())
 
-                    do! RpsRepository.update updatedStats |> Async.Ignore
-
-                    return Ok <| Message $"CPU picked {cpuShape}, {scoreMsg}. Total points: {updatedStats.Score}"
+                    match! RpsRepository.update updatedStats with
+                    | DatabaseResult.Failure ex -> return Error ex.Message
+                    | DatabaseResult.Success _ -> return Ok <| Message $"CPU picked {cpuShape}, {scoreMsg}. Total points: {updatedStats.Score}"
                 | Error err -> return Error err
             | _ -> return Error """Invalid shape (valid choices are "rock" "paper" "scissors")"""
         }

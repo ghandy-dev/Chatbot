@@ -70,16 +70,21 @@ type Logger(name: string, ?logLevel: LogLevel) =
 
 let private loggers = new Dictionary<string, Logger>()
 
-let private getLogger name =
+let private getLogger name loglevel =
     if loggers.ContainsKey(name) then
         loggers[name]
     else
-        let logger = Logger(name, LogLevel.Info)
+        let logger = Logger(name, loglevel)
         loggers.Add(name, logger)
         logger
 
-let createLogger<'a> () =
-    let typeInfo = typeof<'a>
-    getLogger typeInfo.Name
+let createLogger<'a> loglevel =
+    match loglevel with
+    | None -> getLogger (typeof<'a>).Name LogLevel.Info
+    | Some level -> getLogger (typeof<'a>).Name level
 
-let createNamedLogger name = getLogger name
+
+let createNamedLogger name loglevel =
+    match loglevel with
+    | None -> getLogger name LogLevel.Info
+    | Some level -> getLogger name level

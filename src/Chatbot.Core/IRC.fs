@@ -57,7 +57,7 @@ type IrcClient(host: string, port: int) =
     [<Literal>]
     let readerufferSize = 10240
 
-    let logger = Logging.createLogger<IrcClient> ()
+    let logger = Logging.createLogger<IrcClient> None
     let client = IRC.createTcpClient host port
     let stream = IRC.getSslStream client host
     let reader = IO.createStreamReader stream

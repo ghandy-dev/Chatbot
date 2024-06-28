@@ -1,0 +1,16 @@
+services:
+  chatbot:
+    image: chatbot
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - private_network
+    env_file:
+      - .env
+    volumes: 
+        - /data:/app/data
+
+networks:
+  private_network:
+    driver: bridge

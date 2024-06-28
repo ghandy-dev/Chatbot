@@ -7,9 +7,7 @@
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/src/Chatbot/bin/Debug/net8.0/Chatbot.dll",
             "cwd": "${workspaceFolder}",
-            "args": [
-                "--AccessToken=",
-            ],
+            "args": [],
             "stopAtEntry": false,
             "console": "internalConsole",
         },
@@ -18,5 +16,14 @@
             "type": "coreclr",
             "request": "attach"
         },
+        {
+            "name": "Docker .NET Launch",
+            "type": "docker",
+            "request": "launch",
+            "preLaunchTask": "docker-run: debug",
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/Chatbot/Chatbot.fsproj"
+            }
+        }
     ]
 }

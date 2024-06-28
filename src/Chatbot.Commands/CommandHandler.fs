@@ -7,7 +7,7 @@ open Chatbot.Database.Types
 
 open System
 
-let private logger = Logging.createNamedLogger "Commands"
+let private logger = Logging.createNamedLogger "Commands" (Some Logging.LogLevel.Info)
 
 let private users =
     new Collections.Concurrent.ConcurrentDictionary<(User * string), DateTime>()
