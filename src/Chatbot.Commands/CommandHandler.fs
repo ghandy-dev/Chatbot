@@ -98,11 +98,9 @@ let rec handleCommand userId username source message =
                                         | Some (response) -> return Some response
                                     | Pipe commands ->
                                         let rec executePipe (acc: string) commands =
-                                            printf "commands: %A" commands
                                             match commands with
                                             | [] -> async { return Some <| Message acc }
                                             | c :: cs ->
-                                                printf "commands2: %s, %A" c cs
                                                 async {
                                                     match! handleCommand userId username source $"{c} {acc}" with
                                                     | None -> return None
