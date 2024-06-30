@@ -13,9 +13,9 @@ let private generate' (ctx: SiteContents) (page: string) =
                 th [] [ string "Cooldown (seconds)" ]
                 th [] [ string "Description" ]
             ]
-            for name, command in Commands.commands |> Map.toList |> List.distinctBy (fun (name, command) -> command.Name) do
+            for command in Commands.commandsMap do
                 tr [ Class "table-row" ] [
-                    td [] [ string name ]
+                    td [] [ string command.Name ]
                     td [] [ string (if command.AdminOnly then "✓" else "✘") ]
                     td [] [ string (command.Aliases |> String.concat ",") ]
                     td [] [ string $"{command.Cooldown / 1000}" ]

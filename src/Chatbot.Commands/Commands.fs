@@ -9,7 +9,7 @@ module Commands =
         | [] -> [ (c.Name), c ]
         | aliases -> c.Name :: aliases |> List.map (fun a -> (a), c)
 
-    let commands =
+    let commandsMap =
         [
             Command.createCommand ("xd", [], "xd.", SyncFunction xd, 30000, false)
             Command.createCommand ("echo", [], "Echo input back.", SyncFunctionWithArgs echo, 5000, true)
@@ -39,6 +39,9 @@ module Commands =
             Command.createCommand ("randomquote", [ "rq" ], "Get a random quote from a random user in the current channel.", AsyncFunctionWithArgsAndContext randomQuote, 10000, false)
             Command.createCommand ("pick", [ ], "Picks a single item out of a sequence.", AsyncFunctionWithArgsAndContext randomQuote, 10000, false)
         ]
+
+    let commands =
+        commandsMap
         |> List.map toKeyValue
         |> List.collect id
         |> Map.ofList
