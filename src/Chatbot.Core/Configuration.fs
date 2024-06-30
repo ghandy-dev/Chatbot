@@ -59,7 +59,6 @@ module Configuration =
         type RedditConfig = {
             ClientId: string
             ClientSecret: string
-            UserAgent: string
         }
 
         let config = configuration.GetSection("Reddit").Get<RedditConfig>()

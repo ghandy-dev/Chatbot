@@ -22,7 +22,7 @@ module Reddit =
 
     let mutable accessToken: AccessToken = Unchecked.defaultof<_>
 
-    let userAgent = Reddit.config.UserAgent
+    let userAgent = configuration.Item("UserAgent")
 
     let getAccessToken () =
         async {
