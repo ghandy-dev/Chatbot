@@ -7,7 +7,8 @@ open Chatbot.Database.Types
 
 open System
 
-let private logger = Logging.createNamedLogger "Commands" (Some Logging.LogLevel.Info)
+let private logger =
+    Logging.createNamedLogger "Commands" (Some Logging.LogLevel.Info)
 
 let private users =
     new Collections.Concurrent.ConcurrentDictionary<(User * string), DateTime>()
@@ -79,46 +80,51 @@ let rec handleCommand userId username source message =
             if isCooldownExpired user command then
                 users[(user, command.Name)] <- DateTime.UtcNow
 
-                let context = Context.createContext userId username user.IsAdmin source
-
-                try
-                    if (command.AdminOnly && not user.IsAdmin) then
-                        return None
-                    else
-                        let! response =
-                            async {
-                                match! executeCommand command parameters context with
-                                | Ok commandOutcome ->
-                                    match commandOutcome with
-                                    | BotAction(action, message) -> return Some <| BotAction(action, formatResponse message)
-                                    | Message message -> return Some <| (Message <| formatResponse message)
-                                    | RunAlias command ->
-                                        match! handleCommand userId username source command with
-                                        | None -> return None
-                                        | Some (response) -> return Some response
-                                    | Pipe commands ->
-                                        let rec executePipe (acc: string) commands =
-                                            match commands with
-                                            | [] -> async { return Some <| Message acc }
-                                            | c :: cs ->
-                                                async {
-                                                    match! handleCommand userId username source $"{c} {acc}" with
-                                                    | None -> return None
-                                                    | Some (Message intermediateResult) ->
-                                                        match! executePipe intermediateResult cs with
-                                                        | None -> return None
-                                                        | Some result -> return Some result
-                                                    | Some result -> return Some result
-                                                }
-
-                                        return! executePipe "" commands
-                                | Error err -> return Some <| (Message <| formatResponse err)
-                            }
-
-                        return response
-                with ex ->
-                    logger.LogError($"Error occured running command: {command} {context} {parameters}", ex)
+                if (command.AdminOnly && not user.IsAdmin) then
                     return None
+                else
+                    let! response =
+                        async {
+                            let context = Context.createContext userId username user.IsAdmin source
+
+                            match! executeCommand command parameters context with
+                            | Ok commandOutcome ->
+                                match commandOutcome with
+                                | BotAction(action, message) -> return Some <| BotAction(action, formatResponse message)
+                                | Message message -> return Some <| (Message <| formatResponse message)
+                                | RunAlias command ->
+                                    match! handleCommand userId username source command with
+                                    | None -> return None
+                                    | Some(response) -> return Some response
+                                | Pipe commands ->
+                                    let rec executePipe (acc: string) commands =
+                                        match commands with
+                                        | [] -> async { return Some <| Message acc }
+                                        | c :: cs ->
+                                            async {
+                                                match! handleCommand userId username source $"{c} {acc}" with
+                                                | None -> return None
+                                                | Some(Message intermediateResult) ->
+                                                    match! executePipe intermediateResult cs with
+                                                    | None -> return None
+                                                    | Some result -> return Some result
+                                                | Some result -> return Some result
+                                            }
+
+                                    return! executePipe "" commands
+                            | Error err -> return Some <| (Message <| formatResponse err)
+                        }
+
+                    return response
             else
                 return None
+    }
+
+let safeHandleCommand userId username source message =
+    async {
+        try
+            return! handleCommand userId username source message
+        with ex ->
+            logger.LogError($"Error occured running command: User: {username} Source: {source} Message: {message}", ex)
+            return None
     }

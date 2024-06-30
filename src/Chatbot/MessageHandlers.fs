@@ -10,7 +10,7 @@ let privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProcessor<Clie
     async {
         match msg.Message.StartsWith(botConfig.CommandPrefix) with
         | true ->
-            let! response = handleCommand msg.UserId msg.Username (Channel msg.Channel) msg.Message[1..]
+            let! response = safeHandleCommand msg.UserId msg.Username (Channel msg.Channel) msg.Message[1..]
 
             match response with
             | Some commandOutcome ->
@@ -41,7 +41,7 @@ let whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProcessor<_>) 
     async {
         match msg.Message.StartsWith(botConfig.CommandPrefix) with
         | true ->
-            let! response = handleCommand msg.UserId msg.DisplayName (Whisper msg.UserId) msg.Message[1..]
+            let! response = safeHandleCommand msg.UserId msg.DisplayName (Whisper msg.UserId) msg.Message[1..]
 
             match response with
             | Some commandOutcome ->
