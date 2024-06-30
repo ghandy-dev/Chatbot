@@ -44,29 +44,32 @@ type Logger(name: string, ?logLevel: LogLevel) =
         print " "
 
         match ex with
-        | Some ex -> printLine $"{msg}\r\n{ex.StackTrace}"
+        | Some ex ->
+            printLine $"{msg}"
+            printLine $"Exception message: {ex.Message}"
+            printLine $"Stack trace: {ex.StackTrace}"
         | None -> printLine $"{msg}"
 
 
     member this.LogDebug (msg: string) =
         if logLevel <= LogLevel.Debug then
-            this.Log(logLevel, msg)
+            this.Log(LogLevel.Debug, msg)
 
     member this.LogTrace (msg: string) =
         if logLevel <= LogLevel.Trace then
-            this.Log(logLevel, msg)
+            this.Log(LogLevel.Trace, msg)
 
     member this.LogInfo (msg: string) =
         if logLevel <= LogLevel.Info then
-            this.Log(logLevel, msg)
+            this.Log(LogLevel.Info, msg)
 
     member this.LogWarning (msg: string) =
         if logLevel <= LogLevel.Warning then
-            this.Log(logLevel, msg)
+            this.Log(LogLevel.Warning, msg)
 
     member this.LogError (msg: string, ex: Exception) =
-        if logLevel <= LogLevel.Warning then
-            this.Log(logLevel, msg, ex)
+        if logLevel <= LogLevel.Error then
+            this.Log(LogLevel.Error, msg, ex)
 
 let private loggers = new Dictionary<string, Logger>()
 
