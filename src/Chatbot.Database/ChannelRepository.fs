@@ -70,7 +70,8 @@ module ChannelRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                return DatabaseResult.Failure ex
+                logger.LogError(ex.Message, ex)
+                return DatabaseResult.Failure
         }
 
     let delete (channelId: int) =
@@ -86,5 +87,6 @@ module ChannelRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                return DatabaseResult.Failure ex
+                logger.LogError(ex.Message, ex)
+                return DatabaseResult.Failure
         }

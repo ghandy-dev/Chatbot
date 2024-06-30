@@ -8,7 +8,10 @@ module DB =
     open Dapper
     open Dapper.FSharp.SQLite
 
+    open Chatbot
     open Chatbot.Database
+
+    let logger = Logging.createNamedLogger "Database" (Some Logging.LogLevel.Error)
 
     let private connectionString = Chatbot.Configuration.ConnectionStrings.config.Database
 
@@ -16,9 +19,14 @@ module DB =
     DefaultTypeMap.MatchNamesWithUnderscores <- true
 
     let internal connection: IDbConnection =
-        let conn = new SqliteConnection(connectionString)
-        conn.Open()
-        conn
+        try
+            let conn = new SqliteConnection(connectionString)
+            conn.Open()
+            conn
+        with ex ->
+            logger.LogError(ex.Message, ex)
+            failwith (ex.Message)
+
 
     let internal users = table'<Entities.User> "users"
     let internal rpsStats = table'<Entities.RpsStats> "rps_stats"

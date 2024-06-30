@@ -52,7 +52,8 @@ module RpsRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                return DatabaseResult.Failure ex
+                logger.LogError(ex.Message, ex)
+                return DatabaseResult.Failure
         }
 
     let update (stats: RpsStats) =
@@ -72,5 +73,6 @@ module RpsRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                return DatabaseResult.Failure ex
+                logger.LogError(ex.Message, ex)
+                return DatabaseResult.Failure
         }

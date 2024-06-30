@@ -46,5 +46,6 @@ module UserRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                return DatabaseResult.Failure ex
+                logger.LogError(ex.Message, ex)
+                return DatabaseResult.Failure
         }
