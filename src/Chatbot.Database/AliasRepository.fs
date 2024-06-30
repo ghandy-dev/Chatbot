@@ -48,7 +48,8 @@ module AliasRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                return DatabaseResult.Failure ex
+                logger.LogError(ex.Message, ex)
+                return DatabaseResult.Failure
         }
 
     let update (alias: Alias) =
@@ -68,7 +69,8 @@ module AliasRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                return DatabaseResult.Failure ex
+                logger.LogError(ex.Message, ex)
+                return DatabaseResult.Failure
         }
 
     let delete (userId: int) (alias: string) =
@@ -84,5 +86,6 @@ module AliasRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                return DatabaseResult.Failure ex
+                logger.LogError(ex.Message, ex)
+                return DatabaseResult.Failure
         }

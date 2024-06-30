@@ -45,4 +45,4 @@ module TextTransform =
     let texttransform args =
         match args with
         | transform :: words -> transform' transform words
-        | _ -> Error "Input missing."
+        | _ -> Error "No input provided."

@@ -21,6 +21,6 @@ module JoinChannel =
                     | None ->
                         match! ChannelRepository.add (Channel.create user.Id user.DisplayName) with
                         | DatabaseResult.Success _ -> return Ok <| BotAction(JoinChannel channel, $"Channel added ({channel})")
-                        | DatabaseResult.Failure ex -> return failwith ex.Message
+                        | DatabaseResult.Failure -> return Error "Failed to add and join channel."
 
         }

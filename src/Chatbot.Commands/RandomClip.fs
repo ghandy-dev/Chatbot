@@ -14,16 +14,13 @@ module RandomClip =
                 |+-> TTVSharp.toResult
             with
             | Error error -> return Error error
-            | Ok response ->
-                match response.Data |> Seq.toList with
-                | [] -> return Error "No clips found."
-                | clips -> return Ok clips[System.Random.Shared.Next(clips.Length)]
+            | Ok response -> return Ok(response.Data |> Seq.toList)
         }
 
     let randomClip (args: string list) (context: Context) =
         async {
             match context.Source with
-            | Whisper _ -> return Error $"This command can only be executed from within the context of a channel"
+            | Whisper _ -> return Error "This command can only be executed from within the context of a channel"
             | Channel channel ->
 
             let channel =
@@ -32,6 +29,11 @@ module RandomClip =
                 | channel :: _ -> channel
 
             match! Users.getUser channel |+-> TTVSharp.tryHeadResult "User not found." |> AsyncResult.bind getClipsResult with
-            | Ok clip -> return Ok <| Message $"\"{clip.Title}\" ({clip.ViewCount} views, {clip.CreatedAt.ToShortDateString()}) {clip.Url}"
+            | Ok clip ->
+                match clip with
+                | [] -> return Ok <| Message "No clips found."
+                | clips ->
+                    let clip = clips[System.Random.Shared.Next(clips.Length)]
+                    return Ok <| Message $"\"{clip.Title}\" ({clip.ViewCount} views, {clip.CreatedAt.ToShortDateString()}) {clip.Url}"
             | Error error -> return Error error
         }

@@ -12,13 +12,13 @@ module LeaveChannel =
             match args with
             | [] -> return Error "No channel specified."
             | channel :: _ ->
-                match! Users.getUser channel |+-> TTVSharp.tryHeadResult "User not found." with
-                | Error err -> return Error err
-                | Ok user ->
+                match! Users.getUser channel |+-> TTVSharp.tryHead with
+                | None -> return Error "User not found."
+                | Some user ->
                     match! ChannelRepository.getById (user.Id |> int) with
                     | None -> return Error $"Not in channel ({user.Id} {user.DisplayName})"
                     | Some _ ->
                         match! ChannelRepository.delete (user.Id |> int) with
                         | DatabaseResult.Success _ -> return Ok <| BotAction (LeaveChannel channel, $"removed channel ({user.Id} {user.DisplayName})")
-                        | DatabaseResult.Failure ex -> return Error $"Failed to delete channel: {ex.Message}"
+                        | DatabaseResult.Failure -> return Error $"Failed to delete and leave channel."
         }

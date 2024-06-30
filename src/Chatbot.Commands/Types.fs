@@ -20,13 +20,14 @@ type BotCommand =
     | JoinChannel of string
     | LeaveChannel of string
 
-type CommandOutcome =
+type CommandValue =
     | Message of string
     | RunAlias of string
     | Pipe of string list
     | BotAction of BotCommand * string
 
-type CommandResult = Result<CommandOutcome, string>
+type CommandResult = Result<CommandValue, string>
+
 type Parameters = string list
 
 type SyncFunction = unit -> CommandResult

@@ -9,7 +9,7 @@ module Pick =
 
     let pick args =
         match args with
-        | [] -> Ok <| Message "No items provided."
+        | [] -> Error "No items provided."
         | _ ->
             let index = random.Next args.Length
             Ok <| Message $"{args[index]}"

@@ -18,8 +18,8 @@ module RNG =
             | n :: _ -> (tryParseInt n, tryParseInt n)
 
         match (min, max) with
-        | (None, _) -> Error "error parsing min"
-        | (_, None) -> Error "error parsing max"
+        | (None, _) -> Error "Error parsing min value."
+        | (_, None) -> Error "Error parsing max value."
         | (Some min, Some max) ->
 
             let n =

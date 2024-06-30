@@ -10,34 +10,34 @@ module Alias =
     let private add userId name command =
         async {
             match! getByUserAndName (userId |> int) name with
-            | Some _ -> return Ok <| Message $"Command {name} already exists."
+            | Some _ -> return Ok <| Message $"Alias {name} already exists."
             | None ->
                 match! add (Alias.create (userId |> int) name (String.concat " " command)) with
-                | DatabaseResult.Failure err -> return Error err.Message
-                | DatabaseResult.Success 0 -> return Ok <| Message $"Command {name} already exists."
-                | DatabaseResult.Success _ -> return Ok <| Message $"Command {name} successfully added."
+                | DatabaseResult.Failure -> return Error "Error occured trying to add alias."
+                | DatabaseResult.Success 0 -> return Ok <| Message $"Alias {name} already exists."
+                | DatabaseResult.Success _ -> return Ok <| Message $"Alias {name} successfully added."
         }
 
     let private edit userId name command =
         async {
             match! update (Alias.create (userId |> int) name (String.concat " " command)) with
-            | DatabaseResult.Failure err -> return Error err.Message
-            | DatabaseResult.Success 0 -> return Ok <| Message $"Command {name} does not exist."
-            | DatabaseResult.Success _ -> return Ok <| Message $"Command {name} successfully updated."
+            | DatabaseResult.Failure -> return Error "Error occurred trying to edit alias."
+            | DatabaseResult.Success 0 -> return Ok <| Message $"Alias {name} does not exist."
+            | DatabaseResult.Success _ -> return Ok <| Message $"Alias {name} successfully updated."
         }
 
     let private delete userId name =
         async {
             match! delete (userId |> int) name with
-            | DatabaseResult.Failure err -> return Error err.Message
-            | DatabaseResult.Success 0 -> return Ok <| Message $"Command {name} does not exist."
-            | DatabaseResult.Success _ -> return Ok <| Message $"Command {name} successfully removed."
+            | DatabaseResult.Failure -> return Error "Error occurred trying to delete alias."
+            | DatabaseResult.Success 0 -> return Ok <| Message $"Alias {name} does not exist."
+            | DatabaseResult.Success _ -> return Ok <| Message $"Alias {name} successfully removed."
         }
 
     let private run userId name =
         async {
             match! getByUserAndName (userId |> int) name with
-            | None -> return Ok <| Message $"Command {name} does not exist."
+            | None -> return Ok <| Message $"Alias {name} does not exist."
             | Some alias -> return Ok <| RunAlias alias.Command
         }
 

@@ -125,29 +125,13 @@ module Braille =
     let private webp: (byte[] * byte[]) =
         [| 0x52uy ; 0x49uy ; 0x46uy ; 0x46uy |], [| 0x57uy ; 0x45uy ; 0x42uy ; 0x50uy |]
 
-    let private isPng (bytes: byte[]) =
-        if bytes.Length > 3 && bytes[0..3] = png then
-            true
-        else
-            false
+    let private isPng (bytes: byte[]) = bytes.Length > 3 && bytes[0..3] = png
 
-    let private isJpg (bytes: byte[]) =
-        if bytes.Length > 8 && bytes[0..8] = jpg then
-            true
-        else
-            false
+    let private isJpg (bytes: byte[]) = bytes.Length > 8 && bytes[0..8] = jpg
 
-    let private isBmp (bytes: byte[]) =
-        if bytes.Length > 1 && bytes[0..1] = bmp then
-            true
-        else
-            false
+    let private isBmp (bytes: byte[]) = bytes.Length > 1 && bytes[0..1] = bmp
 
-    let private isWebp (bytes: byte[]) =
-        if bytes.Length > 11 && (bytes[0..3], bytes[8..11]) = webp then
-            true
-        else
-            false
+    let private isWebp (bytes: byte[]) = bytes.Length > 11 && (bytes[0..3], bytes[8..11]) = webp
 
     let private isImage (bytes: byte[]) =
         isPng bytes || isJpg bytes || isBmp bytes || isWebp bytes
@@ -168,8 +152,11 @@ module Braille =
                 let! bytes = response |> toBytesAsync
 
                 if
-                    response.originalHttpResponseMessage.Content.Headers.Contains("Content-Type")
-                    && RegularExpressions.Regex.IsMatch(response.originalHttpResponseMessage.Content.Headers.ContentType.MediaType, pattern)
+                    (response.originalHttpResponseMessage.Content.Headers.Contains("Content-Type")
+                     && RegularExpressions.Regex.IsMatch(
+                         response.originalHttpResponseMessage.Content.Headers.ContentType.MediaType,
+                         pattern
+                     ))
                     || isImage bytes
                 then
                     return Some bytes
@@ -181,7 +168,7 @@ module Braille =
     let private internalBraille url setting =
         async {
             match! getImage url with
-            | None -> return Error "Error retrieving image."
+            | None -> return Error "Couldn't retrieve image, invalid url provided, or an unsupported image format is used."
             | Some image ->
                 let braille = imageToBraille 30 image setting
 
@@ -194,7 +181,7 @@ module Braille =
     let braille args =
         async {
             match args with
-            | [] -> return Error "No url specified."
+            | [] -> return Ok <| Message "No url specified."
             | url :: setting ->
                 let setting =
                     match setting with

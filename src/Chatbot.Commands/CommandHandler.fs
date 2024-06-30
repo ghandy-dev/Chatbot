@@ -27,7 +27,8 @@ let private getUser userId username =
         match! UserRepository.getById (userId |> int) with
         | None ->
             match! UserRepository.add (User.create (userId |> int) username) with
-            | DatabaseResult.Failure ex -> return failwith ex.Message
+            | DatabaseResult.Failure ->
+                return failwith "Couldn't add user to database."
             | DatabaseResult.Success _ ->
                 match! UserRepository.getById (userId |> int) with
                 | None -> return failwith "Couldn't retrieve new user"
@@ -88,10 +89,10 @@ let rec handleCommand userId username source message =
                             let context = Context.createContext userId username user.IsAdmin source
 
                             match! executeCommand command parameters context with
-                            | Ok commandOutcome ->
-                                match commandOutcome with
-                                | BotAction(action, message) -> return Some <| BotAction(action, formatResponse message)
+                            | Ok value ->
+                                match value with
                                 | Message message -> return Some <| (Message <| formatResponse message)
+                                | BotAction(action, message) -> return Some <| BotAction(action, formatResponse message)
                                 | RunAlias command ->
                                     match! handleCommand userId username source command with
                                     | None -> return None
@@ -112,7 +113,9 @@ let rec handleCommand userId username source message =
                                             }
 
                                     return! executePipe "" commands
-                            | Error err -> return Some <| (Message <| formatResponse err)
+                            | Error err ->
+                                logger.LogWarning(err)
+                                return None
                         }
 
                     return response

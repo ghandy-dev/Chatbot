@@ -32,11 +32,11 @@ module RockPaperScissors =
                         match! RpsRepository.getById (context.UserId |> int) with
                         | None ->
                             match! RpsRepository.add (RpsStats.newStats (context.UserId |> int)) with
-                            | DatabaseResult.Failure ex -> return Error ex.Message
+                            | DatabaseResult.Failure -> return Error "Error occurred creating stats."
                             | DatabaseResult.Success _ ->
                                 match! RpsRepository.getById (context.UserId |> int) with
                                 | Some stats -> return Ok stats
-                                | None -> return Error "Couldn't retrieve stats"
+                                | None -> return Error "Couldn't retrieve stats."
                         | Some stats -> return Ok stats
                     }
 
@@ -49,7 +49,7 @@ module RockPaperScissors =
                         | _ -> ($"you lose! +{score} points", stats.addLoss ())
 
                     match! RpsRepository.update updatedStats with
-                    | DatabaseResult.Failure ex -> return Error ex.Message
+                    | DatabaseResult.Failure -> return Error "Error occurred updating stats."
                     | DatabaseResult.Success _ -> return Ok <| Message $"CPU picked {cpuShape}, {scoreMsg}. Total points: {updatedStats.Score}"
                 | Error err -> return Error err
             | _ -> return Error """Invalid shape (valid choices are "rock" "paper" "scissors")"""
