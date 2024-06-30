@@ -22,18 +22,17 @@ module RandomClip =
             match context.Source with
             | Whisper _ -> return Error "This command can only be executed from within the context of a channel"
             | Channel channel ->
+                let channel =
+                    match args with
+                    | [] -> channel
+                    | channel :: _ -> channel
 
-            let channel =
-                match args with
-                | [] -> channel
-                | channel :: _ -> channel
-
-            match! Users.getUser channel |+-> TTVSharp.tryHeadResult "User not found." |> AsyncResult.bind getClipsResult with
-            | Ok clip ->
-                match clip with
-                | [] -> return Ok <| Message "No clips found."
-                | clips ->
-                    let clip = clips[System.Random.Shared.Next(clips.Length)]
-                    return Ok <| Message $"\"{clip.Title}\" ({clip.ViewCount} views, {clip.CreatedAt.ToShortDateString()}) {clip.Url}"
-            | Error error -> return Error error
+                match! Users.getUser channel |+-> TTVSharp.tryHeadResult "User not found." |> AsyncResult.bind getClipsResult with
+                | Ok clip ->
+                    match clip with
+                    | [] -> return Ok <| Message "No clips found."
+                    | clips ->
+                        let clip = clips[System.Random.Shared.Next(clips.Length)]
+                        return Ok <| Message $"\"{clip.Title}\" ({clip.ViewCount} views, {clip.CreatedAt.ToShortDateString()}) {clip.Url}"
+                | Error error -> return Error error
         }
