@@ -8,6 +8,7 @@
     <Compile Include="Types.fs" />
     <Compile Include="Logs/Api.fs" />
     <Compile Include="Logs/Logs.fs" />
+    <Compile Include="Help/Help.fs" />
     <Compile Include="DallE/Types.fs" />
     <Compile Include="DallE/Api.fs" />
     <Compile Include="DallE/DallE.fs" />

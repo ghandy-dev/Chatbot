@@ -3,7 +3,6 @@ namespace Chatbot.Commands
 [<AutoOpen>]
 module Reddit =
 
-    open Chatbot
     open Chatbot.Commands.Api.Reddit
 
     let private sortings = [ "top" ; "hot" ; "best" ]
@@ -12,7 +11,6 @@ module Reddit =
         match args with
         | [] -> Error "No subreddit specified"
         | subreddit :: sort :: _ ->
-
             if sortings |> List.contains sort then
                 Ok(subreddit, sort)
             else

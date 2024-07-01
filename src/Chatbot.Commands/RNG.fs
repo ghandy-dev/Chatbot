@@ -34,6 +34,8 @@ module RNG =
         let n = random.NextDouble() * 100.0
         Ok <| Message $"""{n.ToString("n2")}%%"""
 
+    let private coinFlipSide = [ "Heads (yes)" ; "Tails (no)" ]
+
     let coinFlip () =
         let n = random.Next(1)
-        Ok <| Message $"{n}"
+        Ok <| Message $"{coinFlipSide[n]}"
