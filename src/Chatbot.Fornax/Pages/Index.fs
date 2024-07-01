@@ -6,20 +6,26 @@ open Html
 let private generate' (ctx: SiteContents) (page: string) =
     let commands =
         table [] [
+            colgroup [ Class "table-heading" ] [
+                col [ HtmlProperties.Span 2 ; HtmlProperties.Style [ CSSProperties.Width "5%" ] ]
+                col [ HtmlProperties.Span 2 ; HtmlProperties.Style [ CSSProperties.Width "5%" ] ]
+                col [ HtmlProperties.Span 1 ; HtmlProperties.Style [ CSSProperties.Width "80%" ] ]
+            ]
+
             tr [ Class "table-heading" ] [
                 th [] [ string "Name" ]
-                th [] [ string "Admin Only?" ]
-                th [] [ string "Aliases" ]
-                th [] [ string "Cooldown (seconds)" ]
-                th [] [ string "Description" ]
+                th [ Scope "col" ] [ string "Aliases" ]
+                th [ Scope "col" ] [ string "Admin Only?" ]
+                th [ Scope "col" ] [ string "Cooldown (seconds)" ]
+                th [ Scope "col" ] [ string "Description" ]
             ]
-            for command in Commands.commandsMap do
+            for command in Commands.commandsMap |> List.sortBy (fun c -> c.Name) do
                 tr [ Class "table-row" ] [
                     td [] [ string command.Name ]
-                    td [] [ string (if command.AdminOnly then "✓" else "✘") ]
                     td [] [ string (command.Aliases |> String.concat ",") ]
-                    td [] [ string $"{command.Cooldown / 1000}" ]
-                    td [] [ string command.Description ]
+                    td [ HtmlProperties.Style [ CSSProperties.TextAlign "center" ] ] [ string (if command.AdminOnly then "✓" else "✘") ]
+                    td [ HtmlProperties.Style [ CSSProperties.TextAlign "center" ] ] [ string $"{command.Cooldown / 1000}" ]
+                    td [] [ pre [] [ string (System.Web.HttpUtility.HtmlEncode(command.Description)) ] ]
                 ]
         ]
 

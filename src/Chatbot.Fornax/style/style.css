@@ -18,7 +18,8 @@ table {
 
 th,
 td {
-  padding: 12px;
+  border: solid 1px #616468;
+  padding: 8px;
   text-align: left;
 }
 
@@ -49,7 +50,7 @@ tr:nth-child(even) {
 }
 
 .articles {
-  margin: 5rem 0;
+  margin: 2rem 0;
 }
 
 .article-title {
@@ -66,7 +67,7 @@ tr:nth-child(even) {
 
 .article-body {
   line-height: 1.4;
-  margin: 0 6rem;
+  margin: 0 2rem;
 }
 
 @media screen and (max-width: 991px) {
@@ -74,4 +75,8 @@ tr:nth-child(even) {
     line-height: 1.4;
     margin: 0;
   }
+}
+
+.small-cols {
+  width: 5%;
 }
