@@ -27,7 +27,6 @@ module DB =
             logger.LogError(ex.Message, ex)
             failwith (ex.Message)
 
-
     let internal users = table'<Entities.User> "users"
     let internal rpsStats = table'<Entities.RpsStats> "rps_stats"
     let internal channels = table'<Entities.Channel> "channels"

@@ -24,6 +24,16 @@
             "netCore": {
                 "appProject": "${workspaceFolder}/src/Chatbot/Chatbot.fsproj"
             }
+        },
+        {
+            "name": "Docker .NET Core Attach (Preview)",
+            "containerName": "564faabafccd8d1a8001ffdcd743ca299ac721a1e265f10dcbc2031610b54848",
+            "type": "docker",
+            "request": "attach",
+            "platform": "netCore",
+            "sourceFileMap": {
+                "/src": "${workspaceFolder}"
+            }
         }
     ]
 }

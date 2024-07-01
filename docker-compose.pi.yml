@@ -5,7 +5,7 @@ services:
     volumes:
       - chatbot_data:/app/data
     env_file:
-      - ./.env
+      - .env
 
     networks:
       - private_network
