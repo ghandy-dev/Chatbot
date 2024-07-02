@@ -4,12 +4,25 @@ namespace Chatbot.Commands
 module Pick =
 
     open System
+    open System.Text.RegularExpressions
 
     let private random = Random.Shared
 
     let pick args =
         match args with
         | [] -> Error "No items provided."
-        | _ ->
-            let index = random.Next args.Length
-            Ok <| Message $"{args[index]}"
+        | head :: tail ->
+            let delimiterPattern = @"^delimiter:(.+)$"
+            let m = Regex.Match(head, delimiterPattern)
+
+            let items =
+                match m.Success with
+                | false -> args
+                | true ->
+                    let items =
+                        String.concat " " tail |> fun s -> s.Split(m.Groups[1].Value, StringSplitOptions.TrimEntries)
+
+                    items |> List.ofArray
+
+            let index = random.Next items.Length
+            Ok $"{items[index]}"
