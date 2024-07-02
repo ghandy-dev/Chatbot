@@ -11,7 +11,7 @@ module NameColor =
         async {
             return!
                 helixApi.Chat.GetUserChatColorAsync(new GetUserChatColorRequest(UserIds = [ user.Id ])) |> Async.AwaitTask
-                |+-> TTVSharp.tryHeadResultT "User color not found."
+                |+-> TTVSharp.tryHeadResult "User color not found."
         }
 
     let private innerNameColor username =

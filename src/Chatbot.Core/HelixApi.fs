@@ -51,12 +51,6 @@ module TTVSharp =
 
     let tryHeadResult error f = f |> tryHead |> Result.fromOption error
 
-    let tryGeteDataT response = tryGetData response
-
-    let tryHeadT data = data |> tryHead
-
-    let tryHeadResultT error data = data |> tryHeadResult error
-
     module User =
 
         let selectUserId (user: User) = user.Id

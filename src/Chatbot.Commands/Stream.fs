@@ -14,7 +14,7 @@ module Stream =
             async {
                 return!
                     helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(UserIds = [ user.Id ])) |> Async.AwaitTask
-                    |+-> TTVSharp.tryHeadResultT $"{user.DisplayName} is not currently live."
+                    |+-> TTVSharp.tryHeadResult $"{user.DisplayName} is not currently live."
             }
 
     let stream args =

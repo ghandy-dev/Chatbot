@@ -13,7 +13,7 @@ module Vod =
                 return!
                     helixApi.Videos.GetVideosByUserIdAsync(new GetVideosByUserIdRequest(UserIds = [ user.Id ], First = 1))
                     |> Async.AwaitTask
-                    |+-> TTVSharp.tryHeadResultT "No vods found."
+                    |+-> TTVSharp.tryHeadResult "No vods found."
             }
 
     let vod args =
