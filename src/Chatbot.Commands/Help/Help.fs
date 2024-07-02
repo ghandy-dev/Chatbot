@@ -177,11 +177,11 @@ Pick a single random item from a given list of items.
 
 Examples:
 
-{exampleArgs "pick" "<input sequence>"}
+{exampleArgs "pick" "<items>"}
 {exampleArgs "pick" "1 2 3 4 5 6 7"}
 {exampleArgs "pick" "Red Green Yellow Blue Pink"}
 
-Custom delimiter
+Custom delimiter:
 {exampleArgs "pick" "delimiter:<delimiter> <input sequence>"}
 {exampleArgs "pick" "delimiter:, Elden Ring, Dark Souls 1, Dark Souls 2, Dark Souls 3, Sekiro"}
 """
