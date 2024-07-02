@@ -87,9 +87,13 @@ module Braille =
 
         use bitmap = if bitmap.Height > bitmap.Width then crop bitmap else bitmap
 
-        let width = width * 2 // 2 pixels per braille ascii symbol
+        // 2 pixels per braille ascii symbol
+        let width = width * 2
         let ratio = float bitmap.Width / (float width)
-        let height = (roundUpToMultiple (float bitmap.Height / ratio) 4.0) |> int // 4 pixels per braille ascii symbol
+
+        // 4 pixels per braille ascii symbol, max 15 lines (15 * 4 = 60 vertical dots)
+        let height =
+            min ((roundUpToMultiple (float bitmap.Height / ratio) 4.0) |> int) (15 * 4)
 
         let imageInfo = new SKImageInfo(width, height)
         use resized = bitmap.Resize(imageInfo, SKFilterQuality.High)
@@ -102,6 +106,8 @@ module Braille =
                 let brailleValue = toBraille resized x y setting average
                 let braille = System.Convert.ToChar(brailleValue)
                 sb.Append(braille) |> ignore
+
+            sb.Append(" ") |> ignore
 
         sb.ToString()
 
@@ -131,7 +137,8 @@ module Braille =
 
     let private isBmp (bytes: byte[]) = bytes.Length > 1 && bytes[0..1] = bmp
 
-    let private isWebp (bytes: byte[]) = bytes.Length > 11 && (bytes[0..3], bytes[8..11]) = webp
+    let private isWebp (bytes: byte[]) =
+        bytes.Length > 11 && (bytes[0..3], bytes[8..11]) = webp
 
     let private isImage (bytes: byte[]) =
         isPng bytes || isJpg bytes || isBmp bytes || isWebp bytes
@@ -170,18 +177,14 @@ module Braille =
             match! getImage url with
             | None -> return Error "Couldn't retrieve image, invalid url provided, or an unsupported image format is used."
             | Some image ->
-                let braille = imageToBraille 30 image setting
-
-                if braille.Length > 500 then
-                    return Ok braille[0..479]
-                else
-                    return Ok braille
+                let braille = imageToBraille 32 image setting
+                return Ok braille
         }
 
     let braille args =
         async {
             match args with
-            | [] -> return Ok <| Message "No url specified."
+            | [] -> return Error "No url specified."
             | url :: setting ->
                 let setting =
                     match setting with
