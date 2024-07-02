@@ -11,7 +11,7 @@ module DB =
     open Chatbot
     open Chatbot.Database
 
-    let logger = Logging.createNamedLogger "Database" (Some Logging.LogLevel.Error)
+    let logger = Logging.createNamedLogger "Database"
 
     let private connectionString = Chatbot.Configuration.ConnectionStrings.config.Database
 

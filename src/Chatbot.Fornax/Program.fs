@@ -14,7 +14,7 @@ let main args =
         | [] -> failwith "Expected 1 arguments"
         | "build" :: _ -> do! Build.build()
         | "serve" :: _ -> Serve.serve()
-        | _ -> failwithf "Unknown switch"
+        | _ -> failwith "Unknown switch"
 
 
         return 0

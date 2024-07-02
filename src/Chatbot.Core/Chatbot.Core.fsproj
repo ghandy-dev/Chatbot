@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <Compile Include="DotEnv.fs" />
+    <Compile Include="Configuration.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Result.fs" />
@@ -14,7 +15,6 @@
     <Compile Include="Async/Async.fs" />
     <Compile Include="Async/AsyncResult.fs" />
     <Compile Include="Async/AsyncOption.fs" />
-    <Compile Include="Configuration.fs" />
     <Compile Include="HelixApi.fs" />
     <Compile Include="IO.fs" />
     <Compile Include="IRC.fs" />

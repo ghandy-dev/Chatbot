@@ -5,7 +5,7 @@ module Program =
     open System
     open System.Threading
 
-    let logger = Logging.createNamedLogger "Program" (Some Logging.LogLevel.Trace)
+    let logger = Logging.createNamedLogger "Program"
     let cancellationTokenSource = new CancellationTokenSource()
     let cancellationToken = cancellationTokenSource.Token
 

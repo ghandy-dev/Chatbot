@@ -7,8 +7,7 @@ open Chatbot.Database.Types
 
 open System
 
-let private logger =
-    Logging.createNamedLogger "Commands" (Some Logging.LogLevel.Info)
+let private logger = Logging.createNamedLogger "Commands"
 
 let private users =
     new Collections.Concurrent.ConcurrentDictionary<(User * string), DateTime>()
@@ -27,8 +26,7 @@ let private getUser userId username =
         match! UserRepository.getById (userId |> int) with
         | None ->
             match! UserRepository.add (User.create (userId |> int) username) with
-            | DatabaseResult.Failure ->
-                return failwith "Couldn't add user to database."
+            | DatabaseResult.Failure -> return failwith "Couldn't add user to database."
             | DatabaseResult.Success _ ->
                 match! UserRepository.getById (userId |> int) with
                 | None -> return failwith "Couldn't retrieve new user"

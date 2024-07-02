@@ -21,6 +21,16 @@ module Configuration =
 
     let accessToken = configuration.GetValue<string>("AccessToken")
 
+    module Logging =
+
+        type LogLevel = { Default: string }
+
+        [<CLIMutable>]
+        type LoggingConfig = { LogLevel: LogLevel }
+
+        let config = configuration.GetSection("Logging").Get<LoggingConfig>()
+
+
     module ConnectionStrings =
 
         [<CLIMutable>]

@@ -6,11 +6,13 @@ open System.Collections.Generic
 
 [<RequireQualifiedAccess>]
 type LogLevel =
-    | Debug = 0
-    | Trace = 1
+    | Trace = 0
+    | Debug = 1
     | Info = 2
     | Warning = 3
     | Error = 4
+    | Critical = 5
+    | None = 6
 
 let private print value = Console.Write($"{value}")
 
@@ -18,24 +20,39 @@ let private printLine value = Console.WriteLine($"{value}")
 
 let private logLevels =
     [
-        LogLevel.Debug, ("DEBUG", ConsoleColor.Yellow)
-        LogLevel.Trace, ("TRACE", ConsoleColor.Cyan)
-        LogLevel.Info, ("INFO", ConsoleColor.Green)
-        LogLevel.Warning, ("WARNING", ConsoleColor.DarkYellow)
-        LogLevel.Error, ("ERROR", ConsoleColor.Red)
+        LogLevel.Trace, ("TRACE", ConsoleColor.Cyan, None)
+        LogLevel.Debug, ("DEBUG", ConsoleColor.Yellow, None)
+        LogLevel.Info, ("INFO", ConsoleColor.Green, None)
+        LogLevel.Warning, ("WARNING", ConsoleColor.DarkYellow, None)
+        LogLevel.Error, ("ERROR", ConsoleColor.Red, None)
+        LogLevel.Critical, ("CRITICAL", ConsoleColor.White, Some ConsoleColor.Red)
     ]
     |> Map.ofList
+
+let private parseLogLevel logLevel =
+    match logLevel with
+    | "Trace" -> LogLevel.Trace
+    | "Debug" -> LogLevel.Debug
+    | "Information" -> LogLevel.Info
+    | "Warning" -> LogLevel.Warning
+    | "Error" -> LogLevel.Error
+    | "Critical" -> LogLevel.Critical
+    | _ -> failwithf "Unknown Log Level: %s" logLevel
 
 type Logger(name: string, ?logLevel: LogLevel) =
 
     let logLevel =
         match logLevel with
         | Some level -> level
-        | None -> LogLevel.Info
+        | None -> Configuration.Logging.config.LogLevel.Default |> parseLogLevel
 
     member _.Log (logLevel, msg: string, ?ex: Exception) =
         let time = DateTime.UtcNow.ToString("HH:mm:ss")
-        let (label, foregroundColor) = logLevels[logLevel]
+        let (label, foregroundColor, backgroundColor) = logLevels[logLevel]
+
+        match backgroundColor with
+        | None -> ()
+        | Some color -> Console.BackgroundColor <- color
 
         print $"{time} [{name}] "
         Console.ForegroundColor <- foregroundColor
@@ -49,7 +66,6 @@ type Logger(name: string, ?logLevel: LogLevel) =
             printLine $"Exception message: {ex.Message}"
             printLine $"Stack trace: {ex.StackTrace}"
         | None -> printLine $"{msg}"
-
 
     member this.LogDebug (msg: string) =
         if logLevel <= LogLevel.Debug then
@@ -67,27 +83,24 @@ type Logger(name: string, ?logLevel: LogLevel) =
         if logLevel <= LogLevel.Warning then
             this.Log(LogLevel.Warning, msg)
 
-    member this.LogError (msg: string, ex: Exception) =
+    member this.LogError (msg: string, ?ex: Exception) =
         if logLevel <= LogLevel.Error then
-            this.Log(LogLevel.Error, msg, ex)
+            this.Log(LogLevel.Error, msg, Option.toObj ex)
+
+    member this.LogCritical (msg: string, ?ex: Exception) =
+        if logLevel <= LogLevel.Critical then
+            this.Log(LogLevel.Critical, msg, Option.toObj ex)
 
 let private loggers = new Dictionary<string, Logger>()
 
-let private getLogger name loglevel =
+let private getLogger name =
     if loggers.ContainsKey(name) then
         loggers[name]
     else
-        let logger = Logger(name, loglevel)
+        let logger = Logger(name)
         loggers.Add(name, logger)
         logger
 
-let createLogger<'a> loglevel =
-    match loglevel with
-    | None -> getLogger (typeof<'a>).Name LogLevel.Info
-    | Some level -> getLogger (typeof<'a>).Name level
+let createNamedLogger name = getLogger name
 
-
-let createNamedLogger name loglevel =
-    match loglevel with
-    | None -> getLogger name LogLevel.Info
-    | Some level -> getLogger name level
+let createLogger<'a> = createNamedLogger (typeof<'a>.Name)

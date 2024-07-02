@@ -3,7 +3,7 @@ module Chatbot.Shared
 open Chatbot.Configuration
 open Chatbot.Types
 
-let logger = Logging.createNamedLogger "Connection" (Some Logging.LogLevel.Trace)
+let logger = Logging.createNamedLogger "Connection"
 let botConfig = Bot.config
 
 let ircConnection =
