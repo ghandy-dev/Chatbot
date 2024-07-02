@@ -36,6 +36,7 @@ module Commands =
             Command.createCommand ("stream", [], HelpInfo.Stream, AsyncFunctionWithArgs stream, 15000, false)
             Command.createCommand ("time", [], HelpInfo.Time, SyncFunction time, 10000, false)
             Command.createCommand ("texttransform", [ "tt" ], HelpInfo.TextTransform, SyncFunctionWithArgs texttransform, 10000, false)
+            Command.createCommand ("topstreams", [ "ts" ], HelpInfo.TopStreams, AsyncFunction topStreams, 10000, false)
             Command.createCommand ("userid", [ "uid" ], HelpInfo.UserId, AsyncFunctionWithArgsAndContext userId, 10000, false)
             Command.createCommand ("vod", [], HelpInfo.Vod, AsyncFunctionWithArgs vod, 15000, false)
             Command.createCommand ("xd", [], HelpInfo.xd, SyncFunction xd, 30000, false)

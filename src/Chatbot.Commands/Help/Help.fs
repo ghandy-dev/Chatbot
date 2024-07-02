@@ -327,6 +327,16 @@ Examples:
 {exampleArgs "texttransform" "uppercase hello world!"}
 """
 
+    let TopStreams =
+        $"""
+Gets top 10 streams (by viewer count) on Twitch.
+Broadcaster - game (viewer count)
+
+Examples:
+
+{example "topstreams"}
+"""
+
     let UserId =
         $"""
 Gets a user's twitch id.
