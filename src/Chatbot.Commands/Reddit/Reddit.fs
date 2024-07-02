@@ -5,23 +5,23 @@ module Reddit =
 
     open Chatbot.Commands.Api.Reddit
 
-    let private sortings = [ "top" ; "hot" ; "best" ]
+    let private sortings = [ "top" ; "hot" ; "best" ] |> Set.ofList
 
-    let private valid args =
+    let private tryParseArgs args =
         match args with
         | [] -> Error "No subreddit specified"
-        | subreddit :: sort :: _ ->
-            if sortings |> List.contains sort then
+        | [ subreddit ] -> Ok(subreddit, "hot")
+        | sort :: subreddit :: _ ->
+            if sortings |> Set.contains sort then
                 Ok(subreddit, sort)
             else
                 let validSortings = String.concat ", " sortings
                 Error $"Valid sortings are {validSortings}"
-        | subreddit :: _ -> Ok(subreddit, "hot")
 
     let reddit (args: string list) =
         async {
             match!
-                valid args
+                tryParseArgs args
                 |> AsyncResult.zipAsyncSync (getAccessToken ())
                 |> AsyncResult.bind (fun (token, (subreddit, sort)) -> getPosts subreddit sort token)
             with
