@@ -8,10 +8,18 @@ module Ping =
     let private startTime =
         Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
 
+    let private platform = Environment.OSVersion.Platform
+    let private platformVersion = Environment.OSVersion.Version
+    let private processors = Environment.ProcessorCount
+    let private architecture = Runtime.InteropServices.RuntimeInformation.OSArchitecture
+    let private version = Environment.Version
+
     let ping () =
         let duration = (DateTime.UtcNow - startTime)
 
         let timeOnline =
             sprintf "%d hours, %d minutes, %d seconds" (duration.TotalHours |> int) duration.Minutes duration.Seconds
 
-        Ok <| Message $"Pong. Uptime: {timeOnline}"
+        Ok
+        <| Message
+            $"Pong. Uptime: {timeOnline}. Running on platform: {platform} {platformVersion}, processors: {processors}, architecture: {architecture}, dotnet version: {version}."
