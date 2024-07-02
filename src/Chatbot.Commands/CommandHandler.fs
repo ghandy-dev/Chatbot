@@ -112,8 +112,8 @@ let rec handleCommand userId username source message =
 
                                     return! executePipe "" commands
                             | Error err ->
-                                logger.LogWarning(err)
-                                return None
+                                logger.LogError(err)
+                                return Some <| (Message <| formatResponse err)
                         }
 
                     return response
