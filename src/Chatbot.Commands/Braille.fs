@@ -16,7 +16,7 @@ module Braille =
     let private conversions =
         [
             "luminance", (fun (s: SKColor) -> (0.299 * float s.Red) + (0.587 * float s.Green) + (0.114 * float s.Blue))
-            "average", (fun (s: SKColor) -> (s.Red + s.Green + s.Blue) |> float |> (/) 3.0)
+            "average", (fun (s: SKColor) -> ((s.Red + s.Green + s.Blue) |> float) / 3.0)
             "max", (fun (s: SKColor) -> [ s.Red ; s.Green ; s.Blue ] |> List.max |> float)
             "lightness",
             fun (s: SKColor) ->
