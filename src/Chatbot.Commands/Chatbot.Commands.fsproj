@@ -9,6 +9,9 @@
     <Compile Include="Logs/Api.fs" />
     <Compile Include="Logs/Logs.fs" />
     <Compile Include="Help/Help.fs" />
+    <Compile Include="Wikipedia/Types.fs" />
+    <Compile Include="Wikipedia/Api.fs" />
+    <Compile Include="Wikipedia/Wikipedia.fs" />
     <Compile Include="DallE/Types.fs" />
     <Compile Include="DallE/Api.fs" />
     <Compile Include="DallE/DallE.fs" />
@@ -37,6 +40,7 @@
     <Compile Include="Echo.fs" />
     <Compile Include="xd.fs" />
     <Compile Include="Pick.fs" />
+    <Compile Include="Encode.fs" />
     <Compile Include="TopStreams.fs" />
     <Compile Include="Pipe.fs" />
     <Compile Include="Alias.fs" />

@@ -122,6 +122,19 @@ Examples:
 {exampleArgs "echo" "Hello World!"}
 """
 
+    let Encode =
+        $"""
+Encode text transforming it to a different a different format.
+
+Examples:
+
+{exampleArgs "encode" "<encoder> <input>"}
+Encode using the caeser cipher with a 13 letter shift, re-applying this again to the encoded output decodes the text.
+{exampleArgs "encode" "rot13 Hello World!"}
+Encode input to base64.
+{exampleArgs "encode" "base64 forsen"}
+"""
+
     let FaceIt =
         $"""
 Get recent match stats, or recent history of wins and losses for games played on FaceIt for CS2.
@@ -359,6 +372,15 @@ Examples:
 
 {exampleArgs "vod" "<channel>"}
 {exampleArgs "vod" "forsen"}
+"""
+
+    let Wiki =
+        $"""
+Gets the top result wikipedia page for the specified query, along with a short summary of the page.
+
+Examples:
+
+{exampleArgs "wiki" "<query>"}
 """
 
     let xd =

@@ -30,20 +30,13 @@ type CommandResult = Result<CommandValue, string>
 
 type Parameters = string list
 
-type SyncFunction = unit -> CommandResult
-type AsyncFunction = unit -> Async<CommandResult>
-type SyncFunctionWithArgs = Parameters -> CommandResult
-type SyncFunctionWithArgsAndContext = Parameters -> Context -> CommandResult
-type AsyncFunctionWithArgs = Parameters -> Async<CommandResult>
-type AsyncFunctionWithArgsAndContext = Parameters -> Context -> Async<CommandResult>
-
 type CommandFunction =
-    | SyncFunction of SyncFunction
-    | SyncFunctionWithArgs of SyncFunctionWithArgs
-    | SyncFunctionWithArgsAndContext of SyncFunctionWithArgsAndContext
-    | AsyncFunction of AsyncFunction
-    | AsyncFunctionWithArgs of AsyncFunctionWithArgs
-    | AsyncFunctionWithArgsAndContext of AsyncFunctionWithArgsAndContext
+    | SyncFunction of (unit -> CommandResult)
+    | SyncFunctionWithArgs of (Parameters -> CommandResult)
+    | SyncFunctionWithArgsAndContext of (Parameters -> Context -> CommandResult)
+    | AsyncFunction of (unit -> Async<CommandResult>)
+    | AsyncFunctionWithArgs of (Parameters -> Async<CommandResult>)
+    | AsyncFunctionWithArgsAndContext of (Parameters -> Context -> Async<CommandResult>)
 
 type Command = {
     Name: string
