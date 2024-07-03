@@ -186,7 +186,7 @@ module Braille =
             match args with
             | [] -> return Error "No url specified."
             | [ url ] ->
-                match! internalBraille url "luminance" with
+                match! internalBraille "luminance" url with
                 | Error err -> return Error err
                 | Ok brailleAscii -> return Ok <| Message brailleAscii
             | setting :: url :: _ ->
