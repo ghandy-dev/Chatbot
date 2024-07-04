@@ -392,9 +392,7 @@ module Types =
 
     type ClearChatMessage = {
         Channel: string
-        User: string
         RoomId: string
-        TargetUserId: string
         TmiSentTimestamp: string
     }
 
@@ -578,23 +576,16 @@ module MessageMapping =
                 CapRequestEnabled = acknowledged
                 Capabilities = capabilities
             }
-
         | _ -> None
 
     let (|ClearChatCommand|_|) (message: IrcMessage) : ClearChatMessage option =
         match message.Command with
         | ClearChat ->
-            let parts = message.Parameters.Split(" ", 2)
-
             Some {
-                Channel = parts[0]
-                User = parts.[1].[1..]
+                Channel = message.Parameters[1..]
                 RoomId = message.Tags["room-id"]
-                TargetUserId = message.Tags["target-user-id"]
                 TmiSentTimestamp = message.Tags["tmi-sent-ts"]
             }
-
-
         | _ -> None
 
     let (|ClearMsgCommand|_|) (message: IrcMessage) : ClearMsgMessage option =
@@ -610,7 +601,6 @@ module MessageMapping =
                 TargetMsgId = message.Tags["target-msg-id"]
                 TmiSentTimestamp = message.Tags["tmi-sent-ts"]
             }
-
         | _ -> None
 
     let (|GlobalUserStateCommand|_|) (message: IrcMessage) : GlobalUserStateMessage option =
@@ -622,7 +612,6 @@ module MessageMapping =
                 Color = message.Tags["color"]
                 DisplayName = message.Tags["display-name"]
                 EmoteSets = parseEmoteSets message.Tags["emote-sets"]
-                // turbo = bitStringToBool message.tags["turbo"]
                 UserId = message.Tags["user-id"]
                 UserType = message.Tags["user-type"]
             }
