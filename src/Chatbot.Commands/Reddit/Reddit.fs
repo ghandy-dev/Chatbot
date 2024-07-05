@@ -24,16 +24,20 @@ module Reddit =
             match! tokenStore.GetToken TokenType.Reddit with
             | None -> return Error "Couldn't retrieve access token for Reddit API"
             | Some token ->
-                match!
-                    tryParseArgs args
-                    |> AsyncResult.bindAsyncSync (fun (subreddit, sort) -> getPosts subreddit sort token)
-                with
-                | Error error -> return Error error
-                | Ok posts ->
-                    let post =
-                        posts.Data.Children
-                        |> List.filter (fun p -> p.Data.Over18 = false && p.Data.IsSelf = false)
-                        |> fun ps -> ps[System.Random.Shared.Next(ps.Length)].Data
+                match! tryParseArgs args |> AsyncResult.bindAsyncSync (fun (subreddit, sort) -> getPosts subreddit sort token) with
+                | Error err -> return Error err
+                | Ok subreddit ->
+                    let posts = subreddit.Data.Children
 
-                    return Ok <| Message $"r/{post.Subreddit} \"{System.Web.HttpUtility.HtmlDecode post.Title}\" (+{post.Score}) {post.Url}"
+                    if posts.Length = 0 then
+                        return Ok <| Message "No posts found!"
+                    else
+                        let post =
+                            posts
+                            |> List.filter (fun p -> p.Data.Over18 = false && p.Data.IsSelf = false)
+                            |> fun ps -> ps[System.Random.Shared.Next(ps.Length)].Data
+
+                        return
+                            Ok
+                            <| Message $"r/{post.Subreddit} \"{System.Web.HttpUtility.HtmlDecode post.Title}\" (+{post.Score}) {post.Url}"
         }
