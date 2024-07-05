@@ -253,7 +253,7 @@ Examples:
 
     let RandomLine =
         $"""
-Gets a random line from yourself or a specified user from within the current channel.
+Gets a random line from anyone or a specified user from within the current channel.
 Only channels with logs available can be used.
 
 Examples:
@@ -265,7 +265,7 @@ Examples:
 
     let RandomQuote =
         $"""
-Gets a random quote from a user in the current channel.
+Gets a random quote from yourself from the current channel.
 Only channels with logs available can be used.
 
 Examples:
