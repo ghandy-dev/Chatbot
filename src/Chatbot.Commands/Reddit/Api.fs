@@ -17,41 +17,7 @@ module Reddit =
     [<Literal>]
     let private oAuthApiUrl = "https://oauth.reddit.com"
 
-    [<Literal>]
-    let private authUrl = "https://www.reddit.com/api/v1/access_token"
-
-    let mutable accessToken: AccessToken = Unchecked.defaultof<_>
-
     let userAgent = configuration.Item("UserAgent")
-
-    let getAccessToken () =
-        async {
-            if (box accessToken <> null) && accessToken.ExpiresAt > DateTime.UtcNow then
-                return Ok accessToken.AccessToken
-            else
-                use! response =
-                    http {
-                        POST authUrl
-                        Accept MimeTypes.applicationJson
-                        AuthorizationUserPw Reddit.config.ClientId Reddit.config.ClientSecret
-                        UserAgent userAgent
-                        body
-                        formUrlEncoded [ ("grant_type", "client_credentials") ]
-                    }
-                    |> sendAsync
-
-                match toResult response with
-                | Ok response ->
-                    let! oAuthToken = response |> deserializeJsonAsync<OAuthToken>
-
-                    accessToken <- {
-                        AccessToken = oAuthToken.AccessToken
-                        ExpiresAt = DateTime.UtcNow.AddSeconds(oAuthToken.ExpiresIn)
-                    }
-
-                    return Ok accessToken.AccessToken
-                | Error err -> return Error $"[{err.statusCode}] {err.reasonPhrase}: Failed to request access token."
-        }
 
     let getFromJsonAsync<'a> url accessToken =
         async {

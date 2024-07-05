@@ -1,9 +1,5 @@
 ﻿namespace Chatbot
 
-// module Assembly =
-//
-//     type Placeholder = Placeholder
-
 module Configuration =
 
     open Microsoft.Extensions.Configuration
@@ -15,11 +11,7 @@ module Configuration =
             .AddEnvironmentVariables()
             .AddJsonFile("appsettings.json", false, true)
             .AddEnvironmentVariables()
-            // .AddUserSecrets(System.Reflection.Assembly.GetExecutingAssembly(), optional = true, reloadOnChange = false)
-            // .AddCommandLine(System.Environment.GetCommandLineArgs())
             .Build()
-
-    let accessToken = configuration.GetValue<string>("AccessToken")
 
     module Logging =
 
@@ -48,6 +40,7 @@ module Configuration =
         type TwitchConfig = {
             ClientId: string
             ClientSecret: string
+            RefreshToken: string
         }
 
         let config = configuration.GetSection("Twitch").Get<TwitchConfig>()

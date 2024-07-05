@@ -43,14 +43,19 @@ let createIrcClient () =
 let authenticate (client: IrcClient) =
     async {
         logger.LogTrace "Authenticating..."
-        if (botConfig.Capabilities.Length > 0) then
-            logger.LogTrace "Requesting Capabilities..."
-            let capabilities = String.concat " " botConfig.Capabilities
-            do! client.WriteAsync($"CAP REQ :{capabilities}")
 
-        do! client.WriteAsync($"PASS oauth:{accessToken}")
-        do! client.WriteAsync($"NICK {botConfig.Botname}")
-        do! client.FlushAsync()
+        match! Authorization.tokenStore.GetToken Authorization.TokenType.Twitch with
+        | None -> failwithf "Couldn't retrieve access token for Twitch API"
+        | Some token ->
+
+            if (botConfig.Capabilities.Length > 0) then
+                logger.LogTrace "Requesting Capabilities..."
+                let capabilities = String.concat " " botConfig.Capabilities
+                do! client.WriteAsync($"CAP REQ :{capabilities}")
+
+            do! client.WriteAsync($"PASS oauth:{token}")
+            do! client.WriteAsync($"NICK {botConfig.Botname}")
+            do! client.FlushAsync()
     }
 
 let createBot (client: IrcClient) cancellationToken =
@@ -58,7 +63,9 @@ let createBot (client: IrcClient) cancellationToken =
     logger.LogTrace "Creating bot..."
 
     let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
-    let whisperRateLimiter = RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
+
+    let whisperRateLimiter =
+        RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
 
     let rec ircReader (client: IrcClient) (mb: MailboxProcessor<_>) (state: State) =
         async {
@@ -79,6 +86,7 @@ let createBot (client: IrcClient) cancellationToken =
 
                 let start (client: IrcClient) =
                     logger.LogTrace "Starting bot..."
+
                     async {
                         logger.LogTrace "Initialising state..."
                         let! state = init ()
@@ -114,17 +122,20 @@ let createBot (client: IrcClient) cancellationToken =
                                 match! HelixApi.Users.getUser (botConfig.Botname) |+-> TTVSharp.tryHead with
                                 | None -> do logger.LogError($"Could not look up own User {botConfig}", new Exception())
                                 | Some user ->
-                                    match! HelixApi.Whispers.sendWhisper user.Id wm.UserId wm.Message accessToken with
-                                    | 204 -> logger.LogInfo($"Whisper sent to {wm.Username}: {wm.Message}")
-                                    | 400 -> logger.LogInfo("Failed to send whisper. Bad request")
-                                    | 401 ->
-                                        logger.LogInfo(
-                                            "Failed to send whisper. Things to check: Verified phone number, user access token has user:manage:whispers"
-                                        )
-                                    | 403 -> logger.LogInfo("Failed to send whisper. Suspended or account can't send whispers")
-                                    | 404 -> logger.LogInfo("Failed to send whisper. Recipient user id was not found")
-                                    | 429 -> logger.LogInfo("Failed to send whisper. Exceeded rate limit")
-                                    | statusCode -> logger.LogInfo($"Unexpected response from Helix Whisper API: {statusCode}")
+                                    match! Authorization.tokenStore.GetToken Authorization.TokenType.Twitch with
+                                    | None -> logger.LogInfo("Failed to send whisper. Couldn't retrieve access token for Twitch API.")
+                                    | Some token ->
+                                        match! HelixApi.Whispers.sendWhisper user.Id wm.UserId wm.Message token with
+                                        | 204 -> logger.LogInfo($"Whisper sent to {wm.Username}: {wm.Message}")
+                                        | 400 -> logger.LogInfo("Failed to send whisper. Bad request")
+                                        | 401 ->
+                                            logger.LogInfo(
+                                                "Failed to send whisper. Things to check: Token refreshed, verified phone number, token has user:manage:whispers scope"
+                                            )
+                                        | 403 -> logger.LogInfo("Failed to send whisper. Suspended or account can't send whispers")
+                                        | 404 -> logger.LogInfo("Failed to send whisper. Recipient user id was not found")
+                                        | 429 -> logger.LogInfo("Failed to send whisper. Exceeded rate limit")
+                                        | statusCode -> logger.LogInfo($"Unexpected response from Helix Whisper API: {statusCode}")
                         | SendRawIrcMessage msg ->
                             logger.LogInfo($"Sending raw message: {msg}")
                             do! send msg client
