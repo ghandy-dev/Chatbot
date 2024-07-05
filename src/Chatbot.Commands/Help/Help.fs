@@ -15,6 +15,16 @@ module HelpInfo =
     let example = sprintf "%s %s" commandPrefix
     let exampleArgs = sprintf "%s %s %s" commandPrefix
 
+    let AddBetween =
+        $"""
+Insert a word (e.g. an emote) between each word in the input text.
+
+Examples:
+Add a new alias
+{exampleArgs "addbetween" "addbetween <word> <text>"}
+{exampleArgs "addbetween" "addbetween forsenE LET'S GO FORSEN"}
+"""
+
     let Alias =
         $"""
 Runs a command using a custom alias.
