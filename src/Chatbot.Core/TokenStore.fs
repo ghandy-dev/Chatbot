@@ -22,14 +22,14 @@ module Authorization =
         | Twitch
         | Reddit
 
-    let hasExpired dateTime = DateTime.UtcNow > dateTime
+    let private hasExpired dateTime = DateTime.UtcNow > dateTime
 
-    let maybeHasExpired dateTime =
+    let private maybeHasExpired dateTime =
         match dateTime with
         | None -> false
         | Some dateTime -> hasExpired dateTime
 
-    let getTwitchTokenAsync (authClient: OAuthClient) =
+    let private getTwitchTokenAsync (authClient: OAuthClient) =
         async {
             let refreshToken = Configuration.Twitch.config.RefreshToken
             let clientId = Configuration.Twitch.config.ClientId
@@ -45,7 +45,7 @@ module Authorization =
                 return Ok response.Token
         }
 
-    let getRedditTokenAsync () =
+    let private getRedditTokenAsync () =
         async {
             use! response =
                 let clientId = Configuration.Reddit.config.ClientId
