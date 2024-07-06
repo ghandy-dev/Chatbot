@@ -1,8 +1,8 @@
 [<RequireQualifiedAccess>]
 module Async
 
-let Create v = async { return v }
+let create v = async { return v }
 
-let Bind binder computation = async.Bind (computation, binder)
+let bind binder computation = async.Bind (computation, binder)
 
-let Map f a = Bind (f >> Create) a
+let map f a = bind (f >> create) a

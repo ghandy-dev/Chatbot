@@ -46,7 +46,7 @@ let zip a b =
         | Error error -> return Error error
     }
 
-let zipSyncAsync a b =
+let zipSyncAsync a (b: Async<Result<'c,'b>>) =
     async {
         match a with
         | Ok x ->
