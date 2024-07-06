@@ -80,7 +80,7 @@ module Authorization =
                 match tokenType with
                 | Twitch ->
                     match tokenStoreDict.TryGetValue(tokenType) with
-                    | true, token when maybeHasExpired token.ExpiresAt -> return Some token.AccessToken
+                    | true, token when not <| maybeHasExpired token.ExpiresAt -> return Some token.AccessToken
                     | _ ->
                         match! getTwitchTokenAsync authClient with
                         | Error err ->
@@ -91,7 +91,7 @@ module Authorization =
                             return Some token.AccessToken
                 | Reddit ->
                     match tokenStoreDict.TryGetValue(tokenType) with
-                    | true, token when maybeHasExpired token.ExpiresAt -> return Some token.AccessToken
+                    | true, token when not <| maybeHasExpired token.ExpiresAt -> return Some token.AccessToken
                     | _ ->
                         match! getRedditTokenAsync () with
                         | Error err ->
