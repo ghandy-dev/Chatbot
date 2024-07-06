@@ -13,21 +13,33 @@ module RandomClip =
                 helixApi.Clips.GetClipsAsync(new GetClipsRequestByBroadcasterId(BroadcasterId = user.Id, First = 50)) |> Async.AwaitTask
                 |+-> TTVSharp.toResult
             with
-            | Error error -> return Error error
+            | Error err -> return Error err
             | Ok response -> return Ok(response.Data |> Seq.toList)
         }
 
+    let private getUserResult username =
+        async {
+            return!
+                helixApi.Users.GetUsersAsync(new GetUsersRequest(Logins = [ username ])) |> Async.AwaitTask
+                |+-> TTVSharp.tryHeadResult "User not found."
+        }
+
+    let private getChannel args (context: Context) =
+        match context.Source with
+        | Whisper _ ->
+            match args with
+            | channel :: _ -> Ok channel
+            | _ -> Error "This command can only be executed from within the context of a channel"
+        | Channel channel ->
+            match args with
+            | [] -> Ok channel
+            | channel :: _ -> Ok channel
+
     let randomClip (args: string list) (context: Context) =
         async {
-            match context.Source with
-            | Whisper _ -> return Error "This command can only be executed from within the context of a channel"
-            | Channel channel ->
-                let channel =
-                    match args with
-                    | [] -> channel
-                    | channel :: _ -> channel
-
-                match! Users.getUser channel |+-> TTVSharp.tryHeadResult "User not found." |> AsyncResult.bind getClipsResult with
+            match! Async.create (getChannel args context)
+                |> AsyncResult.bind getUserResult
+                |> AsyncResult.bind getClipsResult with
                 | Ok clip ->
                     match clip with
                     | [] -> return Ok <| Message "No clips found."
