@@ -151,7 +151,7 @@ Get recent match stats, or recent history of wins and losses for games played on
 
 Examples:
 
-Get last game stats:
+Get last game stats (can't get live game info):
 {exampleArgs "faceit" "<player name>"}
 {exampleArgs "faceit" "FrozenBag"}
 
