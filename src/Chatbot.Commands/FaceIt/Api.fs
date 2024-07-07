@@ -9,9 +9,6 @@ module FaceIt =
     open FsHttp.Request
     open FsHttp.Response
 
-    open Matches
-    open Players
-
     [<Literal>]
     let private apiUrl = "https://open.faceit.com/data/v4"
 
@@ -22,7 +19,8 @@ module FaceIt =
     let private playerHistory playerId gameId limit =
         $"players/{playerId}/history?game={gameId}&limit={limit}"
 
-    let private matches matchId = $"/matches/{matchId}"
+    let private ``match`` matchId = $"/matches/{matchId}"
+    let private matchStats matchId = $"/matches/{matchId}/stats"
 
     let private getFromJsonAsync<'a> url =
         async {
@@ -44,29 +42,35 @@ module FaceIt =
     let getPlayer player =
         async {
             let url = $"{apiUrl}/{playerByName player}"
-            return! getFromJsonAsync<Player> url
+            return! getFromJsonAsync<Players.Player> url
         }
 
     let getPlayerById playerId =
         async {
             let url = $"{apiUrl}/{playerById playerId}"
-            return! getFromJsonAsync<Player> url
+            return! getFromJsonAsync<Players.Player> url
         }
 
     let getPlayerStats playerId =
         async {
             let url = $"""{apiUrl}/{playerStats playerId "cs2"}"""
-            return! getFromJsonAsync<PlayerStats> url
+            return! getFromJsonAsync<Players.PlayerStats> url
         }
 
     let getPlayerMatchHistory playerId limit =
         async {
             let url = $"""{apiUrl}/{playerHistory playerId "cs2" limit}"""
-            return! getFromJsonAsync<PlayerMatchHistory> url
+            return! getFromJsonAsync<Players.MatchHistory> url
         }
 
     let getMatch matchId =
         async {
-            let url = $"{apiUrl}/{matches matchId}"
-            return! getFromJsonAsync<Match> url
+            let url = $"{apiUrl}/{``match`` matchId}"
+            return! getFromJsonAsync<Matches.Match> url
+        }
+
+    let getMatchStats matchId =
+        async {
+            let url = $"{apiUrl}/{matchStats matchId}"
+            return! getFromJsonAsync<Matches.Stats.Match> url
         }

@@ -7,25 +7,25 @@ module FaceIt =
 
     open System
     open System.Text
-    open Chatbot
 
     let private stats playerName =
         async {
-            let! player = getPlayer playerName
 
-            match! player |> AsyncResult.bindAsyncSync (fun p -> getPlayerStats p.PlayerId) with
+            match! getPlayer playerName |> AsyncResult.bindZip (fun p -> getPlayerStats p.PlayerId) with
             | Error error -> return Error error
-            | Ok stats ->
+            | Ok(player, stats) ->
                 let recentResults =
                     stats.Lifetime.RecentResults |> List.map (fun r -> if r = "0" then "L" else "W") |> String.concat " "
 
                 let message =
                     (new StringBuilder())
-                        .Append($"Recent games: [{recentResults}] | ")
-                        .Append($"Current win streak: {stats.Lifetime.CurrentWinStreak} | ")
-                        .Append($"Longest win streak: {stats.Lifetime.LongestWinStreak} | ")
-                        .Append($"Matches played: {stats.Lifetime.Matches} | ")
-                        .Append($"Win rate: {stats.Lifetime.WinRate}%% | ")
+                        .Append($"Recent games: [{recentResults}], ")
+                        .Append($"""Elo: {player.Games["cs2"].FaceItElo}, """)
+                        .Append($"""Rank: Level {player.Games["cs2"].SkillLevel}, """)
+                        .Append($"Current win streak: {stats.Lifetime.CurrentWinStreak}, ")
+                        .Append($"Longest win streak: {stats.Lifetime.LongestWinStreak}, ")
+                        .Append($"Matches played: {stats.Lifetime.Matches}, ")
+                        .Append($"Win rate: {stats.Lifetime.WinRate}%%, ")
                         .Append($"Average K/D ratio: {stats.Lifetime.AverageKDRatio}")
                         .ToString()
 
@@ -34,27 +34,53 @@ module FaceIt =
 
     let private history playerName =
         async {
-            let! player = getPlayer playerName
-
-            match! player |> AsyncResult.bindZipResult (fun p -> getPlayerMatchHistory p.PlayerId 20) with
+            match! getPlayer playerName |> AsyncResult.bindZip (fun p -> getPlayerMatchHistory p.PlayerId 5) with
             | Error error -> return Error error
             | Ok(player, history) ->
 
-                let outcomes =
+                let! matches =
                     history.Items
-                    |> List.map (fun m -> m.Teams[m.Results.Winner].Players |> List.exists (fun p -> p.PlayerId = player.PlayerId))
-                    |> List.countBy id
-                    |> Map.ofList
+                    |> List.map (fun m -> m.MatchId)
+                    |> List.map getMatchStats
+                    |> Async.Parallel
+                    |> Async.bind (fun m -> m |> Array.map Result.toOption |> Async.create)
+                    |> Async.bind (fun m -> m |> Array.choose id |> Async.create)
 
-                let scores =
-                    history.Items |> List.map (fun m -> $"{m.Results.Score}") |> String.concat ", "
+                match matches |> List.ofArray with
+                | [] -> return Ok <| Message "No recent games played!"
+                | matches ->
 
-                let message =
-                    (new StringBuilder())
-                        .Append($"W/L: {outcomes[true]}/{outcomes[false]} | Recent scores: {scores}")
-                        .ToString()
+                    let matchResults =
+                        matches
+                        |> List.map (fun m ->
+                            m.Rounds
+                            |> List.map (fun r ->
+                                let winner = r.RoundStats.Winner
 
-                return Ok <| Message message
+                                r.Teams
+                                |> List.filter (fun t -> t.TeamId = winner)
+                                |> Seq.head
+                                |> (fun team -> team.Players |> List.exists (fun t -> t.PlayerId = player.PlayerId))
+                                |> (fun outcome -> if outcome then "Win" else "Loss")
+                            )
+                        )
+
+                    let scores =
+                        matches
+                        |> List.map (fun m ->
+                            m.Rounds
+                            |> List.map (fun r ->  $"Map: {r.RoundStats.Map}, Score: [{r.RoundStats.Score}]"))
+
+                    let results =
+                        List.zip3 matchResults scores history.Items
+                        |> List.map (fun (rs, ss, h) ->
+                            List.zip rs ss
+                            |> List.map (fun (result, stats) -> $"{DateTimeOffset.FromUnixTimeSeconds(h.FinishedAt).Date.ToShortDateString()} Result: {result}, {stats}")
+                            |> String.concat " | "
+                        )
+                        |> String.concat " | "
+
+                    return Ok <| Message results
         }
 
     let private lastGame playerName =
@@ -66,7 +92,7 @@ module FaceIt =
             | Ok(player, lastMatch) ->
 
                 match lastMatch.Items with
-                | [] -> return Ok <| Message "no matches played"
+                | [] -> return Ok <| Message "No matches played!"
                 | m :: _ ->
                     let playerTeam, otherTeam =
                         m.Teams
@@ -107,9 +133,9 @@ module FaceIt =
 
                         let winner =
                             if m.Results.Winner = (fst playerTeam) then
-                                $"winner: team_{player.Nickname}"
+                                $"Winner: team_{player.Nickname}"
                             else
-                                $"winner: {(snd otherTeam).Nickname}"
+                                $"Winner: {(snd otherTeam).Nickname}"
 
                         let teamElos =
                             players
@@ -125,12 +151,12 @@ module FaceIt =
 
                         let message =
                             (new StringBuilder())
-                                .Append($"map: {gameMap} | ")
-                                .Append($"game status: {m.Status} | ")
-                                .Append($"date: {date} | ")
-                                .Append($"duration: {durationFormatted} | ")
-                                .Append($"{winner} | ")
-                                .Append($"average elo: team_{player.Nickname} {teamElos[0]}, ")
+                                .Append($"Map: {gameMap}, ")
+                                .Append($"Game Status: {m.Status}, ")
+                                .Append($"Date: {date}, ")
+                                .Append($"Game Length: {durationFormatted}, ")
+                                .Append($"{winner}, ")
+                                .Append($"Average Elo: team_{player.Nickname} {teamElos[0]}, ")
                                 .Append($"{(snd otherTeam).Nickname}: {teamElos[1]}")
                                 .ToString()
 
