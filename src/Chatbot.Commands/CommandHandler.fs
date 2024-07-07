@@ -53,13 +53,10 @@ let private executeCommand command parameters context =
     }
 
 let private parseCommandAndParameters (message: string) =
-    let parts =
-        message.Split(" ", StringSplitOptions.RemoveEmptyEntries) |> List.ofArray
-
-    let command = parts[0]
-    let parameters = if parts.Length > 1 then parts[1..] else []
-
-    command, parameters
+    match message.Split(" ", StringSplitOptions.RemoveEmptyEntries) |> List.ofArray with
+    | [] -> failwith "No command?"
+    | [ command ] -> command, []
+    | command :: parameters -> command, parameters
 
 let private formatResponse (response: string) =
     if response.Length > 500 then
