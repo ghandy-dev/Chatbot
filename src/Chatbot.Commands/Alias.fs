@@ -14,7 +14,7 @@ module Alias =
             | None ->
                 match! add (Alias.create (userId |> int) name (String.concat " " command)) with
                 | DatabaseResult.Failure -> return Error "Error occured trying to add alias."
-                | DatabaseResult.Success 0 -> return Ok <| Message $"You already have alias {name}."
+                | DatabaseResult.Success 0 -> return Error $"You already have alias {name}."
                 | DatabaseResult.Success _ -> return Ok <| Message $"Alias {name} successfully added."
         }
 
@@ -22,7 +22,7 @@ module Alias =
         async {
             match! update (Alias.create (userId |> int) name (String.concat " " command)) with
             | DatabaseResult.Failure -> return Error "Error occurred trying to edit alias."
-            | DatabaseResult.Success 0 -> return Ok <| Message $"You don't have the alias {name}."
+            | DatabaseResult.Success 0 -> return Error $"You don't have the alias {name}."
             | DatabaseResult.Success _ -> return Ok <| Message $"Alias {name} successfully updated."
         }
 
@@ -30,21 +30,21 @@ module Alias =
         async {
             match! delete (userId |> int) name with
             | DatabaseResult.Failure -> return Error "Error occurred trying to delete alias."
-            | DatabaseResult.Success 0 -> return Ok <| Message $"You don't have the alias {name}."
+            | DatabaseResult.Success 0 -> return Error $"You don't have the alias {name}."
             | DatabaseResult.Success _ -> return Ok <| Message $"Alias {name} successfully removed."
         }
 
     let private get userId name =
         async {
             match! getByUserAndName (userId |> int) name with
-            | None -> return Ok <| Message $"You don't have the alias {name}."
+            | None -> return Error $"You don't have the alias {name}."
             | Some alias -> return Ok <| Message alias.Command
         }
 
     let private run userId name =
         async {
             match! getByUserAndName (userId |> int) name with
-            | None -> return Ok <| Message $"You don't have the alias {name}."
+            | None -> return Error $"You don't have the alias {name}."
             | Some alias -> return Ok <| RunAlias alias.Command
         }
 
@@ -59,5 +59,5 @@ module Alias =
             | "definition" :: name :: _ -> return! get context.UserId name
             | "run" :: name :: parameters
             | name :: parameters -> return! run context.UserId name
-            | [] -> return Ok <| Message "No definition provided"
+            | [] -> return Error "No definition provided"
         }

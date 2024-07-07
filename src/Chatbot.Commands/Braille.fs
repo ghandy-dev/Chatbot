@@ -172,7 +172,7 @@ module Braille =
             | Error _ -> return None
         }
 
-    let private internalBraille setting url =
+    let private internalBraille (url, setting) =
         async {
             match! getImage url with
             | None -> return Error "Couldn't retrieve image, invalid url provided, or an unsupported image format is used."
@@ -183,17 +183,16 @@ module Braille =
 
     let braille args =
         async {
-            match args with
-            | [] -> return Error "No url specified."
-            | [ url ] ->
-                match! internalBraille "luminance" url with
-                | Error err -> return Error err
-                | Ok brailleAscii -> return Ok <| Message brailleAscii
-            | setting :: url :: _ ->
-                match conversions |> Map.containsKey setting with
-                | false -> return Error "Unknown conversion."
-                | true ->
-                    match! internalBraille setting url with
-                    | Error err -> return Error err
-                    | Ok brailleAscii -> return Ok <| Message brailleAscii
+            let argsResult =
+                match args with
+                | [] -> Error "No url specified."
+                | [ url ] -> Ok("luminance", url)
+                | setting :: url :: _ ->
+                    match conversions.ContainsKey setting with
+                    | false -> Error "Unknown conversion specified."
+                    | true -> Ok(url, setting)
+
+            match! argsResult |> AsyncResult.bindAsyncSync internalBraille with
+            | Error err -> return Error err
+            | Ok brailleAscii -> return Ok <| Message brailleAscii
         }
