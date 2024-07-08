@@ -45,6 +45,6 @@ module RandomClip =
                     | [] -> return Ok <| Message "No clips found."
                     | clips ->
                         let clip = clips[System.Random.Shared.Next(clips.Length)]
-                        return Ok <| Message $"""\"{clip.Title}\" ({clip.ViewCount.ToString("N0")} views, {clip.CreatedAt.ToShortDateString()}) {clip.Url}"""
+                        return Ok <| Message $""""{clip.Title}" ({clip.ViewCount.ToString("N0")} views, {clip.CreatedAt.ToShortDateString()}) {clip.Url}"""
                 | Error error -> return Error error
         }
