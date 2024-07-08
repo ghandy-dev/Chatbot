@@ -154,6 +154,7 @@ let createBot (client: IrcClient) cancellationToken =
                             Logging.info "Twitch servers requested we reconnect..."
                             (client :> IDisposable).Dispose()
                             let client = createIrcClient ()
+                            do! authenticate client
                             do! start client
                             do! loop client
 
