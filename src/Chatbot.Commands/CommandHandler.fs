@@ -7,8 +7,6 @@ open Chatbot.Database.Types
 
 open System
 
-let private logger = Logging.createNamedLogger "Commands"
-
 let private users =
     new Collections.Concurrent.ConcurrentDictionary<(User * string), DateTime>()
 
@@ -44,11 +42,6 @@ let private isCooldownExpired user (command: Command) =
 let private executeCommand command parameters context =
     async {
         let! response = applyFunction command.Execute parameters context
-
-        match response with
-        | Error message -> logger.LogInfo $"error: {message}, command {command.Name}, failed. parameters: {parameters}, context: {context}"
-        | _ -> ()
-
         return response
     }
 
@@ -121,6 +114,6 @@ let safeHandleCommand userId username source message =
         try
             return! handleCommand userId username source message
         with ex ->
-            logger.LogError($"Error occured running command: User: {username} Source: {source} Message: {message}", ex)
+            Logging.error $"Unknown error occurred executing command" ex
             return None
     }

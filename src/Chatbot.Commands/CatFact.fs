@@ -30,6 +30,7 @@ module CatFacts =
                 let! fact = response |> deserializeJsonAsync<CatFact>
                 return Ok <| Message fact.Fact
             | Error response ->
+                // TODO: log errors like this, return something else?
                 let! rawResponse = toTextAsync response
                 return Error $"{response.statusCode} {rawResponse}"
         }

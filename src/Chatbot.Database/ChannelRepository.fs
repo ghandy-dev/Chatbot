@@ -2,8 +2,12 @@
 
 module ChannelRepository =
 
+    open Chatbot
+
     open DB
+
     open Dapper.FSharp.SQLite
+
     open Types
 
     let private mapChannelEntity (entity: Entities.Channel) : Channel = {
@@ -70,7 +74,7 @@ module ChannelRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                logger.LogError(ex.Message, ex)
+                Logging.error ex.Message ex
                 return DatabaseResult.Failure
         }
 
@@ -87,6 +91,6 @@ module ChannelRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                logger.LogError(ex.Message, ex)
+                Logging.error ex.Message ex
                 return DatabaseResult.Failure
         }

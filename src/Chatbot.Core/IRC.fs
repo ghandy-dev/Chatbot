@@ -57,7 +57,6 @@ type IrcClient(host: string, port: int) =
     [<Literal>]
     let readerufferSize = 10240
 
-    let logger = Logging.createLogger<IrcClient>
     let client = IRC.createTcpClient host port
     let stream = IRC.getSslStream client host
     let reader = IO.createStreamReader stream
@@ -79,9 +78,9 @@ type IrcClient(host: string, port: int) =
             try
                 do! IO.writeLineAsync writer message
             with
-            | :? ObjectDisposedException as ex -> logger.LogError("error in writeLineAsync", ex) |> ignore
-            | :? InvalidOperationException as ex -> logger.LogError("error in writeLineAsync", ex) |> ignore
-            | ex -> logger.LogError("error in writeLineAsync", ex) |> ignore
+            | :? ObjectDisposedException as ex -> Logging.error "error in writeLineAsync" ex |> ignore
+            | :? InvalidOperationException as ex -> Logging.error "error in writeLineAsync" ex |> ignore
+            | ex -> Logging.error "error in writeLineAsync" ex |> ignore
         }
 
     let flushAsync () =
@@ -89,9 +88,9 @@ type IrcClient(host: string, port: int) =
             try
                 do! IO.flushAsync writer
             with
-            | :? ObjectDisposedException as ex -> logger.LogError("error in flushAsync", ex) |> ignore
-            | :? InvalidOperationException as ex -> logger.LogError("error in flushAsync", ex) |> ignore
-            | ex -> logger.LogError("error in flushAsync", ex) |> ignore
+            | :? ObjectDisposedException as ex -> Logging.error "error in flushAsync" ex |> ignore
+            | :? InvalidOperationException as ex -> Logging.error "error in flushAsync" ex |> ignore
+            | ex -> Logging.error "error in flushAsync" ex |> ignore
         }
 
     let sendAsync (message: string) =

@@ -5,13 +5,12 @@ module Program =
     open System
     open System.Threading
 
-    let logger = Logging.createNamedLogger "Program"
     let cancellationTokenSource = new CancellationTokenSource()
     let cancellationToken = cancellationTokenSource.Token
 
     let cancelSubscription =
         Console.CancelKeyPress.Subscribe(fun args ->
-            logger.LogInfo "Cancellation Requested..."
+            Logging.info "Cancellation Requested..."
             args.Cancel <- true
             cancellationTokenSource.Cancel()
         )
@@ -20,14 +19,14 @@ module Program =
     let main args =
         try
             try
-                logger.LogInfo "Starting..."
+                Logging.info "Starting..."
                 Bot.run cancellationToken
                 Async.AwaitWaitHandle cancellationToken.WaitHandle |> ignore
             with ex ->
-                logger.LogError("Exception caught.", ex)
+                Logging.error "Exception caught" ex
         finally
             cancellationTokenSource.Token.WaitHandle.WaitOne() |> ignore
 
-        logger.LogInfo "Stopped."
+        Logging.info "Stopped."
 
         0

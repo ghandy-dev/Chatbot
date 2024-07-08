@@ -2,9 +2,14 @@
 
 module UserRepository =
 
+    open Chatbot
+
     open DB
+
     open Dapper.FSharp.SQLite
+
     open Types
+
 
     let private mapUserEntity (entity: Entities.User) : User = {
         UserId = entity.user_id
@@ -46,6 +51,6 @@ module UserRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                logger.LogError(ex.Message, ex)
+                Logging.error ex.Message ex
                 return DatabaseResult.Failure
         }

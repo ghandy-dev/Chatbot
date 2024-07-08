@@ -11,8 +11,6 @@ module DB =
     open Chatbot
     open Chatbot.Database
 
-    let logger = Logging.createNamedLogger "Database"
-
     let private connectionString = Chatbot.Configuration.ConnectionStrings.config.Database
 
     OptionTypes.register ()
@@ -24,7 +22,7 @@ module DB =
             conn.Open()
             conn
         with ex ->
-            logger.LogError(ex.Message, ex)
+            Logging.error ex.Message ex
             failwith (ex.Message)
 
     let internal users = table'<Entities.User> "users"

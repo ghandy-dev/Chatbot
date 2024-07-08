@@ -1,7 +1,6 @@
 module Chatbot.Bot
 
 open Chatbot
-open Chatbot.Configuration
 open Chatbot.Commands
 open Chatbot.IRC
 open Chatbot.MessageHandlers
@@ -10,6 +9,7 @@ open Chatbot.Shared
 open Chatbot.Types
 
 open System
+open Authorization
 
 type RoomState = {
     LastMessage: DateTime
@@ -25,16 +25,30 @@ type RoomState = {
 type State = {
     Channels: string list
     RoomStates: Map<string, RoomState>
+    BotUser: string
+    BotUserId: string
 }
 
 let init () =
     async {
         let! channels = Database.ChannelRepository.getAll () |+-> List.ofSeq |+-> List.map (fun c -> c.ChannelName)
+        let! maybeToken = tokenStore.GetToken(TokenType.Twitch)
 
-        return {
-            Channels = channels
-            RoomStates = Map.empty
-        }
+        match maybeToken with
+        | None -> return failwith "Could not retrieve token using ClientId and ClientSecret"
+        | Some token ->
+            let! response = HelixApi.helixApi.Users.GetUsersAsync(token) |> Async.AwaitTask
+            let maybeUser = response |> TTVSharp.tryHead
+
+            match maybeUser with
+            | None -> return failwith "No user associated with token?"
+            | Some user ->
+                return {
+                    Channels = channels
+                    RoomStates = Map.empty
+                    BotUser = user.DisplayName
+                    BotUserId = user.Id
+                }
     }
 
 let createIrcClient () =
@@ -42,14 +56,14 @@ let createIrcClient () =
 
 let authenticate (client: IrcClient) =
     async {
-        logger.LogTrace "Authenticating..."
+        Logging.trace "Authenticating..."
 
         match! Authorization.tokenStore.GetToken Authorization.TokenType.Twitch with
         | None -> failwithf "Couldn't retrieve access token for Twitch API"
         | Some token ->
 
             if (botConfig.Capabilities.Length > 0) then
-                logger.LogTrace "Requesting Capabilities..."
+                Logging.trace "Requesting Capabilities..."
                 let capabilities = String.concat " " botConfig.Capabilities
                 do! client.WriteAsync($"CAP REQ :{capabilities}")
 
@@ -60,7 +74,7 @@ let authenticate (client: IrcClient) =
 
 let createBot (client: IrcClient) cancellationToken =
 
-    logger.LogTrace "Creating bot..."
+    Logging.trace "Creating bot..."
 
     let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
 
@@ -72,34 +86,33 @@ let createBot (client: IrcClient) cancellationToken =
             match client.Connected with
             | true ->
                 match! client.ReadAsync cancellationToken with
-                | Some messages ->
-                    logger.LogInfo(messages.TrimEnd([| '\r' ; '\n' |]))
-                    do! handleMessages messages mb
+                | Some message ->
+                    Logging.info (message.Trim([| '\r' ; '\n' |]))
+                    do! handleMessage message mb
                     do! ircReader client mb state
                 | None -> () // if this happens then the client isn't connected
-            | false -> logger.LogInfo("IRC client disconnected.")
+            | false -> Logging.warning "IRC client disconnected."
         }
 
     new MailboxProcessor<ClientRequest>(
         (fun mb ->
             async {
 
+                let! state = init ()
+
                 let start (client: IrcClient) =
-                    logger.LogTrace "Starting bot..."
+                    Logging.trace "Starting bot..."
 
                     async {
-                        logger.LogTrace "Initialising state..."
-                        let! state = init ()
-
-                        logger.LogTrace "Joining channels..."
+                        Logging.trace "Joining channels..."
                         do! client.JoinChannels state.Channels
 
-                        logger.LogTrace "Starting reader..."
+                        Logging.trace "Starting reader..."
                         let! result = ircReader client mb state |> Async.StartChild |> Async.Catch
 
                         match result with
-                        | Choice1Of2 _ -> logger.LogTrace "Reader returned."
-                        | Choice2Of2 ex -> logger.LogError($"Exception occurred in {nameof (ircReader)}", ex)
+                        | Choice1Of2 _ -> Logging.trace "Reader returned."
+                        | Choice2Of2 ex -> Logging.error $"Exception occurred in {nameof (ircReader)}" ex
                     }
 
                 let send (message: string) (client: IrcClient) =
@@ -112,39 +125,33 @@ let createBot (client: IrcClient) cancellationToken =
                     async {
                         match! mb.Receive() with
                         | SendPongMessage pong ->
-                            logger.LogInfo($"Sending PONG :{pong}")
+                            Logging.info $"Sending PONG :{pong}"
                             do! client.PongAsync(pong)
                         | SendPrivateMessage pm ->
-                            logger.LogInfo($"Sending private message: #{pm.Channel} {pm.Message}")
+                            Logging.info $"Sending private message: #{pm.Channel} {pm.Message}"
                             do! client.SendPrivMessage(pm.Channel, pm.Message)
                         | SendWhisperMessage wm ->
                             if (whisperRateLimiter.CanSend()) then
-                                match! HelixApi.Users.getUser (botConfig.Botname) |+-> TTVSharp.tryHead with
-                                | None -> do logger.LogError($"Could not look up own User {botConfig}", new Exception())
-                                | Some user ->
-                                    match! Authorization.tokenStore.GetToken Authorization.TokenType.Twitch with
-                                    | None -> logger.LogInfo("Failed to send whisper. Couldn't retrieve access token for Twitch API.")
-                                    | Some token ->
-                                        match! HelixApi.Whispers.sendWhisper user.Id wm.UserId wm.Message token with
-                                        | 204 -> logger.LogInfo($"Whisper sent to {wm.Username}: {wm.Message}")
-                                        | 400 -> logger.LogInfo("Failed to send whisper. Bad request")
-                                        | 401 ->
-                                            logger.LogInfo(
-                                                "Failed to send whisper. Things to check: Token refreshed, verified phone number, token has user:manage:whispers scope"
-                                            )
-                                        | 403 -> logger.LogInfo("Failed to send whisper. Suspended or account can't send whispers")
-                                        | 404 -> logger.LogInfo("Failed to send whisper. Recipient user id was not found")
-                                        | 429 -> logger.LogInfo("Failed to send whisper. Exceeded rate limit")
-                                        | statusCode -> logger.LogInfo($"Unexpected response from Helix Whisper API: {statusCode}")
+                                match! Authorization.tokenStore.GetToken Authorization.TokenType.Twitch with
+                                | None -> Logging.info "Failed to send whisper. Couldn't retrieve access token for Twitch API."
+                                | Some token ->
+                                    match! HelixApi.Whispers.sendWhisper state.BotUserId wm.UserId wm.Message token with
+                                    | 204 -> Logging.info $"Whisper sent to {wm.Username}: {wm.Message}"
+                                    | 400 -> Logging.info "Failed to send whisper. Bad request"
+                                    | 401 -> Logging.info "Failed to send whisper. Things to check: Token refreshed, verified phone number, token has user:manage:whispers scope"
+                                    | 403 -> Logging.info "Failed to send whisper. Suspended or account can't send whispers"
+                                    | 404 -> Logging.info "Failed to send whisper. Recipient user id was not found"
+                                    | 429 -> Logging.info "Failed to send whisper. Exceeded rate limit"
+                                    | statusCode -> Logging.info $"Unexpected response from Helix Whisper API: {statusCode}"
                         | SendRawIrcMessage msg ->
-                            logger.LogInfo($"Sending raw message: {msg}")
+                            Logging.info $"Sending raw message: {msg}"
                             do! send msg client
                         | BotCommand command ->
                             match command with
                             | JoinChannel channel -> do! client.JoinChannel channel
                             | LeaveChannel channel -> do! client.PartChannel channel
                         | Reconnect ->
-                            logger.LogInfo("Twitch servers requested we reconnect...")
+                            Logging.info "Twitch servers requested we reconnect..."
                             (client :> IDisposable).Dispose()
                             let client = createIrcClient ()
                             do! start client

@@ -38,9 +38,8 @@ module Authorization =
             let! response = authClient.RefreshTokenAsync(clientId, clientSecret, refreshToken) |> Async.AwaitTask
 
             if response.Error <> null then
-                return
-                    Error
-                        $"Error occurred trying to refresh Twitch token. Status Code: {response.Error.Status}, Message: {response.Error.Message}"
+                let statusCode = enum<System.Net.HttpStatusCode> response.Error.Status
+                return Error (new System.Net.Http.HttpRequestException(response.Error.Message, null, statusCode))
             else
                 return Ok response.Token
         }
@@ -62,16 +61,15 @@ module Authorization =
                 |> sendAsync
 
             match toResult response with
-            | Error err -> return Error $"Error occurred trying to refresh Reddit token: Status Code: {err.statusCode |> int}"
+            | Error err ->
+                return Error (new System.Net.Http.HttpRequestException("", null, response.statusCode))
             | Ok response ->
                 let! token = response |> deserializeJsonAsync<AccessToken>
                 return Ok token
         }
 
-
     type TokenStore() =
 
-        let logger = Logging.createLogger<TokenStore>
         let authClient = new OAuthClient()
         let tokenStoreDict = ConcurrentDictionary<TokenType, AccessToken>()
 
@@ -84,7 +82,7 @@ module Authorization =
                     | _ ->
                         match! getTwitchTokenAsync authClient with
                         | Error err ->
-                            logger.LogError(err)
+                            Logging.error "Failed to get reddit access token" err
                             return None
                         | Ok token ->
                             tokenStoreDict[tokenType] <- { AccessToken = token.AccessToken ; ExpiresAt = Some token.ExpiresAt }
@@ -95,7 +93,7 @@ module Authorization =
                     | _ ->
                         match! getRedditTokenAsync () with
                         | Error err ->
-                            logger.LogError(err)
+                            Logging.error "Failed to get reddit access token" err
                             return None
                         | Ok token ->
                             tokenStoreDict[tokenType] <- { AccessToken = token.AccessToken ; ExpiresAt = token.ExpiresAt }

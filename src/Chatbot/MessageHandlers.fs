@@ -3,8 +3,8 @@ module Chatbot.MessageHandlers
 open Chatbot.Commands
 open Chatbot.Commands.Handler
 open Chatbot.IRC.Messages
-open Chatbot.Types
 open Chatbot.Shared
+open Chatbot.Types
 
 let privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProcessor<ClientRequest>) =
     async {
@@ -109,8 +109,8 @@ let messageHandler (msg) (mb: MailboxProcessor<_>) =
         | _ -> ()
     }
 
-let private parseMessages messages =
-    messages |> IRC.Parsing.Parser.parseIrcMessage |> Array.map MessageMapping.mapIrcMessage |> Array.choose id
+let private parseMessage message =
+    message |> IRC.Parsing.Parser.parseIrcMessage |> Array.map MessageMapping.mapIrcMessage |> Array.choose id
 
-let handleMessages messages (mb: MailboxProcessor<ClientRequest>) =
-    parseMessages messages |> Array.map (fun msg -> messageHandler msg mb) |> Async.Parallel |> Async.Ignore
+let handleMessage message (mb: MailboxProcessor<ClientRequest>) =
+    parseMessage message |> Array.map (fun msg -> messageHandler msg mb) |> Async.Parallel |> Async.Ignore

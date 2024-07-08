@@ -2,8 +2,12 @@
 
 module AliasRepository =
 
+    open Chatbot
+
     open DB
+
     open Dapper.FSharp.SQLite
+
     open Types
 
     let private mapAliasEntity (entity: Entities.Alias) : Alias = {
@@ -48,7 +52,7 @@ module AliasRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                logger.LogError(ex.Message, ex)
+                Logging.error ex.Message ex
                 return DatabaseResult.Failure
         }
 
@@ -69,7 +73,7 @@ module AliasRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                logger.LogError(ex.Message, ex)
+                Logging.error ex.Message ex
                 return DatabaseResult.Failure
         }
 
@@ -86,6 +90,6 @@ module AliasRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                logger.LogError(ex.Message, ex)
+                Logging.error ex.Message ex
                 return DatabaseResult.Failure
         }

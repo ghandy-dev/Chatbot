@@ -171,6 +171,6 @@ module FaceIt =
                 match command with
                 | "stats" -> return! stats player
                 | "history" -> return! history player
-                | _ -> return Error "unknown subcommand"
+                | _ -> return Error "Unknown subcommand."
             | player :: _ -> return! lastGame player
         }

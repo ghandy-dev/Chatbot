@@ -6,28 +6,39 @@ open System.Collections.Generic
 
 [<RequireQualifiedAccess>]
 type LogLevel =
-    | Trace = 0
-    | Debug = 1
-    | Info = 2
-    | Warning = 3
-    | Error = 4
-    | Critical = 5
-    | None = 6
+    | Trace
+    | Debug
+    | Info
+    | Warning
+    | Error
+    | Critical
 
-let private print value = Console.Write($"{value}")
+    member x.toInt () =
+        x
+        |> function
+            | Trace -> 1
+            | Debug -> 2
+            | Info -> 3
+            | Warning -> 4
+            | Error -> 5
+            | Critical -> 6
 
-let private printLine value = Console.WriteLine($"{value}")
+    override x.ToString () =
+        x
+        |> function
+            | Trace -> "Trace"
+            | Debug -> "Debug"
+            | Info -> "Info"
+            | Warning -> "Warning"
+            | Error -> "Error"
+            | Critical -> "Critical"
 
-let private logLevels =
-    [
-        LogLevel.Trace, ("TRACE", ConsoleColor.Cyan, None)
-        LogLevel.Debug, ("DEBUG", ConsoleColor.Yellow, None)
-        LogLevel.Info, ("INFO", ConsoleColor.Green, None)
-        LogLevel.Warning, ("WARNING", ConsoleColor.DarkYellow, None)
-        LogLevel.Error, ("ERROR", ConsoleColor.Red, None)
-        LogLevel.Critical, ("CRITICAL", ConsoleColor.White, Some ConsoleColor.Red)
-    ]
-    |> Map.ofList
+type LogEntry = {
+    Timestamp: DateTime
+    Level: LogLevel
+    Message: string
+    Exception: Exception option
+}
 
 let private parseLogLevel logLevel =
     match logLevel with
@@ -39,68 +50,55 @@ let private parseLogLevel logLevel =
     | "Critical" -> LogLevel.Critical
     | _ -> failwithf "Unknown Log Level: %s" logLevel
 
-type Logger(name: string, ?logLevel: LogLevel) =
+let private defaultLogLevel = LogLevel.Info
 
-    let logLevel =
-        match logLevel with
-        | Some level -> level
-        | None -> Configuration.Logging.config.LogLevel.Default |> parseLogLevel
+let currentLogLevel = parseLogLevel Configuration.Logging.config.LogLevel.Default
 
-    member _.Log (logLevel, msg: string, ?ex: Exception) =
-        let time = DateTime.UtcNow.ToString("HH:mm:ss")
-        let (label, foregroundColor, backgroundColor) = logLevels[logLevel]
+let private toColor logLevel =
+    match logLevel with
+    | LogLevel.Trace -> ConsoleColor.Cyan, None
+    | LogLevel.Debug -> ConsoleColor.Yellow, None
+    | LogLevel.Info -> ConsoleColor.Green, None
+    | LogLevel.Warning -> ConsoleColor.DarkYellow, None
+    | LogLevel.Error -> ConsoleColor.Red, None
+    | LogLevel.Critical -> ConsoleColor.White, Some ConsoleColor.Red
 
-        match backgroundColor with
-        | None -> ()
-        | Some color -> Console.BackgroundColor <- color
+let private shouldLog (logLevel: LogLevel) =
+    match currentLogLevel with
+    | LogLevel.Trace -> true
+    | LogLevel.Debug -> logLevel >= LogLevel.Debug
+    | LogLevel.Info -> logLevel >= LogLevel.Info
+    | LogLevel.Warning -> logLevel >= LogLevel.Warning
+    | LogLevel.Error -> logLevel >= LogLevel.Error
+    | LogLevel.Critical -> logLevel >= LogLevel.Critical
 
-        print $"{time} [{name}] "
-        Console.ForegroundColor <- foregroundColor
-        print $"[{label}]"
-        Console.ResetColor()
-        print " "
+let private logEntry entry =
+    let foregroundColor, backgroundColor = toColor entry.Level
 
-        match ex with
-        | Some ex ->
-            printLine $"{msg}"
-            printLine $"Exception message: {ex.Message}"
-            printLine $"Stack trace: {ex.StackTrace}"
-        | None -> printLine $"{msg}"
+    printf "[%s] " (entry.Timestamp.ToString("yyyy/MM/dd HH:mm:ss"))
+    Console.ForegroundColor <- foregroundColor
+    match backgroundColor with
+    | None -> ()
+    | Some color -> Console.BackgroundColor <- color
+    printf "[%A]: " entry.Level
+    Console.ResetColor()
+    printfn "%s" entry.Message
 
-    member this.LogDebug (msg: string) =
-        if logLevel <= LogLevel.Debug then
-            this.Log(LogLevel.Debug, msg)
+let private log logLevel message ex =
+    let entry = {
+        Timestamp = DateTime.UtcNow
+        Level = logLevel
+        Message = message
+        Exception = ex
+    }
 
-    member this.LogTrace (msg: string) =
-        if logLevel <= LogLevel.Trace then
-            this.Log(LogLevel.Trace, msg)
+    match shouldLog logLevel with
+    | true -> logEntry entry
+    | false -> ()
 
-    member this.LogInfo (msg: string) =
-        if logLevel <= LogLevel.Info then
-            this.Log(LogLevel.Info, msg)
-
-    member this.LogWarning (msg: string) =
-        if logLevel <= LogLevel.Warning then
-            this.Log(LogLevel.Warning, msg)
-
-    member this.LogError (msg: string, ?ex: Exception) =
-        if logLevel <= LogLevel.Error then
-            this.Log(LogLevel.Error, msg, Option.toObj ex)
-
-    member this.LogCritical (msg: string, ?ex: Exception) =
-        if logLevel <= LogLevel.Critical then
-            this.Log(LogLevel.Critical, msg, Option.toObj ex)
-
-let private loggers = new Dictionary<string, Logger>()
-
-let private getLogger name =
-    if loggers.ContainsKey(name) then
-        loggers[name]
-    else
-        let logger = Logger(name)
-        loggers.Add(name, logger)
-        logger
-
-let createNamedLogger name = getLogger name
-
-let createLogger<'a> = createNamedLogger (typeof<'a>.Name)
+let trace msg = log LogLevel.Trace msg None
+let debug msg = log LogLevel.Debug msg None
+let info msg = log LogLevel.Info msg None
+let warning msg = log LogLevel.Warning msg None
+let error msg ex = log LogLevel.Error msg (Some ex)
+let critical msg ex = log LogLevel.Critical msg (Some ex)
