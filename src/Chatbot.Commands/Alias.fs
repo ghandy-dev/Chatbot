@@ -10,41 +10,41 @@ module Alias =
     let private add userId name command =
         async {
             match! getByUserAndName (userId |> int) name with
-            | Some _ -> return Ok <| Message $"Alias {name} already exists."
+            | Some _ -> return Ok <| Message $"Alias {name} already exists"
             | None ->
                 match! add (Alias.create (userId |> int) name (String.concat " " command)) with
-                | DatabaseResult.Failure -> return Error "Error occured trying to add alias."
-                | DatabaseResult.Success 0 -> return Error $"You already have alias {name}."
-                | DatabaseResult.Success _ -> return Ok <| Message $"Alias {name} successfully added."
+                | DatabaseResult.Failure -> return Error "Error occured trying to add alias"
+                | DatabaseResult.Success 0 -> return Error $"You already have alias {name}"
+                | DatabaseResult.Success _ -> return Ok <| Message $"Alias {name} successfully added"
         }
 
     let private edit userId name command =
         async {
             match! update (Alias.create (userId |> int) name (String.concat " " command)) with
-            | DatabaseResult.Failure -> return Error "Error occurred trying to edit alias."
-            | DatabaseResult.Success 0 -> return Error $"You don't have the alias {name}."
-            | DatabaseResult.Success _ -> return Ok <| Message $"Alias {name} successfully updated."
+            | DatabaseResult.Failure -> return Error "Error occurred trying to edit alias"
+            | DatabaseResult.Success 0 -> return Error $"You don't have the alias {name}"
+            | DatabaseResult.Success _ -> return Ok <| Message $"Alias {name} successfully updated"
         }
 
     let private delete userId name =
         async {
             match! delete (userId |> int) name with
-            | DatabaseResult.Failure -> return Error "Error occurred trying to delete alias."
-            | DatabaseResult.Success 0 -> return Error $"You don't have the alias {name}."
-            | DatabaseResult.Success _ -> return Ok <| Message $"Alias {name} successfully removed."
+            | DatabaseResult.Failure -> return Error "Error occurred trying to delete alias"
+            | DatabaseResult.Success 0 -> return Error $"You don't have the alias {name}"
+            | DatabaseResult.Success _ -> return Ok <| Message $"Alias {name} successfully removed"
         }
 
     let private get userId name =
         async {
             match! getByUserAndName (userId |> int) name with
-            | None -> return Error $"You don't have the alias {name}."
+            | None -> return Error $"You don't have the alias {name}"
             | Some alias -> return Ok <| Message alias.Command
         }
 
     let private run userId name parameters =
         async {
             match! getByUserAndName (userId |> int) name with
-            | None -> return Error $"You don't have the alias {name}."
+            | None -> return Error $"You don't have the alias {name}"
             | Some alias -> return Ok <| RunAlias (alias.Command, parameters)
         }
 
