@@ -11,7 +11,16 @@ module Braille =
     open FsHttp.Request
     open FsHttp.Response
 
-    let private offsets = [ 1 ; 8 ; 2 ; 16 ; 4 ; 32 ; 64 ; 128 ]
+    let private offsets = [
+        (0, 0, 1)
+        (0, 1, 2)
+        (0, 2, 4)
+        (1, 0, 8)
+        (1, 1, 16)
+        (1, 2, 32)
+        (0, 3, 64)
+        (1, 3, 128)
+    ]
 
     let private conversions =
         [
@@ -40,36 +49,20 @@ module Braille =
         average / (float bitmap.Height * float bitmap.Width)
 
     let private toBraille (bitmap: SKBitmap) x y f average : int =
-        let mutable brailleValue = 10240
+        let initialBrailleValue = 10240
 
-        if getPixelValue bitmap x y f > average then
-            brailleValue <- brailleValue + offsets[0]
+        let brailleValue =
+            offsets
+            |> List.fold
+                (fun acc (dx, dy, offsetValue) ->
+                    if getPixelValue bitmap (x + dx) (y + dy) f > average then
+                        acc + offsetValue
+                    else
+                        acc
+                )
+                initialBrailleValue
 
-        if getPixelValue bitmap (x + 1) y f > average then
-            brailleValue <- brailleValue + offsets[1]
-
-        if getPixelValue bitmap x (y + 1) f > average then
-            brailleValue <- brailleValue + offsets[2]
-
-        if getPixelValue bitmap (x + 1) (y + 1) f > average then
-            brailleValue <- brailleValue + offsets[3]
-
-        if getPixelValue bitmap x (y + 2) f > average then
-            brailleValue <- brailleValue + offsets[4]
-
-        if getPixelValue bitmap (x + 1) (y + 2) f > average then
-            brailleValue <- brailleValue + offsets[5]
-
-        if getPixelValue bitmap x (y + 3) f > average then
-            brailleValue <- brailleValue + offsets[6]
-
-        if getPixelValue bitmap (x + 1) (y + 3) f > average then
-            brailleValue <- brailleValue + offsets[7]
-
-        if brailleValue = 10240 then
-            brailleValue <- 10241
-
-        brailleValue
+        if brailleValue = 10240 then 10241 else brailleValue
 
     let private roundUpToMultiple number x = number - (number % x)
 
@@ -175,7 +168,7 @@ module Braille =
     let private internalBraille (url, setting) =
         async {
             match! getImage url with
-            | None -> return Error "Couldn't retrieve image, invalid url provided, or an unsupported image format is used."
+            | None -> return Error "Couldn't retrieve image, invalid url provided, or an unsupported image format is used"
             | Some image ->
                 let braille = imageToBraille 32 image setting
                 return Ok braille
@@ -185,11 +178,11 @@ module Braille =
         async {
             let argsResult =
                 match args with
-                | [] -> Error "No url specified."
-                | [ url ] -> Ok("luminance", url)
+                | [] -> Error "No url specified"
+                | [ url ] -> Ok(url, "luminance")
                 | setting :: url :: _ ->
                     match conversions.ContainsKey setting with
-                    | false -> Error "Unknown conversion specified."
+                    | false -> Error "Unknown conversion specified"
                     | true -> Ok(url, setting)
 
             match! argsResult |> AsyncResult.bindAsyncSync internalBraille with
