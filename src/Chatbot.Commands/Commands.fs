@@ -29,7 +29,7 @@ module Commands =
             Command.createCommand ("joinchannel", [], HelpInfo.JoinChannel, AsyncFunctionWithArgs joinChannel, 5000, true)
             Command.createCommand ("leavechannel", [], HelpInfo.LeaveChannel, AsyncFunctionWithArgs leaveChannel, 5000, true)
             Command.createCommand ("namecolor", [ "color" ], HelpInfo.NameColor, AsyncFunctionWithArgsAndContext namecolor, 20000, false)
-            Command.createCommand ("pick", [], HelpInfo.Pick, AsyncFunctionWithArgsAndContext randomQuote, 10000, false)
+            Command.createCommand ("pick", [], HelpInfo.Pick, SyncFunctionWithArgs pick, 10000, false)
             Command.createCommand ("pipe", [], HelpInfo.Pipe, SyncFunctionWithArgs pipe, 10000, false)
             Command.createCommand ("ping", [], HelpInfo.Ping, SyncFunction ping, 5000, false)
             Command.createCommand ("randomclip", [ "rc" ], HelpInfo.RandomClip, AsyncFunctionWithArgsAndContext randomClip, 20000, false)

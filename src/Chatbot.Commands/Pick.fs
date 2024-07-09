@@ -10,7 +10,7 @@ module Pick =
 
     let pick args =
         match args with
-        | [] -> Error "No items provided."
+        | [] -> Error "No items provided"
         | head :: tail ->
             let delimiterPattern = @"^delimiter:(.+)$"
             let m = Regex.Match(head, delimiterPattern)
@@ -25,4 +25,4 @@ module Pick =
                     items |> List.ofArray
 
             let index = random.Next items.Length
-            Ok $"{items[index]}"
+            Ok <| Message $"{items[index]}"
