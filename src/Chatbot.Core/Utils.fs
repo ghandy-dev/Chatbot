@@ -26,6 +26,12 @@ module Text =
 
     open System.Text.RegularExpressions
 
+    let formatString (format: string) (args: string list) =
+        let pattern = @"\{(\d+)\}"
+        Regex.Replace(format, pattern, fun m ->
+            let index = int m.Groups.[1].Value
+            args.[index])
+
     let private parseKeyValuePair (m: Match) =
         m.Value.Split(":")
         |> (fun pair ->

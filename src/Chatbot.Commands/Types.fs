@@ -22,7 +22,7 @@ type BotCommand =
 
 type CommandValue =
     | Message of string
-    | RunAlias of string
+    | RunAlias of string * string list
     | Pipe of string list
     | BotAction of BotCommand * string
 

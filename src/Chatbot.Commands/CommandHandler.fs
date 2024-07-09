@@ -81,8 +81,10 @@ let rec handleCommand userId username source message =
                                 match value with
                                 | Message message -> return Some <| (Message <| formatResponse message)
                                 | BotAction(action, message) -> return Some <| BotAction(action, formatResponse message)
-                                | RunAlias command ->
-                                    match! handleCommand userId username source command with
+                                | RunAlias(command, parameters) ->
+                                    let formattedCommand = Utils.Text.formatString command parameters
+
+                                    match! handleCommand userId username source formattedCommand with
                                     | None -> return None
                                     | Some(response) -> return Some response
                                 | Pipe commands ->

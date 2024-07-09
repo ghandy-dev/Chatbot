@@ -41,11 +41,11 @@ module Alias =
             | Some alias -> return Ok <| Message alias.Command
         }
 
-    let private run userId name =
+    let private run userId name parameters =
         async {
             match! getByUserAndName (userId |> int) name with
             | None -> return Error $"You don't have the alias {name}."
-            | Some alias -> return Ok <| RunAlias alias.Command
+            | Some alias -> return Ok <| RunAlias (alias.Command, parameters)
         }
 
     let alias args (context: Context) =
@@ -58,6 +58,6 @@ module Alias =
             | "update" :: name :: command -> return! edit context.UserId name command
             | "definition" :: name :: _ -> return! get context.UserId name
             | "run" :: name :: parameters
-            | name :: parameters -> return! run context.UserId name
+            | name :: parameters -> return! run context.UserId name parameters
             | [] -> return Error "No definition provided"
         }
