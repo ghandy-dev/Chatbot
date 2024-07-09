@@ -111,7 +111,7 @@ let createBot (client: IrcClient) cancellationToken =
                         let! result = ircReader client mb state |> Async.StartChild |> Async.Catch
 
                         match result with
-                        | Choice1Of2 _ -> Logging.trace "Reader returned."
+                        | Choice1Of2 _ -> Logging.trace "Reader started."
                         | Choice2Of2 ex -> Logging.error $"Exception occurred in {nameof (ircReader)}" ex
                     }
 
