@@ -1,8 +1,9 @@
-namespace Chatbot.Commands.Api
+namespace Chatbot.Commands.DallE
 
-module DallE =
+module Api =
 
-    open Chatbot.Commands.Types.DallE
+    open Types.Image
+    open Types.Text
     open Chatbot.Configuration
 
     open FsHttp
@@ -37,7 +38,7 @@ module DallE =
     let getImage size prompt =
         async {
             let request = {
-                model = "dall-e-3"
+                model = DallE3
                 prompt = prompt
                 n = 1
                 size = size

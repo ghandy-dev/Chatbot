@@ -1,11 +1,12 @@
-namespace Chatbot.Commands
+namespace Chatbot.Commands.DallE
 
 [<AutoOpen>]
 module DallE =
 
     open System
-    open Chatbot.Commands.Api.DallE
-    open Utils.Parsing
+
+    open Api
+    open Utils
 
     let private toSize =
         function
@@ -22,7 +23,7 @@ module DallE =
             | [] -> return Error $"Usage: >dalle <your prompt here>"
             | _ ->
                 let values =
-                    parseKeyValuePairs (String.Join("", args))
+                    Text.parseKeyValuePairs (String.Join("", args))
                     |> Map.change
                         "size"
                         (fun k ->
