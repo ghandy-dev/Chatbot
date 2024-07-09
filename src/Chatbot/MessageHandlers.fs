@@ -6,7 +6,7 @@ open Chatbot.IRC.Messages
 open Chatbot.Shared
 open Chatbot.Types
 
-let privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProcessor<ClientRequest>) =
+let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProcessor<ClientRequest>) =
     async {
         match msg.Message.StartsWith(botConfig.CommandPrefix) with
         | true ->
@@ -37,7 +37,7 @@ let privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProcessor<Clie
         | false -> ()
     }
 
-let whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProcessor<_>) =
+let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProcessor<_>) =
     async {
         match msg.Message.StartsWith(botConfig.CommandPrefix) with
         | true ->
@@ -70,7 +70,7 @@ let whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProcessor<_>) 
         | false -> ()
     }
 
-let roomStateMessageHandler (roomStateMsg: Types.RoomStateMessage) =
+let private roomStateMessageHandler (roomStateMsg: Types.RoomStateMessage) =
     match roomStates.TryFind roomStateMsg.RoomId with
     | None ->
         let roomState =
