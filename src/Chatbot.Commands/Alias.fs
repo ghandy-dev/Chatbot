@@ -50,7 +50,7 @@ module Alias =
 
     let alias args (context: Context) =
         async {
-            match args |> List.ofSeq with
+            match args with
             | "add" :: name :: command -> return! add context.UserId name command
             | "remove" :: name :: _
             | "delete" :: name :: _ -> return! delete context.UserId name
