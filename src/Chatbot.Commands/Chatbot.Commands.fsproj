@@ -12,9 +12,9 @@
     <Compile Include="Wikipedia/Types.fs" />
     <Compile Include="Wikipedia/Api.fs" />
     <Compile Include="Wikipedia/Wikipedia.fs" />
-    <Compile Include="DallE/Types.fs" />
-    <Compile Include="DallE/Api.fs" />
-    <Compile Include="DallE/DallE.fs" />
+    <Compile Include="OpenAI/Types.fs" />
+    <Compile Include="OpenAI/Api.fs" />
+    <Compile Include="OpenAI/OpenAI.fs" />
     <Compile Include="FaceIt/Types.fs" />
     <Compile Include="FaceIt/Api.fs" />
     <Compile Include="FaceIt/FaceIt.fs" />
