@@ -21,7 +21,7 @@ module RandomClip =
         async {
             return!
                 helixApi.Users.GetUsersAsync(new GetUsersRequest(Logins = [ username ])) |> Async.AwaitTask
-                |+-> TTVSharp.tryHeadResult "User not found."
+                |+-> TTVSharp.tryHeadResult "User not found"
         }
 
     let private getChannel args (context: Context) =
@@ -42,7 +42,7 @@ module RandomClip =
                 |> AsyncResult.bind getClipsResult with
                 | Ok clip ->
                     match clip with
-                    | [] -> return Ok <| Message "No clips found."
+                    | [] -> return Ok <| Message "No clips found"
                     | clips ->
                         let clip = clips[System.Random.Shared.Next(clips.Length)]
                         return Ok <| Message $""""{clip.Title}" ({clip.ViewCount.ToString("N0")} views, {clip.CreatedAt.ToShortDateString()}) {clip.Url}"""

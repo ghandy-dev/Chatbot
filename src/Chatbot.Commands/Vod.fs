@@ -19,7 +19,7 @@ module Vod =
     let vod args =
         async {
             match args with
-            | [] -> return Error "No channel specified."
+            | [] -> return Error "No channel specified"
             | channel :: _ ->
                 match! Users.getUser channel |+-> TTVSharp.tryHeadResult "User not found." |> AsyncResult.bind latestVod with
                 | Ok video -> return Ok <| Message $"\"{video.Title}\" {video.CreatedAt.ToShortDateString()} {video.Url} [{video.Duration}]"

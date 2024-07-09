@@ -7,7 +7,7 @@ open Chatbot.Database.Types
 
 open System
 
-let private users =
+let private userCommandCooldowns =
     new Collections.Concurrent.ConcurrentDictionary<(User * string), DateTime>()
 
 let private applyFunction =
@@ -34,7 +34,7 @@ let private getUser userId username =
 
 let private isCooldownExpired user (command: Command) =
     let lastCommandTime =
-        users.GetOrAdd((user, command.Name), (fun _ -> DateTime.MinValue.ToUniversalTime()))
+        userCommandCooldowns.GetOrAdd((user, command.Name), (fun _ -> DateTime.MinValue.ToUniversalTime()))
 
     let timeSinceLastCommand = DateTime.UtcNow - lastCommandTime
     timeSinceLastCommand.TotalMilliseconds > command.Cooldown
@@ -67,7 +67,7 @@ let rec handleCommand userId username source message =
         | None -> return None
         | Some command ->
             if isCooldownExpired user command then
-                users[(user, command.Name)] <- DateTime.UtcNow
+                userCommandCooldowns[(user, command.Name)] <- DateTime.UtcNow
 
                 if (command.AdminOnly && not user.IsAdmin) then
                     return None
@@ -114,6 +114,6 @@ let safeHandleCommand userId username source message =
         try
             return! handleCommand userId username source message
         with ex ->
-            Logging.error $"Unknown error occurred executing command" ex
+            Logging.error $"Error occurred executing command" ex
             return None
     }

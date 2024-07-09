@@ -5,7 +5,7 @@ module AddBetween =
 
     let addBetween args =
         match args with
-        | [ _ ] -> Ok <| Message "No text provided."
+        | [ _ ] -> Error "No text provided"
         | word :: text ->
             [
                 yield word

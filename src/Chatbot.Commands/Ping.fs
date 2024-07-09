@@ -18,7 +18,7 @@ module Ping =
         let duration = (DateTime.UtcNow - startTime)
 
         let timeOnline =
-            sprintf "%d hours, %d minutes, %d seconds" (duration.TotalHours |> int) duration.Minutes duration.Seconds
+            $"{(duration.TotalHours |> int)} hours, {duration.Minutes} minutes, {duration.Seconds} seconds"
 
         Ok
         <| Message

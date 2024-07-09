@@ -84,6 +84,10 @@ let private logEntry entry =
     Console.ResetColor()
     printfn "%s" entry.Message
 
+    match entry.Exception with
+    | None -> ()
+    | Some ex -> printfn "%s" (ex.ToString())
+
 let private log logLevel message ex =
     let entry = {
         Timestamp = DateTime.UtcNow

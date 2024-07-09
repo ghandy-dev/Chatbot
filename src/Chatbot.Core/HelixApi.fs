@@ -8,7 +8,7 @@ module HelixApi =
 
     open Microsoft.Extensions.Options
 
-    let options =
+    let private options =
         Options.Create<HelixApiOptions>(new HelixApiOptions(ClientId = Twitch.config.ClientId, ClientSecret = Twitch.config.ClientSecret))
 
     let helixApi = new HelixApi(options)
@@ -34,22 +34,25 @@ module TTVSharp =
         | code when code >= 200 && code < 300 -> Ok response.Body
         | _ -> Error response.Error.Message
 
-    let toResultSelector response =
-        match response |> toResult with
-        | Ok r -> Ok r
-        | Error e -> Error e
-
     let tryGetData result =
         match toResult result with
         | Ok e -> Some (e :> HelixResponse<'a>).Data
         | Error _ -> None
+
+    let tryGetDataResult result =
+        match toResult result with
+        | Ok e -> Ok (e :> HelixResponse<'a>).Data
+        | Error err -> Error err
 
     let tryHead result =
         match tryGetData result with
         | None -> None
         | Some data -> data |> Array.ofSeq |> Array.tryHead
 
-    let tryHeadResult error f = f |> tryHead |> Result.fromOption error
+    let tryHeadResult error f =
+        match tryGetDataResult f with
+        | Error err -> Error err
+        | Ok data ->  data |> Array.ofSeq |> Array.tryHead |> Result.fromOption error
 
     module User =
 

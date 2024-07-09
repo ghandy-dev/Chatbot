@@ -6,7 +6,7 @@ module Time =
     open System
 
     [<Literal>]
-    let private dateTimeFormat = "dd/MM/yyyy HH:mm:ss"
+    let private dateTimeFormat = "yyyy/MM/dd HH:mm:ss"
 
     let time () =
         Ok <| Message $"{DateTime.UtcNow.ToString(dateTimeFormat)} (UTC)"

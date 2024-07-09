@@ -9,5 +9,5 @@ module Pipe =
 
         match commands with
         | []
-        | [ _ ] -> Error "At least 2 commands must be piped together."
+        | [ _ ] -> Error "At least 2 commands must be piped together"
         | cs -> Ok <| Pipe cs

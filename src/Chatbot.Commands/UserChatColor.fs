@@ -7,18 +7,14 @@ module NameColor =
     open Chatbot.HelixApi
     open TTVSharp.Helix
 
-    let private userChatColor (user: User) =
+    let private getNameColor username =
         async {
             return!
-                helixApi.Chat.GetUserChatColorAsync(new GetUserChatColorRequest(UserIds = [ user.Id ])) |> Async.AwaitTask
-                |+-> TTVSharp.tryHeadResult "User color not found."
-        }
-
-    let private innerNameColor username =
-        async {
-            match! Users.getUser username |+-> TTVSharp.tryHeadResult "User not found." |++> Result.bindAsync userChatColor with
-            | Ok response -> return Ok $"{response.UserName} {response.Color}"
-            | Error err -> return Error err
+                Users.getUser username |+-> TTVSharp.tryHeadResult "User not found"
+                |++> Result.bindAsync (fun user ->
+                    helixApi.Chat.GetUserChatColorAsync(new GetUserChatColorRequest(UserIds = [ user.Id ])) |> Async.AwaitTask
+                    |+-> TTVSharp.tryHeadResult "User color not found"
+                )
         }
 
     let namecolor (args: string list) (context: Context) =
@@ -28,7 +24,7 @@ module NameColor =
                 | [] -> context.Username
                 | username :: _ -> username
 
-            match! innerNameColor username with
+            match! getNameColor username with
             | Error err -> return Error err
-            | Ok message -> return Ok <| Message message
+            | Ok response -> return Ok <| Message $"{response.UserName} {response.Color}"
         }

@@ -29,4 +29,4 @@ module Rot13 =
         | "base64" :: input -> base64 (String.concat " " input) |> Message |> Ok
         | "rot13" :: input -> rot13 (String.concat " " input) |> Message |> Ok
         | "caeser" :: input -> caeser (String.concat " " input) (System.Random.Shared.Next(1, 27)) |> Message |> Ok
-        | _ -> Error "Unknown encoder specified."
+        | _ -> Error "Unknown encoder specified"

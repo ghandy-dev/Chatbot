@@ -40,9 +40,9 @@ module TextTransform =
         | Some f ->
             let text = f words
             Ok <| Message text
-        | None -> Error $"""Unknown transform: "{transform}"."""
+        | None -> Error $"Unknown transform: \"{transform}\""
 
     let texttransform args =
         match args with
         | transform :: words -> transform' transform words
-        | _ -> Error "No input provided."
+        | _ -> Error "No text provided"

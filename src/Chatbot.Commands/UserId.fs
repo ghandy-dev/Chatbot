@@ -13,5 +13,5 @@ module UserId =
             | user :: _ ->
                 match! Users.getUser user |+-> TTVSharp.tryHead with
                 | Some user -> return Ok <| Message user.Id
-                | None -> return Error "User not found."
+                | None -> return Error "User not found"
         }

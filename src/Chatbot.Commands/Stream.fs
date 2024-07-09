@@ -26,10 +26,11 @@ module Stream =
                 | Error e -> return Error e
                 | Ok stream ->
                     let viewerCount = stream.ViewerCount.ToString("N0")
-                    let uptime = (stream.StartedAt - DateTime.UtcNow).ToString("hh\\hmm\\mss\\s")
+                    let uptime = (stream.StartedAt - DateTime.UtcNow).ToString("hh\\h:mm\\m:ss\\s")
+                    let url = $"https://twitch.tv/{stream.UserLogin}"
 
                     return
                         Ok
                         <| Message
-                            $"{stream.UserName} is streaming {stream.GameName} for {viewerCount} viewers. \"{stream.Title}\" https://twitch.tv/{stream.UserLogin} [{uptime}]"
+                            $"{stream.UserName} is streaming {stream.GameName} for {viewerCount} viewers. \"{stream.Title}\" {url} [{uptime}]"
         }
