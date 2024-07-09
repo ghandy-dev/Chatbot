@@ -1,6 +1,6 @@
-namespace Chatbot.Commands.Types
+namespace Chatbot.Commands.Reddit
 
-module Reddit =
+module Types =
 
     open System
     open System.Text.Json.Serialization

@@ -1,9 +1,10 @@
-namespace Chatbot.Commands
+namespace Chatbot.Commands.FaceIt
 
 [<AutoOpen>]
 module FaceIt =
 
-    open Chatbot.Commands.Api.FaceIt
+    open Api
+    open Chatbot.Commands
 
     open System
     open System.Text

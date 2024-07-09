@@ -1,6 +1,9 @@
 namespace Chatbot.Commands
 
 open Chatbot.Commands
+open Chatbot.Commands.FaceIt
+open Chatbot.Commands.Logs
+open Chatbot.Commands.Reddit
 
 module Commands =
 

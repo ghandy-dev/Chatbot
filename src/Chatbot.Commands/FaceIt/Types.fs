@@ -1,6 +1,6 @@
-namespace Chatbot.Commands.Types
+namespace Chatbot.Commands.FaceIt
 
-module FaceIt =
+module Types =
 
     open System.Text.Json.Serialization
 

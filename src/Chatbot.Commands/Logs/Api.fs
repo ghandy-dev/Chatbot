@@ -1,6 +1,6 @@
-namespace Chatbot.Commands.Api
+namespace Chatbot.Commands.Logs
 
-module Logs =
+module Api =
 
     open FsHttp
     open FsHttp.Request

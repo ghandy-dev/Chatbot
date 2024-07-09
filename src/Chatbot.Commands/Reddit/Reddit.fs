@@ -1,10 +1,11 @@
-namespace Chatbot.Commands
+namespace Chatbot.Commands.Reddit
 
 [<AutoOpen>]
 module Reddit =
 
+    open Api
     open Chatbot.Authorization
-    open Chatbot.Commands.Api.Reddit
+    open Chatbot.Commands
 
     let private sortings = [ "top" ; "hot" ; "best" ] |> Set.ofList
 

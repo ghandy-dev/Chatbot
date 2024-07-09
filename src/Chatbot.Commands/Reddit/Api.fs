@@ -1,15 +1,13 @@
-namespace Chatbot.Commands.Api
+namespace Chatbot.Commands.Reddit
 
-module Reddit =
+module Api =
 
-    open Chatbot.Commands.Types.Reddit
+    open Types
     open Chatbot.Configuration
 
     open FsHttp
     open FsHttp.Request
     open FsHttp.Response
-
-    open System
 
     [<Literal>]
     let private apiUrl = "https://reddit.com"
