@@ -36,7 +36,7 @@ module TTVSharp =
 
     let toResultSelector response =
         match response |> toResult with
-        | Ok r -> r |> Ok
+        | Ok r -> Ok r
         | Error e -> Error e
 
     let tryGetData result =
