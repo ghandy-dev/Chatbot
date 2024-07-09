@@ -4,7 +4,7 @@ namespace Chatbot.Commands
 module RNG =
 
     open System
-    open Utils.Parsing
+    open Utils
 
     let private random = Random.Shared
 
@@ -14,8 +14,8 @@ module RNG =
         let (min, max) =
             match args with
             | [] -> defaultArgs
-            | min :: max :: _ -> (tryParseInt min, tryParseInt max)
-            | n :: _ -> (tryParseInt n, tryParseInt n)
+            | min :: max :: _ -> (Int32.tryParse min, Int32.tryParse max)
+            | n :: _ -> (Int32.tryParse n, Int32.tryParse n)
 
         match (min, max) with
         | (None, _) -> Error "Error parsing min value."

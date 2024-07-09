@@ -1,11 +1,13 @@
 module Utils
 
-module Parsing =
+module Int32 =
 
-    let tryParseInt (s: string) =
+    let tryParse (s: string) =
         match System.Int32.TryParse(s) with
         | true, v -> Some v
         | false, _ -> None
+
+module Boolean =
 
     let tryParseBit =
         function
@@ -18,6 +20,9 @@ module Parsing =
         function
         | "0" -> false
         | _ -> true
+
+
+module Text =
 
     open System.Text.RegularExpressions
 

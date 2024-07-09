@@ -1,7 +1,6 @@
 module Chatbot.IRC.Messages
 
 open Utils
-open Utils.Parsing
 open Chatbot.IRC.Parsing.Types
 
 [<AutoOpen>]
@@ -676,12 +675,12 @@ module MessageMapping =
         | RoomState ->
             Some {
                 Channel = message.Parameters.[1..]
-                EmoteOnly = message.Tags.TryFind "emote-only" |> Option.bind tryParseBit
-                FollowersOnly = message.Tags.TryFind "followers-only" |> Option.bind tryParseBit
-                R9K = message.Tags.TryFind "r9k" |> Option.bind tryParseBit
+                EmoteOnly = message.Tags.TryFind "emote-only" |> Option.bind  Boolean.tryParseBit
+                FollowersOnly = message.Tags.TryFind "followers-only" |> Option.bind Boolean.tryParseBit
+                R9K = message.Tags.TryFind "r9k" |> Option.bind Boolean.tryParseBit
                 RoomId = message.Tags["room-id"]
-                Slow = message.Tags.TryFind "slow" |> Option.bind tryParseInt
-                SubsOnly = message.Tags.TryFind "subs-only" |> Option.bind tryParseBit
+                Slow = message.Tags.TryFind "slow" |> Option.bind Int32.tryParse
+                SubsOnly = message.Tags.TryFind "subs-only" |> Option.bind Boolean.tryParseBit
             }
         | _ -> None
 
@@ -704,12 +703,12 @@ module MessageMapping =
                 Emotes = parseEmotes message.Tags["emotes"]
                 Id = message.Tags["id"]
                 Login = message.Tags["login"]
-                Moderator = message.Tags["mod"] |> parseBit
+                Moderator = message.Tags["mod"] |> Boolean.parseBit
                 MsgId =
                     match message.Tags["msg-id"] with
                     | ParsedUserNoticeEventType event -> event
                 RoomId = message.Tags["room-id"]
-                Subscriber = message.Tags["subscriber"] |> parseBit
+                Subscriber = message.Tags["subscriber"] |> Boolean.parseBit
                 SystemMsg = message.Tags["system-msg"]
                 UserId = message.Tags["user-id"]
                 UserType = message.Tags["user-type"]
@@ -726,8 +725,8 @@ module MessageMapping =
                 Color = message.Tags["color"]
                 DisplayName = message.Tags["display-name"]
                 EmoteSets = parseEmoteSets message.Tags["emote-sets"]
-                Moderator = message.Tags["mod"] |> parseBit
-                Subscriber = message.Tags["subscriber"] |> parseBit
+                Moderator = message.Tags["mod"] |> Boolean.parseBit
+                Subscriber = message.Tags["subscriber"] |> Boolean.parseBit
                 UserType = message.Tags["user-type"]
             }
         | _ -> None
