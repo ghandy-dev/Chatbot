@@ -65,7 +65,7 @@ module Api =
         Content = [
             {
                 Type = "text"
-                Text = "You are a helpful assistant. Keep responses as brief and short as possiblee."
+                Text = "You are a friendly and knowledgeable assistant. Provide brief and clear responses. Respond using plaintext."
             }
         ]
     }
