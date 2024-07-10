@@ -164,6 +164,18 @@ Get a players recent win/loss history:
 {exampleArgs "faceit" "history FrozenBag"}
 """
 
+    let Gpt =
+        $"""
+Chat with OpenAI's ChatGPT
+
+Conversations are based on the context of the channel, and Gpt maintains a history of messages sent by chatters for up to 10 minutes from the last message sent.
+i.e. 10 mins after sending no messages through the gpt command will wipe your chatting history with it
+
+Examples:
+
+{exampleArgs "gpt" "<prompt>"}
+"""
+
     let JoinChannel =
         $"""
 Join a channel and add it to the join list.

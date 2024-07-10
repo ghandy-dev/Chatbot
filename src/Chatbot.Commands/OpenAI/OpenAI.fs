@@ -1,10 +1,11 @@
-namespace Chatbot.Commands.DallE
+namespace Chatbot.Commands.OpenAI
 
 [<AutoOpen>]
-module DallE =
+module OpenAI =
 
     open System
 
+    open Chatbot.Commands
     open Api
     open Utils
 
@@ -17,10 +18,10 @@ module DallE =
 
     let private generateImage size prompt = async { return! getImage size prompt }
 
-    let dalle (args: string list) =
+    let dalle args =
         async {
             match args with
-            | [] -> return Error $"Usage: >dalle <your prompt here>"
+            | [] -> return Error $"No prompt provided"
             | _ ->
                 let values =
                     Text.parseKeyValuePairs (String.Join("", args))
@@ -32,5 +33,22 @@ module DallE =
                             | None -> Some(toSize "")
                         )
 
-                return! generateImage values["size"] values["prompt"]
+                match! generateImage values["size"] values["prompt"] with
+                | Error err -> return Error err
+                | Ok url -> return Ok <| Message url
+        }
+
+    let gpt args context =
+        async {
+            match context.Source with
+            | Whisper _ -> return Ok <| Message "Gpt cannot currently be used in whispers"
+            | Channel channel ->
+                match args with
+                | [] -> return Error "No input provided"
+                | input ->
+                    let message = String.concat " " input
+
+                    match! sendGptMessage message context.Username channel with
+                    | Error err -> return Error err
+                    | Ok message -> return Ok <| Message message
         }

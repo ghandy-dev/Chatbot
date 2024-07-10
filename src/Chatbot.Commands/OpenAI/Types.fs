@@ -1,60 +1,75 @@
-namespace Chatbot.Commands.DallE
+namespace Chatbot.Commands.OpenAI
 
 module Types =
 
-    module Text =
+    open System.Text.Json.Serialization
 
-        [<Literal>]
-        let Gpt3_5Turbo = "gpt-3.5-turbo"
+    module Gpt =
 
-        [<Literal>]
-        let Gpt4 = "gpt-4o"
+        let [<Literal>] Gpt3_5Turbo = "gpt-3.5-turbo"
+        let [<Literal>] Gpt4 = "gpt-4o"
 
-        type TextGenerationMessage = {
-            role: string
-            content: string
+        type TextGeneration = {
+            Model: string
+            Messages: TextGenerationMessage list
+            [<JsonPropertyName("max_tokens")>]
+            MaxTokens: int
+            n: int
+            User: string
         }
 
-        type Choices = {
-            index: int
-            message: TextGenerationMessage
+        and TextGenerationMessage = {
+            Role: string
+            Name: string option
+            Content: MessageContent list
         }
 
-        type TokenUsage = {
-            prompt_tokens: int
-            completion_tokens: int
-            total_tokens: int
+        and MessageContent = {
+            Type: string
+            Text: string
         }
 
         type TextGenerationMessageResponse = {
-            id: string
-            choices: Choices array
-            created: int
-            model: string
-            service_tier: string option
-            system_fingerprint: string
-            object: string
-            usage: TokenUsage
+            Id: string
+            Choices: Choices list
+            Created: int
+            Model: string
+            [<JsonPropertyName("service_tier")>]
+            ServiceTier: string option
+            [<JsonPropertyName("system_fingerprint")>]
+            SystemFingerprint: string
+            Object: string
+            Usage: TokenUsage
         }
 
-        type TextGeneration = {
-            model: string
-            messages: TextGenerationMessage array
-            max_tokens: int
-            n: int
-            user: string
+        and Choices = {
+            Index: int
+            Message: TextGenerationResponseMessage
         }
 
-    module Image =
+        and TextGenerationResponseMessage = {
+            Role: string
+            Content: string
+        }
 
-        [<Literal>]
-        let DallE3 = "dall-e-3"
+        and TokenUsage = {
+            [<JsonPropertyName("prompt_tokens")>]
+            PromptTokens: int
+            [<JsonPropertyName("completion_tokens")>]
+            CompletionTokens: int
+            [<JsonPropertyName("total_tokens")>]
+            TotalTokens: int
+        }
+
+    module DallE =
+
+        let [<Literal>] DallE3 = "dall-e-3"
 
         type GenerateImage = {
-            model: string
-            prompt: string
+            Model: string
+            Prompt: string
             n: int
-            size: string
+            Size: string
         }
 
-        type GenerateImageResponse = { url: string }
+        type GenerateImageResponse = { Url: string }

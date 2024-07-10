@@ -71,11 +71,11 @@ module Configuration =
         [<CLIMutable>]
         type FaceItConfig = { ApiKey: string }
 
-        let config = configuration.GetSection("FaceIt").Get<FaceItConfig>()
+        let config: FaceItConfig = configuration.GetSection("FaceIt").Get<FaceItConfig>()
 
-    module DallE =
+    module OpenAI =
 
         [<CLIMutable>]
-        type DallEConfig = { ApiKey: string }
+        type OpenAiConfig = { ApiKey: string }
 
-        let config = configuration.GetSection("DallE").Get<DallEConfig>()
+        let config = configuration.GetSection("OpenAI").Get<OpenAiConfig>()
