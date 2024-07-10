@@ -49,6 +49,25 @@ module Text =
         let matches = regex.Matches(input)
         matches |> Seq.choose parseKeyValuePair |> Map.ofSeq
 
+    let stripMarkdownTags content =
+        let patterns = [
+            @"`{3}", ""                             // Code Blocks
+            @"\*{1,2}([/w/s+].*?)\*{1,2}", "$1"     // Bold
+            @"_{2}([/w/s+].*?)_{2}", "$1"           // Italics
+            @"~{2}([/w/s+].*?)~{2}", "$1"           // Strikethrough
+            @"#{1,6}\s(.*?)", "$1"                  // Headers
+            @"=|-{5,}.*\n", ""                      // Other Headers
+            @"\[.*?\][\(](.*?)[\)]", "$1"           // Links
+            @"\n{1,}", " "
+        ]
+
+        let stripped =
+            patterns
+            |> List.fold (fun acc (pattern, replacement) ->
+                Regex.Replace(acc, pattern, replacement, RegexOptions.Multiline)
+            ) content
+
+        stripped
 
 module Map =
 
