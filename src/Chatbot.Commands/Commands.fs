@@ -26,7 +26,7 @@ module Commands =
             Command.createCommand ("echo", [], HelpInfo.Echo, SyncFunctionWithArgs echo, 5000, true)
             Command.createCommand ("encode", [], HelpInfo.Encode, SyncFunctionWithArgs encode, 5000, false)
             Command.createCommand ("faceit", [], HelpInfo.FaceIt, AsyncFunctionWithArgs faceit, 20000, false)
-            Command.createCommand ("gpt", [], "", AsyncFunctionWithArgsAndContext gpt, 15000, false)
+            Command.createCommand ("gpt", [], HelpInfo.Gpt, AsyncFunctionWithArgsAndContext gpt, 15000, false)
             Command.createCommand ("help", [], "\nDisplay help info about commands.", SyncFunction help, 10000, false)
             Command.createCommand ("joinchannel", [], HelpInfo.JoinChannel, AsyncFunctionWithArgs joinChannel, 5000, true)
             Command.createCommand ("leavechannel", [], HelpInfo.LeaveChannel, AsyncFunctionWithArgs leaveChannel, 5000, true)
