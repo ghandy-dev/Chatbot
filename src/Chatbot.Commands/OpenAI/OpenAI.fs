@@ -8,7 +8,6 @@ module OpenAI =
     open Chatbot.Commands
     open Api
     open Utils
-    open System.Text.RegularExpressions
 
     let private toSize =
         function
