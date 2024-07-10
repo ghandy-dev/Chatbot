@@ -8,6 +8,7 @@ module OpenAI =
     open Chatbot.Commands
     open Api
     open Utils
+    open System.Text.RegularExpressions
 
     let private toSize =
         function
@@ -41,7 +42,7 @@ module OpenAI =
     let gpt args context =
         async {
             match context.Source with
-            | Whisper _ -> return Ok <| Message "Gpt cannot currently be used in whispers"
+            | Whisper _ -> return Ok <| Message "Gpt currently cannot be used in whispers"
             | Channel channel ->
                 match args with
                 | [] -> return Error "No input provided"
@@ -50,5 +51,5 @@ module OpenAI =
 
                     match! sendGptMessage message context.Username channel with
                     | Error err -> return Error err
-                    | Ok message -> return Ok <| Message(message.Trim([| '\r' ; '\n' |]))
+                    | Ok message -> return Ok <| Message(Text.stripMarkdownTags message)
         }
