@@ -50,5 +50,5 @@ module OpenAI =
 
                     match! sendGptMessage message context.Username channel with
                     | Error err -> return Error err
-                    | Ok message -> return Ok <| Message message
+                    | Ok message -> return Ok <| Message(message.Trim([| '\r' ; '\n' |]))
         }
