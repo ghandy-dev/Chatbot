@@ -76,6 +76,9 @@ module Configuration =
     module OpenAI =
 
         [<CLIMutable>]
-        type OpenAiConfig = { ApiKey: string }
+        type OpenAiConfig = {
+            ApiKey: string
+            DefaultModel: string
+        }
 
         let config = configuration.GetSection("OpenAI").Get<OpenAiConfig>()

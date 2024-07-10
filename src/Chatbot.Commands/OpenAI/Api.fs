@@ -110,7 +110,7 @@ module Api =
                     updatedMessages
 
             let request = {
-                Model = Gpt4
+                Model = Chatbot.Configuration.OpenAI.config.DefaultModel
                 Messages = messages
                 MaxTokens = 150
                 n = 1
