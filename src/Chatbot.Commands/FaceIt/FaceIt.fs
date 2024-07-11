@@ -11,7 +11,6 @@ module FaceIt =
 
     let private stats playerName =
         async {
-
             match! getPlayer playerName |> AsyncResult.bindZip (fun p -> getPlayerStats p.PlayerId) with
             | Error error -> return Error error
             | Ok(player, stats) ->
@@ -110,14 +109,9 @@ module FaceIt =
                     | Error error -> return Error error
                     | Ok matchData ->
 
-                        let! players =
+                        let! teamPlayers =
                             [ playerTeam ; otherTeam ]
-                            |> List.map (fun (teamName, team) ->
-                                async {
-                                    return!
-                                        team.Players |> List.map (fun p -> async { return! getPlayerById p.PlayerId }) |> Async.Parallel
-                                }
-                            )
+                            |> List.map (fun (_, team) -> team.Players |> List.map (fun p -> getPlayerById p.PlayerId) |> Async.Parallel)
                             |> Async.Parallel
 
                         let gameMap =
@@ -133,7 +127,7 @@ module FaceIt =
                         let duration =
                             (DateTimeOffset.FromUnixTimeSeconds(m.FinishedAt) - DateTimeOffset.FromUnixTimeSeconds(m.StartedAt))
 
-                        let durationFormatted = $"{duration.Hours}h:{duration.Minutes}m:{duration.Seconds}s"
+                        let durationFormatted = duration.ToString("hh\h\:mm\m\:ss\s")
 
                         let winner =
                             if m.Results.Winner = (fst playerTeam) then
@@ -142,11 +136,11 @@ module FaceIt =
                                 $"Winner: {(snd otherTeam).Nickname}"
 
                         let teamElos =
-                            players
+                            teamPlayers
                             |> Array.map (fun ps ->
                                 ps
-                                |> Array.choose (fun ps ->
-                                    match ps with
+                                |> Array.choose (
+                                    function
                                     | Ok p -> Some p
                                     | Error _ -> None
                                 )
