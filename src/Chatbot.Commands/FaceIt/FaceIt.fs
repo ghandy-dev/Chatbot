@@ -44,8 +44,7 @@ module FaceIt =
                     |> List.map (fun m -> m.MatchId)
                     |> List.map getMatchStats
                     |> Async.Parallel
-                    |> Async.bind (fun m -> m |> Array.map Result.toOption |> Async.create)
-                    |> Async.bind (fun m -> m |> Array.choose id |> Async.create)
+                    |> Async.map (Array.choose Result.toOption)
 
                 match matches |> List.ofArray with
                 | [] -> return Ok <| Message "No recent games played!"
