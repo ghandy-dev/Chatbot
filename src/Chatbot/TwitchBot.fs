@@ -31,7 +31,7 @@ type State = {
 
 let init () =
     async {
-        let! channels = Database.ChannelRepository.getAll () |+-> List.ofSeq |+-> List.map (fun c -> c.ChannelName)
+        let! channels = Database.ChannelRepository.getAll () |+> List.ofSeq |+> List.map (fun c -> c.ChannelName)
         let! maybeToken = tokenStore.GetToken(TokenType.Twitch)
 
         match maybeToken with
@@ -54,7 +54,7 @@ let init () =
 let createIrcClient () =
     new IrcClient(fst ircConnection, snd ircConnection |> int)
 
-let authenticate (client: IrcClient) =
+let authenticate (client: IrcClient) user =
     async {
         Logging.trace "Authenticating..."
 
@@ -68,7 +68,7 @@ let authenticate (client: IrcClient) =
                 do! client.WriteAsync($"CAP REQ :{capabilities}")
 
             do! client.WriteAsync($"PASS oauth:{token}")
-            do! client.WriteAsync($"NICK {botConfig.Botname}")
+            do! client.WriteAsync($"NICK {user}")
             do! client.FlushAsync()
     }
 
@@ -154,14 +154,14 @@ let createBot (client: IrcClient) cancellationToken =
                             Logging.info "Twitch servers requested we reconnect..."
                             (client :> IDisposable).Dispose()
                             let client = createIrcClient ()
-                            do! authenticate client
+                            do! authenticate client state.BotUser
                             do! start client
                             do! loop client
 
                         do! loop client
                     }
 
-                do! authenticate client
+                do! authenticate client state.BotUser
                 do! start client
                 do! loop client
 

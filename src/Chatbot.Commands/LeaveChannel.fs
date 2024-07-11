@@ -12,7 +12,7 @@ module LeaveChannel =
             match args with
             | [] -> return Error "No channel specified"
             | channel :: _ ->
-                match! Users.getUser channel |+-> TTVSharp.tryHead with
+                match! Users.getUser channel |+> TTVSharp.tryHead with
                 | None -> return Error "User not found"
                 | Some user ->
                     match! ChannelRepository.getById (user.Id |> int) with

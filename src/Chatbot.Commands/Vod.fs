@@ -13,7 +13,7 @@ module Vod =
                 return!
                     helixApi.Videos.GetVideosByUserIdAsync(new GetVideosByUserIdRequest(UserIds = [ user.Id ], First = 1))
                     |> Async.AwaitTask
-                    |+-> TTVSharp.tryHeadResult "No vods found."
+                    |+> TTVSharp.tryHeadResult "No vods found."
             }
 
     let vod args =
@@ -21,7 +21,7 @@ module Vod =
             match args with
             | [] -> return Error "No channel specified"
             | channel :: _ ->
-                match! Users.getUser channel |+-> TTVSharp.tryHeadResult "User not found." |> AsyncResult.bind latestVod with
+                match! Users.getUser channel |+> TTVSharp.tryHeadResult "User not found." |> AsyncResult.bind latestVod with
                 | Ok video -> return Ok <| Message $"\"{video.Title}\" {video.CreatedAt.ToShortDateString()} {video.Url} [{video.Duration}]"
                 | Error err -> return Error err
         }

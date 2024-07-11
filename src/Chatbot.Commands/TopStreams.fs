@@ -9,7 +9,9 @@ module TopStreams =
 
     let private getStreams =
         async {
-            return! helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(First = 10)) |> Async.AwaitTask |+-> TTVSharp.tryGetDataResult
+            return!
+                helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(First = 10)) |> Async.AwaitTask
+                |+> TTVSharp.tryGetDataResult
         }
 
     let topStreams () =

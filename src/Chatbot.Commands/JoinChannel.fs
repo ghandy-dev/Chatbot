@@ -13,7 +13,7 @@ module JoinChannel =
             match args with
             | [] -> return Error "No channel specified."
             | channel :: _ ->
-                match! Users.getUser channel |+-> TTVSharp.tryHeadResult "Channel not found" with
+                match! Users.getUser channel |+> TTVSharp.tryHeadResult "Channel not found" with
                 | Error err -> return Error err
                 | Ok user ->
                     match! ChannelRepository.getById (user.Id |> int) with
