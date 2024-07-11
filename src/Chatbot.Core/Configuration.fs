@@ -50,7 +50,6 @@ module Configuration =
         [<CLIMutable>]
         type BotConfig = {
             CommandPrefix: string
-            Botname: string
             Capabilities: string array
         }
 
