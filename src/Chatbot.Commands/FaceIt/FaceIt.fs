@@ -41,8 +41,7 @@ module FaceIt =
 
                 let! matches =
                     history.Items
-                    |> List.map (fun m -> m.MatchId)
-                    |> List.map getMatchStats
+                    |> List.map (fun m -> m.MatchId |> getMatchStats)
                     |> Async.Parallel
                     |> Async.map (Array.choose Result.toOption)
 
@@ -57,25 +56,30 @@ module FaceIt =
                             |> List.map (fun r ->
                                 let winner = r.RoundStats.Winner
 
-                                r.Teams
-                                |> List.filter (fun t -> t.TeamId = winner)
-                                |> Seq.head
-                                |> (fun team -> team.Players |> List.exists (fun t -> t.PlayerId = player.PlayerId))
-                                |> (fun outcome -> if outcome then "Win" else "Loss")
+                                let outcome =
+                                    r.Teams
+                                    |> List.map (fun t ->
+                                        if t.TeamId = winner && t.Players |> List.exists (fun p -> p.PlayerId = player.PlayerId) then
+                                            "Win"
+                                        else
+                                            "Loss"
+                                    )
+                                    |> List.exactlyOne // the player should only be on one team
+
+                                let score = $"Map: {r.RoundStats.Map}, Score: [{r.RoundStats.Score}]"
+
+                                (score, outcome)
+
                             )
                         )
 
-                    let scores =
-                        matches
-                        |> List.map (fun m ->
-                            m.Rounds
-                            |> List.map (fun r ->  $"Map: {r.RoundStats.Map}, Score: [{r.RoundStats.Score}]"))
-
                     let results =
-                        List.zip3 matchResults scores history.Items
-                        |> List.map (fun (rs, ss, h) ->
-                            List.zip rs ss
-                            |> List.map (fun (result, stats) -> $"{DateTimeOffset.FromUnixTimeSeconds(h.FinishedAt).Date.ToShortDateString()} Result: {result}, {stats}")
+                        List.zip matchResults history.Items
+                        |> List.map (fun (roundResults, h) ->
+                            roundResults
+                            |> List.map (fun (outcome, score) ->
+                                $"{DateTimeOffset.FromUnixTimeSeconds(h.FinishedAt).Date.ToShortDateString()} Result: {outcome}, {score}"
+                            )
                             |> String.concat " | "
                         )
                         |> String.concat " | "
