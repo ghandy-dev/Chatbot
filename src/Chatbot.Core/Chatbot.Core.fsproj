@@ -14,7 +14,7 @@
     <Compile Include="Async/AsyncResult.fs" />
     <Compile Include="Async/Operators.fs" />
     <Compile Include="Async/AsyncOption.fs" />
-    <Compile Include="HelixApi.fs" />
+    <Compile Include="Twitch.fs" />
     <Compile Include="TokenStore.fs" />
     <Compile Include="IO.fs" />
     <Compile Include="IRC.fs" />
