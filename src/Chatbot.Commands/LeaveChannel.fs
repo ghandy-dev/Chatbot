@@ -5,14 +5,14 @@ module LeaveChannel =
 
     open Chatbot
     open Chatbot.Database
-    open Chatbot.HelixApi
+    open TTVSharp.Helix
 
     let leaveChannel (args: string list) =
         async {
             match args with
             | [] -> return Error "No channel specified"
             | channel :: _ ->
-                match! Users.getUser channel |+> TTVSharp.tryHead with
+                match! Users.getUser channel with
                 | None -> return Error "User not found"
                 | Some user ->
                     match! ChannelRepository.getById (user.Id |> int) with

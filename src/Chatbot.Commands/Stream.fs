@@ -5,24 +5,18 @@ module Stream =
 
     open System
 
-    open Chatbot
-    open Chatbot.HelixApi
     open TTVSharp.Helix
-
-    let private innerStream =
-        fun (user: User) ->
-            async {
-                return!
-                    helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(UserIds = [ user.Id ])) |> Async.AwaitTask
-                    |+> TTVSharp.tryHeadResult $"{user.DisplayName} is not currently live."
-            }
 
     let stream args =
         async {
             match args with
             | [] -> return Error "No channel specified."
             | channel :: _ ->
-                match! Users.getUser channel |+> TTVSharp.tryHeadResult "Channel not found." |> AsyncResult.bind innerStream with
+                match!
+                    Users.getUser channel
+                    |> AsyncResult.fromOption "User not found"
+                    |> AsyncResult.bind (fun user -> Streams.getStream user.Id |> AsyncResult.fromOption "Stream not live")
+                with
                 | Error e -> return Error e
                 | Ok stream ->
                     let viewerCount = stream.ViewerCount.ToString("N0")

@@ -8,8 +8,10 @@ open Chatbot.MessageLimiter
 open Chatbot.Shared
 open Chatbot.Types
 
-open System
 open Authorization
+open TTVSharp
+
+open System
 
 type RoomState = {
     LastMessage: DateTime
@@ -37,8 +39,9 @@ let init () =
         match maybeToken with
         | None -> return failwith "Could not retrieve token using ClientId and ClientSecret"
         | Some token ->
-            let! response = HelixApi.helixApi.Users.GetUsersAsync(token) |> Async.AwaitTask
-            let maybeUser = response |> TTVSharp.tryHead
+            let! maybeUser =
+                Helix.helixApi.Users.GetUsersAsync(token) |> Async.AwaitTask
+                |+> Helpers.Helix.tryHead
 
             match maybeUser with
             | None -> return failwith "No user associated with token?"
@@ -135,7 +138,7 @@ let createBot (client: IrcClient) cancellationToken =
                                 match! Authorization.tokenStore.GetToken Authorization.TokenType.Twitch with
                                 | None -> Logging.info "Failed to send whisper. Couldn't retrieve access token for Twitch API."
                                 | Some token ->
-                                    match! HelixApi.Whispers.sendWhisper state.BotUserId wm.UserId wm.Message token with
+                                    match! Helix.Whispers.sendWhisper state.BotUserId wm.UserId wm.Message token with
                                     | 204 -> Logging.info $"Whisper sent to {wm.Username}: {wm.Message}"
                                     | 400 -> Logging.info "Failed to send whisper. Bad request"
                                     | 401 -> Logging.info "Failed to send whisper. Things to check: Token refreshed, verified phone number, token has user:manage:whispers scope"

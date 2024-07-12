@@ -3,19 +3,19 @@ namespace Chatbot.Commands
 [<AutoOpen>]
 module JoinChannel =
 
-    open Chatbot
     open Chatbot.Database
     open Chatbot.Database.Types
-    open Chatbot.HelixApi
+
+    open TTVSharp.Helix
 
     let joinChannel (args: string list) =
         async {
             match args with
             | [] -> return Error "No channel specified."
             | channel :: _ ->
-                match! Users.getUser channel |+> TTVSharp.tryHeadResult "Channel not found" with
-                | Error err -> return Error err
-                | Ok user ->
+                match! Users.getUser channel with
+                | None -> return Error "User not found"
+                | Some user ->
                     match! ChannelRepository.getById (user.Id |> int) with
                     | Some _ -> return Ok <| Message "Channel already added"
                     | None ->
