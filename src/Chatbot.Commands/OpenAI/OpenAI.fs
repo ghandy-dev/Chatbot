@@ -18,22 +18,21 @@ module OpenAI =
 
     let private generateImage size prompt = async { return! getImage size prompt }
 
+    let private defaultValues = Map<string, string> [ ("size", "square") ]
+
+    let private keys = defaultValues.Keys |> List.ofSeq
+
     let dalle args =
         async {
             match args with
             | [] -> return Error $"No prompt provided"
             | _ ->
-                let values =
-                    Text.parseKeyValuePairs (String.Join("", args))
-                    |> Map.change
-                        "size"
-                        (fun k ->
-                            match k with
-                            | Some v -> Some(toSize v)
-                            | None -> Some(toSize "")
-                        )
-
-                match! generateImage values["size"] values["prompt"] with
+                let (prompt, map) =
+                    KeyValueParser.parseKeyValuePairs args (Some keys)
+                    |> (fun (m, p) ->
+                        (p, m |> Map.merge defaultValues)
+                    )
+                match! generateImage map["size"] prompt with
                 | Error err -> return Error err
                 | Ok url -> return Ok <| Message url
         }

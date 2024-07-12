@@ -21,7 +21,6 @@ module Boolean =
         | "0" -> false
         | _ -> true
 
-
 module Text =
 
     open System.Text.RegularExpressions
@@ -31,23 +30,6 @@ module Text =
         Regex.Replace(format, pattern, fun m ->
             let index = int m.Groups.[1].Value
             args.[index])
-
-    let private parseKeyValuePair (m: Match) =
-        m.Value.Split(":")
-        |> (fun pair ->
-            match pair with
-            | [| key ; value |] ->
-
-                let value = if value.StartsWith("\"") then value.Trim('"') else value
-                Some(key, value)
-            | _ -> None
-        )
-
-    let parseKeyValuePairs (input: string) =
-        let pattern = @"(\w+):([\w]+|\""(.*?)\"")"
-        let regex = new Regex(pattern)
-        let matches = regex.Matches(input)
-        matches |> Seq.choose parseKeyValuePair |> Map.ofSeq
 
     let stripMarkdownTags content =
         let patterns = [
@@ -82,6 +64,8 @@ module Map =
 
     let mergeInto (into: Map<'a, 'b>) (from: Map<'a, 'b>) = Map.fold add into from
 
+    let mergeFrom = fun into from -> mergeInto from into
+
 module Array =
 
     let swap (array: array<'a>) n k =
@@ -92,3 +76,42 @@ module Array =
 module List =
 
     let doesNotContain value list = not <| (list |> List.contains value)
+
+module KeyValueParser =
+
+    open System.Text.RegularExpressions
+
+    let private patternTemplate = sprintf @"%s:""*(\w+)""*\s*"
+    let private captureAllPattern = @"(\w+):""*(\w+)""*\s*"
+
+    let parseKeyValuePair (string: string) =
+        string.Split(":")
+        |> function
+            | [| key ; value |] ->
+                let value = if value.StartsWith("\"") then value.Trim('"') else value
+                Some(key, value)
+            | _ -> None
+
+    let private removeKeyValuePairs list pattern =
+        let string = list |> String.concat " "
+        Regex.Replace(string, pattern, "")
+
+    let parseKeyValuePairs list keys =
+        let pattern =
+            match keys with
+            | None -> captureAllPattern
+            | Some keys ->
+                keys
+                |> List.map patternTemplate
+                |> String.concat "|"
+
+        let matches =
+            list
+            |> List.map (fun a -> Regex.Match(a, pattern))
+            |> List.filter (fun m -> m.Success)
+            |> List.map (fun m -> m.Value)
+
+        let map = matches |> List.choose parseKeyValuePair |> Map.ofList
+        let newString = removeKeyValuePairs list pattern
+
+        (map, newString)
