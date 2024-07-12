@@ -1,10 +1,32 @@
-namespace Chatbot
+module TTVSharp
 
 open TTVSharp.Helix
 
-module HelixApi =
+module Helpers =
+
+    let toResult (response: TTVSharp.IApiResponse<'a>) =
+        match response.StatusCode with
+        | code when code >= 200 && code < 300 -> Ok response.Body
+        | _ -> Error response.Error.Message
+
+    module Helix =
+
+        let private toResult' (response) = toResult response
+
+        let tryGetData (helixResponse) =
+            match toResult' helixResponse with
+            | Error _ -> None
+            | Ok response -> Some (response :> HelixResponse<'a>).Data
+
+        let tryHead (helixResponse) =
+            match tryGetData helixResponse with
+            | None -> None
+            | Some data -> data |> Array.ofSeq |> Array.tryHead
+
+module Helix =
 
     open Chatbot.Configuration
+    open Helpers
 
     open Microsoft.Extensions.Options
 
@@ -13,10 +35,38 @@ module HelixApi =
 
     let helixApi = new HelixApi(options)
 
+    module Chat =
+        let getUserChatColor userId =
+            helixApi.Chat.GetUserChatColorAsync(new GetUserChatColorRequest(UserIds = [ userId ])) |> Async.AwaitTask
+            |+> Helix.tryHead
+
+    module Clips =
+
+        let getClips userId (dateFrom: System.DateTime) (dateTo: System.DateTime) =
+            helixApi.Clips.GetClipsAsync(new GetClipsRequestByBroadcasterId(BroadcasterId = userId, StartedAt = dateFrom, EndedAt = dateTo, First = 50)) |> Async.AwaitTask
+            |+> Helix.tryGetData
+
+    module Streams =
+
+        let getStreams (first: int) =
+            helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(First = first)) |> Async.AwaitTask
+            |+> Helix.tryGetData
+
+        let getStream userId =
+            helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(UserIds = [ userId ])) |> Async.AwaitTask
+            |+> Helix.tryHead
+
     module Users =
 
         let getUser username =
             helixApi.Users.GetUsersAsync(new GetUsersRequest(Logins = [ username ])) |> Async.AwaitTask
+            |+> Helix.tryHead
+
+    module Videos =
+
+        let getLatestVod userId =
+            helixApi.Videos.GetVideosByUserIdAsync(new GetVideosByUserIdRequest(UserIds = [ userId ], First = 1)) |> Async.AwaitTask
+            |+> Helix.tryHead
 
     module Whispers =
 
@@ -26,34 +76,3 @@ module HelixApi =
                 accessToken = accessToken
             )
             |> Async.AwaitTask
-
-module TTVSharp =
-
-    let toResult (response: TTVSharp.IApiResponse<'a>) =
-        match response.StatusCode with
-        | code when code >= 200 && code < 300 -> Ok response.Body
-        | _ -> Error response.Error.Message
-
-    let tryGetData result =
-        match toResult result with
-        | Ok e -> Some (e :> HelixResponse<'a>).Data
-        | Error _ -> None
-
-    let tryGetDataResult result =
-        match toResult result with
-        | Ok e -> Ok (e :> HelixResponse<'a>).Data
-        | Error err -> Error err
-
-    let tryHead result =
-        match tryGetData result with
-        | None -> None
-        | Some data -> data |> Array.ofSeq |> Array.tryHead
-
-    let tryHeadResult error f =
-        match tryGetDataResult f with
-        | Error err -> Error err
-        | Ok data ->  data |> Array.ofSeq |> Array.tryHead |> Result.fromOption error
-
-    module User =
-
-        let selectUserId (user: User) = user.Id
