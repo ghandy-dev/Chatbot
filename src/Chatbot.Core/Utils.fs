@@ -94,7 +94,10 @@ module KeyValueParser =
 
     let private removeKeyValuePairs list pattern =
         let string = list |> String.concat " "
+
         Regex.Replace(string, pattern, "")
+        |> (fun s -> s.Split(" "))
+        |> List.ofArray
 
     let parseKeyValuePairs list keys =
         let pattern =
@@ -112,6 +115,6 @@ module KeyValueParser =
             |> List.map (fun m -> m.Value)
 
         let map = matches |> List.choose parseKeyValuePair |> Map.ofList
-        let newString = removeKeyValuePairs list pattern
+        let newList = removeKeyValuePairs list pattern
 
-        (map, newString)
+        (map, newList)
