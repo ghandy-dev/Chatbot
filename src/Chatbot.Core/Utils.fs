@@ -99,13 +99,13 @@ module KeyValueParser =
         |> (fun s -> s.Split(" "))
         |> List.ofArray
 
-    let parseKeyValuePairs list keys =
+    let parseKeyValuePairs list (keys: string seq option) =
         let pattern =
             match keys with
             | None -> captureAllPattern
             | Some keys ->
                 keys
-                |> List.map patternTemplate
+                |> Seq.map patternTemplate
                 |> String.concat "|"
 
         let matches =
@@ -117,4 +117,4 @@ module KeyValueParser =
         let map = matches |> List.choose parseKeyValuePair |> Map.ofList
         let newList = removeKeyValuePairs list pattern
 
-        (map, newList)
+        (newList, map)
