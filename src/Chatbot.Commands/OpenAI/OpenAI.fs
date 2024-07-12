@@ -3,8 +3,6 @@ namespace Chatbot.Commands.OpenAI
 [<AutoOpen>]
 module OpenAI =
 
-    open System
-
     open Chatbot.Commands
     open Api
     open Utils
@@ -18,21 +16,19 @@ module OpenAI =
 
     let private generateImage size prompt = async { return! getImage size prompt }
 
-    let private defaultValues = Map<string, string> [ ("size", "square") ]
-
-    let private keys = defaultValues.Keys |> List.ofSeq
+    let private defaultKeyValues = Map<string, string> [ ("size", "square") ]
 
     let dalle args =
         async {
             match args with
             | [] -> return Error $"No prompt provided"
             | _ ->
-                let (prompt, map) =
-                    KeyValueParser.parseKeyValuePairs args (Some keys)
-                    |> (fun (m, p) ->
-                        (p, m |> Map.merge defaultValues)
+                let (args, map) =
+                    KeyValueParser.parseKeyValuePairs args (Some defaultKeyValues.Keys)
+                    |> (fun (p, m) ->
+                        (p, m |> Map.merge defaultKeyValues)
                     )
-                match! generateImage map["size"] prompt with
+                match! generateImage map["size"] (args |> String.concat " ") with
                 | Error err -> return Error err
                 | Ok url -> return Ok <| Message url
         }
