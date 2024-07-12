@@ -5,22 +5,16 @@ open System.IO
 
 let private parseLine (line: string) =
     match line.Split('=', StringSplitOptions.RemoveEmptyEntries) with
-    | [| key ; value |] -> Environment.SetEnvironmentVariable(key, value)
-    | _ -> ()
+    | [| key ; value |] -> Some(key, value)
+    | _ -> None
 
 let load () =
     async {
         let filePath = Path.Combine(".env")
 
-        return!
-            filePath
-            |> File.Exists
-            |> function
-                | false -> async { return () }
-                | true ->
-                    async {
-                        let! lines = filePath |> File.ReadAllLinesAsync |> Async.AwaitTask
-
-                        return lines |> Seq.iter parseLine
-                    }
+        if (filePath |> File.Exists) then
+            let! lines = filePath |> File.ReadAllLinesAsync |> Async.AwaitTask
+            lines
+            |> Seq.choose parseLine
+            |> Seq.iter (fun (key, value) -> Environment.SetEnvironmentVariable(key, value))
     }
