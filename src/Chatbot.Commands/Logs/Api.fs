@@ -24,7 +24,7 @@ module Api =
             match toResult response with
             | Ok response ->
                 let! content = response.content.ReadAsStringAsync() |> Async.AwaitTask
-                return Ok content
+                return Ok (content.TrimEnd())
             | Error e -> return Error $"Http response did not indicate success. {(int)e.statusCode} {e.reasonPhrase}"
         }
 
