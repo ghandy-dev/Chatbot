@@ -9,6 +9,9 @@
     <Compile Include="Logs/Api.fs" />
     <Compile Include="Logs/Logs.fs" />
     <Compile Include="Help/Help.fs" />
+    <Compile Include="UrbanDictionary/Types.fs" />
+    <Compile Include="UrbanDictionary/Api.fs" />
+    <Compile Include="UrbanDictionary/UrbanDictionary.fs" />
     <Compile Include="Wikipedia/Types.fs" />
     <Compile Include="Wikipedia/Api.fs" />
     <Compile Include="Wikipedia/Wikipedia.fs" />

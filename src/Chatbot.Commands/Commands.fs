@@ -5,6 +5,7 @@ open Chatbot.Commands.FaceIt
 open Chatbot.Commands.Logs
 open Chatbot.Commands.OpenAI
 open Chatbot.Commands.Reddit
+open Chatbot.Commands.UrbanDictionary
 
 module Commands =
 
@@ -44,6 +45,7 @@ module Commands =
             Command.createCommand ("time", [], HelpInfo.Time, SyncFunction time, 5000, false)
             Command.createCommand ("texttransform", [ "tt" ], HelpInfo.TextTransform, SyncFunctionWithArgs texttransform, 5000, false)
             Command.createCommand ("topstreams", [ "ts" ], HelpInfo.TopStreams, AsyncFunction topStreams, 20000, false)
+            Command.createCommand ("urban", [ "ud" ], HelpInfo.UrbanDictionary, AsyncFunctionWithArgs urban, 20000, false)
             Command.createCommand ("userid", [ "uid" ], HelpInfo.UserId, AsyncFunctionWithArgsAndContext userId, 20000, false)
             Command.createCommand ("vod", [], HelpInfo.Vod, AsyncFunctionWithArgs vod, 20000, false)
             Command.createCommand ("wiki", [], HelpInfo.Wiki, AsyncFunctionWithArgs wiki, 20000, false)

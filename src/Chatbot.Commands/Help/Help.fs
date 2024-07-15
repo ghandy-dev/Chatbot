@@ -372,6 +372,20 @@ Examples:
 {example "topstreams"}
 """
 
+    let UrbanDictionary =
+        $"""
+Get the definition of a word from Urban Dictionary.
+
+Examples:
+
+Search for a specific term.
+{exampleArgs "urban" "<term(s)>"}
+{exampleArgs "urban" "forsen"}
+
+Get the definition for a random word.
+{exampleArgs "urban" "random:true"}
+"""
+
     let UserId =
         $"""
 Gets a user's twitch id.
