@@ -13,24 +13,6 @@ open TTVSharp
 
 open System
 
-type RoomState = {
-    LastMessage: DateTime
-    Channel: string
-    EmoteOnly: bool option
-    FollowersOnly: bool option
-    R9k: bool option
-    RoomId: string
-    Slow: int option
-    SubsOnly: bool option
-}
-
-type State = {
-    Channels: string list
-    RoomStates: Map<string, RoomState>
-    BotUser: string
-    BotUserId: string
-}
-
 let init () =
     async {
         let! channels = Database.ChannelRepository.getAll () |+> List.ofSeq |+> List.map (fun c -> c.ChannelName)

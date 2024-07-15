@@ -28,8 +28,10 @@ type RoomState = {
 type RoomStates = Map<string, RoomState>
 
 type State = {
-    RoomStates: RoomStates
-    Capabilities: string list option
+    Channels: string list
+    RoomStates: Map<string, RoomState>
+    BotUser: string
+    BotUserId: string
 }
 
 type PrivateMessage = {
