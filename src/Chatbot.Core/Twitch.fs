@@ -36,6 +36,7 @@ module Helix =
     let helixApi = new HelixApi(options)
 
     module Chat =
+
         let getUserChatColor userId =
             helixApi.Chat.GetUserChatColorAsync(new GetUserChatColorRequest(UserIds = [ userId ])) |> Async.AwaitTask
             |+> Helix.tryHead
