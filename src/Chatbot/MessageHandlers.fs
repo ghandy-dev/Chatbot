@@ -32,7 +32,7 @@ let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProces
                         }
                     )
                 | RunAlias _
-                | Pipe _ -> failwith $"{nameof(RunAlias)} / {nameof(Pipe)} shouldn't hit here!"
+                | Pipe _ -> ()
             | None -> ()
         | false -> ()
     }
@@ -65,7 +65,7 @@ let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProces
                         }
                     )
                 | RunAlias _
-                | Pipe _ -> failwith $"{nameof(RunAlias)} / {nameof(Pipe)} shouldn't hit here!"
+                | Pipe _ -> ()
             | None -> ()
         | false -> ()
     }
