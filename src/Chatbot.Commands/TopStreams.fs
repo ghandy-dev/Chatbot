@@ -8,8 +8,8 @@ module TopStreams =
     let topStreams () =
         async {
             match! Helix.Streams.getStreams 10 with
-            | None -> return Error "Error fetching top streams"
-            | Some streams ->
+            | Error err -> return Error err
+            | Ok streams ->
                 match streams |> List.ofSeq with
                 | [] -> return Ok <| Message "No one is streaming!"
                 | streams ->

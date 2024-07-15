@@ -45,7 +45,7 @@ module RandomClip =
             match!
                 Async.create (getChannel args context)
                 |> AsyncResult.bind (Users.getUser >> AsyncResult.fromOption "User not found")
-                |> AsyncResult.bind (fun user -> (Clips.getClips user.Id dateFrom dateTo) |> AsyncResult.fromOption "No clips found")
+                |> AsyncResult.bind (fun user -> (Clips.getClips user.Id dateFrom dateTo))
             with
             | Ok clips ->
                 match clips |> List.ofSeq with

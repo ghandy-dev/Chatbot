@@ -37,11 +37,13 @@ let init () =
         let! maybeToken = tokenStore.GetToken(TokenType.Twitch)
 
         match maybeToken with
-        | None -> return failwith "Could not retrieve token using ClientId and ClientSecret"
+        | None -> return failwith "Failed to retrieve token"
         | Some token ->
             let! maybeUser =
                 Helix.helixApi.Users.GetUsersAsync(token) |> Async.AwaitTask
-                |+> Helpers.Helix.tryHead
+                |+> TTVSharp.toResult
+                |+> Result.toOption
+                |+> Option.bind (fun r -> r.Data |> Seq.tryHead)
 
             match maybeUser with
             | None -> return failwith "No user associated with token?"
