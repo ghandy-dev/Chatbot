@@ -19,20 +19,17 @@ let private applyFunction =
     | AsyncFunctionWithArgs f -> fun args _ -> f args
     | AsyncFunctionWithArgsAndContext f -> fun args ctx -> f args ctx
 
-let private getUser userId username =
+let private getUser (userId: string) username =
     async {
         match! UserRepository.getById (userId |> int) with
         | None ->
-            match! UserRepository.add (User.create (userId |> int) username) with
-            | DatabaseResult.Failure -> return failwith "Couldn't add user to database."
-            | DatabaseResult.Success _ ->
-                match! UserRepository.getById (userId |> int) with
-                | None -> return failwith "Couldn't retrieve new user"
-                | Some user -> return user
+            let user = (User.create (userId |> int) username)
+            UserRepository.add user |> Async.Ignore |> ignore
+            return user
         | Some user -> return user
     }
 
-let private isCooldownExpired user (command: Command) =
+let private cooldownExpired user (command: Command) =
     let lastCommandTime =
         userCommandCooldowns.GetOrAdd((user, command.Name), (fun _ -> DateTime.MinValue.ToUniversalTime()))
 
@@ -66,7 +63,7 @@ let rec handleCommand userId username source message =
         match Map.tryFind commandName Commands.commands with
         | None -> return None
         | Some command ->
-            if isCooldownExpired user command then
+            if cooldownExpired user command then
                 userCommandCooldowns[(user, command.Name)] <- DateTime.UtcNow
 
                 if (command.AdminOnly && not user.IsAdmin) then
