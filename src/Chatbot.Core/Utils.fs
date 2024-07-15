@@ -99,7 +99,7 @@ module KeyValueParser =
         |> (fun s -> s.Split(" "))
         |> List.ofArray
 
-    let parseKeyValuePairs list (keys: string seq option) =
+    let parseKeyValuePairs list keys =
         let pattern =
             match keys with
             | None -> captureAllPattern
