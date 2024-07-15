@@ -378,12 +378,12 @@ Get the definition of a word from Urban Dictionary.
 
 Examples:
 
-Search for a specific term.
-{exampleArgs "urban" "<term(s)>"}
-{exampleArgs "urban" "forsen"}
-
 Get the definition for a random word.
-{exampleArgs "urban" "random:true"}
+{example "urban"}
+
+Search for a specific term.
+{exampleArgs "urban" "<term>"}
+{exampleArgs "urban" "forsen"}
 """
 
     let UserId =

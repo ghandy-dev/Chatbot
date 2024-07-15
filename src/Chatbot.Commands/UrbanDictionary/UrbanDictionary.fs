@@ -5,22 +5,17 @@ module Reddit =
 
     open Api
     open Chatbot.Commands
-    open Utils.KeyValueParser
 
     open System.Text.RegularExpressions
-
-    let private keys = [ "random" ]
 
     let pattern = @"[\[\]]|\n"
 
     let urban args =
         async {
-            let (_, map) = parseKeyValuePairs args (Some keys)
-
             let f =
-                if map.ContainsKey "random" then
-                    random()
-                else
+                match args with
+                | [] -> random()
+                | _ ->
                     let query = args |> String.concat " "
                     search query
 
