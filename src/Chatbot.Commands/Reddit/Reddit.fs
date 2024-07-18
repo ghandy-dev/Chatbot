@@ -38,7 +38,9 @@ module Reddit =
                             |> List.filter (fun p -> p.Data.Over18 = false && p.Data.IsSelf = false)
                             |> fun ps -> ps[System.Random.Shared.Next(ps.Length)].Data
 
+                        let title = (System.Web.HttpUtility.HtmlDecode post.Title).Replace("\n", "")
+
                         return
                             Ok
-                            <| Message $"r/{post.Subreddit} \"{System.Web.HttpUtility.HtmlDecode post.Title}\" (+{post.Score}) {post.Url}"
+                            <| Message $"r/{post.Subreddit} \"{title}\" (+{post.Score}) {post.Url}"
         }
