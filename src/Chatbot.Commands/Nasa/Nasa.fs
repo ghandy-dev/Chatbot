@@ -13,7 +13,7 @@ module Nasa =
         | [] -> Ok None
         | date :: _ ->
             match DateOnly.TryParseExact(date, dateFormat) with
-            | false, _ -> Error $"Couldn't parse provided date. Expected format: YYYY-MM-DD"
+            | false, _ -> Error $"Couldn't parse provided date. Expected format: yyyy-mm-dd"
             | true, parsedDate -> Ok <| Some parsedDate
 
     let apod args =
