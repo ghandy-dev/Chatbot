@@ -15,6 +15,21 @@ module HelpInfo =
     let example = sprintf "%s %s" commandPrefix
     let exampleArgs = sprintf "%s %s %s" commandPrefix
 
+
+    let AstronomyPictureOfTheDay =
+        $"""
+Get the Astronomy Picture of the Day from NASA.
+
+Examples:
+Get todays picture.
+{example "apod"}
+
+Examples:
+Get the picture for a given date. (date format: yyyy/mm/dd)
+{exampleArgs "apod" "<date>"}
+{exampleArgs "apod" "2024/07/19"}
+"""
+
     let AddBetween =
         $"""
 Insert a word (e.g. an emote) between each word in the input text.
@@ -50,7 +65,8 @@ Get an alias definition
 
 Run an alias
 {exampleArgs ">" "<alias name>"}
-{exampleArgs "alias" "run <alias name>"}"""
+{exampleArgs "alias" "run <alias name>"}
+"""
 
     let Braille =
         $"""

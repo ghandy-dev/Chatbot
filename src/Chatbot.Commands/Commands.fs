@@ -19,6 +19,7 @@ module Commands =
             Command.createCommand ("%", [], HelpInfo.Percentage, SyncFunction percentage, 10000, false)
             Command.createCommand ("addbetween", [ "ab" ], HelpInfo.AddBetween, SyncFunctionWithArgs addBetween, 10000, false)
             Command.createCommand ("alias", [ $"{Chatbot.Configuration.Bot.config.CommandPrefix}" ], HelpInfo.Alias, AsyncFunctionWithArgsAndContext alias, 5000, false)
+            Command.createCommand ("apod", [], HelpInfo.AstronomyPictureOfTheDay, AsyncFunctionWithArgs apod, 20000, false)
             Command.createCommand ("braille", [], HelpInfo.Braille, AsyncFunctionWithArgs braille, 20000, false)
             Command.createCommand ("calculator", [ "calc" ], HelpInfo.Calculator, SyncFunctionWithArgs calculate, 5000, false)
             Command.createCommand ("catfact", [], HelpInfo.CatFact, AsyncFunction catFact, 20000, false)

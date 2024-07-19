@@ -4,7 +4,6 @@ namespace Chatbot.Commands
 module RNG =
 
     open System
-    open Utils
 
     let private random = Random.Shared
 

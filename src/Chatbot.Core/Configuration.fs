@@ -81,3 +81,12 @@ module Configuration =
         }
 
         let config = configuration.GetSection("OpenAI").Get<OpenAiConfig>()
+
+    module Nasa =
+
+        [<CLIMutable>]
+        type NasaConfig = {
+            ApiKey: string
+        }
+
+        let config = configuration.GetSection("Nasa").Get<NasaConfig>()
