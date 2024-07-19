@@ -43,7 +43,10 @@ let private executeCommand command parameters context =
     }
 
 let private parseCommandAndParameters (message: string) =
-    match message.Split(" ", StringSplitOptions.RemoveEmptyEntries) |> List.ofArray with
+    match
+        message.Replace("\U000e0000", "")
+        |> fun m -> m.Split(" ", StringSplitOptions.RemoveEmptyEntries)
+        |> List.ofArray with
     | [] -> failwith "No command?"
     | [ command ] -> command, []
     | command :: parameters -> command, parameters
