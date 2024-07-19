@@ -20,5 +20,11 @@ module Nasa =
         async {
             match! parseApodArgs args |> Async.create |> AsyncResult.bind getPictureOfTheDay with
             | Error err -> return Error err
-            | Ok apod -> return Ok <| Message $"{apod.Title} {apod.HdUrl}"
+            | Ok apod ->
+                let url =
+                    match apod.HdUrl with
+                    | None -> apod.Url
+                    | Some url -> url
+
+                return Ok <| Message $"{apod.Title} {url}"
         }

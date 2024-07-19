@@ -10,7 +10,7 @@ module Nasa =
         Copyright: string
         Date: DateOnly
         Explanation: string
-        HdUrl: string
+        HdUrl: string option
         [<JsonPropertyName("media_type")>]
         MediaType: string
         [<JsonPropertyName("service_version")>]
