@@ -16,7 +16,7 @@ module Nasa =
 
     let private apiKey = Chatbot.Configuration.Nasa.config.ApiKey
 
-    let private pictureOfTheDay date = $"{apiUrl}/apod?api_key={apiKey}&date={date}"
+    let private pictureOfTheDay date = $"{apiUrl}/planetary/apod?api_key={apiKey}&date={date}"
 
     let private marsRoverPhotos date camera = $"{apiUrl}/mars-photos?api_key={apiKey}&date={date}&camera={camera}"
 
