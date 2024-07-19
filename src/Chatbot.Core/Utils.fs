@@ -1,3 +1,4 @@
+[<AutoOpen>]
 module Utils
 
 module Int32 =
@@ -8,6 +9,11 @@ module Int32 =
         | false, _ -> None
 
 module Boolean =
+
+    let tryParse (s: string) =
+        match System.Boolean.TryParse s with
+        | false, _ -> None
+        | true, v -> Some v
 
     let tryParseBit =
         function
@@ -20,6 +26,13 @@ module Boolean =
         function
         | "0" -> false
         | _ -> true
+
+module DateTime =
+
+    let tryParse (s: string) =
+        match System.DateTime.TryParse s with
+        | false, _ -> None
+        | true, v -> Some v
 
 module Text =
 
@@ -82,9 +95,8 @@ module KeyValueParser =
     open System.Text.RegularExpressions
 
     let private patternTemplate = sprintf @"%s:""*(\w+)""*\s*"
-    let private captureAllPattern = @"(\w+):""*(\w+)""*\s*"
 
-    let parseKeyValuePair (string: string) =
+    let tryParseKeyValuePair (string: string) =
         string.Split(":")
         |> function
             | [| key ; value |] ->
@@ -92,18 +104,23 @@ module KeyValueParser =
                 Some(key, value)
             | _ -> None
 
-    let private removeKeyValuePairs list pattern =
+    let removeKeyValues list keys  =
         let string = list |> String.concat " "
 
-        Regex.Replace(string, pattern, "")
-        |> (fun s -> s.Split(" "))
-        |> List.ofArray
-
-    let parseKeyValuePairs list keys =
         let pattern =
-            match keys with
-            | None -> captureAllPattern
-            | Some keys ->
+                keys
+                |> Seq.map patternTemplate
+                |> String.concat "|"
+
+        let newString =
+            Regex.Replace(string, pattern, "")
+            |> (fun s -> s.Split(" "))
+            |> List.ofArray
+
+        newString
+
+    let parse list keys =
+        let pattern =
                 keys
                 |> Seq.map patternTemplate
                 |> String.concat "|"
@@ -114,7 +131,6 @@ module KeyValueParser =
             |> List.filter (fun m -> m.Success)
             |> List.map (fun m -> m.Value)
 
-        let map = matches |> List.choose parseKeyValuePair |> Map.ofList
-        let newList = removeKeyValuePairs list pattern
+        let values = matches |> List.choose tryParseKeyValuePair |> Map.ofList
 
-        (newList, map)
+        values

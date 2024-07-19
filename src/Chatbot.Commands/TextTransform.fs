@@ -4,7 +4,6 @@ namespace Chatbot.Commands
 module TextTransform =
 
     open System
-    open Utils
 
     let private random = Random.Shared
 

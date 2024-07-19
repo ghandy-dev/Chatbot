@@ -6,7 +6,6 @@ module RandomClip =
     open System
 
     open TTVSharp.Helix
-    open Utils
 
     let private getChannel args (context: Context) =
         match context.Source with
@@ -19,8 +18,7 @@ module RandomClip =
             | [] -> Ok channel
             | channel :: _ -> Ok channel
 
-    let private defaultKeyValues = Map [ ("period", "week") ]
-    let keys = defaultKeyValues.Keys
+    let private keys = [ "period" ]
 
     let private periodToDateRange period =
         let rangeTo = DateTime.Today
@@ -36,11 +34,11 @@ module RandomClip =
 
     let randomClip (args: string list) (context: Context) =
         async {
-            let (args, map) =
-                KeyValueParser.parseKeyValuePairs args (Some defaultKeyValues.Keys)
+            let values = KeyValueParser.parse args keys
 
-            let map = map |> Map.mergeInto defaultKeyValues
-            let (dateFrom, dateTo) = periodToDateRange map["period"]
+            let period = values.TryFind "period" |> Option.defaultValue "week"
+
+            let (dateFrom, dateTo) = periodToDateRange period
 
             match!
                 Async.create (getChannel args context)

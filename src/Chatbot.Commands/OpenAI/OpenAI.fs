@@ -5,7 +5,6 @@ module OpenAI =
 
     open Chatbot.Commands
     open Api
-    open Utils
 
     let private toSize =
         function
@@ -16,19 +15,19 @@ module OpenAI =
 
     let private generateImage size prompt = async { return! getImage size prompt }
 
-    let private defaultKeyValues = Map<string, string> [ ("size", "square") ]
+    let private keys = [ "size" ]
 
     let dalle args =
         async {
             match args with
             | [] -> return Error $"No prompt provided"
             | _ ->
-                let (args, map) =
-                    KeyValueParser.parseKeyValuePairs args (Some defaultKeyValues.Keys)
-                    |> (fun (p, m) ->
-                        (p, m |> Map.merge defaultKeyValues)
-                    )
-                match! generateImage map["size"] (args |> String.concat " ") with
+                let values = KeyValueParser.parse args keys
+                let prompt = KeyValueParser.removeKeyValues args keys |> String.concat " "
+
+                let size = values.TryFind "size" |> Option.defaultValue "square"
+
+                match! generateImage size prompt with
                 | Error err -> return Error err
                 | Ok url -> return Ok <| Message url
         }

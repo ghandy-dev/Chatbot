@@ -1,6 +1,5 @@
 module Chatbot.IRC.Messages
 
-open Utils
 open Chatbot.IRC.Parsing.Types
 
 [<AutoOpen>]
