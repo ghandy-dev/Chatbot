@@ -11,7 +11,10 @@ module FaceIt =
 
     let private stats playerName =
         async {
-            match! getPlayer playerName |> AsyncResult.bindZip (fun p -> getPlayerStats p.PlayerId) with
+            match!
+                getPlayer playerName
+                |+> Result.bindZip (fun p -> getPlayerStats p.PlayerId)
+            with
             | Error error -> return Error error
             | Ok(player, stats) ->
                 let recentResults =
@@ -34,7 +37,10 @@ module FaceIt =
 
     let private history playerName =
         async {
-            match! getPlayer playerName |> AsyncResult.bindZip (fun p -> getPlayerMatchHistory p.PlayerId 5) with
+            match!
+                getPlayer playerName
+                |+> Result.bindZip (fun p -> getPlayerMatchHistory p.PlayerId 5)
+            with
             | Error error -> return Error error
             | Ok(player, history) ->
 
@@ -88,12 +94,12 @@ module FaceIt =
 
     let private lastGame playerName =
         async {
-            let! player = getPlayer playerName
-
-            match! player |> AsyncResult.bindZipResult (fun p -> getPlayerMatchHistory p.PlayerId 1) with
+            match!
+                getPlayer playerName
+                |+> Result.bindZip (fun p -> getPlayerMatchHistory p.PlayerId 1)
+            with
             | Error error -> return Error error
             | Ok(player, lastMatch) ->
-
                 match lastMatch.Items with
                 | [] -> return Ok <| Message "No matches played!"
                 | m :: _ ->

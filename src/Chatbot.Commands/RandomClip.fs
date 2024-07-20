@@ -41,9 +41,10 @@ module RandomClip =
             let (dateFrom, dateTo) = periodToDateRange period
 
             match!
-                Async.create (getChannel args context)
-                |> AsyncResult.bind (Users.getUser >> AsyncResult.fromOption "User not found")
-                |> AsyncResult.bind (fun user -> (Clips.getClips user.Id dateFrom dateTo))
+                getChannel args context
+                |> Async.create
+                |> Result.bindAsync (fun username -> Users.getUser username |-> Result.fromOption "User not found")
+                |> Result.bindAsync (fun user -> Clips.getClips user.Id dateFrom dateTo)
             with
             | Ok clips ->
                 match clips |> List.ofSeq with

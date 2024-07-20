@@ -15,27 +15,19 @@ open System
 
 let init () =
     async {
-        let! channels = Database.ChannelRepository.getAll () |+> List.ofSeq |+> List.map (fun c -> c.ChannelName)
-        let! maybeToken = tokenStore.GetToken(TokenType.Twitch)
+        let! channels = Database.ChannelRepository.getAll () |-> List.ofSeq |-> List.map (fun c -> c.ChannelName)
 
-        match maybeToken with
-        | None -> return failwith "Failed to retrieve token"
-        | Some token ->
-            let! maybeUser =
-                Helix.helixApi.Users.GetUsersAsync(token) |> Async.AwaitTask
-                |+> TTVSharp.toResult
-                |+> Result.toOption
-                |+> Option.bind (fun r -> r.Data |> Seq.tryHead)
-
-            match maybeUser with
-            | None -> return failwith "No user associated with token?"
-            | Some user ->
-                return {
-                    Channels = channels
-                    RoomStates = Map.empty
-                    BotUser = user.DisplayName
-                    BotUserId = user.Id
-                }
+        match!
+            tokenStore.GetToken(TokenType.Twitch)
+            |> Option.bindAsync Helix.Users.getAccessTokenUser with
+        | None -> return failwith "Expected access token / user"
+        | Some user ->
+            return {
+                Channels = channels
+                RoomStates = Map.empty
+                BotUser = user.DisplayName
+                BotUserId = user.Id
+            }
     }
 
 let createIrcClient () =
@@ -47,16 +39,7 @@ let authenticate (client: IrcClient) user =
 
         match! Authorization.tokenStore.GetToken Authorization.TokenType.Twitch with
         | None -> failwithf "Couldn't retrieve access token for Twitch API"
-        | Some token ->
-
-            if (botConfig.Capabilities.Length > 0) then
-                Logging.trace "Requesting Capabilities..."
-                let capabilities = String.concat " " botConfig.Capabilities
-                do! client.WriteAsync($"CAP REQ :{capabilities}")
-
-            do! client.WriteAsync($"PASS oauth:{token}")
-            do! client.WriteAsync($"NICK {user}")
-            do! client.FlushAsync()
+        | Some token -> do! client.AuthenticateAsync (user, token, botConfig.Capabilities)
     }
 
 let createBot (client: IrcClient) cancellationToken =
@@ -124,12 +107,7 @@ let createBot (client: IrcClient) cancellationToken =
                                 | Some token ->
                                     match! Helix.Whispers.sendWhisper state.BotUserId wm.UserId wm.Message token with
                                     | 204 -> Logging.info $"Whisper sent to {wm.Username}: {wm.Message}"
-                                    | 400 -> Logging.info "Failed to send whisper. Bad request"
-                                    | 401 -> Logging.info "Failed to send whisper. Things to check: Token refreshed, verified phone number, token has user:manage:whispers scope"
-                                    | 403 -> Logging.info "Failed to send whisper. Suspended or account can't send whispers"
-                                    | 404 -> Logging.info "Failed to send whisper. Recipient user id was not found"
-                                    | 429 -> Logging.info "Failed to send whisper. Exceeded rate limit"
-                                    | statusCode -> Logging.info $"Unexpected response from Helix Whisper API: {statusCode}"
+                                    | statusCode -> Logging.info $"Failed to send whisper, response from Helix Whisper API: {statusCode}"
                         | SendRawIrcMessage msg ->
                             Logging.info $"Sending raw message: {msg}"
                             do! send msg client

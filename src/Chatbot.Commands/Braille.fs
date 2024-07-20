@@ -185,7 +185,11 @@ module Braille =
                     | false -> Error "Unknown conversion specified"
                     | true -> Ok(url, setting)
 
-            match! argsResult |> AsyncResult.bindAsyncSync internalBraille with
+            match!
+                argsResult
+                |> Async.create
+                |> Result.bindAsync (internalBraille)
+            with
             | Error err -> return Error err
             | Ok brailleAscii -> return Ok <| Message brailleAscii
         }

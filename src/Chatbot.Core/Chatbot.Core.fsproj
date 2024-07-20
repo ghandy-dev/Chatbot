@@ -9,11 +9,10 @@
     <Compile Include="Configuration.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Utils.fs" />
+    <Compile Include="Async.fs" />
+    <Compile Include="Operators.fs" />
     <Compile Include="Result.fs" />
-    <Compile Include="Async/Async.fs" />
-    <Compile Include="Async/AsyncResult.fs" />
-    <Compile Include="Async/Operators.fs" />
-    <Compile Include="Async/AsyncOption.fs" />
+    <Compile Include="Option.fs" />
     <Compile Include="Twitch.fs" />
     <Compile Include="TokenStore.fs" />
     <Compile Include="IO.fs" />

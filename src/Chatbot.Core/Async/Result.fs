@@ -64,5 +64,5 @@ let toOptionAsync asyncResult =
 let fromOptionAsync error asyncOption =
     async {
         let! option = asyncOption
-        return fromOption error option
+        return Result.fromOption error option
     }

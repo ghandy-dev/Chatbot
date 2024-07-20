@@ -25,7 +25,11 @@ module Reddit =
             match! tokenStore.GetToken TokenType.Reddit with
             | None -> return Error "Couldn't retrieve access token for Reddit API"
             | Some token ->
-                match! tryParseArgs args |> AsyncResult.bindAsyncSync (fun (subreddit, sort) -> getPosts subreddit sort token) with
+                match!
+                    tryParseArgs args
+                    |> Async.create
+                    |> Result.bindAsync (fun (subreddit, sort) -> getPosts subreddit sort token)
+                with
                 | Error err -> return Error err
                 | Ok subreddit ->
                     let posts = subreddit.Data.Children

@@ -12,7 +12,7 @@ module NameColor =
                 | [] -> context.Username
                 | username :: _ -> username
 
-            match! Chat.getUserChatColor username |> AsyncResult.fromOption "User not found" with
+            match! Chat.getUserChatColor username |-> Result.fromOption "User not found" with
             | Error err -> return Error err
             | Ok response -> return Ok <| Message $"{response.UserName} {response.Color}"
         }

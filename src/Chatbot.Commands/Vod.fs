@@ -12,8 +12,8 @@ module Vod =
             | channel :: _ ->
                 match!
                     Users.getUser channel
-                    |> AsyncResult.fromOption "User not found"
-                    |> AsyncResult.bind (fun user -> Videos.getLatestVod user.Id |> AsyncResult.fromOption "No VOD found")
+                    |> Result.fromOptionAsync "User not found"
+                    |> Result.bindAsync (fun user -> Videos.getLatestVod user.Id |-> Result.fromOption "No VOD found")
                 with
                 | Error err -> return Error err
                 | Ok video -> return Ok <| Message $"\"{video.Title}\" {video.CreatedAt.ToShortDateString()} {video.Url} [{video.Duration}]"

@@ -14,8 +14,8 @@ module Stream =
             | channel :: _ ->
                 match!
                     Users.getUser channel
-                    |> AsyncResult.fromOption "User not found"
-                    |> AsyncResult.bind (fun user -> Streams.getStream user.Id |> AsyncResult.fromOption "Stream not live")
+                    |-> Result.fromOption "User not found"
+                    |> Result.bindAsync (fun user -> Streams.getStream user.Id |-> Result.fromOption "Stream not live")
                 with
                 | Error e -> return Error e
                 | Ok stream ->

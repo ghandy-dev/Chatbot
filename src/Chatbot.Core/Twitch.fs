@@ -27,35 +27,39 @@ module Helix =
 
         let getUserChatColor userId =
             helixApi.Chat.GetUserChatColorAsync(new GetUserChatColorRequest(UserIds = [ userId ])) |> Async.AwaitTask
-            |+> tryHead
+            |-> tryHead
 
     module Clips =
 
         let getClips userId (dateFrom: System.DateTime) (dateTo: System.DateTime) =
             helixApi.Clips.GetClipsAsync(new GetClipsRequestByBroadcasterId(BroadcasterId = userId, StartedAt = dateFrom, EndedAt = dateTo, First = 50)) |> Async.AwaitTask
-            |+> tryGetData
+            |-> tryGetData
 
     module Streams =
 
         let getStreams (first: int) =
             helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(First = first)) |> Async.AwaitTask
-            |+> tryGetData
+            |-> tryGetData
 
         let getStream userId =
             helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(UserIds = [ userId ])) |> Async.AwaitTask
-            |+> tryHead
+            |-> tryHead
 
     module Users =
 
         let getUser username =
             helixApi.Users.GetUsersAsync(new GetUsersRequest(Logins = [ username ])) |> Async.AwaitTask
-            |+> tryHead
+            |-> tryHead
+
+        let getAccessTokenUser accessToken =
+            helixApi.Users.GetUsersAsync(accessToken) |> Async.AwaitTask
+            |-> tryHead
 
     module Videos =
 
         let getLatestVod userId =
             helixApi.Videos.GetVideosByUserIdAsync(new GetVideosByUserIdRequest(UserIds = [ userId ], First = 1)) |> Async.AwaitTask
-            |+> tryHead
+            |-> tryHead
 
     module Whispers =
 
