@@ -50,7 +50,7 @@ module Configuration =
         [<CLIMutable>]
         type BotConfig = {
             CommandPrefix: string
-            Capabilities: string array
+            Capabilities: string list
         }
 
         let config = configuration.GetSection("BotConfig").Get<BotConfig>()
