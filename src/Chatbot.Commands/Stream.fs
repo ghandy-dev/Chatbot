@@ -20,7 +20,7 @@ module Stream =
                 | Error e -> return Error e
                 | Ok stream ->
                     let viewerCount = stream.ViewerCount.ToString("N0")
-                    let uptime = (stream.StartedAt - DateTime.UtcNow).ToString("hh\\h:mm\\m:ss\\s")
+                    let uptime = (DateTime.UtcNow - stream.StartedAt).ToString("hh\h\:mm\m\:ss\s")
                     let url = $"https://twitch.tv/{stream.UserLogin}"
 
                     return
