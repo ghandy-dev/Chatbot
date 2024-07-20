@@ -139,6 +139,16 @@ type IrcClient(host: string, port: int) =
 
     member _.FlushAsync () = flushAsync ()
 
+    member this.AuthenticateAsync (user: string, accessToken: string, capabilities: string list) =
+        async {
+            if (capabilities.Length > 0) then
+                do! this.WriteAsync($"""CAP REQ :{String.concat " " capabilities}""")
+
+            do! this.WriteAsync($"PASS oauth:{accessToken}")
+            do! this.WriteAsync($"NICK {user}")
+            do! this.FlushAsync()
+        }
+
     interface IDisposable with
         member _.Dispose () =
             isConnected <- false
