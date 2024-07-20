@@ -139,7 +139,7 @@ type IrcClient(host: string, port: int) =
 
     member _.FlushAsync () = flushAsync ()
 
-    member this.AuthenticateAsync (user: string, accessToken: string, capabilities: string list) =
+    member this.AuthenticateAsync (user: string, accessToken: string, capabilities: string array) =
         async {
             if (capabilities.Length > 0) then
                 do! this.WriteAsync($"""CAP REQ :{String.concat " " capabilities}""")
