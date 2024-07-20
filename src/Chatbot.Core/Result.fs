@@ -45,11 +45,6 @@ let bindZip binder value =
         | Error error -> return Error error
     }
 
-let toOption result =
-    match result with
-    | Ok value -> Some value
-    | Error _ -> None
-
 let fromOption error option =
     match option with
     | None -> Error error
