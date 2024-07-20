@@ -23,6 +23,12 @@ module Helix =
 
     let helixApi = new HelixApi(options)
 
+    module Channels =
+
+        let getChannel userId =
+            helixApi.Channels.GetChannelAsync(new GetChannelRequest(BroadcasterId = userId)) |> Async.AwaitTask
+            |-> tryHead
+
     module Chat =
 
         let getUserChatColor userId =

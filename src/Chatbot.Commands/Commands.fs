@@ -23,6 +23,7 @@ module Commands =
             Command.createCommand ("braille", [], HelpInfo.Braille, AsyncFunctionWithArgs braille, 20000, false)
             Command.createCommand ("calculator", [ "calc" ], HelpInfo.Calculator, SyncFunctionWithArgs calculate, 5000, false)
             Command.createCommand ("catfact", [], HelpInfo.CatFact, AsyncFunction catFact, 20000, false)
+            Command.createCommand ("channel", [], HelpInfo.Channel, AsyncFunctionWithArgs channel, 20000, false)
             Command.createCommand ("coinflip", [ "cf" ], HelpInfo.CoinFlip, SyncFunction coinFlip, 10000, false)
             Command.createCommand ("eightball", ["8ball"], HelpInfo.Eightball, SyncFunction eightball, 10000, false)
             Command.createCommand ("echo", [], HelpInfo.Echo, SyncFunctionWithArgs echo, 5000, true)

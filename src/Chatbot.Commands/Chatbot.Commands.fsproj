@@ -30,6 +30,7 @@
     <Compile Include="Braille.fs" />
     <Compile Include="TextTransform.fs" />
     <Compile Include="RandomClip.fs" />
+    <Compile Include="Channel.fs" />
     <Compile Include="Stream.fs" />
     <Compile Include="UserChatColor.fs" />
     <Compile Include="UserId.fs" />

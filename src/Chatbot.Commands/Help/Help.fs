@@ -112,10 +112,19 @@ Supported operators:
 
     let CatFact =
         $"""
-Gets a random cat fact
+Gets a random cat fact.
 
-Examples
+Examples:
 {example "catfact"}
+"""
+
+    let Channel =
+        $"""
+Gets a broadcasters channel information.
+
+Examples:
+{exampleArgs "channel" "<channel>"}
+{exampleArgs "channel" "forsen"}
 """
 
     let CoinFlip =
