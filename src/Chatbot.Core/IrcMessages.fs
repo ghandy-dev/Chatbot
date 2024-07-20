@@ -167,168 +167,168 @@ module Types =
         | WhisperRestrictedRecipient
         | Unknown of string
 
-    let (|ParseNoticeEventType|) (eventType) =
-        match eventType with
-        | "already_banned" -> AlreadyBanned
-        | "already_emote_only_off" -> AlreadyEmoteOnlyOff
-        | "already_emote_only_on" -> AlreadyEmoteOnlyOn
-        | "already_followers_off" -> AlreadyFollowersOff
-        | "already_followers_on" -> AlreadyFollowersOn
-        | "already_r9k_off" -> AlreadyR9kOff
-        | "already_r9k_on" -> AlreadyR9kOn
-        | "already_slow_off" -> AlreadySlowOff
-        | "already_slow_on" -> AlreadySlowOn
-        | "already_subs_off" -> AlreadySubsOff
-        | "already_subs_on" -> AlreadySubsOn
-        | "autohost_receive" -> AutohostReceive
-        | "bad_ban_admin" -> BadBanAdmin
-        | "bad_ban_anon" -> BadBanAnon
-        | "bad_ban_broadcaster" -> BadBanBroadcaster
-        | "bad_ban_mod" -> BadBanMod
-        | "bad_ban_self" -> BadBanSelf
-        | "bad_ban_staff" -> BadBanStaff
-        | "bad_commercial_error" -> BadCommercialError
-        | "bad_delete_message_broadcaster" -> BadDeleteMessageBroadcaster
-        | "bad_delete_message_mod" -> BadDeleteMessageMod
-        | "bad_host_error" -> BadHostError
-        | "bad_host_hosting" -> BadHostHosting
-        | "bad_host_rate_exceeded" -> BadHostRateExceeded
-        | "bad_host_rejected" -> BadHostRejected
-        | "bad_host_self" -> BadHostSelf
-        | "bad_mod_banned" -> BadModBanned
-        | "bad_mod_mod" -> BadModMod
-        | "bad_slow_duration" -> BadSlowDuration
-        | "bad_timeout_admin" -> BadTimeoutAdmin
-        | "bad_timeout_anon" -> BadTimeoutAnon
-        | "bad_timeout_broadcaster" -> BadTimeoutBroadcaster
-        | "bad_timeout_duration" -> BadTimeoutDuration
-        | "bad_timeout_mod" -> BadTimeoutMod
-        | "bad_timeout_self" -> BadTimeoutSelf
-        | "bad_timeout_staff" -> BadTimeoutStaff
-        | "bad_unban_no_ban" -> BadUnbanNoBan
-        | "bad_unhost_error" -> BadUnhostError
-        | "bad_unmod_mod" -> BadUnmodMod
-        | "bad_vip_grantee_banned" -> BadVipGranteeBanned
-        | "bad_vip_grantee_already_vip" -> BadVipGranteeAlreadyVip
-        | "bad_vip_max_vips_reached" -> BadVipMaxVipsReached
-        | "bad_vip_achievement_incomplete" -> BadVipAchievementIncomplete
-        | "bad_unvip_grantee_not_vip" -> BadUnvipGranteeNotVip
-        | "ban_success" -> BanSuccess
-        | "cmds_available" -> CmdsAvailable
-        | "color_changed" -> ColorChanged
-        | "commercial_success" -> CommercialSuccess
-        | "delete_message_success" -> DeleteMessageSuccess
-        | "delete_staff_message_success" -> DeleteStaffMessageSuccess
-        | "emote_only_off" -> EmoteOnlyOff
-        | "emote_only_on" -> EmoteOnlyOn
-        | "followers_off" -> FollowersOff
-        | "followers_on" -> FollowersOn
-        | "followers_on_zero" -> FollowersOnZero
-        | "host_off" -> HostOff
-        | "host_on" -> HostOn
-        | "host_receive" -> HostReceive
-        | "host_receive_no_count" -> HostReceiveNoCount
-        | "host_target_went_offline" -> HostTargetWentOffline
-        | "hosts_remaining" -> HostsRemaining
-        | "invalid_user" -> InvalidUser
-        | "mod_success" -> ModSuccess
-        | "msg_banned" -> MsgBanned
-        | "msg_bad_characters" -> MsgBadCharacters
-        | "msg_channel_blocked" -> MsgChannelBlocked
-        | "msg_channel_suspended" -> MsgChannelSuspended
-        | "msg_duplicate" -> MsgDuplicate
-        | "msg_emoteonly" -> MsgEmoteonly
-        | "msg_followersonly" -> MsgFollowersonly
-        | "msg_followersonly_followed" -> MsgFollowersonlyFollowed
-        | "msg_followersonly_zero" -> MsgFollowersonlyZero
-        | "msg_r9k" -> MsgR9k
-        | "msg_ratelimit" -> MsgRatelimit
-        | "msg_rejected" -> MsgRejected
-        | "msg_rejected_mandatory" -> MsgRejectedMandatory
-        | "msg_requires_verified_phone_number" -> MsgRequiresVerifiedPhoneNumber
-        | "msg_slowmode" -> MsgSlowmode
-        | "msg_subsonly" -> MsgSubsonly
-        | "msg_suspended" -> MsgSuspended
-        | "msg_timedout" -> MsgTimedout
-        | "msg_verified_email" -> MsgVerifiedEmail
-        | "no_help" -> NoHelp
-        | "no_mods" -> NoMods
-        | "no_vips" -> NoVips
-        | "not_hosting" -> NotHosting
-        | "no_permission" -> NoPermission
-        | "r9k_off" -> R9kOff
-        | "r9k_on" -> R9kOn
-        | "raid_error_already_raiding" -> RaidErrorAlreadyRaiding
-        | "raid_error_forbidden" -> RaidErrorForbidden
-        | "raid_error_self" -> RaidErrorSelf
-        | "raid_error_too_many_viewers" -> RaidErrorTooManyViewers
-        | "raid_error_unexpected" -> RaidErrorUnexpected
-        | "raid_notice_mature" -> RaidNoticeMature
-        | "raid_notice_restricted_chat" -> RaidNoticeRestrictedChat
-        | "room_mods" -> RoomMods
-        | "slow_off" -> SlowOff
-        | "slow_on" -> SlowOn
-        | "subs_off" -> SubsOff
-        | "subs_on" -> SubsOn
-        | "timeout_no_timeout" -> TimeoutNoTimeout
-        | "timeout_success" -> TimeoutSuccess
-        | "tos_ban" -> TosBan
-        | "turbo_only_color" -> TurboOnlyColor
-        | "unavailable_command" -> UnavailableCommand
-        | "unban_success" -> UnbanSuccess
-        | "unmod_success" -> UnmodSuccess
-        | "unraid_error_no_active_raid" -> UnraidErrorNoActiveRaid
-        | "unraid_error_unexpected" -> UnraidErrorUnexpected
-        | "unraid_success" -> UnraidSuccess
-        | "unrecognized_cmd" -> UnrecognizedCmd
-        | "untimeout_banned" -> UntimeoutBanned
-        | "untimeout_success" -> UntimeoutSuccess
-        | "unvip_success" -> UnvipSuccess
-        | "usage_ban" -> UsageBan
-        | "usage_clear" -> UsageClear
-        | "usage_color" -> UsageColor
-        | "usage_commercial" -> UsageCommercial
-        | "usage_disconnect" -> UsageDisconnect
-        | "usage_delete" -> UsageDelete
-        | "usage_emote_only_off" -> UsageEmoteOnlyOff
-        | "usage_emote_only_on" -> UsageEmoteOnlyOn
-        | "usage_followers_off" -> UsageFollowersOff
-        | "usage_followers_on" -> UsageFollowersOn
-        | "usage_help" -> UsageHelp
-        | "usage_host" -> UsageHost
-        | "usage_marker" -> UsageMarker
-        | "usage_me" -> UsageMe
-        | "usage_mod" -> UsageMod
-        | "usage_mods" -> UsageMods
-        | "usage_r9k_off" -> UsageR9kOff
-        | "usage_r9k_on" -> UsageR9kOn
-        | "usage_raid" -> UsageRaid
-        | "usage_slow_off" -> UsageSlowOff
-        | "usage_slow_on" -> UsageSlowOn
-        | "usage_subs_off" -> UsageSubsOff
-        | "usage_subs_on" -> UsageSubsOn
-        | "usage_timeout" -> UsageTimeout
-        | "usage_unban" -> UsageUnban
-        | "usage_unhost" -> UsageUnhost
-        | "usage_unmod" -> UsageUnmod
-        | "usage_unraid" -> UsageUnraid
-        | "usage_untimeout" -> UsageUntimeout
-        | "usage_unvip" -> UsageUnvip
-        | "usage_user" -> UsageUser
-        | "usage_vip" -> UsageVip
-        | "usage_vips" -> UsageVips
-        | "usage_whisper" -> UsageWhisper
-        | "vip_success" -> VipSuccess
-        | "vips_success" -> VipsSuccess
-        | "whisper_banned" -> WhisperBanned
-        | "whisper_banned_recipient" -> WhisperBannedRecipient
-        | "whisper_invalid_login" -> WhisperInvalidLogin
-        | "whisper_invalid_self" -> WhisperInvalidSelf
-        | "whisper_limit_per_min" -> WhisperLimitPerMin
-        | "whisper_limit_per_sec" -> WhisperLimitPerSec
-        | "whisper_restricted" -> WhisperRestricted
-        | "whisper_restricted_recipient" -> WhisperRestrictedRecipient
-        | _ -> Unknown eventType
+        static member parse =
+            function
+            | "already_banned" -> AlreadyBanned
+            | "already_emote_only_off" -> AlreadyEmoteOnlyOff
+            | "already_emote_only_on" -> AlreadyEmoteOnlyOn
+            | "already_followers_off" -> AlreadyFollowersOff
+            | "already_followers_on" -> AlreadyFollowersOn
+            | "already_r9k_off" -> AlreadyR9kOff
+            | "already_r9k_on" -> AlreadyR9kOn
+            | "already_slow_off" -> AlreadySlowOff
+            | "already_slow_on" -> AlreadySlowOn
+            | "already_subs_off" -> AlreadySubsOff
+            | "already_subs_on" -> AlreadySubsOn
+            | "autohost_receive" -> AutohostReceive
+            | "bad_ban_admin" -> BadBanAdmin
+            | "bad_ban_anon" -> BadBanAnon
+            | "bad_ban_broadcaster" -> BadBanBroadcaster
+            | "bad_ban_mod" -> BadBanMod
+            | "bad_ban_self" -> BadBanSelf
+            | "bad_ban_staff" -> BadBanStaff
+            | "bad_commercial_error" -> BadCommercialError
+            | "bad_delete_message_broadcaster" -> BadDeleteMessageBroadcaster
+            | "bad_delete_message_mod" -> BadDeleteMessageMod
+            | "bad_host_error" -> BadHostError
+            | "bad_host_hosting" -> BadHostHosting
+            | "bad_host_rate_exceeded" -> BadHostRateExceeded
+            | "bad_host_rejected" -> BadHostRejected
+            | "bad_host_self" -> BadHostSelf
+            | "bad_mod_banned" -> BadModBanned
+            | "bad_mod_mod" -> BadModMod
+            | "bad_slow_duration" -> BadSlowDuration
+            | "bad_timeout_admin" -> BadTimeoutAdmin
+            | "bad_timeout_anon" -> BadTimeoutAnon
+            | "bad_timeout_broadcaster" -> BadTimeoutBroadcaster
+            | "bad_timeout_duration" -> BadTimeoutDuration
+            | "bad_timeout_mod" -> BadTimeoutMod
+            | "bad_timeout_self" -> BadTimeoutSelf
+            | "bad_timeout_staff" -> BadTimeoutStaff
+            | "bad_unban_no_ban" -> BadUnbanNoBan
+            | "bad_unhost_error" -> BadUnhostError
+            | "bad_unmod_mod" -> BadUnmodMod
+            | "bad_vip_grantee_banned" -> BadVipGranteeBanned
+            | "bad_vip_grantee_already_vip" -> BadVipGranteeAlreadyVip
+            | "bad_vip_max_vips_reached" -> BadVipMaxVipsReached
+            | "bad_vip_achievement_incomplete" -> BadVipAchievementIncomplete
+            | "bad_unvip_grantee_not_vip" -> BadUnvipGranteeNotVip
+            | "ban_success" -> BanSuccess
+            | "cmds_available" -> CmdsAvailable
+            | "color_changed" -> ColorChanged
+            | "commercial_success" -> CommercialSuccess
+            | "delete_message_success" -> DeleteMessageSuccess
+            | "delete_staff_message_success" -> DeleteStaffMessageSuccess
+            | "emote_only_off" -> EmoteOnlyOff
+            | "emote_only_on" -> EmoteOnlyOn
+            | "followers_off" -> FollowersOff
+            | "followers_on" -> FollowersOn
+            | "followers_on_zero" -> FollowersOnZero
+            | "host_off" -> HostOff
+            | "host_on" -> HostOn
+            | "host_receive" -> HostReceive
+            | "host_receive_no_count" -> HostReceiveNoCount
+            | "host_target_went_offline" -> HostTargetWentOffline
+            | "hosts_remaining" -> HostsRemaining
+            | "invalid_user" -> InvalidUser
+            | "mod_success" -> ModSuccess
+            | "msg_banned" -> MsgBanned
+            | "msg_bad_characters" -> MsgBadCharacters
+            | "msg_channel_blocked" -> MsgChannelBlocked
+            | "msg_channel_suspended" -> MsgChannelSuspended
+            | "msg_duplicate" -> MsgDuplicate
+            | "msg_emoteonly" -> MsgEmoteonly
+            | "msg_followersonly" -> MsgFollowersonly
+            | "msg_followersonly_followed" -> MsgFollowersonlyFollowed
+            | "msg_followersonly_zero" -> MsgFollowersonlyZero
+            | "msg_r9k" -> MsgR9k
+            | "msg_ratelimit" -> MsgRatelimit
+            | "msg_rejected" -> MsgRejected
+            | "msg_rejected_mandatory" -> MsgRejectedMandatory
+            | "msg_requires_verified_phone_number" -> MsgRequiresVerifiedPhoneNumber
+            | "msg_slowmode" -> MsgSlowmode
+            | "msg_subsonly" -> MsgSubsonly
+            | "msg_suspended" -> MsgSuspended
+            | "msg_timedout" -> MsgTimedout
+            | "msg_verified_email" -> MsgVerifiedEmail
+            | "no_help" -> NoHelp
+            | "no_mods" -> NoMods
+            | "no_vips" -> NoVips
+            | "not_hosting" -> NotHosting
+            | "no_permission" -> NoPermission
+            | "r9k_off" -> R9kOff
+            | "r9k_on" -> R9kOn
+            | "raid_error_already_raiding" -> RaidErrorAlreadyRaiding
+            | "raid_error_forbidden" -> RaidErrorForbidden
+            | "raid_error_self" -> RaidErrorSelf
+            | "raid_error_too_many_viewers" -> RaidErrorTooManyViewers
+            | "raid_error_unexpected" -> RaidErrorUnexpected
+            | "raid_notice_mature" -> RaidNoticeMature
+            | "raid_notice_restricted_chat" -> RaidNoticeRestrictedChat
+            | "room_mods" -> RoomMods
+            | "slow_off" -> SlowOff
+            | "slow_on" -> SlowOn
+            | "subs_off" -> SubsOff
+            | "subs_on" -> SubsOn
+            | "timeout_no_timeout" -> TimeoutNoTimeout
+            | "timeout_success" -> TimeoutSuccess
+            | "tos_ban" -> TosBan
+            | "turbo_only_color" -> TurboOnlyColor
+            | "unavailable_command" -> UnavailableCommand
+            | "unban_success" -> UnbanSuccess
+            | "unmod_success" -> UnmodSuccess
+            | "unraid_error_no_active_raid" -> UnraidErrorNoActiveRaid
+            | "unraid_error_unexpected" -> UnraidErrorUnexpected
+            | "unraid_success" -> UnraidSuccess
+            | "unrecognized_cmd" -> UnrecognizedCmd
+            | "untimeout_banned" -> UntimeoutBanned
+            | "untimeout_success" -> UntimeoutSuccess
+            | "unvip_success" -> UnvipSuccess
+            | "usage_ban" -> UsageBan
+            | "usage_clear" -> UsageClear
+            | "usage_color" -> UsageColor
+            | "usage_commercial" -> UsageCommercial
+            | "usage_disconnect" -> UsageDisconnect
+            | "usage_delete" -> UsageDelete
+            | "usage_emote_only_off" -> UsageEmoteOnlyOff
+            | "usage_emote_only_on" -> UsageEmoteOnlyOn
+            | "usage_followers_off" -> UsageFollowersOff
+            | "usage_followers_on" -> UsageFollowersOn
+            | "usage_help" -> UsageHelp
+            | "usage_host" -> UsageHost
+            | "usage_marker" -> UsageMarker
+            | "usage_me" -> UsageMe
+            | "usage_mod" -> UsageMod
+            | "usage_mods" -> UsageMods
+            | "usage_r9k_off" -> UsageR9kOff
+            | "usage_r9k_on" -> UsageR9kOn
+            | "usage_raid" -> UsageRaid
+            | "usage_slow_off" -> UsageSlowOff
+            | "usage_slow_on" -> UsageSlowOn
+            | "usage_subs_off" -> UsageSubsOff
+            | "usage_subs_on" -> UsageSubsOn
+            | "usage_timeout" -> UsageTimeout
+            | "usage_unban" -> UsageUnban
+            | "usage_unhost" -> UsageUnhost
+            | "usage_unmod" -> UsageUnmod
+            | "usage_unraid" -> UsageUnraid
+            | "usage_untimeout" -> UsageUntimeout
+            | "usage_unvip" -> UsageUnvip
+            | "usage_user" -> UsageUser
+            | "usage_vip" -> UsageVip
+            | "usage_vips" -> UsageVips
+            | "usage_whisper" -> UsageWhisper
+            | "vip_success" -> VipSuccess
+            | "vips_success" -> VipsSuccess
+            | "whisper_banned" -> WhisperBanned
+            | "whisper_banned_recipient" -> WhisperBannedRecipient
+            | "whisper_invalid_login" -> WhisperInvalidLogin
+            | "whisper_invalid_self" -> WhisperInvalidSelf
+            | "whisper_limit_per_min" -> WhisperLimitPerMin
+            | "whisper_limit_per_sec" -> WhisperLimitPerSec
+            | "whisper_restricted" -> WhisperRestricted
+            | "whisper_restricted_recipient" -> WhisperRestrictedRecipient
+            | et -> Unknown et
 
     type UserNoticeEventType =
         | Sub
@@ -344,20 +344,20 @@ module Types =
         | BitsBadgeTier
         | Unknown of string
 
-    let (|ParsedUserNoticeEventType|) (eventType) =
-        match eventType with
-        | "sub" -> Sub
-        | "resub" -> ReSub
-        | "subgift" -> SubGift
-        | "submysterygift" -> SubMysteryGift
-        | "giftpaidupgrade" -> GiftPaidUpgrade
-        | "rewardgift" -> RewardGift
-        | "anongiftpaidupgrade" -> NonGiftPaidUpgrade
-        | "raid" -> Raid
-        | "unraid" -> Unraid
-        | "ritual" -> Ritual
-        | "bitsbadgetier" -> BitsBadgeTier
-        | _ -> Unknown eventType
+        static member parse =
+            function
+            | "sub" -> Sub
+            | "resub" -> ReSub
+            | "subgift" -> SubGift
+            | "submysterygift" -> SubMysteryGift
+            | "giftpaidupgrade" -> GiftPaidUpgrade
+            | "rewardgift" -> RewardGift
+            | "anongiftpaidupgrade" -> NonGiftPaidUpgrade
+            | "raid" -> Raid
+            | "unraid" -> Unraid
+            | "ritual" -> Ritual
+            | "bitsbadgetier" -> BitsBadgeTier
+            | et -> Unknown et
 
     type EmotePosition = {
         StartPosition: string
@@ -658,9 +658,7 @@ module MessageMapping =
             Some {
                 Channel = parts.[0].[1..]
                 Message = parts.[1].[1..]
-                MsgId =
-                    match message.Tags["msg-id"] with
-                    | ParseNoticeEventType event -> event
+                MsgId = message.Tags["msg-id"] |> NoticeEventType.parse
             }
         | _ -> None
 
@@ -674,7 +672,7 @@ module MessageMapping =
         | RoomState ->
             Some {
                 Channel = message.Parameters.[1..]
-                EmoteOnly = message.Tags.TryFind "emote-only" |> Option.bind  Boolean.tryParseBit
+                EmoteOnly = message.Tags.TryFind "emote-only" |> Option.bind Boolean.tryParseBit
                 FollowersOnly = message.Tags.TryFind "followers-only" |> Option.bind Boolean.tryParseBit
                 R9K = message.Tags.TryFind "r9k" |> Option.bind Boolean.tryParseBit
                 RoomId = message.Tags["room-id"]
@@ -703,9 +701,7 @@ module MessageMapping =
                 Id = message.Tags["id"]
                 Login = message.Tags["login"]
                 Moderator = message.Tags["mod"] |> Boolean.parseBit
-                MsgId =
-                    match message.Tags["msg-id"] with
-                    | ParsedUserNoticeEventType event -> event
+                MsgId = message.Tags["msg-id"] |> UserNoticeEventType.parse
                 RoomId = message.Tags["room-id"]
                 Subscriber = message.Tags["subscriber"] |> Boolean.parseBit
                 SystemMsg = message.Tags["system-msg"]
