@@ -30,8 +30,10 @@ module Weather =
 
             match toResult response with
             | Ok response ->
-                let! posts = response |> deserializeJsonAsync<'a>
-                return Ok posts
+                return!
+                    response
+                    |> deserializeJsonAsync<'a>
+                    |-> Ok
             | Error e -> return Error $"Http response did not indicate success. {(int) e.statusCode} {e.reasonPhrase}"
         }
 
