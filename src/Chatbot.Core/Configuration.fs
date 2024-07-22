@@ -90,3 +90,29 @@ module Configuration =
         }
 
         let config = configuration.GetSection("Nasa").Get<NasaConfig>()
+
+    module Google =
+
+        [<CLIMutable>]
+        type GoogleConfig = {
+            Geocoding: Geocoding
+        }
+
+        and Geocoding = {
+            ApiKey: string
+        }
+
+        let config = configuration.GetSection("Google").Get<GoogleConfig>()
+
+    module Microsoft =
+
+        [<CLIMutable>]
+        type MicrosoftConfig = {
+            Weather: Weather
+        }
+
+        and Weather = {
+            ApiKey: string
+        }
+
+        let config = configuration.GetSection("Microsoft").Get<MicrosoftConfig>()

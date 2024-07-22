@@ -435,6 +435,17 @@ Examples:
 {exampleArgs "vod" "forsen"}
 """
 
+    let Weather =
+        $"""
+Look up the weather for a location.
+
+Examples:
+
+{exampleArgs "weather" "<location>"}
+{exampleArgs "weather" "Sweden"}
+{exampleArgs "weather" "Madrid, Spain"}
+"""
+
     let Wiki =
         $"""
 Gets the top result wikipedia page for the specified query, along with a short summary of the page.

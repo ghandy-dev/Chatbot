@@ -21,6 +21,9 @@
     <Compile Include="OpenAI/Types.fs" />
     <Compile Include="OpenAI/Api.fs" />
     <Compile Include="OpenAI/OpenAI.fs" />
+    <Compile Include="Weather/Types.fs" />
+    <Compile Include="Weather/Api.fs" />
+    <Compile Include="Weather/Weather.fs" />
     <Compile Include="FaceIt/Types.fs" />
     <Compile Include="FaceIt/Api.fs" />
     <Compile Include="FaceIt/FaceIt.fs" />

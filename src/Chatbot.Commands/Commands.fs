@@ -50,6 +50,7 @@ module Commands =
             Command.createCommand ("urban", [ "ud" ], HelpInfo.UrbanDictionary, AsyncFunctionWithArgs urban, 20000, false)
             Command.createCommand ("userid", [ "uid" ], HelpInfo.UserId, AsyncFunctionWithArgsAndContext userId, 20000, false)
             Command.createCommand ("vod", [], HelpInfo.Vod, AsyncFunctionWithArgs vod, 20000, false)
+            Command.createCommand ("weather", [], HelpInfo.Weather, AsyncFunctionWithArgs weather, 20000, false)
             Command.createCommand ("wiki", [], HelpInfo.Wiki, AsyncFunctionWithArgs wiki, 20000, false)
             Command.createCommand ("xd", [], HelpInfo.xd, SyncFunction xd, 60000, false)
         ]
