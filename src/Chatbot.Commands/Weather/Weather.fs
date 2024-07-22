@@ -7,12 +7,12 @@ module Weather =
     open Types.Weather
     open Google
 
-    let conditionToEmoji iconCode =
+    let weatherCodeToEmoji iconCode =
         match iconCode with
         | IconCode.DN_Cloudy -> "☁️"
         | IconCode.DN_Dreary -> "☁️"
         | IconCode.DN_Fog -> "🌫️"
-        | IconCode.DN_Showers -> ""
+        | IconCode.DN_Showers -> "🌧️"
         | IconCode.DN_ThunderStorms -> "⛈️"
         | IconCode.DN_Rain -> "🌧️"
         | IconCode.DN_Flurries -> "🌨️"
@@ -48,6 +48,7 @@ module Weather =
         | IconCode.N_MostlyCloudyWithThunderstorms -> "⛈️"
         | IconCode.N_MostlyCloudyWithFlurries -> "🌨️"
         | IconCode.N_MostlyCloudyWithSnow -> "🌨️"
+        | _ -> ""
 
     let weather args =
         async {
@@ -70,7 +71,7 @@ module Weather =
                     | weather :: _ ->
                         let time = weather.DateTime.ToString("dd MMM HH:mm")
                         let location = geocoding.FormattedAddress
-                        let emoji = conditionToEmoji weather.IconCode
+                        let emoji = weatherCodeToEmoji weather.IconCode
                         let summary = weather.Phrase
                         let temperature = $"{weather.Temperature.Value}°{weather.Temperature.Unit}"
 
