@@ -306,13 +306,29 @@ Examples:
 
     let RandomClip =
         $"""
-Get a random clip of the current channel, or a specified channel.
+Get a random clip from the current channel, or a specified channel.
+
+Optionally specify a period to look up clips from.
+
+Valid periods are:
+    - day
+    - week (default)
+    - month
+    - year
+    - all
 
 Examples:
 
+Get a random clip from the current channel:
 {example "randomclip"}
+
+Get a random clip from a channel:
 {exampleArgs "randomclip" "<channel>"}
 {exampleArgs "randomclip" "forsen"}
+
+Get a random clip using in a given period:
+{exampleArgs "randomclip" "<channel> period:<period>"}
+{exampleArgs "randomclip" "lirik period:year"}
 """
 
     let RandomLine =
