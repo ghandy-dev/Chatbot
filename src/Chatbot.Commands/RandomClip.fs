@@ -25,9 +25,11 @@ module RandomClip =
 
         let rangeFrom =
             match period with
+            | "day" -> rangeTo.AddDays(-1)
             | "week" -> rangeTo.AddDays(-7)
             | "month" -> rangeTo.AddMonths(-1)
             | "year" -> rangeTo.AddYears(-1)
+            | "all"
             | _ -> DateTime.MinValue
 
         (rangeFrom, rangeTo)
