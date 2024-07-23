@@ -58,6 +58,14 @@ and PlusCode = {
     GlobalCode: string
 }
 
+type Timezone = {
+  DstOffset: int
+  RawOffset: int
+  Status: string
+  TimeZoneId: string
+  TimeZoneName: string
+}
+
 [<RequireQualifiedAccess>]
 type Status =
     | Ok
@@ -79,13 +87,16 @@ type Status =
         | "UNKNOWN_ERROR" -> Some UnknownError
         | _ -> None
 
-let private apiKey = Chatbot.Configuration.Google.config.Geocoding.ApiKey
+let private geocodeApiKeey = Chatbot.Configuration.Google.config.Geocoding.ApiKey
+let private timezoneApiKey = Chatbot.Configuration.Google.config.Timezone.ApiKey
 
 let [<Literal>] private  ApiUrl = "https://maps.googleapis.com/maps/api"
 
-let private  GeocodeUrl = $"{ApiUrl}/geocode/json?"
+let private GeocodeUrl = $"{ApiUrl}/geocode/json?"
+let private TimezoneUrl = $"{ApiUrl}/maps/json?"
 
-let private GeocodeAddress address = $"{GeocodeUrl}address={address}&key={apiKey}"
+let private GeocodeAddress address = $"{GeocodeUrl}address={address}&key={geocodeApiKeey}"
+let private Timezone latitude longitude timestamp = $"{TimezoneUrl}location={latitude},{longitude}&timestamp={timestamp}&key={timezoneApiKey}"
 
 let private getFromJson<'T> url =
     async {
@@ -106,7 +117,7 @@ let private getFromJson<'T> url =
                 |-> Ok
     }
 
-let getGeocodedAddress (address) =
+let getLocationGecode (address) =
     async {
         let address = System.Web.HttpUtility.UrlEncode (address |> String.concat "+")
         let url = GeocodeAddress address
@@ -119,6 +130,19 @@ let getGeocodedAddress (address) =
                 match response.Results with
                 | [] -> return Error "No results"
                 | location :: _ -> return Ok location
+            | Some _ -> return Error response.Status
+            | _ -> return Error "Unknown status error from Google Geocode API"
+    }
+
+let getTimezone latitude longitude timestamp =
+    async {
+        let url = Timezone latitude longitude timestamp
+
+        match! getFromJson<Timezone> url with
+        | Error err -> return Error err
+        | Ok response ->
+            match response.Status |> Status.tryParse with
+            | Some Status.Ok -> return Ok response
             | Some _ -> return Error response.Status
             | _ -> return Error "Unknown status error from Google Geocode API"
     }

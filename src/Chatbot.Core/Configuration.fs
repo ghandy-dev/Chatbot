@@ -96,9 +96,14 @@ module Configuration =
         [<CLIMutable>]
         type GoogleConfig = {
             Geocoding: Geocoding
+            Timezone: Timezone
         }
 
         and Geocoding = {
+            ApiKey: string
+        }
+
+        and Timezone = {
             ApiKey: string
         }
 

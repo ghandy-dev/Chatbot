@@ -46,7 +46,7 @@ module Commands =
             Command.createCommand ("rockpaperscissors", [ "rps" ], HelpInfo.RockPaperScissors, AsyncFunctionWithArgsAndContext rps, 10000, false)
             Command.createCommand ("roll", [], HelpInfo.Roll, SyncFunctionWithArgs roll, 10000, false)
             Command.createCommand ("stream", [], HelpInfo.Stream, AsyncFunctionWithArgs stream, 20000, false)
-            Command.createCommand ("time", [], HelpInfo.Time, SyncFunction time, 5000, false)
+            Command.createCommand ("time", [], HelpInfo.Time, AsyncFunctionWithArgs time, 5000, false)
             Command.createCommand ("texttransform", [ "tt" ], HelpInfo.TextTransform, SyncFunctionWithArgs texttransform, 5000, false)
             Command.createCommand ("topstreams", [ "ts" ], HelpInfo.TopStreams, AsyncFunction topStreams, 20000, false)
             Command.createCommand ("urban", [ "ud" ], HelpInfo.UrbanDictionary, AsyncFunctionWithArgs urban, 20000, false)

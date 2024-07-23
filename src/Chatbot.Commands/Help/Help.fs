@@ -390,11 +390,17 @@ Examples:
 
     let Time =
         $"""
-Get current time (UTC).
+Get the current time, or local timezone time based on location.
 
 Examples:
 
+Get current time (UTC).
 {example "time"}
+
+Get current time of location.
+{exampleArgs "time" "<location>"}
+{exampleArgs "time" "Paraguay"}
+{exampleArgs "time" "California, US"}
 """
 
     let TextTransform =
