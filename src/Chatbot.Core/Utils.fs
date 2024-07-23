@@ -48,6 +48,7 @@ module Text =
         let patterns = [
             @"`{3}", ""                             // Code Blocks
             @"\*{1,2}([\w].*?)\*{1,2}", "$1"        // Bold
+            @"-{2,3}", ""                           // Em/en dash
             @"_{2}([\w].*?)_{2}", "$1"              // Italics
             @"~{2}([\w].*?)~{2}", "$1"              // Strikethrough
             @"#{1,6}\s(.*?)", "$1"                  // Headers
