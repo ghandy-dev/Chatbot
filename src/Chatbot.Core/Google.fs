@@ -79,15 +79,15 @@ type Status =
         | "UNKNOWN_ERROR" -> Some UnknownError
         | _ -> None
 
-let apiKey = Chatbot.Configuration.Google.config.Geocoding.ApiKey
+let private apiKey = Chatbot.Configuration.Google.config.Geocoding.ApiKey
 
-let [<Literal>] ApiUrl = "https://maps.googleapis.com/maps/api"
+let [<Literal>] private  ApiUrl = "https://maps.googleapis.com/maps/api"
 
-let GeocodeUrl = $"{ApiUrl}/geocode/json?"
+let private  GeocodeUrl = $"{ApiUrl}/geocode/json?"
 
-let GeocodeAddress address = $"{GeocodeUrl}address={address}&key={apiKey}"
+let private GeocodeAddress address = $"{GeocodeUrl}address={address}&key={apiKey}"
 
-let getFromJson<'T> url =
+let private getFromJson<'T> url =
     async {
         use! response =
             http {

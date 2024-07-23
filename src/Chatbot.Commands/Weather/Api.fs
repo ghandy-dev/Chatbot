@@ -8,16 +8,13 @@ module Weather =
     open FsHttp.Request
     open FsHttp.Response
 
-    open System
+    let [<Literal>] private  apiUrl = "https://atlas.microsoft.com/weather"
 
-    [<Literal>]
-    let private apiUrl = "https://atlas.microsoft.com/weather"
+    let private apiKey = Chatbot.Configuration.Microsoft.config.Weather.ApiKey
 
-    let apiKey = Chatbot.Configuration.Microsoft.config.Weather.ApiKey
+    let private apiVersion = "api-version=1.1"
 
-    let apiVersion = "api-version=1.1"
-
-    let currentWeather latitude longitude = $"{apiUrl}/currentConditions/json?{apiVersion}&query={latitude},{longitude}&subscription-key={apiKey}"
+    let private currentWeather latitude longitude = $"{apiUrl}/currentConditions/json?{apiVersion}&query={latitude},{longitude}&subscription-key={apiKey}"
 
     let private getFromJsonAsync<'a> url =
         async {
