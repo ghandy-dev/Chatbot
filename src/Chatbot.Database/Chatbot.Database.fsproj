@@ -12,6 +12,7 @@
     <Compile Include="ChannelRepository.fs" />
     <Compile Include="RpsRepository.fs" />
     <Compile Include="UserRepository.fs" />
+    <Compile Include="RssFeedRepository.fs" />
     <Compile Include="AliasRepository.fs" />
   </ItemGroup>
 

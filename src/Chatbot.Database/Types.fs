@@ -70,3 +70,8 @@ module Types =
             Name = name
             Command = command
         }
+
+    type RssFeeds = {
+        Urls: string list
+        Category: string
+    }

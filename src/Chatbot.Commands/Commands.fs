@@ -3,6 +3,7 @@ namespace Chatbot.Commands
 open Chatbot.Commands
 open Chatbot.Commands.FaceIt
 open Chatbot.Commands.Logs
+open Chatbot.Commands.News
 open Chatbot.Commands.OpenAI
 open Chatbot.Commands.Reddit
 open Chatbot.Commands.UrbanDictionary
@@ -34,6 +35,7 @@ module Commands =
             Command.createCommand ("joinchannel", [], HelpInfo.JoinChannel, AsyncFunctionWithArgs joinChannel, 5000, true)
             Command.createCommand ("leavechannel", [], HelpInfo.LeaveChannel, AsyncFunctionWithArgs leaveChannel, 5000, true)
             Command.createCommand ("namecolor", [ "color" ], HelpInfo.NameColor, AsyncFunctionWithArgsAndContext namecolor, 20000, false)
+            Command.createCommand ("news", [], HelpInfo.News, AsyncFunctionWithArgs news, 15000, false)
             Command.createCommand ("pick", [], HelpInfo.Pick, SyncFunctionWithArgs pick, 10000, false)
             Command.createCommand ("pipe", [], HelpInfo.Pipe, SyncFunctionWithArgs pipe, 10000, false)
             Command.createCommand ("ping", [], HelpInfo.Ping, SyncFunction ping, 5000, false)

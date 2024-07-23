@@ -231,6 +231,33 @@ Examples:
 {exampleArgs "namecolor" "forsen"}
 """
 
+    let News =
+        $"""
+Get top stories/trending news.
+
+Valid categories are:
+Top Stories
+World
+US
+UK
+Business
+Politics
+Health
+Education
+Science
+Technology
+Entertainment
+Sports
+
+Examples:
+Get world news:
+{example "news"}
+
+Get news based on category
+{exampleArgs "news" "<category>"}
+{exampleArgs "news" "science"}
+"""
+
     let Pick =
         $"""
 Pick a single random item from a given list of items.

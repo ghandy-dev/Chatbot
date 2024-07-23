@@ -21,6 +21,8 @@
     <Compile Include="OpenAI/Types.fs" />
     <Compile Include="OpenAI/Api.fs" />
     <Compile Include="OpenAI/OpenAI.fs" />
+    <Compile Include="News/Api.fs" />
+    <Compile Include="News/News.fs" />
     <Compile Include="Weather/Types.fs" />
     <Compile Include="Weather/Api.fs" />
     <Compile Include="Weather/Weather.fs" />
@@ -65,6 +67,7 @@
     <PackageReference Include="FsHttp" Version="12.0.0" />
     <PackageReference Include="SkiaSharp" Version="2.88.8" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />
+    <PackageReference Include="System.ServiceModel.Syndication" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>

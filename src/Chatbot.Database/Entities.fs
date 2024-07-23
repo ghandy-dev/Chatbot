@@ -29,3 +29,14 @@ module Entities =
         name: string
         command: string
     }
+
+    type internal NewsFeed = {
+        rss_feed_id: int
+        category_id: int
+        url: string
+    }
+
+    type internal NewsFeedCategory = {
+        category_id: int
+        category: string
+    }
