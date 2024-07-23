@@ -10,13 +10,13 @@ module AliasRepository =
 
     open Types
 
-    let private mapAliasEntity (entity: Entities.Alias) : Alias = {
+    let private mapEntity (entity: Entities.Alias) : Alias = {
         UserId = entity.user_id
         Name = entity.name
         Command = entity.command
     }
 
-    let private mapAlias (record: Alias) : Entities.Alias = {
+    let private mapRecord (record: Alias) : Entities.Alias = {
         alias_id = 0
         user_id = record.UserId
         name = record.Name
@@ -33,12 +33,12 @@ module AliasRepository =
                 |> connection.SelectAsync<Entities.Alias>
                 |> Async.AwaitTask
 
-            return channel |> Seq.map mapAliasEntity |> Seq.tryExactlyOne
+            return channel |> Seq.map mapEntity |> Seq.tryExactlyOne
         }
 
     let add (alias: Alias) =
         async {
-            let newAlias = mapAlias alias
+            let newAlias = mapRecord alias
 
             try
                 let! rowsAffected =
@@ -58,7 +58,7 @@ module AliasRepository =
 
     let update (alias: Alias) =
         async {
-            let updatedAlias = mapAlias alias
+            let updatedAlias = mapRecord alias
 
             try
                 let! rowsAffected =

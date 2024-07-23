@@ -10,12 +10,12 @@ module ChannelRepository =
 
     open Types
 
-    let private mapChannelEntity (entity: Entities.Channel) : Channel = {
+    let private mapEntity (entity: Entities.Channel) : Channel = {
         ChannelId = entity.channel_id.ToString()
         ChannelName = entity.channel_name
     }
 
-    let private mapChannel (record: Channel) : Entities.Channel = {
+    let private mapRecord (record: Channel) : Entities.Channel = {
         channel_id = record.ChannelId |> int
         channel_name = record.ChannelName
     }
@@ -30,7 +30,7 @@ module ChannelRepository =
                 |> connection.SelectAsync<Entities.Channel>
                 |> Async.AwaitTask
 
-            return channel |> Seq.map mapChannelEntity
+            return channel |> Seq.map mapEntity
         }
 
     let getAllActive () =
@@ -43,7 +43,7 @@ module ChannelRepository =
                 |> connection.SelectAsync<Entities.Channel>
                 |> Async.AwaitTask
 
-            return channel |> Seq.map mapChannelEntity
+            return channel |> Seq.map mapEntity
         }
 
     let getById (channelId: int) =
@@ -56,12 +56,12 @@ module ChannelRepository =
                 |> connection.SelectAsync<Entities.Channel>
                 |> Async.AwaitTask
 
-            return channel |> Seq.map mapChannelEntity |> Seq.tryExactlyOne
+            return channel |> Seq.map mapEntity |> Seq.tryExactlyOne
         }
 
     let add (channel: Channel) =
         async {
-            let newChannel = mapChannel channel
+            let newChannel = mapRecord channel
 
             try
                 let! rowsAffected =

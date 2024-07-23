@@ -11,13 +11,13 @@ module UserRepository =
     open Types
 
 
-    let private mapUserEntity (entity: Entities.User) : User = {
+    let private mapEntity (entity: Entities.User) : User = {
         UserId = entity.user_id
         Username = entity.username
         IsAdmin = entity.is_admin
     }
 
-    let private mapUser (record: User) : Entities.User = {
+    let private mapRecord (record: User) : Entities.User = {
         user_id = record.UserId
         username = record.Username
         is_admin = record.IsAdmin
@@ -33,12 +33,12 @@ module UserRepository =
                 |> connection.SelectAsync<Entities.User>
                 |> Async.AwaitTask
 
-            return user |> Seq.map mapUserEntity |> Seq.tryExactlyOne
+            return user |> Seq.map mapEntity |> Seq.tryExactlyOne
         }
 
     let add (user: User) =
         async {
-            let newUser = mapUser user
+            let newUser = mapRecord user
 
             try
                 let! rowsAffected =

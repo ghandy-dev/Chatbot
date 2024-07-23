@@ -10,7 +10,7 @@ module RpsRepository =
 
     open Types
 
-    let private mapRpsStatsEntity (entity: Entities.RpsStats) : RpsStats = {
+    let private mapEntity (entity: Entities.RpsStats) : RpsStats = {
         UserId = entity.user_id
         Score = entity.score
         TotalMoves = entity.total_moves
@@ -18,7 +18,7 @@ module RpsRepository =
         Losses = entity.losses
     }
 
-    let private mapRpsStats (record: RpsStats) : Entities.RpsStats = {
+    let private mapRecord (record: RpsStats) : Entities.RpsStats = {
         rps_stats_id = 0
         user_id = record.UserId
         score = record.Score
@@ -37,12 +37,12 @@ module RpsRepository =
                 |> connection.SelectAsync<Entities.RpsStats>
                 |> Async.AwaitTask
 
-            return stats |> Seq.map mapRpsStatsEntity |> Seq.tryExactlyOne
+            return stats |> Seq.map mapEntity |> Seq.tryExactlyOne
         }
 
     let add (stats: RpsStats) =
         async {
-            let newStats = mapRpsStats stats
+            let newStats = mapRecord stats
 
             try
                 let! rowsAffected =
@@ -62,7 +62,7 @@ module RpsRepository =
 
     let update (stats: RpsStats) =
         async {
-            let updatedStats = mapRpsStats stats
+            let updatedStats = mapRecord stats
 
             try
                 let! rowsAffected =
