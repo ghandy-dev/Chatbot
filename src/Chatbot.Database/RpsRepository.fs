@@ -3,12 +3,10 @@
 module RpsRepository =
 
     open Chatbot
-
     open DB
+    open Types
 
     open Dapper.FSharp.SQLite
-
-    open Types
 
     let private mapEntity (entity: Entities.RpsStats) : RpsStats = {
         UserId = entity.user_id

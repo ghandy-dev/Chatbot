@@ -3,13 +3,10 @@
 module UserRepository =
 
     open Chatbot
-
     open DB
-
-    open Dapper.FSharp.SQLite
-
     open Types
 
+    open Dapper.FSharp.SQLite
 
     let private mapEntity (entity: Entities.User) : User = {
         UserId = entity.user_id

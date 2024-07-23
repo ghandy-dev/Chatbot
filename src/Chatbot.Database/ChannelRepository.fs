@@ -3,12 +3,10 @@
 module ChannelRepository =
 
     open Chatbot
-
     open DB
+    open Types
 
     open Dapper.FSharp.SQLite
-
-    open Types
 
     let private mapEntity (entity: Entities.Channel) : Channel = {
         ChannelId = entity.channel_id.ToString()

@@ -3,12 +3,10 @@
 module AliasRepository =
 
     open Chatbot
-
     open DB
+    open Types
 
     open Dapper.FSharp.SQLite
-
-    open Types
 
     let private mapEntity (entity: Entities.Alias) : Alias = {
         UserId = entity.user_id
