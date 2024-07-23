@@ -56,7 +56,7 @@ module Weather =
             | [] -> return Error "No location provided"
             | location ->
                 match!
-                    getGeocodedAddress location
+                    getLocationGecode location
                     |> Result.bindZipAsync (fun g ->
                         let latitude = g.Geometry.Location.Lat
                         let longitude = g.Geometry.Location.Lng
