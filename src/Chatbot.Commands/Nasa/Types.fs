@@ -5,7 +5,7 @@ module Nasa =
     open System
     open System.Text.Json.Serialization
 
-    // Astrology Picture of the Day
+    // Astronomy Picture of the Day
     type APOD = {
         Copyright: string
         Date: DateOnly
