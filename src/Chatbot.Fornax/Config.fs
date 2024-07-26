@@ -1,23 +1,28 @@
 module Config
 
-[<Literal>]
-let ProjectRoot = __SOURCE_DIRECTORY__
-
-[<Literal>]
-let OutputFolderName = "wwwroot"
-
-[<Literal>]
-let OutputDir = ProjectRoot + "/" + OutputFolderName
+let [<Literal>] ProjectRoot = __SOURCE_DIRECTORY__
+let [<Literal>] OutputFolderName = "wwwroot"
+let [<Literal>] OutputDir = ProjectRoot + "/" + OutputFolderName
 
 let siteContents =
-    Loaders.GlobalLoader.loader __SOURCE_DIRECTORY__ (new SiteContents())
+    (new SiteContents())
+    |> Loaders.GlobalLoader.loader ProjectRoot
+    |> Loaders.CommandLoader.loader ProjectRoot
 
 let config: PageGenerators = {
     Generators = [
-        {
+        yield {
             Page = "index"
-            Html = Pages.Index.generate siteContents ProjectRoot "index"
-            OutputFile = "index.html"
+            GenerateOutput = Pages.Index.generate siteContents ProjectRoot "index"
+            Output = Config.NewFileName "index.html"
         }
+        yield!
+            Chatbot.Commands.Commands.commandsList |> List.map (fun (command) ->
+                {
+                    Page = command.Name
+                    GenerateOutput = Pages.Command.generate siteContents ProjectRoot command.Name
+                    Output =  Config.NewFileName $"{command.Name}.html"
+                }
+            )
     ]
 }

@@ -7,8 +7,10 @@
   <ItemGroup>
       <Compile Include="Types.fs" />
       <Compile Include="Loaders/GlobalLoader.fs" />
+      <Compile Include="Loaders/CommandLoader.fs" />
       <Compile Include="Shared/Layout.fs" />
-      <Compile Include="Pages/Index.fs" />
+      <Compile Include="Generators/Index.fs" />
+      <Compile Include="Generators/Command.fs" />
       <Compile Include="Config.fs" />
       <Compile Include="Build.fs" />
       <Compile Include="Serve.fs" />

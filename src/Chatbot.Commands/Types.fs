@@ -38,10 +38,16 @@ type CommandFunction =
     | AsyncFunctionWithArgs of (Parameters -> Async<CommandResult>)
     | AsyncFunctionWithArgsAndContext of (Parameters -> Context -> Async<CommandResult>)
 
+type Details = {
+    Name: string
+    Description: string
+    ExampleUsage: string
+}
+
 type Command = {
     Name: string
     Aliases: string list
-    Description: string
+    Details: Details
     Execute: CommandFunction
     Cooldown: int
     AdminOnly: bool
@@ -50,7 +56,7 @@ type Command = {
     static member createCommand (name, alias, description, func, cooldown, adminOnly) = {
         Name = name
         Aliases = alias
-        Description = description
+        Details = description
         Execute = func
         Cooldown = cooldown
         AdminOnly = adminOnly

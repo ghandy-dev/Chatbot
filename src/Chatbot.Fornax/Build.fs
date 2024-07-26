@@ -40,14 +40,21 @@ let private createOutDir () =
 
 let private generatePages () =
     async {
-        let siteContents = Loaders.GlobalLoader.loader ProjectRoot (new SiteContents())
-
         let configs = Config.config
 
         for config in configs.Generators do
             printfn """Generating page "%s" """ config.Page
-            printfn """Writing page "%s" to "%s" """ config.Page config.OutputFile
-            do! File.WriteAllTextAsync($"{OutputDir}/{config.OutputFile}", config.Html) |> Async.AwaitTask
+
+            let filename =
+                match config.Output with
+                | NewFileName fname -> fname
+                | ChangeExtension ext -> $"{config.Page}.{ext}"
+                | SameFileName -> $"{config.Page}.html"
+                | Custom mapper -> mapper config.Page
+                | MultipleFiles mapper -> mapper config.Page
+
+            printfn """Writing page "%s" to "%s" """ config.Page filename
+            do! File.WriteAllTextAsync($"{OutputDir}/{filename}", config.GenerateOutput) |> Async.AwaitTask
     }
 
 let private copyCssFiles () =

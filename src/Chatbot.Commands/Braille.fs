@@ -170,7 +170,7 @@ module Braille =
             match! getImage url with
             | None -> return Error "Couldn't retrieve image, invalid url provided, or an unsupported image format is used"
             | Some image ->
-                let braille = imageToBraille 32 image setting
+                let braille = imageToBraille 30 image setting
                 return Ok braille
         }
 

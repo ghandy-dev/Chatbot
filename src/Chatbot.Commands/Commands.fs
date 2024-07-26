@@ -15,15 +15,15 @@ module Commands =
         | [] -> [ (c.Name), c ]
         | aliases -> c.Name :: aliases |> List.map (fun a -> (a), c)
 
-    let commandsMap =
+    let commandsList =
         [
-            Command.createCommand ("%", [], HelpInfo.Percentage, SyncFunction percentage, 10000, false)
             Command.createCommand ("addbetween", [ "ab" ], HelpInfo.AddBetween, SyncFunctionWithArgs addBetween, 10000, false)
             Command.createCommand ("alias", [ $"{Chatbot.Configuration.Bot.config.CommandPrefix}" ], HelpInfo.Alias, AsyncFunctionWithArgsAndContext alias, 5000, false)
             Command.createCommand ("apod", [], HelpInfo.AstronomyPictureOfTheDay, AsyncFunctionWithArgs apod, 20000, false)
             Command.createCommand ("braille", [], HelpInfo.Braille, AsyncFunctionWithArgs braille, 20000, false)
             Command.createCommand ("calculator", [ "calc" ], HelpInfo.Calculator, SyncFunctionWithArgs calculate, 5000, false)
             Command.createCommand ("catfact", [], HelpInfo.CatFact, AsyncFunction catFact, 20000, false)
+            Command.createCommand ("chance", [ "%" ], HelpInfo.Chance, SyncFunction chance, 10000, false)
             Command.createCommand ("channel", [], HelpInfo.Channel, AsyncFunctionWithArgs channel, 20000, false)
             Command.createCommand ("coinflip", [ "cf" ], HelpInfo.CoinFlip, SyncFunction coinFlip, 10000, false)
             Command.createCommand ("eightball", ["8ball"], HelpInfo.Eightball, SyncFunction eightball, 10000, false)
@@ -31,7 +31,7 @@ module Commands =
             Command.createCommand ("encode", [], HelpInfo.Encode, SyncFunctionWithArgs encode, 5000, false)
             Command.createCommand ("faceit", [], HelpInfo.FaceIt, AsyncFunctionWithArgs faceit, 20000, false)
             Command.createCommand ("gpt", [], HelpInfo.Gpt, AsyncFunctionWithArgsAndContext gpt, 15000, false)
-            Command.createCommand ("help", [], "\nDisplay help info about commands.", SyncFunction help, 10000, false)
+            Command.createCommand ("help", [],  HelpInfo.Help, SyncFunction help, 10000, false)
             Command.createCommand ("joinchannel", [], HelpInfo.JoinChannel, AsyncFunctionWithArgs joinChannel, 5000, true)
             Command.createCommand ("leavechannel", [], HelpInfo.LeaveChannel, AsyncFunctionWithArgs leaveChannel, 5000, true)
             Command.createCommand ("namecolor", [ "color" ], HelpInfo.NameColor, AsyncFunctionWithArgsAndContext namecolor, 20000, false)
@@ -58,7 +58,7 @@ module Commands =
         ]
 
     let commands =
-        commandsMap
+        commandsList
         |> List.map toKeyValue
         |> List.collect id
         |> Map.ofList

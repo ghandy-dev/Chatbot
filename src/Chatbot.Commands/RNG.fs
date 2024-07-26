@@ -36,7 +36,7 @@ module RNG =
     [<AutoOpen>]
     module Percentage =
 
-        let percentage () =
+        let chance () =
             let n = random.NextDouble() * 100.0
             Ok <| Message $"""{n.ToString("n2")}%%"""
 

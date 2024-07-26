@@ -9,42 +9,43 @@ module Help =
 
 module HelpInfo =
 
-    open System
-
     let commandPrefix = Chatbot.Configuration.Bot.config.CommandPrefix
     let example = sprintf "%s %s" commandPrefix
     let exampleArgs = sprintf "%s %s %s" commandPrefix
 
 
     let AstronomyPictureOfTheDay =
-        $"""
-Get the Astronomy Picture of the Day from NASA.
-
-Examples:
+        {
+            Name = "Astronomy Picture Of TheDay"
+            Description = "Get the Astronomy Picture of the Day from NASA."
+            ExampleUsage = $"""
 Get todays picture.
 {example "apod"}
 
-Examples:
+
 Get the picture for a given date. (date format: yyyy/mm/dd)
 {exampleArgs "apod" "<date>"}
 {exampleArgs "apod" "2024/07/19"}
 """
+        }
 
     let AddBetween =
+        {
+            Name = "Add Between"
+            Description = "Insert a word (e.g. an emote) between each word in the input text."
+            ExampleUsage =
         $"""
-Insert a word (e.g. an emote) between each word in the input text.
-
-Examples:
 Add a new alias
 {exampleArgs "addbetween" "addbetween <word> <text>"}
 {exampleArgs "addbetween" "addbetween forsenE LET'S GO FORSEN"}
 """
+        }
 
     let Alias =
-        $"""
-Runs a command using a custom alias.
-
-Examples:
+        {
+            Name = "Alias"
+            Description = "Runs a command using a custom alias."
+            ExampleUsage = $"""
 Add a new alias
 {exampleArgs "alias" "add <alias name> <commands>"}
 {exampleArgs "alias" "add forsenclip randomclip forsen"}
@@ -67,13 +68,13 @@ Run an alias
 {exampleArgs ">" "<alias name>"}
 {exampleArgs "alias" "run <alias name>"}
 """
+        }
 
     let Braille =
-        $"""
-Generate ASCII braille art of an image.
-
-Examples:
-
+        {
+            Name = "Braille"
+            Description = "Generate ASCII braille art of an image."
+            ExampleUsage = $"""
 {exampleArgs "braille" "<url>"}
 {exampleArgs "braille" "https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0"}
 
@@ -84,19 +85,14 @@ Supported conversions:
     - lightness (default)
     - luminance
     - average
-    - max
-"""
+    - max"""
+        }
 
     let Calculator =
-        $"""
-Calculate a mathematical expression.
-
-Examples:
-
-{exampleArgs "calculate" "2 + 2"}
-{exampleArgs "calculate" "(1 / 2) ^ 4"}
-{exampleArgs "calculate" "sqrt 25"}
-
+        {
+            Name = "Calculator"
+            Description = "Calculate a mathematical expression."
+            ExampleUsage = $"""
 Supported operators:
     - Addition +
     - Subtraction -
@@ -108,74 +104,74 @@ Supported operators:
     - Square root sqrt
     - Log log
     - Exponent exp
+
+{exampleArgs "calculate" "2 + 2"}
+{exampleArgs "calculate" "(1 / 2) ^ 4"}
+{exampleArgs "calculate" "sqrt 25"}
 """
+        }
 
     let CatFact =
-        $"""
-Gets a random cat fact.
-
-Examples:
-{example "catfact"}
-"""
+        {
+            Name = "Cat Fact"
+            Description = "Gets a random cat fact."
+            ExampleUsage = $"""{example "catfact"}"""
+        }
 
     let Channel =
+        {
+            Name = "Channel"
+            Description = "Gets a broadcasters channel information."
+            ExampleUsage =
         $"""
-Gets a broadcasters channel information.
-
-Examples:
 {exampleArgs "channel" "<channel>"}
 {exampleArgs "channel" "forsen"}
 """
+        }
 
     let CoinFlip =
-        $"""
-Flips a coin (50:50 odds)
-
-Heads or Tails
-
-Examples:
-
-{example "coinflip"}
-"""
+        {
+            Name = "Coin Flip"
+            Description = "Flips a coin (50:50 odds)"
+            ExampleUsage =
+        $"""{example "coinflip"}"""
+        }
 
     let Eightball =
-        $"""
-Ask a question and predict the future.
-
-Examples:
-
-{example "eightball"}
-"""
+        {
+            Name = "Eightball"
+            Description = "Ask a question and predict the future."
+            ExampleUsage = $"""{example "eightball"}"""
+        }
 
     let Echo =
-        $"""
-Echo input back to the user.
-
-Examples:
-
-{exampleArgs "echo" "<input>"}
-{exampleArgs "echo" "Hello World!"}
+        {
+                Name = "Echo"
+                Description = "Echo input back to the user."
+                ExampleUsage = $"""
+    {exampleArgs "echo" "<input>"}
+    {exampleArgs "echo" "Hello World!"}
 """
+        }
 
     let Encode =
-        $"""
-Encode text transforming it to a different a different format.
-
-Examples:
-
+        {
+            Name = "Encode"
+            Description = "Encode text transforming it to a different a different format."
+            ExampleUsage = $"""
 {exampleArgs "encode" "<encoder> <input>"}
 Encode using the caeser cipher with a 13 letter shift, re-applying this again to the encoded output decodes the text.
 {exampleArgs "encode" "rot13 Hello World!"}
 Encode input to base64.
 {exampleArgs "encode" "base64 forsen"}
 """
+        }
 
     let FaceIt =
-        $"""
-Get recent match stats, or recent history of wins and losses for games played on FaceIt for CS2.
-
-Examples:
-
+        {
+            Name = "FaceIt"
+            Description = "Get recent match stats, or recent history of wins and losses for games played on FaceIt for CS2."
+            ExampleUsage = $"""
 Get last game stats (can't get live game info):
 {exampleArgs "faceit" "<player name>"}
 {exampleArgs "faceit" "FrozenBag"}
@@ -188,53 +184,62 @@ Get a players recent win/loss history:
 {exampleArgs "faceit" "history <player name>"}
 {exampleArgs "faceit" "history FrozenBag"}
 """
+        }
 
     let Gpt =
-        $"""
-Chat with OpenAI's ChatGPT
-
+        {
+            Name = "Gpt"
+            Description = "Chat with OpenAI's ChatGPT."
+            ExampleUsage = $"""
 Conversations are based on the context of the channel, and Gpt maintains a history of messages sent by chatters for up to 10 minutes from the last message sent.
 i.e. 10 mins after sending no messages through the gpt command will wipe your chatting history with it
 
-Examples:
-
 {exampleArgs "gpt" "<prompt>"}
 """
+        }
+
+    let Help =
+        {
+            Name = "Help"
+            Description = "Get help info about commands."
+            ExampleUsage = $"""{example "help"}"""
+        }
 
     let JoinChannel =
-        $"""
-Join a channel and add it to the join list.
-
-Examples:
-
+        {
+            Name = "Join Channel"
+            Description = "Join a channel and add it to the join list."
+            ExampleUsage = $"""
 {exampleArgs "joinchannel" "<channel name>"}
 {exampleArgs "joinchannel" "forsen"}
 """
+        }
 
     let LeaveChannel =
-        $"""
-Leave a channel and remove it from the join list.
-
-Examples:
-
+        {
+            Name = "Leave Channel"
+            Description = "Leave a channel and remove it from the join list."
+            ExampleUsage = $"""
 {exampleArgs "leavechannel" "<channel name>"}
 {exampleArgs "leavechannel" "forsen"}
 """
+        }
 
     let NameColor =
-        $"""
-Get a user's username chat color.
-
-Examples:
-
+        {
+            Name = "Name Color"
+            Description = "Get a user's username chat color."
+            ExampleUsage = $"""
 {exampleArgs "namecolor" "<username>"}
 {exampleArgs "namecolor" "forsen"}
 """
+        }
 
     let News =
-        $"""
-Get top stories/trending news.
-
+        {
+            Name = "News"
+            Description = "Get top/trending news."
+            ExampleUsage = $"""
 Valid categories are:
 Top Stories
 World
@@ -249,7 +254,6 @@ Technology
 Entertainment
 Sports
 
-Examples:
 Get world news:
 {example "news"}
 
@@ -257,13 +261,13 @@ Get news based on category
 {exampleArgs "news" "<category>"}
 {exampleArgs "news" "science"}
 """
+        }
 
     let Pick =
-        $"""
-Pick a single random item from a given list of items.
-
-Examples:
-
+        {
+            Name = "Pick"
+            Description = "Pick a single random item from a given list of items."
+            ExampleUsage = $"""
 {exampleArgs "pick" "<items>"}
 {exampleArgs "pick" "1 2 3 4 5 6 7"}
 {exampleArgs "pick" "Red Green Yellow Blue Pink"}
@@ -272,53 +276,39 @@ Custom delimiter:
 {exampleArgs "pick" "delimiter:<delimiter> <input sequence>"}
 {exampleArgs "pick" "delimiter:, Elden Ring, Dark Souls 1, Dark Souls 2, Dark Souls 3, Sekiro"}
 """
+        }
 
     let Pipe =
-        $"""
-Pipe together 2 or more commands, taking the result from the previous command, and sending it to the next.
+        {
+            Name = "Pipe"
+            Description = "Pipe together 2 or more commands, taking the result from the previous command, and sending it to the next."
+            ExampleUsage = $"""
 Commands must be delimited by a "|" character
-
-Examples:
 
 {exampleArgs "pipe" "<command> | <command> | ..."}
 {exampleArgs "pipe" "pick one two three | texttransform uppercase"}
 """
+        }
 
     let Ping =
-        $"""
-Ping to check bot is up and running.
-Responds with some metrics (TODO).
+        {
+            Name = "Ping"
+            Description = "Ping to check bot is up and running."
+            ExampleUsage = $"""{example "ping"}"""
+        }
 
-Examples:
-
-{example "ping"}
-"""
-
-    let Percentage =
-        $"""
-Returns a percentage from 0-100%%.
-
-Examples:
-
-{example "percentage"}
-
-"""
+    let Chance =
+        {
+            Name = "Chance"
+            Description = "Returns a percentage from 0-100%%."
+            ExampleUsage = $"""{example "percentage"}"""
+        }
 
     let RandomClip =
-        $"""
-Get a random clip from the current channel, or a specified channel.
-
-Optionally specify a period to look up clips from.
-
-Valid periods are:
-    - day
-    - week (default)
-    - month
-    - year
-    - all
-
-Examples:
-
+        {
+            Name = "Random Clip"
+            Description = "Get a random clip from the current channel, or a specified channel."
+            ExampleUsage = $"""
 Get a random clip from the current channel:
 {example "randomclip"}
 
@@ -327,38 +317,48 @@ Get a random clip from a channel:
 {exampleArgs "randomclip" "forsen"}
 
 Get a random clip using in a given period:
+
+Valid periods are:
+    - day
+    - week (default)
+    - month
+    - year
+    - all
+
 {exampleArgs "randomclip" "<channel> period:<period>"}
 {exampleArgs "randomclip" "lirik period:year"}
 """
+        }
 
     let RandomLine =
-        $"""
-Gets a random line from anyone or a specified user from within the current channel.
+        {
+            Name = "Random Line"
+            Description = "Gets a random line from anyone or a specified user from within the current channel."
+            ExampleUsage = $"""
 Only channels with logs available can be used.
-
-Examples:
 
 {example "randomline"}
 {exampleArgs "randomline" "<username>"}
 {exampleArgs "randomline" "forsen"}
 """
+        }
 
     let RandomQuote =
-        $"""
-Gets a random quote from yourself from the current channel.
+        {
+            Name = "Random Quote"
+            Description = "Gets a random quote from yourself from the current channel."
+            ExampleUsage = $"""
 Only channels with logs available can be used.
 
-Examples:
 {example "randomquote"}
 """
+        }
 
     let Reddit =
-        $"""
-Gets a reddit post that is currently trending (images / videos only)
-Only channels with logs available can be used.
-
-Examples:
-
+        {
+            Name = "Reddit"
+            Description = "Gets a reddit post that is currently trending (images / videos only)"
+            ExampleUsage = $"""
 Get a trending reddit post from a subreddit.
 {exampleArgs "reddit" "<subreddit>"}
 {exampleArgs "reddit" "linuxmemes"}
@@ -367,24 +367,22 @@ Get a trending reddit post based sorted by; "top" / "hot" / "best"
 {exampleArgs "reddit" "<sort> <subreddit>"}
 {exampleArgs "reddit" "top shitposting"}
 """
-
+        }
     let RockPaperScissors =
-        $"""
-Play Rock Paper Scissors against a CPU player. Earn points, and keep track of stats.
-
-Examples:
-
+        {
+            Name = "Rock, Paper, Scissors"
+            Description = "Play Rock Paper Scissors against the bot. Earn points, and keep track of stats."
+            ExampleUsage = $"""
 {exampleArgs "rps" "<shape>"}
 {exampleArgs "rps" "rock"}
 """
+        }
 
     let Roll =
-        $"""
-Roll and random number.
-Default 0-10.
-
-Examples:
-
+        {
+            Name = "Roll"
+            Description = "Roll a random number."
+            ExampleUsage = $"""
 Roll a random number between 0 and 10.
 {example "roll"}
 
@@ -392,24 +390,23 @@ Roll a random number between a min and max value.
 {exampleArgs "roll" "<min> <max>"}
 {exampleArgs "roll" "0 100"}
 """
+        }
 
     let Stream =
-        $"""
-Gets stream info for a stream that is currently live.
-Title, viewcount, current category, uptime.
-
-Examples:
-
+        {
+            Name = "Stream"
+            Description = "Gets stream info for a stream that is currently live."
+            ExampleUsage = $"""
 {exampleArgs "stream" "<channel>"}
 {exampleArgs "stream" "forsen"}
 """
+        }
 
     let Time =
-        $"""
-Get the current time, or local timezone time based on location.
-
-Examples:
-
+        {
+            Name = "Time"
+            Description = "Get the current time (UTC), or the local time from a location"
+            ExampleUsage = $"""
 Get current time (UTC).
 {example "time"}
 
@@ -418,11 +415,13 @@ Get current time of location.
 {exampleArgs "time" "Paraguay"}
 {exampleArgs "time" "California, US"}
 """
+        }
 
     let TextTransform =
-        $"""
-Transforms text from input to a different format.
-
+        {
+            Name = "Text Transform"
+            Description = "Transforms text to a different format."
+            ExampleUsage = $"""
 Supported transforms are:
     - uppercase
     - lowercase
@@ -430,28 +429,24 @@ Supported transforms are:
     - shuffle
     - explode
 
-Examples:
-
 {exampleArgs "texttransform" "<transform> <text>"}
 {exampleArgs "texttransform" "uppercase hello world!"}
 """
+        }
 
     let TopStreams =
-        $"""
-Gets top 10 streams (by viewer count) on Twitch.
-Broadcaster - game (viewer count)
-
-Examples:
-
-{example "topstreams"}
-"""
+        {
+            Name = "Top Streams"
+            Description = "Gets top 10 streams (by viewer count) on Twitch."
+            ExampleUsage = $"""{example "topstreams"}
+            """
+        }
 
     let UrbanDictionary =
-        $"""
-Get the definition of a word from Urban Dictionary.
-
-Examples:
-
+        {
+            Name = "Urban Dictionary"
+            Description = "Get the definition of a word from Urban Dictionary."
+            ExampleUsage = $"""
 Get the definition for a random word.
 {example "urban"}
 
@@ -459,56 +454,52 @@ Search for a specific term.
 {exampleArgs "urban" "<term>"}
 {exampleArgs "urban" "forsen"}
 """
+        }
 
     let UserId =
-        $"""
-Gets a user's twitch id.
-
+        {
+            Name = "User Id"
+            Description = "Get a user's Twitch id."
+            ExampleUsage = $"""
 Doesn't return anything if the user is currently banned.
-
-Examples:
 
 {exampleArgs "userid" "<username>"}
 {exampleArgs "userid" "forsen"}
 """
+        }
 
     let Vod =
-        $"""
-Gets information about the most recent video-on-demand (VOD) of a channel.
-
+        {
+            Name = "Vod"
+            Description = "Gets information about the most recent video-on-demand (VOD) of a channel."
+            ExampleUsage = $"""
 Doesn't return anything if the user is currently banned.
 
-Examples:
-
 {exampleArgs "vod" "<channel>"}
-{exampleArgs "vod" "forsen"}
-"""
+{exampleArgs "vod" "forsen"} """
+        }
 
     let Weather =
-        $"""
-Look up the weather for a location.
-
-Examples:
-
+        {
+            Name = "Weather"
+            Description = "Look up the latest weather for any location around the world."
+            ExampleUsage = $"""
 {exampleArgs "weather" "<location>"}
 {exampleArgs "weather" "Sweden"}
 {exampleArgs "weather" "Madrid, Spain"}
 """
+        }
 
     let Wiki =
-        $"""
-Gets the top result wikipedia page for the specified query, along with a short summary of the page.
-
-Examples:
-
-{exampleArgs "wiki" "<query>"}
-"""
+        {
+            Name = "Wikipedia"
+            Description = "Gets the top result wikipedia page for the specified query, along with a short summary of the page."
+            ExampleUsage = $"""{exampleArgs "wiki" "<query>"}"""
+        }
 
     let xd =
-        $"""
-xd.
-
-Examples:
-
-{example "xd"}
-"""
+        {
+            Name = "xd"
+            Description = "xd"
+            ExampleUsage = $"""xd.{example "xd"}"""
+        }
