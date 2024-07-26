@@ -42,7 +42,22 @@ module OpenAI =
                 | input ->
                     let message = String.concat " " input
 
-                    match! sendGptMessage message context.Username channel with
+                    match! sendGptMessage message context.Username channel false with
+                    | Error err -> return Error err
+                    | Ok message -> return Ok <| Message(Text.stripMarkdownTags message)
+        }
+
+    let evilgpt args context =
+        async {
+            match context.Source with
+            | Whisper _ -> return Ok <| Message "Gpt currently cannot be used in whispers"
+            | Channel channel ->
+                match args with
+                | [] -> return Error "No input provided"
+                | input ->
+                    let message = String.concat " " input
+
+                    match! sendGptMessage message context.Username channel true with
                     | Error err -> return Error err
                     | Ok message -> return Ok <| Message(Text.stripMarkdownTags message)
         }

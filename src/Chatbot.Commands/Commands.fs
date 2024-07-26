@@ -29,6 +29,7 @@ module Commands =
             Command.createCommand ("eightball", ["8ball"], HelpInfo.Eightball, SyncFunction eightball, 10000, false)
             Command.createCommand ("echo", [], HelpInfo.Echo, SyncFunctionWithArgs echo, 5000, true)
             Command.createCommand ("encode", [], HelpInfo.Encode, SyncFunctionWithArgs encode, 5000, false)
+            Command.createCommand ("evilgpt", [], HelpInfo.EvilGpt, AsyncFunctionWithArgsAndContext evilgpt, 15000, false)
             Command.createCommand ("faceit", [], HelpInfo.FaceIt, AsyncFunctionWithArgs faceit, 20000, false)
             Command.createCommand ("gpt", [], HelpInfo.Gpt, AsyncFunctionWithArgsAndContext gpt, 15000, false)
             Command.createCommand ("help", [],  HelpInfo.Help, SyncFunction help, 10000, false)

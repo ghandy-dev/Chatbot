@@ -70,9 +70,22 @@ module Api =
         ]
     }
 
-    let sendGptMessage message user channel =
+    let private evilSystemMessage = {
+        Role = "system"
+        Name = None
+        Content = [
+            {
+                Type = "text"
+                Text = "You are a character who is mean and a bully. Your tone is condescending, sarcastic, and occasionally mocking. You enjoy teasing and belittling others in a playful, non-toxic way."
+            }
+        ]
+    }
+
+    let sendGptMessage message user channel evil =
         async {
-            let key = $"{user}_{channel}"
+            let evilKey = if evil then "evil" else ""
+            let key = $"{user}_{channel}_{evilKey}"
+            let systemMessage = if evil then evilSystemMessage else systemMessage
 
             let message = [
                 {

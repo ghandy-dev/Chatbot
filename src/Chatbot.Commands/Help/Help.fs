@@ -167,6 +167,13 @@ Encode input to base64.
 """
         }
 
+    let EvilGpt =
+        {
+            Name = "Evil Gpt"
+            Description = "Chat with OpenAI's ChatGPT, who is a bit of a bully this time."
+            ExampleUsage = $"""{exampleArgs "evilgpt" "<prompt>"}"""
+        }
+
     let FaceIt =
         {
             Name = "FaceIt"
