@@ -77,14 +77,15 @@ Run an alias
 {exampleArgs "braille" "<url>"}
 {exampleArgs "braille" "https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0"}
 
-With conversion
-{exampleArgs "braille" "<setting> <url>"}
-{exampleArgs "braille" "lightness https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0"}
 Supported conversions:
     - lightness (default)
     - luminance
     - average
-    - max"""
+    - max
+
+{exampleArgs "braille" "<setting> <url>"}
+{exampleArgs "braille" "lightness https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0"}
+"""
         }
 
     let Calculator =
@@ -115,6 +116,13 @@ Supported operators:
             Name = "Cat Fact"
             Description = "Gets a random cat fact."
             ExampleUsage = $"""{example "catfact"}"""
+        }
+
+    let Chance =
+        {
+            Name = "Chance"
+            Description = "Returns a percentage from 0-100%."
+            ExampleUsage = $"""{example "percentage"}"""
         }
 
     let Channel =
@@ -159,8 +167,11 @@ Supported operators:
             Description = "Encode text transforming it to a different a different format."
             ExampleUsage = $"""
 {exampleArgs "encode" "<encoder> <input>"}
+{exampleArgs "encode" "ceaser Kappa 123"}
+
 Encode using the caeser cipher with a 13 letter shift, re-applying this again to the encoded output decodes the text.
 {exampleArgs "encode" "rot13 Hello World!"}
+
 Encode input to base64.
 {exampleArgs "encode" "base64 forsen"}
 """
@@ -301,13 +312,6 @@ Commands must be delimited by a "|" character
             Name = "Ping"
             Description = "Ping to check bot is up and running."
             ExampleUsage = $"""{example "ping"}"""
-        }
-
-    let Chance =
-        {
-            Name = "Chance"
-            Description = "Returns a percentage from 0-100%%."
-            ExampleUsage = $"""{example "percentage"}"""
         }
 
     let RandomClip =
@@ -507,5 +511,5 @@ Doesn't return anything if the user is currently banned.
         {
             Name = "xd"
             Description = "xd"
-            ExampleUsage = $"""xd.{example "xd"}"""
+            ExampleUsage = $"""{example "xd"}"""
         }
