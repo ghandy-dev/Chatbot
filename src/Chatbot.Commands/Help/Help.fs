@@ -35,7 +35,6 @@ Get the picture for a given date. (date format: yyyy/mm/dd)
             Description = "Insert a word (e.g. an emote) between each word in the input text."
             ExampleUsage =
         $"""
-Add a new alias
 {exampleArgs "addbetween" "addbetween <word> <text>"}
 {exampleArgs "addbetween" "addbetween forsenE LET'S GO FORSEN"}
 """
