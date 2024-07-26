@@ -15,7 +15,7 @@ let private generate' (ctx: SiteContents) (page: string) =
             tr [] [
                 th [] [ !! "Name" ]
                 th [ Scope "col" ] [ !! "Aliases" ]
-                th [ Scope "col" ] [ !! "Admin Only?" ]
+                th [ Scope "col" ] [ !! "Admin only?" ]
                 th [ Scope "col" ] [ !! "Cooldown (seconds)" ]
                 th [ Scope "col" ] [ !! "Description" ]
             ]
@@ -33,10 +33,9 @@ let private generate' (ctx: SiteContents) (page: string) =
     let content =
         let title = h1 [] [ !! "Commands" ]
 
-        article [] [ div [] [ title ; commands ] ]
+        div [] [ title ; commands ]
 
 
     content |> Layout.render ctx
-
 
 let generate (ctx: SiteContents) (projectRoot: string) (page: string) = generate' ctx page

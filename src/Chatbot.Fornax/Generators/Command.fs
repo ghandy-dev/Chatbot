@@ -51,5 +51,4 @@ let private generate' (ctx: SiteContents) (page: string) =
 
     content |> Layout.render ctx
 
-
 let generate (ctx: SiteContents) (projectRoot: string) (page: string) = generate' ctx page
