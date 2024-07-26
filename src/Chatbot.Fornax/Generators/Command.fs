@@ -43,8 +43,8 @@ let private generate' (ctx: SiteContents) (page: string) =
                     td [] [ !! (if command.AdminOnly then "✓" else "✘") ]
                 ]
                 tr [] [
-                    td [] [ !! "Description" ]
-                    td [] [ yield! command.ExampleUsage.Split("\n") |> Array.map (fun l ->  p [] [ !! l ] ) ]
+                    td [] [ !! "Usage" ]
+                    td [] [ yield! command.ExampleUsage.Split("\n") |> Array.map (fun l ->  p [] [ !! (System.Web.HttpUtility.HtmlEncode l) ] ) ]
                 ]
             ]
         ]
