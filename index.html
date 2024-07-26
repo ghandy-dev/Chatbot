@@ -4,24 +4,25 @@
     <base href="/Chatbot/"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>
-      Commands - Help
+      Commands
     </title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tiny.css@0.12/dist/dark.css"/>
     <link rel="stylesheet" type="text/css" href="style/style.css"/>
   </head>
   <body>
-    <article class="articles">
-      <div class="article-body">
-        <h1 class="article-title">
+    <article>
+      <div>
+        <h1>
           Commands
         </h1>
         <table>
-          <colgroup class="table-heading">
-            <col span="2" style="width: 5%;"/>
-            <col span="2" style="width: 5%;"/>
-            <col span="1" style="width: 80%;"/>
+          <colgroup>
+            <col/>
+            <col/>
+            <col/>
           </colgroup>
-          <tr class="table-heading">
+          <tr>
             <th>
               Name
             </th>
@@ -38,1091 +39,745 @@
               Description
             </th>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              %
-            </td>
-            <td>
-              
-            </td>
-            <td style="text-align: center;">
-              ✘
-            </td>
-            <td style="text-align: center;">
-              10
-            </td>
-            <td>
-              <pre>
-                
-Returns a percentage from 0-100%.
-
-Examples:
-
-&gt; percentage
-
-
-              </pre>
-            </td>
-          </tr>
-          <tr class="table-row">
-            <td>
-              addbetween
+              <a href="/addbetween">
+                addbetween
+              </a>
             </td>
             <td>
               ab
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               10
             </td>
             <td>
-              <pre>
-                
-Insert a word (e.g. an emote) between each word in the input text.
-
-Examples:
-Add a new alias
-&gt; addbetween addbetween &lt;word&gt; &lt;text&gt;
-&gt; addbetween addbetween forsenE LET&#39;S GO FORSEN
-
-              </pre>
+              Insert a word (e.g. an emote) between each word in the input text.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              alias
+              <a href="/alias">
+                alias
+              </a>
             </td>
             <td>
               >
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               5
             </td>
             <td>
-              <pre>
-                
-Runs a command using a custom alias.
-
-Examples:
-Add a new alias
-&gt; alias add &lt;alias name&gt; &lt;commands&gt;
-&gt; alias add forsenclip randomclip forsen
-
-Remove an alias
-&gt; alias remove &lt;alias name&gt;
-&gt; alias delete &lt;alias name&gt;
-&gt; alias remove forsenclip
-
-Update an alias
-&gt; alias edit &lt;alias name&gt; &lt;commands&gt;
-&gt; alias update &lt;alias name&gt; &lt;commands&gt;
-&gt; alias edit forsenclip randomclip forsen
-
-Get an alias definition
-&gt; alias definition &lt;alias name&gt;
-&gt; alias definition forsenclip
-
-Run an alias
-&gt; &gt; &lt;alias name&gt;
-&gt; alias run &lt;alias name&gt;
-
-              </pre>
+              Runs a command using a custom alias.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              apod
+              <a href="/apod">
+                apod
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               20
             </td>
             <td>
-              <pre>
-                
-Get the Astronomy Picture of the Day from NASA.
-
-Examples:
-Get todays picture.
-&gt; apod
-
-Examples:
-Get the picture for a given date. (date format: yyyy/mm/dd)
-&gt; apod &lt;date&gt;
-&gt; apod 2024/07/19
-
-              </pre>
+              Get the Astronomy Picture of the Day from NASA.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              braille
+              <a href="/braille">
+                braille
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               20
             </td>
             <td>
-              <pre>
-                
-Generate ASCII braille art of an image.
-
-Examples:
-
-&gt; braille &lt;url&gt;
-&gt; braille https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0
-
-With conversion
-&gt; braille &lt;setting&gt; &lt;url&gt;
-&gt; braille lightness https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0
-Supported conversions:
-    - lightness (default)
-    - luminance
-    - average
-    - max
-
-              </pre>
+              Generate ASCII braille art of an image.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              calculator
+              <a href="/calculator">
+                calculator
+              </a>
             </td>
             <td>
               calc
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               5
             </td>
             <td>
-              <pre>
-                
-Calculate a mathematical expression.
-
-Examples:
-
-&gt; calculate 2 + 2
-&gt; calculate (1 / 2) ^ 4
-&gt; calculate sqrt 25
-
-Supported operators:
-    - Addition +
-    - Subtraction -
-    - Multiplication *
-    - Division /
-    - Modulo %
-    - Power ^
-    - Negative (prefix) -
-    - Square root sqrt
-    - Log log
-    - Exponent exp
-
-              </pre>
+              Calculate a mathematical expression.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              catfact
+              <a href="/catfact">
+                catfact
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               20
             </td>
             <td>
-              <pre>
-                
-Gets a random cat fact.
-
-Examples:
-&gt; catfact
-
-              </pre>
+              Gets a random cat fact.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              channel
+              <a href="/chance">
+                chance
+              </a>
+            </td>
+            <td>
+              %
+            </td>
+            <td>
+              ✘
+            </td>
+            <td>
+              10
+            </td>
+            <td>
+              Returns a percentage from 0-100%%.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="/channel">
+                channel
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               20
             </td>
             <td>
-              <pre>
-                
-Gets a broadcasters channel information.
-
-Examples:
-&gt; channel &lt;channel&gt;
-&gt; channel forsen
-
-              </pre>
+              Gets a broadcasters channel information.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              coinflip
+              <a href="/coinflip">
+                coinflip
+              </a>
             </td>
             <td>
               cf
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               10
             </td>
             <td>
-              <pre>
-                
-Flips a coin (50:50 odds)
-
-Heads or Tails
-
-Examples:
-
-&gt; coinflip
-
-              </pre>
+              Flips a coin (50:50 odds)
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              echo
+              <a href="/echo">
+                echo
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✓
             </td>
-            <td style="text-align: center;">
+            <td>
               5
             </td>
             <td>
-              <pre>
-                
-Echo input back to the user.
-
-Examples:
-
-&gt; echo &lt;input&gt;
-&gt; echo Hello World!
-
-              </pre>
+              Echo input back to the user.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              eightball
+              <a href="/eightball">
+                eightball
+              </a>
             </td>
             <td>
               8ball
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               10
             </td>
             <td>
-              <pre>
-                
-Ask a question and predict the future.
-
-Examples:
-
-&gt; eightball
-
-              </pre>
+              Ask a question and predict the future.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              encode
+              <a href="/encode">
+                encode
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               5
             </td>
             <td>
-              <pre>
-                
-Encode text transforming it to a different a different format.
-
-Examples:
-
-&gt; encode &lt;encoder&gt; &lt;input&gt;
-Encode using the caeser cipher with a 13 letter shift, re-applying this again to the encoded output decodes the text.
-&gt; encode rot13 Hello World!
-Encode input to base64.
-&gt; encode base64 forsen
-
-              </pre>
+              Encode text transforming it to a different a different format.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              faceit
+              <a href="/evilgpt">
+                evilgpt
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
-              20
-            </td>
             <td>
-              <pre>
-                
-Get recent match stats, or recent history of wins and losses for games played on FaceIt for CS2.
-
-Examples:
-
-Get last game stats (can&#39;t get live game info):
-&gt; faceit &lt;player name&gt;
-&gt; faceit FrozenBag
-
-Get stats for a player:
-&gt; faceit stats &lt;player name&gt;
-&gt; faceit stats FrozenBag
-
-Get a players recent win/loss history:
-&gt; faceit history &lt;player name&gt;
-&gt; faceit history FrozenBag
-
-              </pre>
-            </td>
-          </tr>
-          <tr class="table-row">
-            <td>
-              gpt
-            </td>
-            <td>
-              
-            </td>
-            <td style="text-align: center;">
-              ✘
-            </td>
-            <td style="text-align: center;">
               15
             </td>
             <td>
-              <pre>
-                
-Chat with OpenAI&#39;s ChatGPT
-
-Conversations are based on the context of the channel, and Gpt maintains a history of messages sent by chatters for up to 10 minutes from the last message sent.
-i.e. 10 mins after sending no messages through the gpt command will wipe your chatting history with it
-
-Examples:
-
-&gt; gpt &lt;prompt&gt;
-
-              </pre>
+              Chat with OpenAI's ChatGPT, who is a bit of a bully this time.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              help
+              <a href="/faceit">
+                faceit
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
+              20
+            </td>
+            <td>
+              Get recent match stats, or recent history of wins and losses for games played on FaceIt for CS2.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="/gpt">
+                gpt
+              </a>
+            </td>
+            <td>
+              
+            </td>
+            <td>
+              ✘
+            </td>
+            <td>
+              15
+            </td>
+            <td>
+              Chat with OpenAI's ChatGPT.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="/help">
+                help
+              </a>
+            </td>
+            <td>
+              
+            </td>
+            <td>
+              ✘
+            </td>
+            <td>
               10
             </td>
             <td>
-              <pre>
-                
-Display help info about commands.
-              </pre>
+              Get help info about commands.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              joinchannel
+              <a href="/joinchannel">
+                joinchannel
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✓
             </td>
-            <td style="text-align: center;">
+            <td>
               5
             </td>
             <td>
-              <pre>
-                
-Join a channel and add it to the join list.
-
-Examples:
-
-&gt; joinchannel &lt;channel name&gt;
-&gt; joinchannel forsen
-
-              </pre>
+              Join a channel and add it to the join list.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              leavechannel
+              <a href="/leavechannel">
+                leavechannel
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✓
             </td>
-            <td style="text-align: center;">
+            <td>
               5
             </td>
             <td>
-              <pre>
-                
-Leave a channel and remove it from the join list.
-
-Examples:
-
-&gt; leavechannel &lt;channel name&gt;
-&gt; leavechannel forsen
-
-              </pre>
+              Leave a channel and remove it from the join list.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              namecolor
+              <a href="/namecolor">
+                namecolor
+              </a>
             </td>
             <td>
               color
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               20
             </td>
             <td>
-              <pre>
-                
-Get a user&#39;s username chat color.
-
-Examples:
-
-&gt; namecolor &lt;username&gt;
-&gt; namecolor forsen
-
-              </pre>
+              Get a user's username chat color.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              news
+              <a href="/news">
+                news
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               15
             </td>
             <td>
-              <pre>
-                
-Get top stories/trending news.
-
-Valid categories are:
-Top Stories
-World
-US
-UK
-Business
-Politics
-Health
-Education
-Science
-Technology
-Entertainment
-Sports
-
-Examples:
-Get world news:
-&gt; news
-
-Get news based on category
-&gt; news &lt;category&gt;
-&gt; news science
-
-              </pre>
+              Get top/trending news.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              pick
+              <a href="/pick">
+                pick
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               10
             </td>
             <td>
-              <pre>
-                
-Pick a single random item from a given list of items.
-
-Examples:
-
-&gt; pick &lt;items&gt;
-&gt; pick 1 2 3 4 5 6 7
-&gt; pick Red Green Yellow Blue Pink
-
-Custom delimiter:
-&gt; pick delimiter:&lt;delimiter&gt; &lt;input sequence&gt;
-&gt; pick delimiter:, Elden Ring, Dark Souls 1, Dark Souls 2, Dark Souls 3, Sekiro
-
-              </pre>
+              Pick a single random item from a given list of items.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              ping
+              <a href="/ping">
+                ping
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               5
             </td>
             <td>
-              <pre>
-                
-Ping to check bot is up and running.
-Responds with some metrics (TODO).
-
-Examples:
-
-&gt; ping
-
-              </pre>
+              Ping to check bot is up and running.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              pipe
+              <a href="/pipe">
+                pipe
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               10
             </td>
             <td>
-              <pre>
-                
-Pipe together 2 or more commands, taking the result from the previous command, and sending it to the next.
-Commands must be delimited by a &quot;|&quot; character
-
-Examples:
-
-&gt; pipe &lt;command&gt; | &lt;command&gt; | ...
-&gt; pipe pick one two three | texttransform uppercase
-
-              </pre>
+              Pipe together 2 or more commands, taking the result from the previous command, and sending it to the next.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              randomclip
+              <a href="/randomclip">
+                randomclip
+              </a>
             </td>
             <td>
               rc
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               20
             </td>
             <td>
-              <pre>
-                
-Get a random clip of the current channel, or a specified channel.
-
-Examples:
-
-&gt; randomclip
-&gt; randomclip &lt;channel&gt;
-&gt; randomclip forsen
-
-              </pre>
+              Get a random clip from the current channel, or a specified channel.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              randomline
+              <a href="/randomline">
+                randomline
+              </a>
             </td>
             <td>
               rl
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               10
             </td>
             <td>
-              <pre>
-                
-Gets a random line from anyone or a specified user from within the current channel.
-Only channels with logs available can be used.
-
-Examples:
-
-&gt; randomline
-&gt; randomline &lt;username&gt;
-&gt; randomline forsen
-
-              </pre>
+              Gets a random line from anyone or a specified user from within the current channel.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              randomquote
+              <a href="/randomquote">
+                randomquote
+              </a>
             </td>
             <td>
               rq
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               10
             </td>
             <td>
-              <pre>
-                
-Gets a random quote from yourself from the current channel.
-Only channels with logs available can be used.
-
-Examples:
-&gt; randomquote
-
-              </pre>
+              Gets a random quote from yourself from the current channel.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              reddit
+              <a href="/reddit">
+                reddit
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               15
             </td>
             <td>
-              <pre>
-                
-Gets a reddit post that is currently trending (images / videos only)
-Only channels with logs available can be used.
-
-Examples:
-
-Get a trending reddit post from a subreddit.
-&gt; reddit &lt;subreddit&gt;
-&gt; reddit linuxmemes
-
-Get a trending reddit post based sorted by; &quot;top&quot; / &quot;hot&quot; / &quot;best&quot;
-&gt; reddit &lt;sort&gt; &lt;subreddit&gt;
-&gt; reddit top shitposting
-
-              </pre>
+              Gets a reddit post that is currently trending (images / videos only)
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              rockpaperscissors
+              <a href="/rockpaperscissors">
+                rockpaperscissors
+              </a>
             </td>
             <td>
               rps
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               10
             </td>
             <td>
-              <pre>
-                
-Play Rock Paper Scissors against a CPU player. Earn points, and keep track of stats.
-
-Examples:
-
-&gt; rps &lt;shape&gt;
-&gt; rps rock
-
-              </pre>
+              Play Rock Paper Scissors against the bot. Earn points, and keep track of stats.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              roll
+              <a href="/roll">
+                roll
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               10
             </td>
             <td>
-              <pre>
-                
-Roll and random number.
-Default 0-10.
-
-Examples:
-
-Roll a random number between 0 and 10.
-&gt; roll
-
-Roll a random number between a min and max value.
-&gt; roll &lt;min&gt; &lt;max&gt;
-&gt; roll 0 100
-
-              </pre>
+              Roll a random number.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              stream
+              <a href="/stream">
+                stream
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               20
             </td>
             <td>
-              <pre>
-                
-Gets stream info for a stream that is currently live.
-Title, viewcount, current category, uptime.
-
-Examples:
-
-&gt; stream &lt;channel&gt;
-&gt; stream forsen
-
-              </pre>
+              Gets stream info for a stream that is currently live.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              texttransform
+              <a href="/texttransform">
+                texttransform
+              </a>
             </td>
             <td>
               tt
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               5
             </td>
             <td>
-              <pre>
-                
-Transforms text from input to a different format.
-
-Supported transforms are:
-    - uppercase
-    - lowercase
-    - reverse
-    - shuffle
-    - explode
-
-Examples:
-
-&gt; texttransform &lt;transform&gt; &lt;text&gt;
-&gt; texttransform uppercase hello world!
-
-              </pre>
+              Transforms text to a different format.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              time
+              <a href="/time">
+                time
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               5
             </td>
             <td>
-              <pre>
-                
-Get current time (UTC).
-
-Examples:
-
-&gt; time
-
-              </pre>
+              Get the current time (UTC), or the local time from a location
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              topstreams
+              <a href="/topstreams">
+                topstreams
+              </a>
             </td>
             <td>
               ts
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               20
             </td>
             <td>
-              <pre>
-                
-Gets top 10 streams (by viewer count) on Twitch.
-Broadcaster - game (viewer count)
-
-Examples:
-
-&gt; topstreams
-
-              </pre>
+              Gets top 10 streams (by viewer count) on Twitch.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              urban
+              <a href="/urban">
+                urban
+              </a>
             </td>
             <td>
               ud
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               20
             </td>
             <td>
-              <pre>
-                
-Get the definition of a word from Urban Dictionary.
-
-Examples:
-
-Get the definition for a random word.
-&gt; urban
-
-Search for a specific term.
-&gt; urban &lt;term&gt;
-&gt; urban forsen
-
-              </pre>
+              Get the definition of a word from Urban Dictionary.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              userid
+              <a href="/userid">
+                userid
+              </a>
             </td>
             <td>
               uid
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               20
             </td>
             <td>
-              <pre>
-                
-Gets a user&#39;s twitch id.
-
-Doesn&#39;t return anything if the user is currently banned.
-
-Examples:
-
-&gt; userid &lt;username&gt;
-&gt; userid forsen
-
-              </pre>
+              Get a user's Twitch id.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              vod
+              <a href="/vod">
+                vod
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               20
             </td>
             <td>
-              <pre>
-                
-Gets information about the most recent video-on-demand (VOD) of a channel.
-
-Doesn&#39;t return anything if the user is currently banned.
-
-Examples:
-
-&gt; vod &lt;channel&gt;
-&gt; vod forsen
-
-              </pre>
+              Gets information about the most recent video-on-demand (VOD) of a channel.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              weather
+              <a href="/weather">
+                weather
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               20
             </td>
             <td>
-              <pre>
-                
-Look up the weather for a location.
-
-Examples:
-
-&gt; weather &lt;location&gt;
-&gt; weather Sweden
-&gt; weather Madrid, Spain
-
-              </pre>
+              Look up the latest weather for any location around the world.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              wiki
+              <a href="/wiki">
+                wiki
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               20
             </td>
             <td>
-              <pre>
-                
-Gets the top result wikipedia page for the specified query, along with a short summary of the page.
-
-Examples:
-
-&gt; wiki &lt;query&gt;
-
-              </pre>
+              Gets the top result wikipedia page for the specified query, along with a short summary of the page.
             </td>
           </tr>
-          <tr class="table-row">
+          <tr>
             <td>
-              xd
+              <a href="/xd">
+                xd
+              </a>
             </td>
             <td>
               
             </td>
-            <td style="text-align: center;">
+            <td>
               ✘
             </td>
-            <td style="text-align: center;">
+            <td>
               60
             </td>
             <td>
-              <pre>
-                
-xd.
-
-Examples:
-
-&gt; xd
-
-              </pre>
+              xd
             </td>
           </tr>
         </table>
