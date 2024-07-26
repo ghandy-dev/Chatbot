@@ -22,7 +22,7 @@ let private generate' (ctx: SiteContents) (page: string) =
 
             for command in Commands.commandsList |> List.sortBy (fun c -> c.Name) do
                 tr [] [
-                    td [] [ a [ Href $"/{command.Name}" ] [ !! command.Name ] ]
+                    td [] [ a [ Href $"{command.Name}" ] [ !! command.Name ] ]
                     td [] [ !! (command.Aliases |> String.concat ",") ]
                     td [] [ !! (if command.AdminOnly then "✓" else "✘") ]
                     td [] [ !! $"{command.Cooldown / 1000}" ]
