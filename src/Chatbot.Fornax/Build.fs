@@ -6,7 +6,6 @@ open System
 open System.IO
 
 let private excludePaths (file: string) =
-
     let fileShouldBeExcluded =
         file.Contains "bin"
         || file.Contains "obj"
@@ -39,8 +38,6 @@ let private createOutDir () =
 
 let private generatePages () =
     async {
-        let configs = Config.config
-
         config.Generators |> Seq.iter (fun config ->
 
             printfn """Generating page "%s" """ config.Page
@@ -57,9 +54,6 @@ let private generatePages () =
 
             let relativeFilePath = getRelativePath ProjectRoot filename
             let outFilePath = new FileInfo($"{OutputFolderName}/{relativeFilePath}")
-
-            if File.Exists(outFilePath.FullName) then
-                File.Delete(outFilePath.FullName)
 
             if not (Directory.Exists(outFilePath.DirectoryName)) then
                 Directory.CreateDirectory(outFilePath.DirectoryName) |> ignore
@@ -79,9 +73,6 @@ let private copyCssFiles () =
         let relativeFilePath = getRelativePath ProjectRoot f.FullName
         let outFilePath = new FileInfo($"{OutputFolderName}/{relativeFilePath}")
 
-        if File.Exists(outFilePath.FullName) then
-            File.Delete(outFilePath.FullName)
-
         if not (Directory.Exists(outFilePath.DirectoryName)) then
             Directory.CreateDirectory(outFilePath.DirectoryName) |> ignore
 
@@ -89,8 +80,18 @@ let private copyCssFiles () =
         f.CopyTo(outFilePath.FullName) |> ignore
     )
 
+let private clean () =
+    let dir = new DirectoryInfo(OutputDir)
+
+    dir.EnumerateFiles()
+    |> Seq.iter (fun f -> f.Delete())
+    dir.EnumerateDirectories()
+    |> Seq.iter (fun d -> d.Delete(true))
+
 let build () =
     async {
+        printfn "-- Cleaning output dir --"
+        clean ()
         printfn "-- Creating output dir --"
         createOutDir ()
         printfn "-- Generating pages --"
