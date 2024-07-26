@@ -33,7 +33,6 @@ let private getRelativePath (baseFolder: string) (targetFile: string) : string =
 
     relativePath
 
-
 let private createOutDir () =
     let outputDir = new DirectoryInfo(OutputDir)
     outputDir.Create()
@@ -42,7 +41,8 @@ let private generatePages () =
     async {
         let configs = Config.config
 
-        for config in configs.Generators do
+        config.Generators |> Seq.iter (fun config ->
+
             printfn """Generating page "%s" """ config.Page
 
             let filename =
@@ -54,7 +54,18 @@ let private generatePages () =
                 | MultipleFiles mapper -> mapper config.Page
 
             printfn """Writing page "%s" to "%s" """ config.Page filename
-            do! File.WriteAllTextAsync($"{OutputDir}/{filename}", config.GenerateOutput) |> Async.AwaitTask
+
+            let relativeFilePath = getRelativePath ProjectRoot filename
+            let outFilePath = new FileInfo($"{OutputFolderName}/{relativeFilePath}")
+
+            if File.Exists(outFilePath.FullName) then
+                File.Delete(outFilePath.FullName)
+
+            if not (Directory.Exists(outFilePath.DirectoryName)) then
+                Directory.CreateDirectory(outFilePath.DirectoryName) |> ignore
+
+            do File.WriteAllTextAsync($"{OutputDir}/{filename}", config.GenerateOutput) |> Async.AwaitTask |> Async.RunSynchronously
+        )
     }
 
 let private copyCssFiles () =

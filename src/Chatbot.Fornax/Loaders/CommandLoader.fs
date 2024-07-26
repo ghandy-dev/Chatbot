@@ -14,7 +14,6 @@ let private loadCommands =
         }
     )
 
-
 let loader (projectRoot: string) (siteContent: SiteContents) =
     let commands = loadCommands
     siteContent.Add(commands)

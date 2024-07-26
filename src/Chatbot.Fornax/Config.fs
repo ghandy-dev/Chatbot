@@ -21,7 +21,7 @@ let config: PageGenerators = {
                 {
                     Page = command.Name
                     GenerateOutput = Pages.Command.generate siteContents ProjectRoot command.Name
-                    Output =  Config.NewFileName $"{command.Name}.html"
+                    Output =  Config.NewFileName $"{command.Name}/index.html"
                 }
             )
     ]
