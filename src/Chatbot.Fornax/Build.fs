@@ -83,10 +83,11 @@ let private copyCssFiles () =
 let private clean () =
     let dir = new DirectoryInfo(OutputDir)
 
-    dir.EnumerateFiles()
-    |> Seq.iter (fun f -> f.Delete())
-    dir.EnumerateDirectories()
-    |> Seq.iter (fun d -> d.Delete(true))
+    if (dir.Exists) then
+        dir.EnumerateFiles()
+        |> Seq.iter (fun f -> f.Delete())
+        dir.EnumerateDirectories()
+        |> Seq.iter (fun d -> d.Delete(true))
 
 let build () =
     async {
