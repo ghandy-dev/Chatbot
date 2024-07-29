@@ -14,9 +14,6 @@ type TwitchChatClientConfig = {
 
 type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig) =
 
-    let mutable cancellationToken' =
-        (new Threading.CancellationTokenSource()).Token
-
     let messageReceived = new Event<string>()
 
     let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
@@ -80,7 +77,6 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
 
     let start (cancellationToken) =
         async {
-            cancellationToken' <- cancellationToken
             client <- createClient ()
             do! authenticate Config.Username
 
@@ -91,10 +87,10 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
             | Choice2Of2 ex -> Logging.error $"Exception occurred in {nameof (reader)}" ex
         }
 
-    let reconnect () =
+    let reconnect (cancellationToken) =
         async {
             (client :> IDisposable).Dispose()
-            do! start cancellationToken'
+            do! start cancellationToken
         }
 
     [<CLIEvent>]
@@ -116,4 +112,4 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
 
     member _.JoinChannels channels = joinChannels channels
 
-    member _.Reconnect () = reconnect ()
+    member _.Reconnect (cancellationToken) = reconnect (cancellationToken)
