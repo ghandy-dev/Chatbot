@@ -20,6 +20,7 @@
     <Compile Include="IRC.fs" />
     <Compile Include="IrcMessageParser.fs" />
     <Compile Include="IrcMessages.fs" />
+    <Compile Include="IrcClient.fs" />
     <Compile Include="RateLimiter.fs" />
     <Compile Include="TwitchChatClient.fs" />
   </ItemGroup>
