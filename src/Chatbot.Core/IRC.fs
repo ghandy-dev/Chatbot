@@ -7,11 +7,9 @@ module IRC =
     open System.Net.Security
     open System.Net.Sockets
 
-    [<Literal>]
-    let writeBufferSize = 1024
 
-    [<Literal>]
-    let readBufferSize = 16384 // 1024 * 16
+    let [<Literal>] writeBufferSize = 1024
+    let [<Literal>] readBufferSize = 16384 // 1024 * 16
 
     let private ircPrivMessage channel message = $"PRIVMSG #{channel} :{message}"
     let private ircPongMessage message = $"PONG :{message}"
@@ -44,111 +42,3 @@ module IRC =
         let channels = channels |> List.map (fun c -> $"#{c}") |> String.concat ","
 
         async { do! writer.WriteLineAsync($"JOIN {channels}") |> Async.AwaitTask }
-
-open Chatbot
-
-open System
-
-[<AllowNullLiteral>]
-type IrcClient(host: string, port: int) =
-
-    let [<Literal>] writerBufferSize = 1024
-    let [<Literal>] readerufferSize = 10240
-
-    let client = IRC.createTcpClient host port
-    let stream = IRC.getSslStream client host
-    let reader = IO.createStreamReader stream
-    let writer = IO.createStreamWriter stream writerBufferSize
-
-    let mutable isConnected = true
-
-    let connected () =
-        if isConnected = false then
-            false
-        else
-            client.Socket.Connected
-
-    let readAsync cancellationToken =
-        IO.readAsync reader readerufferSize cancellationToken
-
-    let writeLineAsync (message: string) =
-        async {
-            try
-                do! IO.writeLineAsync writer message
-            with
-            | :? ObjectDisposedException as ex -> Logging.error "error in writeLineAsync" ex |> ignore
-            | :? InvalidOperationException as ex -> Logging.error "error in writeLineAsync" ex |> ignore
-            | ex -> Logging.error "error in writeLineAsync" ex |> ignore
-        }
-
-    let flushAsync () =
-        async {
-            try
-                do! IO.flushAsync writer
-            with
-            | :? ObjectDisposedException as ex -> Logging.error "error in flushAsync" ex |> ignore
-            | :? InvalidOperationException as ex -> Logging.error "error in flushAsync" ex |> ignore
-            | ex -> Logging.error "error in flushAsync" ex |> ignore
-        }
-
-    let sendAsync (message: string) =
-        async {
-            do! writeLineAsync (message)
-            do! flushAsync ()
-        }
-
-    member _.Connected = connected ()
-
-    member _.PongAsync (message) =
-        async {
-            do! IRC.ircPong writer message
-            do! flushAsync ()
-        }
-
-    member _.PartChannel (channel) =
-        async {
-            do! IRC.ircPartChannel writer channel
-            do! flushAsync ()
-        }
-
-    member _.JoinChannel (channel) =
-        async {
-            do! IRC.ircJoinChannel writer channel
-            do! flushAsync ()
-        }
-
-    member _.JoinChannels (channels) =
-        async {
-            do! IRC.ircJoinChannels writer channels
-            do! flushAsync ()
-        }
-
-    member _.SendPrivMessage (channel, message) =
-        async {
-            do! IRC.ircSendPrivMessage writer channel message
-            do! flushAsync ()
-        }
-
-    member _.ReadAsync (cancellationToken) = readAsync cancellationToken
-
-    member _.WriteAsync (message: string) = writeLineAsync message
-
-    member _.SendAsync (message: string) = sendAsync message
-
-    member _.FlushAsync () = flushAsync ()
-
-    member this.AuthenticateAsync (user: string, accessToken: string, capabilities: string array) =
-        async {
-            if (capabilities.Length > 0) then
-                do! this.WriteAsync($"""CAP REQ :{String.concat " " capabilities}""")
-
-            do! this.WriteAsync($"PASS oauth:{accessToken}")
-            do! this.WriteAsync($"NICK {user}")
-            do! this.FlushAsync()
-        }
-
-    interface IDisposable with
-        member _.Dispose () =
-            isConnected <- false
-            writer.Dispose()
-            client.Dispose()

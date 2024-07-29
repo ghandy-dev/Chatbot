@@ -44,13 +44,13 @@ let createBot (twitchChatClient: TwitchChatClient) cancellationToken =
                 let start () =
                     async {
                         Logging.trace "Starting bot..."
-                        do! twitchChatClient.Start(cancellationToken)
+                        do! twitchChatClient.StartAsync(cancellationToken)
                     }
 
                 let joinChannels () =
                     async {
                         let! channels = getChannels ()
-                        do! twitchChatClient.JoinChannels(channels)
+                        do! twitchChatClient.JoinChannelsAsync(channels)
                     }
 
                 let rec loop () =
@@ -59,7 +59,7 @@ let createBot (twitchChatClient: TwitchChatClient) cancellationToken =
                         | SendPongMessage pong ->
                             Logging.info $"PONG :{pong}"
                             do! twitchChatClient.Client.PongAsync(pong)
-                        | SendPrivateMessage pm -> do! twitchChatClient.Send(pm.Channel, pm.Message)
+                        | SendPrivateMessage pm -> do! twitchChatClient.SendAsync(pm.Channel, pm.Message)
                         | SendWhisperMessage wm ->
                             match! tokenStore.GetToken TokenType.Twitch with
                             | None -> Logging.info "Failed to send whisper. Couldn't retrieve access token for Twitch API."
@@ -67,14 +67,14 @@ let createBot (twitchChatClient: TwitchChatClient) cancellationToken =
                                 match! Helix.Whispers.sendWhisper user.Id wm.UserId wm.Message token with
                                 | 204 -> Logging.info $"Whisper sent to {wm.Username}: {wm.Message}"
                                 | statusCode -> Logging.info $"Failed to send whisper, response from Helix Whisper API: {statusCode}"
-                        | SendRawIrcMessage msg -> do! twitchChatClient.SendRaw(msg)
+                        | SendRawIrcMessage msg -> do! twitchChatClient.SendRawAsync(msg)
                         | BotCommand command ->
                             match command with
-                            | JoinChannel channel -> do! twitchChatClient.JoinChannel channel
-                            | LeaveChannel channel -> do! twitchChatClient.PartChannel channel
+                            | JoinChannel channel -> do! twitchChatClient.JoinChannelAsync channel
+                            | LeaveChannel channel -> do! twitchChatClient.PartChannelAsync channel
                         | Reconnect ->
                             Logging.info "Twitch servers requested we reconnect..."
-                            do! twitchChatClient.Reconnect(cancellationToken)
+                            do! twitchChatClient.ReconnectAsync(cancellationToken)
                             do! joinChannels ()
                             do! loop ()
 

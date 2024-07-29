@@ -40,16 +40,16 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
             | Some token -> do! client.AuthenticateAsync(user, token, Config.Capabilities)
         }
 
-    let partChannel = client.PartChannel
+    let partChannel = client.PartChannelAsync
 
-    let joinChannel = client.JoinChannel
+    let joinChannel = client.JoinChannelAsync
 
-    let joinChannels = client.JoinChannels
+    let joinChannels = client.JoinChannelsAsync
 
     let sendChannelMessage channel message =
         async {
             if chatRateLimiter.CanSend() then
-                do! client.SendPrivMessage (channel, message)
+                do! client.SendPrivMessageAsync (channel, message)
         }
 
     let sendWhisper from ``to`` message accessToken =
@@ -98,18 +98,18 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
 
     member _.Client with get() = client
 
-    member _.Start (cancellationToken: Threading.CancellationToken) = start (cancellationToken)
+    member _.StartAsync (cancellationToken: Threading.CancellationToken) = start (cancellationToken)
 
-    member _.SendRaw message = send message
+    member _.SendRawAsync message = send message
 
-    member _.Send (channel, message) = sendChannelMessage channel message
+    member _.SendAsync (channel, message) = sendChannelMessage channel message
 
-    member _.Whisper (from, ``to``, message, accessToken) = sendWhisper from ``to`` message accessToken
+    member _.WhisperAsync (from, ``to``, message, accessToken) = sendWhisper from ``to`` message accessToken
 
-    member _.PartChannel channel = partChannel channel
+    member _.PartChannelAsync channel = partChannel channel
 
-    member _.JoinChannel channel = joinChannel channel
+    member _.JoinChannelAsync channel = joinChannel channel
 
-    member _.JoinChannels channels = joinChannels channels
+    member _.JoinChannelsAsync channels = joinChannels channels
 
-    member _.Reconnect (cancellationToken) = reconnect (cancellationToken)
+    member _.ReconnectAsync (cancellationToken) = reconnect (cancellationToken)
