@@ -34,6 +34,12 @@ module DateTime =
         | false, _ -> None
         | true, v -> Some v
 
+    let dateStringFormat = "dd/MM/yyyy"
+
+    let timeStringFormat = "HH:mm:ss"
+
+    let dateTimeStringFormat = $"{dateStringFormat} {timeStringFormat}"
+
 module Text =
 
     open System.Text.RegularExpressions
