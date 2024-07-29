@@ -7,7 +7,6 @@ module IRC =
     open System.Net.Security
     open System.Net.Sockets
 
-
     let [<Literal>] writeBufferSize = 1024
     let [<Literal>] readBufferSize = 16384 // 1024 * 16
 
