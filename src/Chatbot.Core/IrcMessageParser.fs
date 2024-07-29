@@ -1,158 +1,160 @@
-﻿module Chatbot.IRC.Parsing
+﻿namespace Chatbot.IRC
 
-module Types =
+module Parsing =
 
-    type IrcCommand =
-        // IRC Commands
-        | Authenticated
-        | Cap
-        | Join
-        | Part
-        | Ping
-        | PrivMsg
-        | RoomList
-        | Unsupported
-        // Twitch IRC Commands
-        | ClearChat
-        | ClearMsg
-        | GlobalUserState
-        | HostTarget
-        | Notice
-        | Reconnect
-        | RoomState
-        | UserNotice
-        | UserState
-        | Whisper
-        // ignore
-        | Ignore
-        | Unknown
+    module Types =
 
-    type Source = {
-        Nick: string
-        Host: string option
-    }
+        type IrcCommand =
+            // IRC Commands
+            | Authenticated
+            | Cap
+            | Join
+            | Part
+            | Ping
+            | PrivMsg
+            | RoomList
+            | Unsupported
+            // Twitch IRC Commands
+            | ClearChat
+            | ClearMsg
+            | GlobalUserState
+            | HostTarget
+            | Notice
+            | Reconnect
+            | RoomState
+            | UserNotice
+            | UserState
+            | Whisper
+            // ignore
+            | Ignore
+            | Unknown
 
-    type IrcMessage = {
-        Tags: Map<string, string>
-        Source: Source option
-        Command: IrcCommand
-        Parameters: string
-    } with
-
-        static member newMessage = {
-            Tags = Map.empty
-            Source = None
-            Command = Unknown
-            Parameters = ""
+        type Source = {
+            Nick: string
+            Host: string option
         }
 
-[<RequireQualifiedAccess>]
-module Parser =
+        type IrcMessage = {
+            Tags: Map<string, string>
+            Source: Source option
+            Command: IrcCommand
+            Parameters: string
+        } with
 
-    open Types
+            static member newMessage = {
+                Tags = Map.empty
+                Source = None
+                Command = Unknown
+                Parameters = ""
+            }
 
-    let private parseIrcCommand =
-        function
-        | "001" -> Authenticated
-        | "CAP" -> Cap
-        | "CLEARCHAT" -> ClearChat
-        | "CLEARMSG" -> ClearMsg
-        | "JOIN" -> Join
-        | "GLOBALUSERSTATE" -> GlobalUserState
-        | "HOSTTARGET" -> HostTarget
-        | "NOTICE" -> Notice
-        | "PART" -> Part
-        | "PING" -> Ping
-        | "PRIVMSG" -> PrivMsg
-        | "RECONNECT" -> Reconnect
-        | "353" -> RoomList
-        | "ROOMSTATE" -> RoomState
-        | "USERNOTICE" -> UserNotice
-        | "USERSTATE" -> UserState
-        | "WHISPER" -> Whisper
-        | "421" -> Unsupported
-        | "002"
-        | "003"
-        | "004"
-        | "366"
-        | "372"
-        | "375"
-        | "376" -> Ignore
-        | _ -> Unknown
+    [<RequireQualifiedAccess>]
+    module Parser =
 
-    let private parseTags (message: string) =
-        message.Split(";")
-        |> Array.fold
-            (fun (m: Map<_, _>) s ->
-                let kv = s.Split("=", 2)
-                m.Add(kv[0], kv[1])
-            )
-            Map.empty
+        open Types
 
-    let private parseSource (message: string) =
-        message.Split("!")
-        |> function
-            | [| nick |] ->
-                Some {
-                    Nick = nick
-                    Host = None
-                }
-            | [| nick ; host |] ->
-                Some {
-                    Nick = nick
-                    Host = Some host
-                }
-            | _ -> None
+        let private parseIrcCommand =
+            function
+            | "001" -> Authenticated
+            | "CAP" -> Cap
+            | "CLEARCHAT" -> ClearChat
+            | "CLEARMSG" -> ClearMsg
+            | "JOIN" -> Join
+            | "GLOBALUSERSTATE" -> GlobalUserState
+            | "HOSTTARGET" -> HostTarget
+            | "NOTICE" -> Notice
+            | "PART" -> Part
+            | "PING" -> Ping
+            | "PRIVMSG" -> PrivMsg
+            | "RECONNECT" -> Reconnect
+            | "353" -> RoomList
+            | "ROOMSTATE" -> RoomState
+            | "USERNOTICE" -> UserNotice
+            | "USERSTATE" -> UserState
+            | "WHISPER" -> Whisper
+            | "421" -> Unsupported
+            | "002"
+            | "003"
+            | "004"
+            | "366"
+            | "372"
+            | "375"
+            | "376" -> Ignore
+            | _ -> Unknown
 
-    type private ParseComponent =
-        | ParseTags
-        | ParseSource
-        | ParseCommand
-        | ParseParameters
-        | MessageParsed
+        let private parseTags (message: string) =
+            message.Split(";")
+            |> Array.fold
+                (fun (m: Map<_, _>) s ->
+                    let kv = s.Split("=", 2)
+                    m.Add(kv[0], kv[1])
+                )
+                Map.empty
 
-    let private parseMessageComponents (message: string) =
-        let rec parseComponents (parts: string array) (next: ParseComponent) (parsedMessage: IrcMessage) =
-            match next with
-            | ParseTags ->
-                if parts[0].StartsWith('@') then
-                    let tags = parseTags parts.[0].[1..]
-                    parseComponents parts[1..] ParseSource { parsedMessage with Tags = tags }
-                else
-                    parseComponents parts ParseSource parsedMessage
-            | ParseSource ->
-                if parts[0].StartsWith(':') then
-                    let source = parseSource parts.[0].[1..]
-                    parseComponents parts[1..] ParseCommand { parsedMessage with Source = source }
-                else
-                    parseComponents parts ParseCommand parsedMessage
-            | ParseCommand ->
-                match parts with
-                | [||] -> parseComponents parts MessageParsed parsedMessage
-                | parts ->
-                    let command = parseIrcCommand parts[0]
+        let private parseSource (message: string) =
+            message.Split("!")
+            |> function
+                | [| nick |] ->
+                    Some {
+                        Nick = nick
+                        Host = None
+                    }
+                | [| nick ; host |] ->
+                    Some {
+                        Nick = nick
+                        Host = Some host
+                    }
+                | _ -> None
 
-                    let parsedMessage = { parsedMessage with Command = command }
+        type private ParseComponent =
+            | ParseTags
+            | ParseSource
+            | ParseCommand
+            | ParseParameters
+            | MessageParsed
 
-                    if parts.Length <= 1 then
-                        parseComponents parts MessageParsed parsedMessage
+        let private parseMessageComponents (message: string) =
+            let rec parseComponents (parts: string array) (next: ParseComponent) (parsedMessage: IrcMessage) =
+                match next with
+                | ParseTags ->
+                    if parts[0].StartsWith('@') then
+                        let tags = parseTags parts.[0].[1..]
+                        parseComponents parts[1..] ParseSource { parsedMessage with Tags = tags }
                     else
-                        parseComponents parts[1..] ParseParameters parsedMessage
-            | ParseParameters ->
-                let parameters = parts[0]
-                parseComponents parts MessageParsed { parsedMessage with Parameters = parameters }
-            | MessageParsed -> parsedMessage
+                        parseComponents parts ParseSource parsedMessage
+                | ParseSource ->
+                    if parts[0].StartsWith(':') then
+                        let source = parseSource parts.[0].[1..]
+                        parseComponents parts[1..] ParseCommand { parsedMessage with Source = source }
+                    else
+                        parseComponents parts ParseCommand parsedMessage
+                | ParseCommand ->
+                    match parts with
+                    | [||] -> parseComponents parts MessageParsed parsedMessage
+                    | parts ->
+                        let command = parseIrcCommand parts[0]
 
-        let parts =
-            if message[0] = '@' then
-                message.Split(" ", 4)
-            else
-                message.Split(" ", 3)
+                        let parsedMessage = { parsedMessage with Command = command }
 
-        parseComponents parts ParseTags IrcMessage.newMessage
+                        if parts.Length <= 1 then
+                            parseComponents parts MessageParsed parsedMessage
+                        else
+                            parseComponents parts[1..] ParseParameters parsedMessage
+                | ParseParameters ->
+                    let parameters = parts[0]
+                    parseComponents parts MessageParsed { parsedMessage with Parameters = parameters }
+                | MessageParsed -> parsedMessage
 
-    let private nonEmptyString s =
-        not <| System.String.IsNullOrWhiteSpace(s)
+            let parts =
+                if message[0] = '@' then
+                    message.Split(" ", 4)
+                else
+                    message.Split(" ", 3)
 
-    let parseIrcMessage (message: string) =
-        message.Split("\r\n") |> Array.filter nonEmptyString |> Array.map parseMessageComponents
+            parseComponents parts ParseTags IrcMessage.newMessage
+
+        let private nonEmptyString s =
+            not <| System.String.IsNullOrWhiteSpace(s)
+
+        let parseIrcMessage (message: string) =
+            message.Split("\r\n") |> Array.filter nonEmptyString |> Array.map parseMessageComponents

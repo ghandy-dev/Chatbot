@@ -16,7 +16,7 @@ module IRC =
     let private ircPrivMessage channel message = $"PRIVMSG #{channel} :{message}"
     let private ircPongMessage message = $"PONG :{message}"
     let private ircPartMessage channel = $"PART #{channel}"
-    let private ircJoinMessage channel = $"JOIN #{channel}"
+    let private ircJoinMessage (channel: 'a) = $"JOIN #{channel}"
 
     let createTcpClient (host: string) (port: int) =
         let s = new Socket(SocketType.Stream, ProtocolType.Tcp)
@@ -49,13 +49,11 @@ open Chatbot
 
 open System
 
+[<AllowNullLiteral>]
 type IrcClient(host: string, port: int) =
 
-    [<Literal>]
-    let writerBufferSize = 1024
-
-    [<Literal>]
-    let readerufferSize = 10240
+    let [<Literal>] writerBufferSize = 1024
+    let [<Literal>] readerufferSize = 10240
 
     let client = IRC.createTcpClient host port
     let stream = IRC.getSslStream client host

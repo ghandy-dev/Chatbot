@@ -1,19 +1,14 @@
-module Chatbot.MessageLimiter
+namespace Chatbot
 
 open System
 
 module Rates =
 
-    [<Literal>]
-    let MessageLimit_Chat = 20 // per 30 seconds
-    [<Literal>]
-    let Interval_Chat = 30s
+    let [<Literal>] MessageLimit_Chat = 20 // per 30 seconds
+    let [<Literal>] Interval_Chat = 30s
 
-    [<Literal>]
-    let MessageLimit_Whispers = 100
-    [<Literal>]
-    let Interval_Whispers = 60s
-
+    let [<Literal>] MessageLimit_Whispers = 100
+    let [<Literal>] Interval_Whispers = 60s
 
 type RateLimiter(messagesPerInterval, interval: int16) =
 

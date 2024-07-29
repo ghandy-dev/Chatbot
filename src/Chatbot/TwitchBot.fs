@@ -2,10 +2,7 @@ module Chatbot.Bot
 
 open Chatbot
 open Chatbot.Commands
-open Chatbot.IRC
 open Chatbot.MessageHandlers
-open Chatbot.MessageLimiter
-open Chatbot.Shared
 open Chatbot.Types
 
 open Authorization
@@ -13,122 +10,80 @@ open TTVSharp
 
 open System
 
-let init () =
+let botConfig = Configuration.Bot.config
+
+let user =
     async {
-        let! channels = Database.ChannelRepository.getAll () |-> List.ofSeq |-> List.map (fun c -> c.ChannelName)
-
-        match!
-            tokenStore.GetToken(TokenType.Twitch)
-            |> Option.bindAsync Helix.Users.getAccessTokenUser with
-        | None -> return failwith "Expected access token / user"
-        | Some user ->
-            return {
-                Channels = channels
-                RoomStates = Map.empty
-                BotUser = user.DisplayName
-                BotUserId = user.Id
-            }
+        match! tokenStore.GetToken(TokenType.Twitch) |> Option.bindAsync Helix.Users.getAccessTokenUser with
+        | Some user -> return user
+        | None -> return failwith "Expect access token (or user?)"
     }
+    |> Async.RunSynchronously
 
-let createIrcClient () =
-    new IrcClient(fst ircConnection, snd ircConnection |> int)
+let connectionConfig =
+    let connection = Configuration.ConnectionStrings.config.Irc
 
-let authenticate (client: IrcClient) user =
-    async {
-        Logging.trace "Authenticating..."
+    connection.Split(":")
+    |> function
+        | [| host ; port |] -> ConnectionType.IRC(host, port |> int)
+        | _ -> failwith "Bad connection string format"
 
-        match! Authorization.tokenStore.GetToken Authorization.TokenType.Twitch with
-        | None -> failwithf "Couldn't retrieve access token for Twitch API"
-        | Some token -> do! client.AuthenticateAsync (user, token, botConfig.Capabilities)
-    }
+let twitchChatConfig: TwitchChatClientConfig = {
+    Username = user.DisplayName
+    Capabilities = botConfig.Capabilities
+}
 
-let createBot (client: IrcClient) cancellationToken =
+let getChannels () =
+    async { return! Database.ChannelRepository.getAll () |-> List.ofSeq |-> List.map (fun c -> c.ChannelName) }
 
-    Logging.trace "Creating bot..."
-
-    let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
-
-    let whisperRateLimiter =
-        RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
-
-    let rec ircReader (client: IrcClient) (mb: MailboxProcessor<_>) (state: State) =
-        async {
-            match client.Connected with
-            | true ->
-                match! client.ReadAsync cancellationToken with
-                | Some message ->
-                    Logging.info (message.Trim([| '\r' ; '\n' |]))
-                    do! handleMessage message mb
-                    do! ircReader client mb state
-                | None -> () // if this happens then the client isn't connected
-            | false -> Logging.warning "IRC client disconnected."
-        }
-
+let createBot (twitchChatClient: TwitchChatClient) cancellationToken =
     new MailboxProcessor<ClientRequest>(
         (fun mb ->
             async {
 
-                let! state = init ()
-
-                let start (client: IrcClient) =
-                    Logging.trace "Starting bot..."
-
+                let start () =
                     async {
-                        Logging.trace "Joining channels..."
-                        do! client.JoinChannels state.Channels
-
-                        Logging.trace "Starting reader..."
-                        let! result = ircReader client mb state |> Async.StartChild |> Async.Catch
-
-                        match result with
-                        | Choice1Of2 _ -> Logging.trace "Reader started."
-                        | Choice2Of2 ex -> Logging.error $"Exception occurred in {nameof (ircReader)}" ex
+                        Logging.trace "Starting bot..."
+                        do! twitchChatClient.Start(cancellationToken)
                     }
 
-                let send (message: string) (client: IrcClient) =
+                let joinChannels () =
                     async {
-                        if chatRateLimiter.CanSend() then
-                            do! client.SendAsync(message)
+                        let! channels = getChannels ()
+                        do! twitchChatClient.JoinChannels(channels)
                     }
 
-                let rec loop (client: IrcClient) =
+                let rec loop () =
                     async {
                         match! mb.Receive() with
                         | SendPongMessage pong ->
-                            Logging.info $"Sending PONG :{pong}"
-                            do! client.PongAsync(pong)
-                        | SendPrivateMessage pm ->
-                            Logging.info $"Sending private message: #{pm.Channel} {pm.Message}"
-                            do! client.SendPrivMessage(pm.Channel, pm.Message)
+                            Logging.info $"PONG :{pong}"
+                            do! twitchChatClient.Client.PongAsync(pong)
+                        | SendPrivateMessage pm -> do! twitchChatClient.Send(pm.Channel, pm.Message)
                         | SendWhisperMessage wm ->
-                            if (whisperRateLimiter.CanSend()) then
-                                match! Authorization.tokenStore.GetToken Authorization.TokenType.Twitch with
-                                | None -> Logging.info "Failed to send whisper. Couldn't retrieve access token for Twitch API."
-                                | Some token ->
-                                    match! Helix.Whispers.sendWhisper state.BotUserId wm.UserId wm.Message token with
-                                    | 204 -> Logging.info $"Whisper sent to {wm.Username}: {wm.Message}"
-                                    | statusCode -> Logging.info $"Failed to send whisper, response from Helix Whisper API: {statusCode}"
-                        | SendRawIrcMessage msg ->
-                            Logging.info $"Sending raw message: {msg}"
-                            do! send msg client
+                            match! tokenStore.GetToken TokenType.Twitch with
+                            | None -> Logging.info "Failed to send whisper. Couldn't retrieve access token for Twitch API."
+                            | Some token ->
+                                match! Helix.Whispers.sendWhisper user.Id wm.UserId wm.Message token with
+                                | 204 -> Logging.info $"Whisper sent to {wm.Username}: {wm.Message}"
+                                | statusCode -> Logging.info $"Failed to send whisper, response from Helix Whisper API: {statusCode}"
+                        | SendRawIrcMessage msg -> do! twitchChatClient.SendRaw(msg)
                         | BotCommand command ->
                             match command with
-                            | JoinChannel channel -> do! client.JoinChannel channel
-                            | LeaveChannel channel -> do! client.PartChannel channel
+                            | JoinChannel channel -> do! twitchChatClient.JoinChannel channel
+                            | LeaveChannel channel -> do! twitchChatClient.PartChannel channel
                         | Reconnect ->
                             Logging.info "Twitch servers requested we reconnect..."
-                            (client :> IDisposable).Dispose()
-                            let client = createIrcClient ()
-                            do! authenticate client state.BotUser
-                            do! start client
-                            do! loop client
+                            do! twitchChatClient.Reconnect()
+                            do! joinChannels ()
+                            do! loop ()
 
-                        do! loop client
+                        do! loop ()
                     }
 
-                do! authenticate client state.BotUser
-                do! start client
-                do! loop client
+                do! start ()
+                do! joinChannels ()
+                do! loop ()
 
             }
         ),
@@ -136,7 +91,11 @@ let createBot (client: IrcClient) cancellationToken =
     )
 
 let run (cancellationToken: Threading.CancellationToken) =
-    let client = createIrcClient ()
-    let mb = createBot client cancellationToken
+    let twitchChatClient = new TwitchChatClient(connectionConfig, twitchChatConfig)
+    let mb = createBot twitchChatClient cancellationToken
+
+    twitchChatClient.MessageReceived.Subscribe (fun message ->
+        message |> fun m -> m.Split([| '\r' ; '\n' |], StringSplitOptions.RemoveEmptyEntries) |> Array.iter Logging.trace
+        handleMessage message mb |> Async.Start) |> ignore
 
     mb.StartImmediate()

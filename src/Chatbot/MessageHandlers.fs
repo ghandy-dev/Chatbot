@@ -1,14 +1,17 @@
 module Chatbot.MessageHandlers
 
+open Chatbot
 open Chatbot.Commands
 open Chatbot.Commands.Handler
 open Chatbot.IRC.Messages
-open Chatbot.Shared
 open Chatbot.Types
+
+let mutable roomStates : RoomStates = Map.empty
+let commandPrefix = Configuration.Bot.config.CommandPrefix
 
 let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProcessor<ClientRequest>) =
     async {
-        match msg.Message.StartsWith(botConfig.CommandPrefix) with
+        match msg.Message.StartsWith(commandPrefix) with
         | true ->
             let! response = safeHandleCommand msg.UserId msg.Username (Channel msg.Channel) msg.Message[1..]
 
@@ -39,7 +42,7 @@ let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProces
 
 let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProcessor<_>) =
     async {
-        match msg.Message.StartsWith(botConfig.CommandPrefix) with
+        match msg.Message.StartsWith(commandPrefix) with
         | true ->
             let! response = safeHandleCommand msg.UserId msg.DisplayName (Whisper msg.UserId) msg.Message[1..]
 
@@ -97,7 +100,7 @@ let private roomStateMessageHandler (roomStateMsg: Types.RoomStateMessage) =
 
         roomStates <- roomStates.Add(roomStateMsg.RoomId, updatedRoomState)
 
-let messageHandler (msg) (mb: MailboxProcessor<_>) =
+let private handleIrcMessage (msg) (mb: MailboxProcessor<_>) =
     async {
         match msg with
         | PingMessage msg -> do mb.Post(SendPongMessage msg.message)
@@ -113,4 +116,4 @@ let private parseMessage message =
     message |> IRC.Parsing.Parser.parseIrcMessage |> Array.map MessageMapping.mapIrcMessage |> Array.choose id
 
 let handleMessage message (mb: MailboxProcessor<ClientRequest>) =
-    parseMessage message |> Array.map (fun msg -> messageHandler msg mb) |> Async.Parallel |> Async.Ignore
+    parseMessage message |> Array.map (fun msg -> handleIrcMessage msg mb) |> Async.Parallel |> Async.Ignore

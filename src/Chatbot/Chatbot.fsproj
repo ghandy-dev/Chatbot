@@ -6,9 +6,7 @@
 
   <ItemGroup>
     <Compile Include="Types.fs" />
-    <Compile Include="Shared.fs" />
     <Compile Include="MessageHandlers.fs" />
-    <Compile Include="RateLimiter.fs" />
     <Compile Include="TwitchBot.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
