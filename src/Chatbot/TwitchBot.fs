@@ -74,7 +74,7 @@ let createBot (twitchChatClient: TwitchChatClient) cancellationToken =
                             | LeaveChannel channel -> do! twitchChatClient.PartChannel channel
                         | Reconnect ->
                             Logging.info "Twitch servers requested we reconnect..."
-                            do! twitchChatClient.Reconnect()
+                            do! twitchChatClient.Reconnect(cancellationToken)
                             do! joinChannels ()
                             do! loop ()
 
