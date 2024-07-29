@@ -3,8 +3,6 @@ namespace Chatbot.Commands
 [<AutoOpen>]
 module News =
 
-    open System
-
     open Chatbot.Commands.Api.News
 
     let news args =
@@ -20,7 +18,7 @@ module News =
             | Error err -> return Error err
             | Ok newsItem ->
                 let title = newsItem.Title.Text
-                let date = newsItem.PublishDate
+                let date = newsItem.PublishDate.UtcDateTime.ToString(DateTime.dateTimeStringFormat)
                 let summary = newsItem.Summary.Text
                 let link =
                     match newsItem.Links |> List.ofSeq with
