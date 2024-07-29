@@ -93,7 +93,7 @@ let private timezoneApiKey = Chatbot.Configuration.Google.config.Timezone.ApiKey
 let [<Literal>] private  ApiUrl = "https://maps.googleapis.com/maps/api"
 
 let private GeocodeUrl = $"{ApiUrl}/geocode/json?"
-let private TimezoneUrl = $"{ApiUrl}/maps/json?"
+let private TimezoneUrl = $"{ApiUrl}/timezone/json?"
 
 let private GeocodeAddress address = $"{GeocodeUrl}address={address}&key={geocodeApiKeey}"
 let private Timezone latitude longitude timestamp = $"{TimezoneUrl}location={latitude},{longitude}&timestamp={timestamp}&key={timezoneApiKey}"
