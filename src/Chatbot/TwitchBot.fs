@@ -25,7 +25,7 @@ let connectionConfig =
     match uri.Scheme with
     | "irc" -> ConnectionType.IRC(uri.Host, uri.Port)
     | "wss" -> ConnectionType.Websocket(uri.Host, uri.Port)
-    | _ -> failwith "Bad connection string"
+    | _ -> failwith "Bad connection string - expected format: scheme://host:port"
 
 let twitchChatConfig: TwitchChatClientConfig = {
     Username = user.DisplayName
