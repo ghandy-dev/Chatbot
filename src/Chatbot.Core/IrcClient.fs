@@ -1,18 +1,18 @@
 namespace Chatbot
 
-open Chatbot.IRC
-
 open System
+open System.IO
 open System.Net.Sockets
+open System.Net.Security
 
 type IrcClient(host: string, port: int) =
 
     let [<Literal>] writerBufferSize = 1024
     let [<Literal>] readerBufferSize = 10240
 
-    let socket = IRC.createTcpClient host port
-    let mutable reader = null
-    let mutable writer = null
+    let socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
+    let mutable reader: TextReader = null
+    let mutable writer: TextWriter = null
 
     let mutable isConnected = true
 
@@ -26,9 +26,10 @@ type IrcClient(host: string, port: int) =
         async {
             do! socket.ConnectAsync(host, port, cancellationToken).AsTask() |> Async.AwaitTask
             let stream = new NetworkStream(socket)
-            let secureStream = IRC.getSslStream stream host
-            reader <- IO.createStreamReader secureStream
-            writer <- IO.createStreamWriter secureStream writerBufferSize
+            let sslStream = new SslStream(stream)
+            sslStream.AuthenticateAsClient(host)
+            reader <- IO.createStreamReader sslStream
+            writer <- IO.createStreamWriter sslStream writerBufferSize
         }
 
     let read cancellationToken =
@@ -65,40 +66,9 @@ type IrcClient(host: string, port: int) =
 
         member _.ConnectAsync (cancellationToken) = connect cancellationToken
 
-        member _.PongAsync (message) =
-            async {
-                do! IRC.ircPong writer message
-                do! flush ()
-            }
-
-        member _.PartChannelAsync (channel) =
-            async {
-                do! IRC.ircPartChannel writer channel
-                do! flush ()
-            }
-
-        member _.JoinChannelAsync (channel) =
-            async {
-                do! IRC.ircJoinChannel writer channel
-                do! flush ()
-            }
-
-        member _.JoinChannelsAsync (channels) =
-            async {
-                do! IRC.ircJoinChannels writer channels
-                do! flush ()
-            }
-
-        member _.SendPrivMessageAsync (channel, message) =
-            async {
-                do! IRC.ircSendPrivMessage writer channel message
-                do! flush ()
-            }
-
         member _.ReadAsync (cancellationToken) = read cancellationToken
 
-        member _.SendAsync (message: string) = send message
-
+        member _.SendAsync (message) = send message
 
         member _.AuthenticateAsync (user: string, accessToken: string, capabilities: string array) =
             async {

@@ -34,21 +34,10 @@ type State = {
     BotUserId: string
 }
 
-type PrivateMessage = {
-    Channel: string
-    Message: string
-}
-
-type WhisperMessage = {
-    UserId: string
-    Username: string
-    Message: string
-}
-
 type ClientRequest =
     | SendRawIrcMessage of string
-    | SendPrivateMessage of PrivateMessage
-    | SendWhisperMessage of WhisperMessage
+    | SendPrivateMessage of channel: string * message: string
+    | SendWhisperMessage of userId: string * username: string * message: string
     | SendPongMessage of string
     | BotCommand of BotCommand
     | Reconnect

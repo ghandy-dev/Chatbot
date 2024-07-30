@@ -20,20 +20,9 @@ let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProces
                 match commandOutcome with
                 | BotAction(action, message) ->
                     mb.Post(BotCommand(action))
-
-                    mb.Post(
-                        SendPrivateMessage {
-                            Channel = msg.Channel
-                            Message = message
-                        }
-                    )
+                    mb.Post(SendPrivateMessage(msg.Channel, message))
                 | Message message ->
-                    mb.Post(
-                        SendPrivateMessage {
-                            Channel = msg.Channel
-                            Message = message
-                        }
-                    )
+                    mb.Post(SendPrivateMessage(msg.Channel, message))
                 | RunAlias _
                 | Pipe _ -> ()
             | None -> ()
@@ -51,22 +40,9 @@ let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProces
                 match commandOutcome with
                 | BotAction(action, message) ->
                     mb.Post(BotCommand(action))
-
-                    mb.Post(
-                        SendWhisperMessage {
-                            UserId = msg.UserId
-                            Username = msg.DisplayName
-                            Message = message
-                        }
-                    )
+                    mb.Post(SendWhisperMessage (msg.UserId, msg.DisplayName, message))
                 | Message message ->
-                    mb.Post(
-                        SendWhisperMessage {
-                            UserId = msg.UserId
-                            Username = msg.DisplayName
-                            Message = message
-                        }
-                    )
+                    mb.Post(SendWhisperMessage (msg.UserId, msg.DisplayName, message))
                 | RunAlias _
                 | Pipe _ -> ()
             | None -> ()

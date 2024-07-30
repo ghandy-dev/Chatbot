@@ -62,36 +62,6 @@ type WebSocketClient(host: string, port: int) =
 
         member _.ConnectAsync(cancellationToken) = connect cancellationToken
 
-        member _.PongAsync (message) =
-            async {
-                let pongMessage = IRC.PongMessage message
-                do! writeLine (pongMessage)
-            }
-
-        member _.PartChannelAsync (channel) =
-            async {
-                let partMessage = IRC.PartMessage channel
-                do! writeLine (partMessage)
-            }
-
-        member _.JoinChannelAsync (channel) =
-            async {
-                let joinMessage = IRC.JoinMessage channel
-                do! writeLine joinMessage
-            }
-
-        member _.JoinChannelsAsync (channels) =
-            async {
-                let joinMessage = IRC.JoinMultipleMessage channels
-                do! writeLine joinMessage
-            }
-
-        member _.SendPrivMessageAsync (channel, message) =
-            async {
-                let privMessage = IRC.PrivMessage channel message
-                do! writeLine privMessage
-            }
-
         member _.ReadAsync (cancellationToken) = read cancellationToken
 
         member _.SendAsync (message: string) = writeLine message

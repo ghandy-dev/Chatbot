@@ -2,6 +2,7 @@ module Chatbot.Bot
 
 open Chatbot
 open Chatbot.Commands
+open Chatbot.IRC
 open Chatbot.MessageHandlers
 open Chatbot.Types
 
@@ -49,7 +50,7 @@ let createBot (twitchChatClient: TwitchChatClient) cancellationToken =
                 let joinChannels () =
                     async {
                         let! channels = getChannels ()
-                        do! twitchChatClient.JoinChannelsAsync(channels)
+                        do! twitchChatClient.SendAsync(IRC.JoinM channels)
                     }
 
                 let rec loop () =
@@ -57,20 +58,20 @@ let createBot (twitchChatClient: TwitchChatClient) cancellationToken =
                         match! mb.Receive() with
                         | SendPongMessage pong ->
                             Logging.info $"PONG :{pong}"
-                            do! twitchChatClient.Client.PongAsync(pong)
-                        | SendPrivateMessage pm -> do! twitchChatClient.SendAsync(pm.Channel, pm.Message)
-                        | SendWhisperMessage wm ->
+                            do! twitchChatClient.SendAsync(IRC.Command.Pong pong)
+                        | SendPrivateMessage (channel, message) -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg (channel, message))
+                        | SendWhisperMessage (userId, username, message) ->
                             match! tokenStore.GetToken TokenType.Twitch with
                             | None -> Logging.info "Failed to send whisper. Couldn't retrieve access token for Twitch API."
                             | Some token ->
-                                match! Helix.Whispers.sendWhisper user.Id wm.UserId wm.Message token with
-                                | 204 -> Logging.info $"Whisper sent to {wm.Username}: {wm.Message}"
+                                match! Helix.Whispers.sendWhisper user.Id userId message token with
+                                | 204 -> Logging.info $"Whisper sent to {username}: {message}"
                                 | statusCode -> Logging.info $"Failed to send whisper, response from Helix Whisper API: {statusCode}"
-                        | SendRawIrcMessage msg -> do! twitchChatClient.SendRawAsync(msg)
+                        | SendRawIrcMessage msg -> do! twitchChatClient.SendAsync(IRC.Command.Raw msg)
                         | BotCommand command ->
                             match command with
-                            | JoinChannel channel -> do! twitchChatClient.JoinChannelAsync channel
-                            | LeaveChannel channel -> do! twitchChatClient.PartChannelAsync channel
+                            | JoinChannel channel -> do! twitchChatClient.SendAsync(IRC.Command.Join channel)
+                            | LeaveChannel channel -> do! twitchChatClient.SendAsync(IRC.Command.Part channel)
                         | Reconnect ->
                             Logging.info "Twitch servers requested we reconnect..."
                             do! twitchChatClient.ReconnectAsync(cancellationToken)

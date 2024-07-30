@@ -16,6 +16,8 @@ type TwitchChatClientConfig = {
 
 type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig) =
 
+    let lastMessagesSent = new Collections.Concurrent.ConcurrentDictionary<string, int64>()
+
     let messageReceived = new Event<string>()
 
     let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
@@ -30,12 +32,6 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
 
     let mutable client: ITwitchConnection = null
 
-    let send (message: string) =
-        async {
-            if chatRateLimiter.CanSend() then
-                do! client.SendAsync(message)
-        }
-
     let authenticate user =
         async {
             match! Authorization.tokenStore.GetToken Authorization.TokenType.Twitch with
@@ -43,16 +39,27 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
             | Some token -> do! client.AuthenticateAsync(user, token, Config.Capabilities)
         }
 
-    let partChannel channel = client.PartChannelAsync channel
-
-    let joinChannel channel = client.JoinChannelAsync channel
-
-    let joinChannels channels = client.JoinChannelsAsync channels
-
-    let sendChannelMessage channel message =
+    let send (command: IRC.Command) =
         async {
-            if chatRateLimiter.CanSend() then
-                do! client.SendPrivMessageAsync (channel, message)
+            let ircMessage = IRC.Command.ToString command
+
+            match command with
+            | IRC.PrivMsg (channel, _) ->
+                let now = DateTimeOffset.Now.ToUnixTimeSeconds()
+                if chatRateLimiter.CanSend() then
+                    match lastMessagesSent.TryGetValue channel with
+                    | false, _ ->
+                        lastMessagesSent[channel] <- now
+                        do! client.SendAsync ircMessage
+                    | true, timestamp ->
+                        if (now - timestamp) >= 1 then
+                            lastMessagesSent[channel] <- now
+                            do! client.SendAsync ircMessage
+                        else
+                            do! Async.Sleep(1000)
+                            lastMessagesSent[channel] <- now
+                            do! client.SendAsync ircMessage
+            | _ -> do! client.SendAsync ircMessage
         }
 
     let sendWhisper from ``to`` message accessToken =
@@ -100,20 +107,10 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
     [<CLIEvent>]
     member _.MessageReceived = messageReceived.Publish
 
-    member _.Client with get() = client
-
     member _.StartAsync (cancellationToken: Threading.CancellationToken) = start (cancellationToken)
 
-    member _.SendRawAsync message = send message
-
-    member _.SendAsync (channel, message) = sendChannelMessage channel message
+    member _.SendAsync (message: IRC.Command) = send message
 
     member _.WhisperAsync (from, ``to``, message, accessToken) = sendWhisper from ``to`` message accessToken
-
-    member _.PartChannelAsync channel = partChannel channel
-
-    member _.JoinChannelAsync channel = joinChannel channel
-
-    member _.JoinChannelsAsync channels = joinChannels channels
 
     member _.ReconnectAsync (cancellationToken) = reconnect (cancellationToken)
