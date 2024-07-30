@@ -21,12 +21,11 @@ let user =
     |> Async.RunSynchronously
 
 let connectionConfig =
-    let connection = Configuration.ConnectionStrings.config.Irc
-
-    connection.Split(":")
-    |> function
-        | [| host ; port |] -> ConnectionType.IRC(host, port |> int)
-        | _ -> failwith "Bad connection string format"
+    let uri = new Uri(Configuration.ConnectionStrings.config.Twitch)
+    match uri.Scheme with
+    | "irc" -> ConnectionType.IRC(uri.Host, uri.Port)
+    | "wss" -> ConnectionType.Websocket(uri.Host, uri.Port)
+    | _ -> failwith "Bad connection string"
 
 let twitchChatConfig: TwitchChatClientConfig = {
     Username = user.DisplayName
