@@ -7,18 +7,21 @@ module IRC =
     open System.Net.Security
     open System.Net.Sockets
 
+    let PrivMessage channel message = $"PRIVMSG #{channel} :{message}"
+    let PongMessage message = $"PONG :{message}"
+    let PartMessage channel = $"PART #{channel}"
+    let JoinMessage (channel: 'a) = $"JOIN #{channel}"
+    let JoinMultipleMessage (channels: string seq) =
+        channels
+        |> Seq.map (fun c -> $"#{c}")
+        |> String.concat ","
+        |> fun cs -> $"JOIN {cs}"
+
     let [<Literal>] writeBufferSize = 1024
     let [<Literal>] readBufferSize = 16384 // 1024 * 16
 
-    let private ircPrivMessage channel message = $"PRIVMSG #{channel} :{message}"
-    let private ircPongMessage message = $"PONG :{message}"
-    let private ircPartMessage channel = $"PART #{channel}"
-    let private ircJoinMessage (channel: 'a) = $"JOIN #{channel}"
-
     let createTcpClient (host: string) (port: int) =
-        let s = new Socket(SocketType.Stream, ProtocolType.Tcp)
-        s.ConnectAsync(host, port) |> Async.AwaitTask |> Async.RunSynchronously
-        new NetworkStream(s)
+        new Socket(SocketType.Stream, ProtocolType.Tcp)
 
     let getSslStream (client: NetworkStream) (host: string) =
         let sslStream = new SslStream(client)
@@ -26,16 +29,16 @@ module IRC =
         sslStream
 
     let ircSendPrivMessage (writer: TextWriter) channel message =
-        async { do! writer.WriteLineAsync(ircPrivMessage channel message) |> Async.AwaitTask }
+        async { do! writer.WriteLineAsync(PrivMessage channel message) |> Async.AwaitTask }
 
     let ircPong (writer: TextWriter) message =
-        async { do! writer.WriteLineAsync(ircPongMessage message) |> Async.AwaitTask }
+        async { do! writer.WriteLineAsync(PongMessage message) |> Async.AwaitTask }
 
     let ircPartChannel (writer: TextWriter) channel =
-        async { do! writer.WriteLineAsync(ircPartMessage channel) |> Async.AwaitTask }
+        async { do! writer.WriteLineAsync(PartMessage channel) |> Async.AwaitTask }
 
     let ircJoinChannel (writer: TextWriter) channel =
-        async { do! writer.WriteLineAsync(ircJoinMessage channel) |> Async.AwaitTask }
+        async { do! writer.WriteLineAsync(JoinMessage channel) |> Async.AwaitTask }
 
     let ircJoinChannels (writer: TextWriter) channels =
         let channels = channels |> List.map (fun c -> $"#{c}") |> String.concat ","

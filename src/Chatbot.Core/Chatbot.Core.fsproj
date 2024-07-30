@@ -5,14 +5,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="DotEnv.fs" />
-    <Compile Include="Configuration.fs" />
-    <Compile Include="Logging.fs" />
-    <Compile Include="Utils.fs" />
+    <Compile Include="ITwitchConnection.fs" />
     <Compile Include="Async.fs" />
     <Compile Include="Operators.fs" />
     <Compile Include="Result.fs" />
     <Compile Include="Option.fs" />
+    <Compile Include="DotEnv.fs" />
+    <Compile Include="Configuration.fs" />
+    <Compile Include="Logging.fs" />
+    <Compile Include="Utils.fs" />
     <Compile Include="Google.fs" />
     <Compile Include="Twitch.fs" />
     <Compile Include="TokenStore.fs" />
@@ -21,6 +22,7 @@
     <Compile Include="IrcMessageParser.fs" />
     <Compile Include="IrcMessages.fs" />
     <Compile Include="IrcClient.fs" />
+    <Compile Include="WebSocketClient.fs" />
     <Compile Include="RateLimiter.fs" />
     <Compile Include="TwitchChatClient.fs" />
   </ItemGroup>

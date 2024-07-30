@@ -15,24 +15,21 @@ module Configuration =
 
     module Logging =
 
-        type LogLevel = { Default: string }
-
         [<CLIMutable>]
         type LoggingConfig = { LogLevel: LogLevel }
+        and LogLevel = { Default: string }
 
         let config = configuration.GetSection("Logging").Get<LoggingConfig>()
-
 
     module ConnectionStrings =
 
         [<CLIMutable>]
         type ConnectionStrings = {
             Database: string
-            Irc: string
+            Twitch: string
         }
 
         let config = configuration.GetSection("ConnectionStrings").Get<ConnectionStrings>()
-
 
     module Twitch =
 

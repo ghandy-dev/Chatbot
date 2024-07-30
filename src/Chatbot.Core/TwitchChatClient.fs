@@ -5,7 +5,9 @@ open Chatbot.IRC
 open System
 
 [<RequireQualifiedAccess>]
-type ConnectionType = IRC of Host: string * Port: int
+type ConnectionType =
+    | IRC of Host: string * Port: int
+    | Websocket of Host: string * Port: int
 
 type TwitchChatClientConfig = {
     Username: string
@@ -21,11 +23,12 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
     let whisperRateLimiter =
         RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
 
-    let createClient () =
+    let createClient () : ITwitchConnection =
         match Connection with
         | ConnectionType.IRC(host, port) -> new IrcClient(host, port)
+        | ConnectionType.Websocket(host, port) -> new WebSocketClient(host, port)
 
-    let mutable client: IrcClient = null
+    let mutable client: ITwitchConnection = null
 
     let send (message: string) =
         async {
@@ -40,11 +43,11 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
             | Some token -> do! client.AuthenticateAsync(user, token, Config.Capabilities)
         }
 
-    let partChannel = client.PartChannelAsync
+    let partChannel channel = client.PartChannelAsync channel
 
-    let joinChannel = client.JoinChannelAsync
+    let joinChannel channel = client.JoinChannelAsync channel
 
-    let joinChannels = client.JoinChannelsAsync
+    let joinChannels channels = client.JoinChannelsAsync channels
 
     let sendChannelMessage channel message =
         async {
@@ -78,6 +81,7 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
     let start (cancellationToken) =
         async {
             client <- createClient ()
+            do! client.ConnectAsync (cancellationToken)
             do! authenticate Config.Username
 
             let! result = reader cancellationToken |> Async.StartChild |> Async.Catch

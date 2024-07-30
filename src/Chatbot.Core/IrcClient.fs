@@ -3,17 +3,16 @@ namespace Chatbot
 open Chatbot.IRC
 
 open System
+open System.Net.Sockets
 
-[<AllowNullLiteral>]
 type IrcClient(host: string, port: int) =
 
     let [<Literal>] writerBufferSize = 1024
-    let [<Literal>] readerufferSize = 10240
+    let [<Literal>] readerBufferSize = 10240
 
-    let client = IRC.createTcpClient host port
-    let stream = IRC.getSslStream client host
-    let reader = IO.createStreamReader stream
-    let writer = IO.createStreamWriter stream writerBufferSize
+    let socket = IRC.createTcpClient host port
+    let mutable reader = null
+    let mutable writer = null
 
     let mutable isConnected = true
 
@@ -21,10 +20,19 @@ type IrcClient(host: string, port: int) =
         if isConnected = false then
             false
         else
-            client.Socket.Connected
+            socket.Connected
+
+    let connect cancellationToken =
+        async {
+            do! socket.ConnectAsync(host, port, cancellationToken).AsTask() |> Async.AwaitTask
+            let stream = new NetworkStream(socket)
+            let secureStream = IRC.getSslStream stream host
+            reader <- IO.createStreamReader secureStream
+            writer <- IO.createStreamWriter secureStream writerBufferSize
+        }
 
     let read cancellationToken =
-        IO.readAsync reader readerufferSize cancellationToken
+        IO.readAsync reader readerBufferSize cancellationToken
 
     let writeLine (message: string) =
         async {
@@ -52,58 +60,58 @@ type IrcClient(host: string, port: int) =
             do! flush ()
         }
 
-    member _.Connected = connected ()
+    interface ITwitchConnection with
+        member _.Connected = connected ()
 
-    member _.PongAsync (message) =
-        async {
-            do! IRC.ircPong writer message
-            do! flush ()
-        }
+        member _.ConnectAsync (cancellationToken) = connect cancellationToken
 
-    member _.PartChannelAsync (channel) =
-        async {
-            do! IRC.ircPartChannel writer channel
-            do! flush ()
-        }
+        member _.PongAsync (message) =
+            async {
+                do! IRC.ircPong writer message
+                do! flush ()
+            }
 
-    member _.JoinChannelAsync (channel) =
-        async {
-            do! IRC.ircJoinChannel writer channel
-            do! flush ()
-        }
+        member _.PartChannelAsync (channel) =
+            async {
+                do! IRC.ircPartChannel writer channel
+                do! flush ()
+            }
 
-    member _.JoinChannelsAsync (channels) =
-        async {
-            do! IRC.ircJoinChannels writer channels
-            do! flush ()
-        }
+        member _.JoinChannelAsync (channel) =
+            async {
+                do! IRC.ircJoinChannel writer channel
+                do! flush ()
+            }
 
-    member _.SendPrivMessageAsync (channel, message) =
-        async {
-            do! IRC.ircSendPrivMessage writer channel message
-            do! flush ()
-        }
+        member _.JoinChannelsAsync (channels) =
+            async {
+                do! IRC.ircJoinChannels writer channels
+                do! flush ()
+            }
 
-    member _.ReadAsync (cancellationToken) = read cancellationToken
+        member _.SendPrivMessageAsync (channel, message) =
+            async {
+                do! IRC.ircSendPrivMessage writer channel message
+                do! flush ()
+            }
 
-    member _.WriteAsync (message: string) = writeLine message
+        member _.ReadAsync (cancellationToken) = read cancellationToken
 
-    member _.SendAsync (message: string) = send message
+        member _.SendAsync (message: string) = send message
 
-    member _.FlushAsync () = flush ()
 
-    member this.AuthenticateAsync (user: string, accessToken: string, capabilities: string array) =
-        async {
-            if (capabilities.Length > 0) then
-                do! this.WriteAsync($"""CAP REQ :{String.concat " " capabilities}""")
+        member _.AuthenticateAsync (user: string, accessToken: string, capabilities: string array) =
+            async {
+                if (capabilities.Length > 0) then
+                    do! writeLine($"""CAP REQ :{String.concat " " capabilities}""")
 
-            do! this.WriteAsync($"PASS oauth:{accessToken}")
-            do! this.WriteAsync($"NICK {user}")
-            do! this.FlushAsync()
-        }
+                do! writeLine($"PASS oauth:{accessToken}")
+                do! writeLine($"NICK {user}")
+                do! flush()
+            }
 
     interface IDisposable with
         member _.Dispose () =
             isConnected <- false
             writer.Dispose()
-            client.Dispose()
+            socket.Dispose()
