@@ -75,3 +75,13 @@ module Types =
         Urls: string list
         Category: string
     }
+
+    type DungeonPlayer = {
+        UserId: int
+        Data: string
+    } with
+
+        static member create userId data = {
+            UserId = userId
+            Data = data
+        }

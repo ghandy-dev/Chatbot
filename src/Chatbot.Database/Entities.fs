@@ -40,3 +40,8 @@ module Entities =
         category_id: int
         category: string
     }
+
+    type internal DungeonPlayer = {
+        user_id: int
+        data: string
+    }

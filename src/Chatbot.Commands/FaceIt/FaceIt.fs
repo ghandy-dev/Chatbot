@@ -4,6 +4,7 @@ namespace Chatbot.Commands.FaceIt
 module FaceIt =
 
     open Api
+    open Types
     open Chatbot.Commands
 
     open System

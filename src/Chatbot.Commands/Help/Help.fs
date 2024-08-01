@@ -144,6 +144,34 @@ Supported operators:
         $"""{example "coinflip"}"""
         }
 
+
+    let Dungeon =
+        {
+            Name = "Dungeon"
+            Description = "Enter the Dungeon and fight for gold."
+            ExampleUsage =
+        $"""
+Register to be able enter the dungeon:
+{exampleArgs "dungeon" "register"}
+
+Get player lifetime stats (kills, gold gained/lost):
+{exampleArgs "dungeon" "stats"}
+
+Check player status (HP, AP, Weapon, Armor, Gold):
+{exampleArgs "dungeon" "status"}
+
+View items available to purchase in the shop:
+{exampleArgs "dungeon" "shop"}
+
+Buy an item (using the item ID shown in the shop):
+{exampleArgs "dungeon" "buy <id>"}
+{exampleArgs "dungeon" "buy 1"}
+
+Fight an opponent to earn gold:
+{exampleArgs "dungeon" "fight"}
+"""
+        }
+
     let Eightball =
         {
             Name = "Eightball"

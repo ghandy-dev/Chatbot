@@ -8,6 +8,9 @@ module Int32 =
         | true, v -> Some v
         | false, _ -> None
 
+    let positive = fun n -> n >= 0 // 🤓 0 isn't positive
+    let negative = fun n -> n < 0
+
 module Boolean =
 
     let tryParse (s: string) =

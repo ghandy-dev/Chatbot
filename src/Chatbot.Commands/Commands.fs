@@ -26,6 +26,7 @@ module Commands =
             Command.createCommand ("chance", [ "%" ], HelpInfo.Chance, SyncFunction chance, 10000, false)
             Command.createCommand ("channel", [], HelpInfo.Channel, AsyncFunctionWithArgs channel, 20000, false)
             Command.createCommand ("coinflip", [ "cf" ], HelpInfo.CoinFlip, SyncFunction coinFlip, 10000, false)
+            Command.createCommand ("dungeon", [], HelpInfo.Dungeon, AsyncFunctionWithArgsAndContext dungeon, 10000, false)
             Command.createCommand ("eightball", ["8ball"], HelpInfo.Eightball, SyncFunction eightball, 10000, false)
             Command.createCommand ("echo", [], HelpInfo.Echo, SyncFunctionWithArgs echo, 5000, true)
             Command.createCommand ("encode", [], HelpInfo.Encode, SyncFunctionWithArgs encode, 5000, false)
