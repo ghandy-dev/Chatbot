@@ -3,30 +3,27 @@ module Dungeon.Fight
 open System
 
 open Types
-open Helpers
 
-let fightAction damage = [
-    HealthChange -damage
-]
+type Outcome = Victory of Player | Defeat of Player
 
 let handleFight (player: Player) (enemy: Enemy) =
     let roll () = Random.Shared.Next(6)
 
     let rec fight (player: Player) (enemy: Enemy) =
         if player.HP <= 0 then
-            Player.applyChanges player [ GoldChange -((player.Gold * 3) / 100) ]
+            Defeat (Player.applyChanges player (Actions.loseAction player))
         else if enemy.HP <= 0 then
-            Player.applyChanges player [ GoldChange enemy.Gold ; EnemyDefeated enemy.Type ]
+            Victory (Player.applyChanges player (Actions.winAction enemy))
         else
             let playerRoll = roll ()
             let enemyRoll = roll ()
-            let playerDamage = playerRoll + player.Weapon
-            let enemyDamage = enemyRoll + enemy.Damage
+            let playerDamage = max (playerRoll + player.Weapon - enemy.Armor) 0
+            let enemyDamage = max (enemyRoll + enemy.Weapon - player.Armor) 0
             fight
-                (Player.applyChanges player (fightAction enemyDamage))
-                (Enemy.applyChanges enemy (fightAction playerDamage))
+                (Player.applyChanges player (Actions.fightAction enemyDamage))
+                (Enemy.applyChanges enemy (Actions.fightAction playerDamage))
 
-    match Player.canPerformAction player with
+    match Actions.canPerformAction player with
     | NoHP msg -> Error msg
     | NoAP msg -> Error msg
     | CanPerformActions ->

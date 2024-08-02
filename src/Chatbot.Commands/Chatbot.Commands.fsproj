@@ -28,9 +28,9 @@
     <Compile Include="Weather/Weather.fs" />
     <Compile Include="DungeonGame/Types.fs" />
     <Compile Include="DungeonGame/Helpers.fs" />
-    <Compile Include="DungeonGame/Items.fs" />
     <Compile Include="DungeonGame/Enemies.fs" />
     <Compile Include="DungeonGame/Player.fs" />
+    <Compile Include="DungeonGame/Actions.fs" />
     <Compile Include="DungeonGame/Shop.fs" />
     <Compile Include="DungeonGame/Fight.fs" />
     <Compile Include="DungeonGame/Dungeon.fs" />

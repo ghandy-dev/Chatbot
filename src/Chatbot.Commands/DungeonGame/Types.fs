@@ -2,7 +2,7 @@ module Dungeon.Types
 
 type Weapon = int
 type Armor = int
-type Fruit = int
+type Heart = int
 
 type EnemyType =
     | Spider
@@ -27,8 +27,8 @@ type EnemyType =
 type Enemy = {
     Type: EnemyType
     HP: int
-    Damage: int
-    Armor: int
+    Weapon: Weapon
+    Armor: Armor
     Gold: int
 }
 
@@ -39,6 +39,10 @@ type EnemyRarity =
     | VeryRare = 7
     | Legendary = 3
 
+let [<Literal>] maxHP = 12
+let [<Literal>] startingHP = 10
+let [<Literal>] maxAP = 5
+
 type Player = {
     AP: int
     HP: int
@@ -46,18 +50,22 @@ type Player = {
     Armor: Armor
     Gold: int
     Stats: Stats
+    LastAction: System.DateOnly
 } with
 
     static member create = {
-        AP = 3
-        HP = 20
+        AP = maxAP
+        HP = startingHP
         Weapon = 1
         Armor = 0
         Gold = 10
         Stats = Stats.create
+        LastAction = System.DateOnly.FromDateTime(System.DateTime.UtcNow)
     }
 
-    override this.ToString() = $"AP: {this.AP}/3, HP: {this.HP}, Damage: {this.Weapon}, Armor: {this.Armor}, Gold: {this.Gold}g"
+    override this.ToString() = $"AP: {this.AP}/{maxAP}, HP: ❤️{this.HP}/{maxHP}, AD: 🗡️+{this.Weapon}, DEF: 🛡️+{this.Armor}, Gold: {this.Gold}g"
+    member this.IsAlive = this.HP > 0
+    member this.HasActionPoints = this.AP > 0
 
 and Stats = {
     Kills: Map<string, int>
@@ -73,13 +81,19 @@ and Stats = {
         TotalGoldLost = 0
     }
 
+type StatChange =
+    | KillsChanged of EnemyType
+    | DeathsChanged of int
+    | TotalGoldEarnedChanged of int
+    | TotalGoldLostChanged of int
+
 type Change =
     | HealthChange of int
     | GoldChange of int
     | WeaponChange of Weapon
     | ArmorChange of Armor
-    | EnemyDefeated of EnemyType
     | ActionPointChange of int
+    | StatChange of StatChange
 
 type Status =
     | NoHP of string
@@ -89,14 +103,14 @@ type Status =
 type ShopItem =
     | Weapon of Weapon * price: int
     | Armor of Armor * price: int
-    | Fruit of Fruit * price: int
+    | Heart of Heart * price: int
     with
 
         override this.ToString() =
             match this with
             | Weapon (w, gold) -> $"🗡️+{w} -{gold}g"
             | Armor (a,  gold) -> $"🛡️+{a} -{gold}g"
-            | Fruit (f,  gold) -> $"🍎+{f} -{gold}g"
+            | Heart (h,  gold) -> $"💗+{h} -{gold}g"
 
 
 type Shop = { Items: ShopItem list }

@@ -1,9 +1,22 @@
 [<AutoOpen>]
 module Utils
 
+open System
+
+let utcNow() = System.DateTime.UtcNow
+
+module DateOnly =
+
+    let today() = DateOnly.FromDateTime(utcNow())
+
+    let tryParseExact (s: ReadOnlySpan<char>) (format: ReadOnlySpan<char>) =
+        match DateOnly.TryParseExact(s, format) with
+        | false, _ -> None
+        | true, date -> Some date
+
 module Int32 =
 
-    let tryParse (s: string) =
+    let tryParse (s: ReadOnlySpan<char>) =
         match System.Int32.TryParse(s) with
         | true, v -> Some v
         | false, _ -> None
@@ -13,7 +26,7 @@ module Int32 =
 
 module Boolean =
 
-    let tryParse (s: string) =
+    let tryParse (s: ReadOnlySpan<char>) =
         match System.Boolean.TryParse s with
         | false, _ -> None
         | true, v -> Some v
@@ -32,7 +45,7 @@ module Boolean =
 
 module DateTime =
 
-    let tryParse (s: string) =
+    let tryParse (s: ReadOnlySpan<char>) =
         match System.DateTime.TryParse s with
         | false, _ -> None
         | true, v -> Some v

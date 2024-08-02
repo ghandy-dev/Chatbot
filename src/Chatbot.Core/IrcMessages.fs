@@ -678,7 +678,7 @@ module Messages =
                     FollowersOnly = message.Tags.TryFind "followers-only" |> Option.bind Boolean.tryParseBit
                     R9K = message.Tags.TryFind "r9k" |> Option.bind Boolean.tryParseBit
                     RoomId = message.Tags["room-id"]
-                    Slow = message.Tags.TryFind "slow" |> Option.bind Int32.tryParse
+                    Slow = message.Tags.TryFind "slow" |> Option.bind (fun s -> Int32.tryParse s)
                     SubsOnly = message.Tags.TryFind "subs-only" |> Option.bind Boolean.tryParseBit
                 }
             | _ -> None

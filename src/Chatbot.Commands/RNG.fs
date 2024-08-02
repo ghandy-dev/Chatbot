@@ -12,7 +12,7 @@ module RNG =
 
         let private defaultArgs = (Some 0, Some 10)
 
-        let roll args =
+        let roll (args: string list) =
 
             let (min, max) =
                 match args with

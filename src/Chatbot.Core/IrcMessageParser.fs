@@ -1,5 +1,7 @@
 ﻿namespace Chatbot.IRC
 
+open System
+
 module Parsing =
 
     module Types =
@@ -154,7 +156,7 @@ module Parsing =
             parseComponents parts ParseTags IrcMessage.newMessage
 
         let private nonEmptyString s =
-            not <| System.String.IsNullOrWhiteSpace(s)
+            not <| String.IsNullOrWhiteSpace(s)
 
         let parseIrcMessage (message: string) =
             message.Split("\r\n") |> Array.filter nonEmptyString |> Array.map parseMessageComponents

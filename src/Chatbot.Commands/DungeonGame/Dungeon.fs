@@ -43,10 +43,17 @@ module Dungeon =
                         let enemy = Helpers.getRandomItem Enemy.enemies (System.Random.Shared)
                         match Fight.handleFight player enemy with
                         | Error err -> return Error err
-                        | Ok player' ->
+                        | Ok (Fight.Victory player') ->
                             do! updatePlayer userId player'
                             let hpChange = Helpers.formatNumberChange (player'.HP - player.HP)
                             let goldChange = Helpers.formatNumberChange (player'.Gold - player.Gold)
-                            return Ok <| Message $"Defeated {enemy.Type.ToString()} (HP: {enemy.HP}, AD: {enemy.Damage}, DEF: {enemy.Armor}) AP: {player'.AP}/3, HP: {player'.HP}({hpChange}), Damage: {player'.Weapon}, Armor: {player'.Armor}, Gold: {player'.Gold}({goldChange}g)"
+                            return Ok <| Message $"Defeated {enemy.Type.ToString()} (HP: {enemy.HP}, AD: {enemy.Weapon}, DEF: {enemy.Armor}) AP: {player'.AP}/{maxAP}, HP: {player'.HP}({hpChange}), AD: {player'.Weapon}, DEF: {player'.Armor}, Gold: {player'.Gold}({goldChange}g)"
+                        | Ok (Fight.Defeat player') ->
+                            do! updatePlayer userId player'
+                            let hpChange = Helpers.formatNumberChange (player'.HP - player.HP)
+                            let goldChange = Helpers.formatNumberChange (player'.Gold - player.Gold)
+                            let damageChange = Helpers.formatNumberChange (player'.Weapon - player.Weapon)
+                            let armorChange = Helpers.formatNumberChange (player'.Armor - player.Armor)
+                            return Ok <| Message $"You Died! Lost to {enemy.Type.ToString()} (HP: {enemy.HP}, AD: {enemy.Weapon}, DEF: {enemy.Armor}). HP: {player'.HP}({hpChange}), AD: {player'.Weapon}({damageChange}), DEF: {player'.Armor}({armorChange}), Gold: {player'.Gold}({goldChange}g)"
                     | _ -> return Error "Unknown subcommand"
         }
