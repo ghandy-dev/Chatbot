@@ -154,10 +154,10 @@ Supported operators:
 Register to be able enter the dungeon:
 {exampleArgs "dungeon" "register"}
 
-Get player lifetime stats (kills, gold gained/lost):
+Get player lifetime stats (kills, deaths, gold gained/lost):
 {exampleArgs "dungeon" "stats"}
 
-Check player status (HP, AP, Weapon, Armor, Gold):
+Check player status (HP, AP, AD, DEF, Gold):
 {exampleArgs "dungeon" "status"}
 
 View items available to purchase in the shop:
