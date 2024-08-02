@@ -31,6 +31,35 @@ module Parsing =
             | Ignore
             | Unknown
 
+            static member parse =
+                function
+                | "001" -> Authenticated
+                | "CAP" -> Cap
+                | "CLEARCHAT" -> ClearChat
+                | "CLEARMSG" -> ClearMsg
+                | "JOIN" -> Join
+                | "GLOBALUSERSTATE" -> GlobalUserState
+                | "HOSTTARGET" -> HostTarget
+                | "NOTICE" -> Notice
+                | "PART" -> Part
+                | "PING" -> Ping
+                | "PRIVMSG" -> PrivMsg
+                | "RECONNECT" -> Reconnect
+                | "353" -> RoomList
+                | "ROOMSTATE" -> RoomState
+                | "USERNOTICE" -> UserNotice
+                | "USERSTATE" -> UserState
+                | "WHISPER" -> Whisper
+                | "421" -> Unsupported
+                | "002"
+                | "003"
+                | "004"
+                | "366"
+                | "372"
+                | "375"
+                | "376" -> Ignore
+                | _ -> Unknown
+
         type Source = {
             Nick: string
             Host: string option
@@ -54,35 +83,6 @@ module Parsing =
     module Parser =
 
         open Types
-
-        let private parseIrcCommand =
-            function
-            | "001" -> Authenticated
-            | "CAP" -> Cap
-            | "CLEARCHAT" -> ClearChat
-            | "CLEARMSG" -> ClearMsg
-            | "JOIN" -> Join
-            | "GLOBALUSERSTATE" -> GlobalUserState
-            | "HOSTTARGET" -> HostTarget
-            | "NOTICE" -> Notice
-            | "PART" -> Part
-            | "PING" -> Ping
-            | "PRIVMSG" -> PrivMsg
-            | "RECONNECT" -> Reconnect
-            | "353" -> RoomList
-            | "ROOMSTATE" -> RoomState
-            | "USERNOTICE" -> UserNotice
-            | "USERSTATE" -> UserState
-            | "WHISPER" -> Whisper
-            | "421" -> Unsupported
-            | "002"
-            | "003"
-            | "004"
-            | "366"
-            | "372"
-            | "375"
-            | "376" -> Ignore
-            | _ -> Unknown
 
         let private parseTags (message: string) =
             message.Split(";")
@@ -134,7 +134,7 @@ module Parsing =
                     match parts with
                     | [||] -> parseComponents parts MessageParsed parsedMessage
                     | parts ->
-                        let command = parseIrcCommand parts[0]
+                        let command = IrcCommand.parse parts[0]
 
                         let parsedMessage = { parsedMessage with Command = command }
 
@@ -155,8 +155,5 @@ module Parsing =
 
             parseComponents parts ParseTags IrcMessage.newMessage
 
-        let private nonEmptyString s =
-            not <| String.IsNullOrWhiteSpace(s)
-
         let parseIrcMessage (message: string) =
-            message.Split("\r\n") |> Array.filter nonEmptyString |> Array.map parseMessageComponents
+            message.Split("\r\n") |> Array.filter String.notEmpty |> Array.map parseMessageComponents

@@ -37,7 +37,7 @@ type WebSocketClient(host: string, port: int) =
             do! read' ()
 
             let message = System.Text.Encoding.UTF8.GetString(buffer.Array, 0, count)
-            if (not <| String.IsNullOrWhiteSpace(message)) then
+            if (String.notEmpty message) then
                 return Some message
             else
                 return None

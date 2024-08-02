@@ -3,7 +3,11 @@ module Utils
 
 open System
 
-let utcNow() = System.DateTime.UtcNow
+let utcNow() = DateTime.UtcNow
+
+module String =
+
+    let notEmpty = not << String.IsNullOrWhiteSpace
 
 module DateOnly =
 
@@ -50,11 +54,9 @@ module DateTime =
         | false, _ -> None
         | true, v -> Some v
 
-    let dateStringFormat = "dd/MM/yyyy"
-
-    let timeStringFormat = "HH:mm:ss"
-
-    let dateTimeStringFormat = $"{dateStringFormat} {timeStringFormat}"
+    let [<Literal>] dateStringFormat = "dd/MM/yyyy"
+    let [<Literal>] timeStringFormat = "HH:mm:ss"
+    let [<Literal>] dateTimeStringFormat = $"dd/MM/yyyy HH:mm:ss"
 
 module Text =
 
