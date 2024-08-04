@@ -85,7 +85,7 @@ module FaceIt =
                         |> List.map (fun (roundResults, h) ->
                             roundResults
                             |> List.map (fun (outcome, score) ->
-                                $"{DateTimeOffset.FromUnixTimeSeconds(h.FinishedAt).Date.ToShortDateString()} Result: {outcome}, {score}"
+                                $"{DateTimeOffset.FromUnixTimeSeconds(h.FinishedAt).Date.ToShortDateString()} {outcome}, {score}"
                             )
                             |> String.concat " | "
                         )
