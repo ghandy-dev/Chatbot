@@ -62,10 +62,12 @@ module FaceIt =
                             |> List.map (fun r ->
                                 let winner = r.RoundStats.Winner
 
+                                // TODO: consider a rewrite?
                                 let outcome =
                                     r.Teams
+                                    |> List.filter (fun t -> t.TeamId = winner)
                                     |> List.map (fun t ->
-                                        if t.TeamId = winner && t.Players |> List.exists (fun p -> p.PlayerId = player.PlayerId) then
+                                        if t.Players |> List.exists (fun p -> p.PlayerId = player.PlayerId) then
                                             "Win"
                                         else
                                             "Loss"
@@ -75,7 +77,6 @@ module FaceIt =
                                 let score = $"Map: {r.RoundStats.Map}, Score: [{r.RoundStats.Score}]"
 
                                 (score, outcome)
-
                             )
                         )
 
