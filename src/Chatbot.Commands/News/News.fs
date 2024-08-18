@@ -18,12 +18,12 @@ module News =
             | Error err -> return Error err
             | Ok newsItem ->
                 let title = newsItem.Title.Text
-                let date = newsItem.PublishDate.UtcDateTime.ToString(DateTime.dateTimeStringFormat)
+                let date = newsItem.PublishDate.UtcDateTime.ToString("dd MMM yyyy, HH:mm")
                 let summary = newsItem.Summary.Text
                 let link =
                     match newsItem.Links |> List.ofSeq with
                     | [] -> ""
                     | l :: _ -> l.Uri.AbsoluteUri
 
-                return Ok <| Message $"{title} {date} {summary} {link}"
+                return Ok <| Message $"{date} {title} {summary} {link}"
         }
