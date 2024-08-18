@@ -4,6 +4,6 @@ CREATE TABLE IF NOT EXISTS [aliases] (
     [name] TEXT NOT NULL,
     [command] TEXT NOT NULL,
 
-    FORIEGN KEY [user_id] REFERENCES [users] ([user_id]),
+    FOREIGN KEY [user_id] REFERENCES [users] ([user_id]),
     UNIQUE([user_id], [name])
 );
