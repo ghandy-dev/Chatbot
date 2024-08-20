@@ -57,6 +57,10 @@ module Helix =
             helixApi.Users.GetUsersAsync(new GetUsersRequest(Logins = [ username ])) |> Async.AwaitTask
             |-> tryHead
 
+        let getUsers usernames =
+            helixApi.Users.GetUsersAsync(new GetUsersRequest(Logins = usernames)) |> Async.AwaitTask
+            |-> tryHead
+
         let getAccessTokenUser accessToken =
             helixApi.Users.GetUsersAsync(accessToken) |> Async.AwaitTask
             |-> tryHead

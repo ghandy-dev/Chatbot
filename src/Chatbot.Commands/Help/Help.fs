@@ -406,6 +406,22 @@ Get a trending reddit post based sorted by; "top" / "hot" / "best"
 {exampleArgs "reddit" "top shitposting"}
 """
         }
+
+    let Remind =
+        {
+            Name = "Remind"
+            Description = "Remind a user when they next type in chat, or set a timed reminder for a user (or yourself)"
+            ExampleUsage = $"""
+Remind a user when they next type in chat:
+{exampleArgs "remind" "<user> <message>"}
+{exampleArgs "reddit" "forsen play assassin's creed black flag"}
+
+Set a timed reminder to remind the user after a set duration in the current channel (can't be set in whispers):
+{exampleArgs "remind" "<user> in <time period> <message>"}
+{exampleArgs "remind" "forsen in 20 mins go live forsenSWA"}
+"""
+        }
+
     let RockPaperScissors =
         {
             Name = "Rock, Paper, Scissors"

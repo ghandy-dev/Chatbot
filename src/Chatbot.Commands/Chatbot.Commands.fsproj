@@ -63,6 +63,7 @@
     <Compile Include="Encode.fs" />
     <Compile Include="TopStreams.fs" />
     <Compile Include="AddBetween.fs" />
+    <Compile Include="Remind.fs" />
     <Compile Include="Pipe.fs" />
     <Compile Include="Alias.fs" />
     <Compile Include="Commands.fs" />

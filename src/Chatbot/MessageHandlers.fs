@@ -88,8 +88,5 @@ let private handleIrcMessage (msg) (mb: MailboxProcessor<_>) =
         | _ -> ()
     }
 
-let private parseMessage message =
-    message |> IRC.Parsing.Parser.parseIrcMessage |> Array.map MessageMapping.mapIrcMessage |> Array.choose id
-
-let handleMessage message (mb: MailboxProcessor<ClientRequest>) =
-    parseMessage message |> Array.map (fun msg -> handleIrcMessage msg mb) |> Async.Parallel |> Async.Ignore
+let handleMessages messages (mb: MailboxProcessor<ClientRequest>) =
+    messages |> Array.map (fun msg -> handleIrcMessage msg mb) |> Async.Parallel |> Async.Ignore

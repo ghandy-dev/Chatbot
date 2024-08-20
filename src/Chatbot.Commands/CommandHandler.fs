@@ -51,12 +51,6 @@ let private parseCommandAndParameters (message: string) =
     | [ command ] -> command, []
     | command :: parameters -> command, parameters
 
-let private formatResponse (response: string) =
-    if response.Length > 500 then
-        response[..496] + "..."
-    else
-        response
-
 let rec handleCommand userId username source message =
     async {
         let commandName, parameters = parseCommandAndParameters message
@@ -79,8 +73,8 @@ let rec handleCommand userId username source message =
                             match! executeCommand command parameters context with
                             | Ok value ->
                                 match value with
-                                | Message message -> return Some <| (Message <| formatResponse message)
-                                | BotAction(action, message) -> return Some <| BotAction(action, formatResponse message)
+                                | Message message -> return Some <| (Message <| formatChatMessage message)
+                                | BotAction(action, message) -> return Some <| BotAction(action, formatChatMessage message)
                                 | RunAlias(command, parameters) ->
                                     let formattedCommand = Utils.Text.formatString command parameters
 
@@ -103,7 +97,7 @@ let rec handleCommand userId username source message =
                                             }
 
                                     return! executePipe "" commands
-                            | Error err -> return Some <| (Message <| formatResponse err)
+                            | Error err -> return Some <| (Message <| formatChatMessage err)
                         }
 
                     return response

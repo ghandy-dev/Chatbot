@@ -45,6 +45,7 @@ module Commands =
             Command.createCommand ("randomline", [ "rl" ], HelpInfo.RandomLine, AsyncFunctionWithArgsAndContext randomLine, 10000, false)
             Command.createCommand ("randomquote", [ "rq" ], HelpInfo.RandomQuote, AsyncFunctionWithArgsAndContext randomQuote, 10000, false)
             Command.createCommand ("reddit", [], HelpInfo.Reddit, AsyncFunctionWithArgs reddit, 15000, false)
+            Command.createCommand ("remind", [ "notify" ], HelpInfo.Remind, AsyncFunctionWithArgsAndContext remind, 5000, false)
             Command.createCommand ("rockpaperscissors", [ "rps" ], HelpInfo.RockPaperScissors, AsyncFunctionWithArgsAndContext rps, 10000, false)
             Command.createCommand ("roll", [], HelpInfo.Roll, SyncFunctionWithArgs roll, 10000, false)
             Command.createCommand ("stream", [], HelpInfo.Stream, AsyncFunctionWithArgs stream, 20000, false)

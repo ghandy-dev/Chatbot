@@ -23,10 +23,10 @@ module RssFeedRepository =
             let pattern = "%" + category + "%"
 
             let query = """
-                SELECT c.category, n.url FROM rss_feeds n
+                SELECT c.category, n.url
+                FROM rss_feeds n
                 INNER JOIN rss_feed_categories c ON n.category_id = c.category_id
-                WHERE c.category LIKE @pattern
-            """
+                WHERE c.category LIKE @pattern"""
 
             try
 

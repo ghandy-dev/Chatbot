@@ -45,3 +45,14 @@ module Entities =
         user_id: int
         data: string
     }
+
+    type internal Reminder = {
+        reminder_id: int
+        timestamp: string
+        user_id: int
+        target_user_id: int
+        message: string
+        channel: string option
+        reminder_timestamp: string option
+        reminded: int
+    }

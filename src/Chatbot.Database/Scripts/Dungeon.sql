@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS [dungeon] (
-    [user_id] INT PRIMARY KEY NOT NULL,
+    [user_id] INTEGER PRIMARY KEY NOT NULL,
     [data] TEXT NOT NULL
 ) WITHOUT ROWID;
 

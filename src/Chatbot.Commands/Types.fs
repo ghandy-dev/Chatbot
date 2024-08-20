@@ -1,6 +1,6 @@
 namespace Chatbot.Commands
 
-type Source = Whisper of string | Channel of string
+type Source = Whisper of username: string | Channel of channel: string
 
 type Context = {
     UserId: string

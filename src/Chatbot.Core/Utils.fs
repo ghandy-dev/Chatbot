@@ -5,6 +5,32 @@ open System
 
 let utcNow() = DateTime.UtcNow
 
+let formatChatMessage (response: string) =
+    if response.Length > 500 then
+        response[..496] + "..."
+    else
+        response
+
+let formatTimeSpan (ts: TimeSpan) =
+    let formatComponent value (format: string) =
+        if value > 0 then Some (value.ToString(format)) else None
+
+    let years = if ts.Days >= 365 then Some ((ts.Days / 365).ToString()) else None
+    let days = if years.IsSome then formatComponent (ts.Days % 365) "00" else formatComponent ts.Days "00"
+    let hours = formatComponent ts.Hours "00"
+    let minutes = formatComponent ts.Minutes "00"
+    let seconds = formatComponent ts.Seconds "00"
+
+    // Build the formatted string
+    match (years, days, hours, minutes, seconds) with
+    | (Some y, Some d,Some h, _, _) -> sprintf "%sy, %sd, %sh" y d h
+    | (None, Some d, Some (h: string), Some m, Some _) -> sprintf "%sd, %sh, %sm" d h m
+    | (None, None, Some h, Some m, Some s) -> sprintf "%sh, %sm, %ss" h m s
+    | (None, None, None, Some m, Some s) -> sprintf "%sm, %ss" m s
+    | (None, None, None, None, Some s) -> sprintf "%ss" s
+    | _ -> "0"  // This should never be reached with valid TimeSpan
+
+
 module String =
 
     let notEmpty = not << String.IsNullOrWhiteSpace

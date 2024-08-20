@@ -18,7 +18,7 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
 
     let lastMessagesSent = new Collections.Concurrent.ConcurrentDictionary<string, int64>()
 
-    let messageReceived = new Event<string>()
+    let messageReceived = new Event<Messages.Types.IrcMessageType array>()
 
     let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
 
@@ -76,7 +76,9 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
                     | true ->
                         match! client.ReadAsync cancellationToken with
                         | Some message ->
-                            messageReceived.Trigger message
+                            message |> fun m -> m.Split([| '\r' ; '\n' |], StringSplitOptions.RemoveEmptyEntries) |> Array.iter Logging.info
+                            let parsedMessage = message |> Parsing.Parser.parseIrcMessage |> Array.map Messages.MessageMapping.mapIrcMessage |> Array.choose id
+                            messageReceived.Trigger parsedMessage
                             do! reader' ()
                         | None -> () // if this happens then the client isn't connected
                     | false -> Logging.warning "IRC client disconnected."
