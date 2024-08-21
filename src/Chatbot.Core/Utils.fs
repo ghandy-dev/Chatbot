@@ -21,14 +21,23 @@ let formatTimeSpan (ts: TimeSpan) =
     let minutes = formatComponent ts.Minutes "00"
     let seconds = formatComponent ts.Seconds "00"
 
-    // Build the formatted string
     match (years, days, hours, minutes, seconds) with
     | (Some y, Some d,Some h, _, _) -> sprintf "%sy, %sd, %sh" y d h
-    | (None, Some d, Some (h: string), Some m, Some _) -> sprintf "%sd, %sh, %sm" d h m
+    | (Some y, None, Some h, _, _) -> sprintf "%sy, %sh" y h
+    | (Some y, Some d, None, _, _) -> sprintf "%sy, %sd" y d
+    | (Some y, None , None, _, _) -> sprintf "%sy" y
+    | (None, Some d, Some h, Some m, _) -> sprintf "%sd, %sh, %sm" d h m
+    | (None, Some d, None, Some m, _) -> sprintf "%sd, %sm" d m
+    | (None, Some d, Some h, None, _) -> sprintf "%sd, %sh" d h
+    | (None, Some d, None, None, _) -> sprintf "%sd" d
     | (None, None, Some h, Some m, Some s) -> sprintf "%sh, %sm, %ss" h m s
+    | (None, None, Some h, None, Some s) -> sprintf "%sh, %ss" h s
+    | (None, None, Some h, Some m, None) -> sprintf "%sh, %sm" h m
+    | (None, None, Some h, None, None) -> sprintf "%sh" h
     | (None, None, None, Some m, Some s) -> sprintf "%sm, %ss" m s
+    | (None, None, None, Some m, None) -> sprintf "%sm" m
     | (None, None, None, None, Some s) -> sprintf "%ss" s
-    | _ -> "0"  // This should never be reached with valid TimeSpan
+    | _ -> "0s"
 
 
 module String =
