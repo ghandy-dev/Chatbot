@@ -51,9 +51,9 @@ module Remind =
                     | None -> return Error $"{user} doesn't exist"
                     | Some targetUser ->
                         let reminder = Types.CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel) message (Some remindDateTime)
-
+                        let targetUsername = if (targetUser.Id = context.UserId) then "you" else $"@{targetUser.DisplayName}"
                         match! ReminderRepository.add reminder with
-                        | DatabaseResult.Success id -> return Ok <| Message $"(ID: {id}) I will remind {targetUser.DisplayName} in {formatTimeSpan remindIn}"
+                        | DatabaseResult.Success id -> return Ok <| Message $"(ID: {id}) I will remind {targetUsername} in {formatTimeSpan remindIn}"
                         | DatabaseResult.Failure -> return Error "Error occurred trying to create reminder"
         }
 
