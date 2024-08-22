@@ -17,12 +17,12 @@ type Context = {
     }
 
 type BotCommand =
-    | JoinChannel of string
-    | LeaveChannel of string
+    | JoinChannel of channel: string
+    | LeaveChannel of channel: string
 
 type CommandValue =
     | Message of string
-    | RunAlias of string * string list
+    | RunAlias of command: string * args: string list
     | Pipe of string list
     | BotAction of BotCommand * string
 
