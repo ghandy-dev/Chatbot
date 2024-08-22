@@ -5,7 +5,7 @@ module Alias =
 
     open Chatbot.Database
     open Chatbot.Database.AliasRepository
-    open Chatbot.Database.Types
+    open Chatbot.Database.Types.Aliases
 
     let private add userId name command =
         async {

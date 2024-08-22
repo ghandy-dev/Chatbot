@@ -4,7 +4,7 @@ namespace Chatbot.Commands
 module JoinChannel =
 
     open Chatbot.Database
-    open Chatbot.Database.Types
+    open Chatbot.Database.Types.Channels
 
     open TTVSharp.Helix
 

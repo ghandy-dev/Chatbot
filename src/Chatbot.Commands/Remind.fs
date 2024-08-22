@@ -7,6 +7,7 @@ module Remind =
     open System.Text.RegularExpressions
 
     open Chatbot.Database
+    open Chatbot.Database.Types.Reminders
 
     let private whenPattern = @"(in\s*)+((\d+)\s+(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)+?,*\s*)+"
     let private timePattern = @"(\d+)\s+(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)"
@@ -50,26 +51,26 @@ module Remind =
                     match! TTVSharp.Helix.Users.getUser user with
                     | None -> return Error $"{user} doesn't exist"
                     | Some targetUser ->
-                        let reminder = Types.CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel) message (Some remindDateTime)
+                        let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel) message (Some remindDateTime)
                         let targetUsername = if (targetUser.Id = context.UserId) then "you" else $"@{targetUser.DisplayName}"
                         match! ReminderRepository.add reminder with
                         | DatabaseResult.Success id -> return Ok <| Message $"(ID: {id}) I will remind {targetUsername} in {formatTimeSpan remindIn}"
                         | DatabaseResult.Failure -> return Error "Error occurred trying to create reminder"
         }
 
-    let private parseReminder user message context =
+    let private parseReminder user message (context: Context) =
         async {
             match! TTVSharp.Helix.Users.getUser user with
             | None -> return Error $"{user} doesn't exist or is currently banned"
             | Some targetUser ->
-                let reminder = Types.CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName None message None
+                let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName None message None
 
                 match! ReminderRepository.add reminder with
                 | DatabaseResult.Success id -> return Ok <| Message $"(ID: {id}) I will remind {targetUser.DisplayName} when they next type in chat"
                 | DatabaseResult.Failure -> return Error "Error occurred trying to create reminder"
         }
 
-    let private remind' args user context =
+    let private remind' args user (context: Context) =
         async {
                 let content = String.concat " " args
                 if Regex.IsMatch(content, whenPattern, RegexOptions.IgnoreCase) then

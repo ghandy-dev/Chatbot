@@ -4,7 +4,7 @@ module UserRepository =
 
     open Chatbot
     open DB
-    open Types
+    open Types.Users
 
     open Dapper.FSharp.SQLite
 

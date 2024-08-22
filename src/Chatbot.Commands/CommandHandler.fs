@@ -3,7 +3,7 @@ module Chatbot.Commands.Handler
 open Chatbot
 open Chatbot.Commands
 open Chatbot.Database
-open Chatbot.Database.Types
+open Chatbot.Database.Types.Users
 
 open System
 

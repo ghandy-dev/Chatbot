@@ -4,7 +4,7 @@ module DungeonRepository =
 
     open Chatbot
     open DB
-    open Types
+    open Types.Dungeon
 
     open Dapper.FSharp.SQLite
 

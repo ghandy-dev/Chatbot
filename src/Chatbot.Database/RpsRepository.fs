@@ -4,7 +4,7 @@ module RpsRepository =
 
     open Chatbot
     open DB
-    open Types
+    open Types.RockPaperScissors
 
     open Dapper.FSharp.SQLite
 

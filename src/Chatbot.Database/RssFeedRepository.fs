@@ -4,7 +4,7 @@ module RssFeedRepository =
 
     open Chatbot
     open DB
-    open Types
+    open Types.News
 
     open Dapper
 

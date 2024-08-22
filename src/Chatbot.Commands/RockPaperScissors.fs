@@ -6,7 +6,7 @@ module RockPaperScissors =
     open System
 
     open Chatbot.Database
-    open Chatbot.Database.Types
+    open Chatbot.Database.Types.RockPaperScissors
 
     let private shapes = [ "rock" ; "paper" ; "scissors" ]
 

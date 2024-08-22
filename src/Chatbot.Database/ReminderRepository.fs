@@ -4,7 +4,7 @@ module ReminderRepository =
 
     open Chatbot
     open DB
-    open Types
+    open Types.Reminders
 
     open Dapper.FSharp.SQLite
     open Dapper
@@ -48,12 +48,15 @@ module ReminderRepository =
                 SELECT reminder_id, timestamp, from_username, target_username, message, channel
                 FROM reminders
                 WHERE reminded = FALSE
-                AND reminder_timestamp < datetime('now')"""
+                AND reminder_timestamp < datetime('now')
+                """
 
-            let update = """
+            let update =
+                """
                 UPDATE reminders
                 SET reminded = TRUE
-                WHERE reminder_id = @reminderId"""
+                WHERE reminder_id = @reminderId
+                """
 
             try
                 let! results = connection.QueryAsync<TimedReminderQuery>(query) |> Async.AwaitTask
@@ -66,17 +69,21 @@ module ReminderRepository =
 
     let getReminders (userId: int) =
         async {
-            let query = """
+            let query =
+                """
                 SELECT reminder_id, timestamp, from_username, target_username, message
                 FROM reminders
                 WHERE target_user_id = @userId
                 AND reminded = FALSE
-                AND reminder_timestamp IS NULL"""
+                AND reminder_timestamp IS NULL
+                """
 
-            let update = """
+            let update =
+                """
                 UPDATE reminders
                 SET reminded = TRUE
-                WHERE reminder_id = @reminderId"""
+                WHERE reminder_id = @reminderId
+                """
 
             try
                 let! results = connection.QueryAsync<ReminderQuery>(query, {| userId = userId |}) |> Async.AwaitTask
@@ -87,7 +94,7 @@ module ReminderRepository =
                 return []
         }
 
-    let getPendingTimedReminderCount (userId) =
+    let getPendingTimedReminderCount (userId: int) =
         async {
             let query =
                 """
@@ -96,7 +103,7 @@ module ReminderRepository =
                 WHERE target_user_id = @userId
                 AND REMINDED = FALSE
                 AND reminder_timestamp IS NOT NULL
-            """
+                """
 
             try
                 let! count = connection.ExecuteScalarAsync<int>(query, {| userId = userId |}) |> Async.AwaitTask
@@ -106,7 +113,7 @@ module ReminderRepository =
                 return -1
         }
 
-    let getPendingReminderCount (userId) =
+    let getPendingReminderCount (userId: int) =
         async {
             let query =
                 """
@@ -115,7 +122,7 @@ module ReminderRepository =
                 WHERE target_user_id = @userId
                 AND REMINDED = FALSE
                 AND reminder_timestamp IS NULL
-            """
+                """
 
             try
                 let! count = connection.ExecuteScalarAsync<int>(query, {| userId = userId |}) |> Async.AwaitTask
@@ -132,7 +139,8 @@ module ReminderRepository =
                 INSERT INTO reminders (timestamp, from_user_id, from_username, target_user_id, target_username, channel, message, reminder_timestamp)
                 VALUES (@timestamp, @fromUserId, @fromUsername, @targetUserId, @targetUsername, @channel, @message, @reminderTimestamp);
 
-                SELECT last_insert_rowid();"""
+                SELECT last_insert_rowid();
+                """
 
             try
                 let! id =

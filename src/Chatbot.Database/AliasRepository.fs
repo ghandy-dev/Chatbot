@@ -4,7 +4,7 @@ module AliasRepository =
 
     open Chatbot
     open DB
-    open Types
+    open Types.Aliases
 
     open Dapper.FSharp.SQLite
 

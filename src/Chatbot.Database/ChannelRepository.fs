@@ -4,7 +4,7 @@ module ChannelRepository =
 
     open Chatbot
     open DB
-    open Types
+    open Types.Channels
 
     open Dapper.FSharp.SQLite
 
