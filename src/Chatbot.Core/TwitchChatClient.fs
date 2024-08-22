@@ -62,10 +62,10 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
             | _ -> do! client.SendAsync ircMessage
         }
 
-    let sendWhisper from ``to`` message accessToken =
+    let sendWhisper toUsername message accessToken =
         async {
             if (whisperRateLimiter.CanSend()) then
-                do! TTVSharp.Helix.Whispers.sendWhisper from ``to`` message accessToken |> Async.Ignore
+                do! TTVSharp.Helix.Whispers.sendWhisper Config.Username toUsername message accessToken |> Async.Ignore
         }
 
     let reader (cancellationToken) =
@@ -113,6 +113,6 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
 
     member _.SendAsync (message: IRC.Command) = send message
 
-    member _.WhisperAsync (from, ``to``, message, accessToken) = sendWhisper from ``to`` message accessToken
+    member _.WhisperAsync (toUsername, message, accessToken) = sendWhisper toUsername message accessToken
 
     member _.ReconnectAsync (cancellationToken) = reconnect (cancellationToken)

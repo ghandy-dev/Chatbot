@@ -17,16 +17,18 @@ module Program =
 
     [<EntryPoint>]
     let main args =
-        try
+        async {
             try
-                Logging.info "Starting..."
-                Bot.run cancellationToken
-                Async.AwaitWaitHandle cancellationToken.WaitHandle |> ignore
-            with ex ->
-                Logging.error "Exception caught" ex
-        finally
-            cancellationTokenSource.Token.WaitHandle.WaitOne() |> ignore
+                try
+                    Logging.info "Starting..."
+                    do! Bot.run cancellationToken
+                    Async.AwaitWaitHandle cancellationToken.WaitHandle |> ignore
+                with ex ->
+                    Logging.error "Exception caught" ex
+            finally
+                cancellationTokenSource.Token.WaitHandle.WaitOne() |> ignore
 
-        Logging.info "Stopped."
+            Logging.info "Stopped."
+        } |> Async.RunSynchronously
 
         0

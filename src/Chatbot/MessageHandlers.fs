@@ -6,7 +6,7 @@ open Chatbot.Commands.Handler
 open Chatbot.IRC.Messages
 open Chatbot.Types
 
-let mutable roomStates : RoomStates = Map.empty
+let roomStates = new System.Collections.Concurrent.ConcurrentDictionary<string, RoomState>()
 let commandPrefix = Configuration.Bot.config.CommandPrefix
 
 let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProcessor<ClientRequest>) =
@@ -39,7 +39,7 @@ let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProces
             | Some commandOutcome ->
                 match commandOutcome with
                 | BotAction(action, message) ->
-                    mb.Post(BotCommand(action))
+                    mb.Post(BotCommand action)
                     mb.Post(SendWhisperMessage (msg.UserId, msg.DisplayName, message))
                 | Message message ->
                     mb.Post(SendWhisperMessage (msg.UserId, msg.DisplayName, message))
@@ -50,8 +50,8 @@ let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProces
     }
 
 let private roomStateMessageHandler (roomStateMsg: Types.RoomStateMessage) =
-    match roomStates.TryFind roomStateMsg.RoomId with
-    | None ->
+    match roomStates.TryGetValue roomStateMsg.RoomId with
+    | false, _ ->
         let roomState =
             RoomState.create (
                 roomStateMsg.Channel,
@@ -63,20 +63,20 @@ let private roomStateMessageHandler (roomStateMsg: Types.RoomStateMessage) =
                 roomStateMsg.SubsOnly
             )
 
-        roomStates <- roomStates.Add(roomState.RoomId, roomState)
-    | Some oldRoomState ->
+        roomStates[roomStateMsg.RoomId] <- roomState
+    | true, roomState ->
         let updatedRoomState = {
-            oldRoomState with
-                EmoteOnly = Option.defaultValue oldRoomState.EmoteOnly roomStateMsg.EmoteOnly
-                FollowersOnly = Option.defaultValue oldRoomState.FollowersOnly roomStateMsg.FollowersOnly
-                R9K = Option.defaultValue oldRoomState.R9K roomStateMsg.R9K
-                Slow = Option.defaultValue oldRoomState.Slow roomStateMsg.Slow
-                SubsOnly = Option.defaultValue oldRoomState.SubsOnly roomStateMsg.SubsOnly
+            roomState with
+                EmoteOnly = Option.defaultValue roomState.EmoteOnly roomStateMsg.EmoteOnly
+                FollowersOnly = Option.defaultValue roomState.FollowersOnly roomStateMsg.FollowersOnly
+                R9K = Option.defaultValue roomState.R9K roomStateMsg.R9K
+                Slow = Option.defaultValue roomState.Slow roomStateMsg.Slow
+                SubsOnly = Option.defaultValue roomState.SubsOnly roomStateMsg.SubsOnly
         }
 
-        roomStates <- roomStates.Add(roomStateMsg.RoomId, updatedRoomState)
+        roomStates[roomStateMsg.RoomId] <- updatedRoomState
 
-let private handleIrcMessage (msg) (mb: MailboxProcessor<_>) =
+let private handleIrcMessage msg (mb: MailboxProcessor<_>) =
     async {
         match msg with
         | PingMessage msg -> do mb.Post(SendPongMessage msg.message)
