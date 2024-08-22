@@ -163,6 +163,6 @@ let run (cancellationToken: Threading.CancellationToken) =
         do! twitchChatClient.StartAsync(cancellationToken)
         do! joinChannels(twitchChatClient)
 
-        chatAgent.StartImmediate()
-        reminderAgent.StartImmediate()
+        chatAgent.Start()
+        reminderAgent.Start()
     }
