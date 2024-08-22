@@ -15,16 +15,16 @@ module Remind =
     let private parseTimeComponents (durations: (string * string) seq) =
         let parseTimeComponent (dateTime: DateTime) (duration: string) (timeComp: string) =
             let duration = Int32.Parse duration
-            match (duration, timeComp.ToLower()) with
-            | (d, "year")
-            | (d, "years") -> dateTime.AddYears(d)
-            | (d, "months") -> dateTime.AddMonths(d)
-            | (d, "days") -> dateTime.AddDays(d)
-            | (d, "hours") -> dateTime.AddHours(d)
-            | (d, "minutes")
-            | (d, "mins") -> dateTime.AddMinutes(d)
-            | (d, "seconds")
-            | (d, "secs") -> dateTime.AddSeconds(d)
+            match duration, timeComp.ToLower() with
+            | d, "year"
+            | d, "years" -> dateTime.AddYears(d)
+            | d, "months" -> dateTime.AddMonths(d)
+            | d, "days" -> dateTime.AddDays(d)
+            | d, "hours" -> dateTime.AddHours(d)
+            | d, "minutes"
+            | d, "mins" -> dateTime.AddMinutes(d)
+            | d, "seconds"
+            | d, "secs" -> dateTime.AddSeconds(d)
             | _ -> dateTime
 
         durations |> Seq.fold (fun dt (d, tc) -> parseTimeComponent dt d tc) (utcNow())
@@ -42,7 +42,7 @@ module Remind =
                     |> Seq.map (fun m -> m.Groups[1].Value, m.Groups[2].Value)
                     |> parseTimeComponents
 
-                if ((remindDateTime - now).Days / 365) > 5 then
+                if (remindDateTime - now).Days / 365 > 5 then
                     return Error "Max reminder time span is now +5 years"
                 else
                     let message = Regex.Replace(content, whenPattern, "")
@@ -74,12 +74,12 @@ module Remind =
         async {
                 let content = String.concat " " args
                 if Regex.IsMatch(content, whenPattern, RegexOptions.IgnoreCase) then
-                    match! (ReminderRepository.getPendingTimedReminderCount (context.UserId |> int)) with
+                    match! ReminderRepository.getPendingTimedReminderCount (context.UserId |> int) with
                     | -1 -> return Error "Error occured checking current pending reminders"
                     | c when c > 20 -> return Error "User has too many pending timed reminders"
                     | _ -> return! parseTimedReminder user content context
                 else
-                    match! (ReminderRepository.getPendingReminderCount (context.UserId |> int)) with
+                    match! ReminderRepository.getPendingReminderCount (context.UserId |> int) with
                     | -1 -> return Error "Error occured checking current pending reminders"
                     | c when c > 10 -> return Error "User has too many pending reminders"
                     | _ -> return! parseReminder user content context
