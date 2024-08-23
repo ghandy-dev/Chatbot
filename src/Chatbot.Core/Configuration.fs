@@ -6,6 +6,15 @@ module Configuration =
 
     DotEnv.load () |> Async.RunSynchronously
 
+    type Env =
+        | Dev
+        | Prod
+
+        static member fromString s =
+            match s with
+            | "dev" | "Dev" -> Dev
+            | _ -> Prod
+
     let configuration =
         ConfigurationBuilder()
             .AddEnvironmentVariables()
@@ -48,9 +57,15 @@ module Configuration =
         type BotConfig = {
             CommandPrefix: string
             Capabilities: string array
+            Env: string
         }
 
         let config = configuration.GetSection("BotConfig").Get<BotConfig>()
+
+        let env =
+            match config.Env with
+            | e when System.String.IsNullOrWhiteSpace e -> Prod
+            | e -> Env.fromString e
 
     module Reddit =
 

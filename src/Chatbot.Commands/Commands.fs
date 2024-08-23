@@ -1,5 +1,6 @@
 namespace Chatbot.Commands
 
+open Chatbot.Configuration
 open Chatbot.Commands
 open Chatbot.Commands.FaceIt
 open Chatbot.Commands.Logs
@@ -11,9 +12,15 @@ open Chatbot.Commands.UrbanDictionary
 module Commands =
 
     let private toKeyValuePair c =
-        match c.Aliases with
-        | [] -> [ c.Name, c ]
-        | aliases -> c.Name :: aliases |> List.map (fun a -> a, c)
+        match Bot.env with
+        | Dev ->
+            match c.Aliases with
+            | [] -> [ $"dev_{c.Name}", c ]
+            | aliases -> c.Name :: aliases |> List.map (fun a -> $"dev_{a}", c)
+        | Prod ->
+            match c.Aliases with
+            | [] -> [ c.Name, c ]
+            | aliases -> c.Name :: aliases |> List.map (fun a -> a, c)
 
     let commandsList =
         [
