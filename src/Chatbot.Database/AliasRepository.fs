@@ -21,9 +21,9 @@ module AliasRepository =
         command = record.Command
     }
 
-    let getByUserAndName (userId: int) (alias: string) =
+    let get (userId: int) (alias: string) =
         async {
-            let! channel =
+            let! results =
                 select {
                     for row in aliases do
                         where (row.user_id = userId && row.name = alias)
@@ -31,7 +31,7 @@ module AliasRepository =
                 |> connection.SelectAsync<Entities.Alias>
                 |> Async.AwaitTask
 
-            return channel |> Seq.map mapEntity |> Seq.tryExactlyOne
+            return results |> Seq.map mapEntity |> Seq.tryExactlyOne
         }
 
     let add (alias: Alias) =

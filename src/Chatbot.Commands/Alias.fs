@@ -4,60 +4,116 @@ namespace Chatbot.Commands
 module Alias =
 
     open Chatbot.Database
-    open Chatbot.Database.AliasRepository
     open Chatbot.Database.Types.Aliases
 
-    let private add userId name command =
+    let private add userId alias command =
         async {
-            match! getByUserAndName (userId |> int) name with
-            | Some _ -> return Message $"Alias {name} already exists"
+            match! AliasRepository.get (userId |> int) alias with
+            | Some _ -> return Message $"Alias {alias} already exists"
             | None ->
-                match! add (Alias.create (userId |> int) name (String.concat " " command)) with
+                match! AliasRepository.add (Alias.create (userId |> int) alias (String.concat " " command)) with
                 | DatabaseResult.Failure -> return Message "Error occured trying to add alias"
-                | DatabaseResult.Success 0 -> return Message $"You already have alias {name}"
-                | DatabaseResult.Success _ -> return Message $"Alias {name} successfully added"
+                | DatabaseResult.Success 0 -> return Message $"You already have alias \"{alias}\""
+                | DatabaseResult.Success _ -> return Message $"Alias \"{alias}\" successfully added"
         }
 
-    let private edit userId name command =
+    let private update userId alias command =
         async {
-            match! update (Alias.create (userId |> int) name (String.concat " " command)) with
-            | DatabaseResult.Failure -> return Message "Error occurred trying to edit alias"
-            | DatabaseResult.Success 0 -> return Message $"You don't have the alias {name}"
-            | DatabaseResult.Success _ -> return Message $"Alias {name} successfully updated"
+            match! AliasRepository.update (Alias.create (userId |> int) alias (String.concat " " command)) with
+            | DatabaseResult.Failure -> return Message "Error occurred trying to update alias"
+            | DatabaseResult.Success 0 -> return Message $"You don't have the alias \"{alias}\""
+            | DatabaseResult.Success _ -> return Message $"Alias \"{alias}\" successfully updated"
         }
 
-    let private delete userId name =
+    let private delete userId alias =
         async {
-            match! delete (userId |> int) name with
+            match! AliasRepository.delete (userId |> int) alias with
             | DatabaseResult.Failure -> return Message "Error occurred trying to delete alias"
-            | DatabaseResult.Success 0 -> return Message $"You don't have the alias {name}"
-            | DatabaseResult.Success _ -> return Message $"Alias {name} successfully removed"
+            | DatabaseResult.Success 0 -> return Message $"You don't have the alias \"{alias}\""
+            | DatabaseResult.Success _ -> return Message $"Alias \"{alias}\" successfully removed"
         }
 
-    let private get userId name =
+    let private get username alias =
         async {
-            match! getByUserAndName (userId |> int) name with
-            | None -> return Message $"You don't have the alias {name}"
-            | Some alias -> return Message alias.Command
+            match! TTVSharp.Helix.Users.getUser username with
+            | None -> return Message "User not found"
+            | Some user ->
+                match! AliasRepository.get (user.Id |> int) alias with
+                | None ->
+                    if System.String.Compare(username, user.Login, true) = 0 then
+                        return Message $"You don't have the alias \"{alias}\""
+                    else
+                        return Message $"{username} doesn't have the alias \"{alias}\""
+                | Some alias -> return Message alias.Command
         }
 
-    let private run userId name parameters =
+    let private run userId alias parameters =
         async {
-            match! getByUserAndName (userId |> int) name with
-            | None -> return Message $"You don't have the alias {name}"
+            match! AliasRepository.get (userId |> int) alias with
+            | None -> return Message $"You don't have the alias \"{alias}\""
             | Some alias -> return RunAlias (alias.Command, parameters)
+        }
+
+    let private copy sourceUsername targetUserId alias =
+        async {
+            match! TTVSharp.Helix.Users.getUser sourceUsername with
+            | None -> return Message "User not found"
+            | Some user ->
+
+                let! sourceAlias = AliasRepository.get (user.Id |> int) alias
+                let! targetAlias = AliasRepository.get (targetUserId |> int) alias
+
+                match sourceAlias, targetAlias with
+                | None, _ -> return Message $"{sourceUsername} doesn't have the alias \"{alias}\""
+                | Some sa, Some _ ->
+                    return Message $"You already have the alias \"{sa.Name}\", use \"copyplace\" to replace an existing alias"
+                | Some sa, None ->
+                    let copiedTa = { sa with UserId = targetUserId |> int}
+                    match! AliasRepository.add copiedTa with
+                    | DatabaseResult.Failure
+                    | DatabaseResult.Success 0 -> return Message "Error occured trying to add copied alias"
+                    | DatabaseResult.Success _ -> return Message $"Alias \"{sa.Name}\" successfully copied"
+        }
+
+    let private copyPlace sourceUsername targetUserId alias =
+        async {
+            match! TTVSharp.Helix.Users.getUser sourceUsername with
+            | None -> return Message "User not found"
+            | Some user ->
+
+                let! sourceAlias = AliasRepository.get (user.Id |> int) alias
+                let! targetAlias = AliasRepository.get (targetUserId |> int) alias
+
+                match sourceAlias, targetAlias with
+                | None, _ -> return Message $"{sourceUsername} doesn't have the alias \"{alias}\""
+                | Some sa, Some _ ->
+                    let copiedTa = { sa with UserId = targetUserId |> int}
+                    match! AliasRepository.update copiedTa with
+                    | DatabaseResult.Failure
+                    | DatabaseResult.Success 0 -> return Message "Error occured trying to overwrite existing alias"
+                    | DatabaseResult.Success _ -> return Message $"Alias \"{sa.Name}\" successfully copied"
+                | Some sa, None ->
+                    let copiedTa = { sa with UserId = targetUserId |> int}
+                    match! AliasRepository.add copiedTa with
+                    | DatabaseResult.Failure
+                    | DatabaseResult.Success 0 -> return Message "Error occured trying to add copied alias"
+                    | DatabaseResult.Success _ -> return Message $"Alias \"{sa.Name}\" successfully copied"
         }
 
     let alias args (context: Context) =
         async {
             match args with
-            | "add" :: name :: command -> return! add context.UserId name command
-            | "remove" :: name :: _
-            | "delete" :: name :: _ -> return! delete context.UserId name
-            | "edit" :: name :: command
-            | "update" :: name :: command -> return! edit context.UserId name command
-            | "definition" :: name :: _ -> return! get context.UserId name
-            | "run" :: name :: parameters
-            | name :: parameters -> return! run context.UserId name parameters
+            | "add" :: alias :: command -> return! add context.UserId alias command
+            | "remove" :: alias :: _
+            | "delete" :: alias :: _ -> return! delete context.UserId alias
+            | "edit" :: alias :: command
+            | "update" :: alias :: command -> return! update context.UserId alias command
+            | "copy" :: username :: alias :: _ -> return! copy username context.UserId alias
+            | "copyplace" :: username :: alias :: _ -> return! copyPlace username context.UserId alias
+            | "check" :: username :: alias :: _
+            | "spy" :: username :: alias :: _
+            | "definition" :: username :: alias :: _ -> return! get context.UserId alias
+            | "run" :: alias :: parameters
+            | alias :: parameters -> return! run context.UserId alias parameters
             | [] -> return Message "No definition provided"
         }

@@ -20,7 +20,7 @@ module UserRepository =
         is_admin = record.IsAdmin
     }
 
-    let getById (userId: int) =
+    let getByUserId (userId: int) =
         async {
             let! user =
                 select {
@@ -30,7 +30,7 @@ module UserRepository =
                 |> connection.SelectAsync<Entities.User>
                 |> Async.AwaitTask
 
-            return user |> Seq.map mapEntity |> Seq.tryExactlyOne
+            return user |> Seq.map mapEntity |> Seq.tryHead
         }
 
     let add (user: User) =

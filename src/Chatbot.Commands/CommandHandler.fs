@@ -21,7 +21,7 @@ let private applyFunction =
 
 let private getUser (userId: string) username =
     async {
-        match! UserRepository.getById (userId |> int) with
+        match! UserRepository.getByUserId (userId |> int) with
         | None ->
             let user = (User.create (userId |> int) username)
             UserRepository.add user |> Async.Ignore |> ignore
