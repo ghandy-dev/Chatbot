@@ -12,9 +12,9 @@ module CatFacts =
         Length: int
     }
 
-    let [<Literal>] private apiUrl = "https://catfact.ninja"
+    let [<Literal>] private ApiUrl = "https://catfact.ninja"
 
-    let private FactUrl = $"{apiUrl}/fact"
+    let private FactUrl = $"{ApiUrl}/fact"
 
     let private getFromJsonAsync<'a> url =
         async {

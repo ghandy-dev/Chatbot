@@ -10,10 +10,10 @@ module Api =
     open FsHttp.Response
 
 
-    let [<Literal>] private apiUrl = "https://api.urbandictionary.com/v0"
+    let [<Literal>] private ApiUrl = "https://api.urbandictionary.com/v0"
 
-    let private randomUrl = $"{apiUrl}/random"
-    let private searchUrl term = $"{apiUrl}/define?term={term}"
+    let private randomUrl = $"{ApiUrl}/random"
+    let private searchUrl term = $"{ApiUrl}/define?term={term}"
 
     let userAgent = configuration.Item("UserAgent")
 

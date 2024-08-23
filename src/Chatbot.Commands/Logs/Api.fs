@@ -6,7 +6,7 @@ module Api =
     open FsHttp.Request
     open FsHttp.Response
 
-    let [<Literal>] private apiUrl = "https://logs.ivr.fi"
+    let [<Literal>] private ApiUrl = "https://logs.ivr.fi"
 
     let private randomChannelLine channel = $"channel/{channel}/random"
     let private randomUserLine channel user = $"channel/{channel}/user/{user}/random"
@@ -29,12 +29,12 @@ module Api =
 
     let getChannelRandomLine channel =
         async {
-            let url = $"{apiUrl}/{randomChannelLine channel}"
+            let url = $"{ApiUrl}/{randomChannelLine channel}"
             return! sendRequest url
         }
 
     let getUserRandomLine channel user =
         async {
-            let url = $"{apiUrl}/{randomUserLine channel user}"
+            let url = $"{ApiUrl}/{randomUserLine channel user}"
             return! sendRequest url
         }

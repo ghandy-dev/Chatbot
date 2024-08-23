@@ -9,11 +9,8 @@ module Api =
     open FsHttp.Request
     open FsHttp.Response
 
-    [<Literal>]
-    let private apiUrl = "https://reddit.com"
-
-    [<Literal>]
-    let private oAuthApiUrl = "https://oauth.reddit.com"
+    let [<Literal>] private ApiUrl = "https://reddit.com"
+    let [<Literal>] private OAuthApiUrl = "https://oauth.reddit.com"
 
     let userAgent = configuration.Item("UserAgent")
 
@@ -39,8 +36,8 @@ module Api =
         async {
             let url =
                 match sorting with
-                | "hot" -> $"{oAuthApiUrl}/r/{subreddit}/hot.json"
-                | "top" -> $"{oAuthApiUrl}/r/{subreddit}/top.json?t=week"
+                | "hot" -> $"{OAuthApiUrl}/r/{subreddit}/hot.json"
+                | "top" -> $"{OAuthApiUrl}/r/{subreddit}/top.json?t=week"
                 | _ -> failwith "Unsupported post sorting."
 
             return! getFromJsonAsync<Thing<Listing<T3>>> url accessToken

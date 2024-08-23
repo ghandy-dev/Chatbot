@@ -47,7 +47,7 @@ module Dungeon =
                             do! updatePlayer userId player'
                             let hpChange = Helpers.formatNumberChange (player'.HP - player.HP)
                             let goldChange = Helpers.formatNumberChange (player'.Gold - player.Gold)
-                            return Message $"Defeated {enemy.Type.ToString()} (HP: {enemy.HP}, AD: {enemy.Weapon}, DEF: {enemy.Armor}) AP: {player'.AP}/{maxAP}, HP: {player'.HP}({hpChange}), AD: {player'.Weapon}, DEF: {player'.Armor}, Gold: {player'.Gold}({goldChange}g)"
+                            return Message $"Defeated {enemy.Type.ToString()} (HP: {enemy.HP}, AD: {enemy.Weapon}, DEF: {enemy.Armor}) AP: {player'.AP}/{MaxAP}, HP: {player'.HP}({hpChange}), AD: {player'.Weapon}, DEF: {player'.Armor}, Gold: {player'.Gold}({goldChange}g)"
                         | Ok (Fight.Defeat player') ->
                             do! updatePlayer userId player'
                             let hpChange = Helpers.formatNumberChange (player'.HP - player.HP)

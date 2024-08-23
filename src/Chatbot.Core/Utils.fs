@@ -89,9 +89,9 @@ module DateTime =
         | false, _ -> None
         | true, v -> Some v
 
-    let [<Literal>] dateStringFormat = "dd/MM/yyyy"
-    let [<Literal>] timeStringFormat = "HH:mm:ss"
-    let [<Literal>] dateTimeStringFormat = $"dd/MM/yyyy HH:mm:ss"
+    let [<Literal>] DateStringFormat = "dd/MM/yyyy"
+    let [<Literal>] TimeStringFormat = "HH:mm:ss"
+    let [<Literal>] DateTimeStringFormat = $"dd/MM/yyyy HH:mm:ss"
 
 module Text =
 

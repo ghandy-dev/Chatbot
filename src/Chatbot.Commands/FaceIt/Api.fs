@@ -10,7 +10,7 @@ module Api =
     open FsHttp.Response
 
     [<Literal>]
-    let private apiUrl = "https://open.faceit.com/data/v4"
+    let private ApiUrl = "https://open.faceit.com/data/v4"
 
     let private playerByName nickname = $"players?nickname={nickname}"
     let private playerById playerId = $"players/{playerId}"
@@ -38,36 +38,36 @@ module Api =
 
     let getPlayer player =
         async {
-            let url = $"{apiUrl}/{playerByName player}"
+            let url = $"{ApiUrl}/{playerByName player}"
             return! getFromJsonAsync<Players.Player> url
         }
 
     let getPlayerById playerId =
         async {
-            let url = $"{apiUrl}/{playerById playerId}"
+            let url = $"{ApiUrl}/{playerById playerId}"
             return! getFromJsonAsync<Players.Player> url
         }
 
     let getPlayerStats playerId =
         async {
-            let url = $"""{apiUrl}/{playerStats playerId "cs2"}"""
+            let url = $"""{ApiUrl}/{playerStats playerId "cs2"}"""
             return! getFromJsonAsync<Players.PlayerStats> url
         }
 
     let getPlayerMatchHistory playerId limit =
         async {
-            let url = $"""{apiUrl}/{playerHistory playerId "cs2" limit}"""
+            let url = $"""{ApiUrl}/{playerHistory playerId "cs2" limit}"""
             return! getFromJsonAsync<Players.MatchHistory> url
         }
 
     let getMatch matchId =
         async {
-            let url = $"{apiUrl}/{``match`` matchId}"
+            let url = $"{ApiUrl}/{``match`` matchId}"
             return! getFromJsonAsync<Matches.Match> url
         }
 
     let getMatchStats matchId =
         async {
-            let url = $"{apiUrl}/{matchStats matchId}"
+            let url = $"{ApiUrl}/{matchStats matchId}"
             return! getFromJsonAsync<Matches.Stats.Match> url
         }

@@ -14,10 +14,10 @@ module Nasa =
     let private apiKey = Chatbot.Configuration.Nasa.config.ApiKey
     let private userAgent = configuration.Item("UserAgent")
 
-    let [<Literal>] private apiUrl = "https://api.nasa.gov"
+    let [<Literal>] private ApiUrl = "https://api.nasa.gov"
 
-    let private pictureOfTheDay date = $"{apiUrl}/planetary/apod?api_key={apiKey}&date={date}"
-    let private marsRoverPhotos date camera = $"{apiUrl}/mars-photos?api_key={apiKey}&date={date}&camera={camera}"
+    let private pictureOfTheDay date = $"{ApiUrl}/planetary/apod?api_key={apiKey}&date={date}"
+    let private marsRoverPhotos date camera = $"{ApiUrl}/mars-photos?api_key={apiKey}&date={date}&camera={camera}"
 
     let private dateFormat = "yyyy-MM-dd"
 

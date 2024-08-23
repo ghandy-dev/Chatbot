@@ -13,8 +13,8 @@ let private incrementKills key map =
 let apply state change : Player =
     match change with
     | HealthChange amount ->
-        if state.HP + amount > maxHP then
-            { state with HP = maxHP }
+        if state.HP + amount > MaxHP then
+            { state with HP = MaxHP }
         else
             { state with HP = state.HP + amount }
     | GoldChange amount -> { state with Gold = state.Gold + amount }
@@ -51,10 +51,10 @@ let getPlayer userId =
             let player = JsonSerializer.Deserialize<Player>(dp.Data)
             if player.LastAction < DateOnly.today() then
                 if not <| player.IsAlive then
-                    return Some { player with AP = maxAP ; HP = startingHP}
+                    return Some { player with AP = MaxAP ; HP = StartingHP}
                 else
                     let daysSinceLastAction = (DateOnly.today().DayNumber - player.LastAction.DayNumber)
-                    return Some { player with AP = maxAP ; HP = min (player.HP + (2 * daysSinceLastAction)) maxHP}
+                    return Some { player with AP = MaxAP ; HP = min (player.HP + (2 * daysSinceLastAction)) MaxHP}
             else
                 return Some player
     }

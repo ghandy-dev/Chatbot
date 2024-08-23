@@ -39,9 +39,9 @@ type EnemyRarity =
     | VeryRare = 7
     | Legendary = 3
 
-let [<Literal>] maxHP = 12
-let [<Literal>] startingHP = 10
-let [<Literal>] maxAP = 5
+let [<Literal>] MaxHP = 12
+let [<Literal>] StartingHP = 10
+let [<Literal>] MaxAP = 5
 
 type Player = {
     AP: int
@@ -54,8 +54,8 @@ type Player = {
 } with
 
     static member create = {
-        AP = maxAP
-        HP = startingHP
+        AP = MaxAP
+        HP = StartingHP
         Weapon = 1
         Armor = 0
         Gold = 10
@@ -63,7 +63,7 @@ type Player = {
         LastAction = System.DateOnly.FromDateTime(System.DateTime.UtcNow)
     }
 
-    override this.ToString() = $"AP: {this.AP}/{maxAP}, HP: ❤️{this.HP}/{maxHP}, AD: 🗡️+{this.Weapon}, DEF: 🛡️+{this.Armor}, Gold: {this.Gold}g"
+    override this.ToString() = $"AP: {this.AP}/{MaxAP}, HP: ❤️{this.HP}/{MaxHP}, AD: 🗡️+{this.Weapon}, DEF: 🛡️+{this.Armor}, Gold: {this.Gold}g"
     member this.IsAlive = this.HP > 0
     member this.HasActionPoints = this.AP > 0
 

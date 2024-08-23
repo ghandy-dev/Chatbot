@@ -7,8 +7,8 @@ open System.Net.Security
 
 type IrcClient(host: string, port: int) =
 
-    let [<Literal>] writerBufferSize = 1024
-    let [<Literal>] readerBufferSize = 10240
+    let [<Literal>] WriterBufferSize = 1024
+    let [<Literal>] ReaderBufferSize = 10240
 
     let socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
     let mutable reader: TextReader = null
@@ -29,11 +29,11 @@ type IrcClient(host: string, port: int) =
             let sslStream = new SslStream(stream)
             sslStream.AuthenticateAsClient(host)
             reader <- IO.createStreamReader sslStream
-            writer <- IO.createStreamWriter sslStream writerBufferSize
+            writer <- IO.createStreamWriter sslStream WriterBufferSize
         }
 
     let read cancellationToken =
-        IO.readAsync reader readerBufferSize cancellationToken
+        IO.readAsync reader ReaderBufferSize cancellationToken
 
     let writeLine (message: string) =
         async {

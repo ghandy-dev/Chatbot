@@ -11,11 +11,9 @@ module Wikipedia =
 
     open System
 
-    [<Literal>]
-    let private apiUrl = "https://api.wikimedia.org/core/v1/wikipedia"
+    let [<Literal>] private ApiUrl = "https://api.wikimedia.org/core/v1/wikipedia"
 
-    let search query numberOfResults =
-        $"{apiUrl}/en/search/page?q={query}&limit={numberOfResults}"
+    let search query numberOfResults = $"{ApiUrl}/en/search/page?q={query}&limit={numberOfResults}"
 
     let userAgent = configuration.Item("UserAgent")
 
