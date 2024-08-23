@@ -14,7 +14,7 @@ module CatFacts =
 
     let [<Literal>] private apiUrl = "https://catfact.ninja"
 
-    let private fact = $"{apiUrl}/fact"
+    let private FactUrl = $"{apiUrl}/fact"
 
     let private getFromJsonAsync<'a> url =
         async {
@@ -34,7 +34,7 @@ module CatFacts =
 
     let private getCatFact () =
         async {
-            return! getFromJsonAsync<CatFact> fact
+            return! getFromJsonAsync<CatFact> FactUrl
         }
 
     let catFact () =
