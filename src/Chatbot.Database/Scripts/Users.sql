@@ -3,3 +3,5 @@ CREATE TABLE IF NOT EXISTS [users] (
     [username] TEXT NOT NULL,
     [is_admin] BOOLEAN DEFAULT 0 NOT NULL
 ) WITHOUT ROWID;
+
+CREATE INDEX IF NOT EXISTS idx_users_user_id ON users ([user_id]);

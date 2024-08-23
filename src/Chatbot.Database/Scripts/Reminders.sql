@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS [reminders] (
     [reminded] INT NOT NULL DEFAULT FALSE
 );
 
-CREATE INDEX idx_target_user_id ON reminders ([target_user_id]);
-CREATE INDEX idx_reminded ON reminders ([reminded]);
+CREATE INDEX IF NOT EXISTS idx_reminders_target_user_id ON reminders ([target_user_id]);
+CREATE INDEX IF NOT EXISTS idx_reminders_reminded ON reminders ([reminded]);

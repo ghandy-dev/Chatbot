@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS [aliases] (
     [name] TEXT NOT NULL,
     [command] TEXT NOT NULL,
 
-    FOREIGN KEY [user_id] REFERENCES [users] ([user_id]),
+    FOREIGN KEY ([user_id]) REFERENCES [users] ([user_id]),
     UNIQUE([user_id], [name])
 );
+
+CREATE INDEX IF NOT EXISTS idx_aliases_user_id ON aliases ([user_id]);
