@@ -60,10 +60,20 @@ Update an alias
 
 Get an alias definition
 {exampleArgs "alias" "definition <alias name>"}
+{exampleArgs "alias" "check <alias name>"}
+{exampleArgs "alias" "spy <alias name>"}
 {exampleArgs "alias" "definition forsenclip"}
 
+Copy an alias
+{exampleArgs "alias" "copy <username> <alias name>"}
+{exampleArgs "alias" "copy forsen randomForsenClip"}
+
+Copy and overwrite an existing alias
+{exampleArgs "alias" "copyplace <username> <alias name>"}
+{exampleArgs "alias" "copyplace forsen randomForsenClip"}
+
 Run an alias
-{exampleArgs ">" "<alias name>"}
+{exampleArgs "run" "<alias name>"}
 {exampleArgs "alias" "run <alias name>"}
 """
         }
@@ -139,8 +149,7 @@ Supported operators:
         {
             Name = "Coin Flip"
             Description = "Flips a coin (50:50 odds)"
-            ExampleUsage =
-        $"""{example "coinflip"}"""
+            ExampleUsage = $"""{example "coinflip"}"""
         }
 
 
