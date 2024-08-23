@@ -108,13 +108,8 @@ let private getFromJson<'T> url =
             |> sendAsync
 
         match response |> toResult with
-        | Error err ->
-            return Error $"HTTP status code did not indicate success: Google Geocode API {err.statusCode}"
-        | Ok res ->
-            return!
-                res
-                |> deserializeJsonAsync<'T>
-                |-> Ok
+        | Error err -> return Error $"Google API HTTP error {err.statusCode |> int} {err.statusCode}"
+        | Ok res -> return! res |> deserializeJsonAsync<'T> |-> Ok
     }
 
 let getLocationGecode (address) =
@@ -124,14 +119,7 @@ let getLocationGecode (address) =
 
         match! getFromJson<ApiResponse<Geocoding>> url with
         | Error err -> return Error err
-        | Ok response ->
-            match response.Status |> Status.tryParse with
-            | Some Status.Ok ->
-                match response.Results with
-                | [] -> return Error "No results"
-                | location :: _ -> return Ok location
-            | Some _ -> return Error response.Status
-            | _ -> return Error "Unknown status error from Google Geocode API"
+        | Ok response -> return Ok response.Results
     }
 
 let getTimezone latitude longitude timestamp =
@@ -140,9 +128,5 @@ let getTimezone latitude longitude timestamp =
 
         match! getFromJson<Timezone> url with
         | Error err -> return Error err
-        | Ok response ->
-            match response.Status |> Status.tryParse with
-            | Some Status.Ok -> return Ok response
-            | Some _ -> return Error response.Status
-            | _ -> return Error "Unknown status error from Google Geocode API"
+        | Ok response -> return Ok response
     }

@@ -12,7 +12,7 @@ module RandomClip =
         | Whisper _ ->
             match args with
             | channel :: _ -> Ok channel
-            | _ -> Error "You must provide a channel if using this command in whispers"
+            | _ -> Error "You must specify a channel if using this command in whispers"
         | Channel channel ->
             match args with
             | [] -> Ok channel
@@ -40,7 +40,7 @@ module RandomClip =
 
             let period = values.TryFind "period" |> Option.defaultValue "week"
 
-            let (dateFrom, dateTo) = periodToDateRange period
+            let dateFrom, dateTo = periodToDateRange period
 
             match!
                 getChannel args context
@@ -50,13 +50,10 @@ module RandomClip =
             with
             | Ok clips ->
                 match clips |> List.ofSeq with
-                | [] -> return Ok <| Message "No clips found"
+                | [] -> return Message "No clips found"
                 | clips ->
                     let clip = clips[System.Random.Shared.Next(clips.Length)]
 
-                    return
-                        Ok
-                        <| Message
-                            $""""{clip.Title}" ({clip.ViewCount.ToString("N0")} views, {clip.CreatedAt.ToShortDateString()}) {clip.Url}"""
-            | Error error -> return Error error
+                    return Message $""""{clip.Title}" ({clip.ViewCount.ToString("N0")} views, {clip.CreatedAt.ToShortDateString()}) {clip.Url}"""
+            | Error err -> return Message err
         }

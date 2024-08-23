@@ -29,9 +29,9 @@ module Api =
 
             match toResult response with
             | Ok response ->
-                let! json = response |> deserializeJsonAsync<'a>
-                return Ok json
-            | Error e -> return Error $"Http response did not indicate success. {(int)e.statusCode} {e.reasonPhrase}"
+                let! deserialized = response |> deserializeJsonAsync<'a>
+                return Ok deserialized
+            | Error err -> return Error $"UrbanDictionary API HTTP error {err.statusCode |> int} {err.statusCode}"
         }
 
     let random () =

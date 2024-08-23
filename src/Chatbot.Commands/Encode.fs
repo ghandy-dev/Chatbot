@@ -24,9 +24,18 @@ module Rot13 =
     let base64 (text: string) =
         text |> System.Text.Encoding.UTF8.GetBytes |> System.Convert.ToBase64String
 
+    let encoders =
+        [
+            "base64", base64
+            "rot13", rot13
+            "caesar", fun s -> caeser s (System.Random.Shared.Next(1, 27))
+        ] |> Map.ofList
+
     let encode args =
         match args with
-        | "base64" :: input -> base64 (String.concat " " input) |> Message |> Ok
-        | "rot13" :: input -> rot13 (String.concat " " input) |> Message |> Ok
-        | "caeser" :: input -> caeser (String.concat " " input) (System.Random.Shared.Next(1, 27)) |> Message |> Ok
-        | _ -> Error "Unknown encoder specified"
+        | [] -> Message "No encoder/text provided"
+        | [ _ ] -> Message "No encoder or text provided"
+        | encoder :: input ->
+            match encoders |> Map.tryFind encoder with
+            | None -> Message "Unknown encoder specified"
+            | Some e -> Message <| e (String.concat "" input)

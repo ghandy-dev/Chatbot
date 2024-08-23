@@ -15,10 +15,7 @@ module Api =
     let private playerByName nickname = $"players?nickname={nickname}"
     let private playerById playerId = $"players/{playerId}"
     let private playerStats playerId gameId = $"players/{playerId}/stats/{gameId}"
-
-    let private playerHistory playerId gameId limit =
-        $"players/{playerId}/history?game={gameId}&limit={limit}"
-
+    let private playerHistory playerId gameId limit = $"players/{playerId}/history?game={gameId}&limit={limit}"
     let private ``match`` matchId = $"/matches/{matchId}"
     let private matchStats matchId = $"/matches/{matchId}/stats"
 
@@ -36,7 +33,7 @@ module Api =
             | Ok response ->
                 let! deserialized = response |> deserializeJsonAsync<'a>
                 return Ok deserialized
-            | Error e -> return Error $"Http response did not indicate success. {(int)e.statusCode} {e.reasonPhrase}"
+            | Error err -> return Error $"FaceIt API HTTP error {err.statusCode |> int} {err.statusCode}"
         }
 
     let getPlayer player =

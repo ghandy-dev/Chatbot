@@ -36,12 +36,13 @@ module TextTransform =
 
     let private transform' transform words =
         match transforms |> Map.tryFind transform with
-        | Some f ->
-            let text = f words
-            Ok <| Message text
-        | None -> Error $"Unknown transform: \"{transform}\""
+        | Some t ->
+            let text = t words
+            Message text
+        | None -> Message $"Unknown transform: \"{transform}\""
 
     let texttransform args =
         match args with
+        | [] -> Message "No transform/text provided"
+        | [ _ ] -> Message "No transform and/or text provided"
         | transform :: words -> transform' transform words
-        | _ -> Error "No text provided"

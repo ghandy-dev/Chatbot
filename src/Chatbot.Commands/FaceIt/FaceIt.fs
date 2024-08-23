@@ -16,7 +16,7 @@ module FaceIt =
                 getPlayer playerName
                 |+> Result.bindZip (fun p -> getPlayerStats p.PlayerId)
             with
-            | Error error -> return Error error
+            | Error error -> return Message error
             | Ok(player, stats) ->
                 let recentResults =
                     stats.Lifetime.RecentResults |> List.map (fun r -> if r = "0" then "L" else "W") |> String.concat " "
@@ -33,7 +33,7 @@ module FaceIt =
                         .Append($"Average K/D ratio: {stats.Lifetime.AverageKDRatio}")
                         .ToString()
 
-                return Ok <| Message message
+                return Message message
         }
 
     let private history playerName =
@@ -42,7 +42,7 @@ module FaceIt =
                 getPlayer playerName
                 |+> Result.bindZip (fun p -> getPlayerMatchHistory p.PlayerId 5)
             with
-            | Error error -> return Error error
+            | Error error -> return Message error
             | Ok(player, history) ->
 
                 let! matches =
@@ -52,7 +52,7 @@ module FaceIt =
                     |> Async.map (Array.choose Result.toOption)
 
                 match matches |> List.ofArray with
-                | [] -> return Ok <| Message "No recent games played!"
+                | [] -> return Message "No recent games played!"
                 | matches ->
 
                     let matchResults =
@@ -91,7 +91,7 @@ module FaceIt =
                         )
                         |> String.concat " | "
 
-                    return Ok <| Message results
+                    return Message results
         }
 
     let private lastGame playerName =
@@ -100,10 +100,10 @@ module FaceIt =
                 getPlayer playerName
                 |+> Result.bindZip (fun p -> getPlayerMatchHistory p.PlayerId 1)
             with
-            | Error error -> return Error error
+            | Error error -> return Message error
             | Ok(player, lastMatch) ->
                 match lastMatch.Items with
-                | [] -> return Ok <| Message "No matches played!"
+                | [] -> return Message "No matches played!"
                 | m :: _ ->
                     let playerTeam, otherTeam =
                         m.Teams
@@ -114,7 +114,7 @@ module FaceIt =
                             | _ -> failwith "Expected 2 lists with one item each"
 
                     match! getMatch m.MatchId with
-                    | Error error -> return Error error
+                    | Error error -> return Message error
                     | Ok matchData ->
 
                         let! teamPlayers =
@@ -132,9 +132,7 @@ module FaceIt =
                                 .FromUnixTimeSeconds(m.FinishedAt)
                                 .DateTime.ToString("dd MMM yyyy HH:mm")
 
-                        let duration =
-                            (DateTimeOffset.FromUnixTimeSeconds(m.FinishedAt) - DateTimeOffset.FromUnixTimeSeconds(m.StartedAt))
-
+                        let duration = DateTimeOffset.FromUnixTimeSeconds(m.FinishedAt) - DateTimeOffset.FromUnixTimeSeconds(m.StartedAt)
                         let durationFormatted = duration.ToString("hh\h\:mm\m\:ss\s")
 
                         let winner =
@@ -166,17 +164,17 @@ module FaceIt =
                                 .Append($"{(snd otherTeam).Nickname}: {teamElos[1]}")
                                 .ToString()
 
-                        return Ok <| Message message
+                        return Message message
         }
 
     let faceit (args: string list) =
         async {
             match args with
-            | [] -> return Error $"Usage: >faceit FrozenBag | >faceit stats FrozenBag | >faceit history FrozenBag"
+            | [] -> return Message $"No subcommand/player specified"
             | command :: player :: _ ->
                 match command with
                 | "stats" -> return! stats player
                 | "history" -> return! history player
-                | _ -> return Error "Unknown subcommand."
+                | _ -> return Message "Unknown subcommand."
             | player :: _ -> return! lastGame player
         }

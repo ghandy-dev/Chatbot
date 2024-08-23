@@ -1,8 +1,9 @@
-namespace Chatbot.Commands
+namespace Chatbot.Commands.News
 
 [<AutoOpen>]
 module News =
 
+    open Chatbot.Commands
     open Chatbot.Commands.Api.News
 
     let news args =
@@ -15,15 +16,11 @@ module News =
                     getNews (Some category)
 
             match result with
-            | Error err -> return Error err
+            | Error err -> return Message err
             | Ok newsItem ->
                 let title = newsItem.Title.Text
                 let date = newsItem.PublishDate.UtcDateTime.ToString("dd MMM yyyy, HH:mm")
                 let summary = newsItem.Summary.Text
-                let link =
-                    match newsItem.Links |> List.ofSeq with
-                    | [] -> ""
-                    | l :: _ -> l.Uri.AbsoluteUri
-
-                return Ok <| Message $"{date} {title} {summary} {link}"
+                let link = newsItem.Links |> Seq.tryHead |> Option.bind (fun l -> Some l.Uri.AbsoluteUri) |> Option.defaultValue ""
+                return Message $"{date} {title} {summary} {link}"
         }

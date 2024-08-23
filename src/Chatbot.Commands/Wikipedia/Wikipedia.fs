@@ -8,14 +8,14 @@ module Wikipedia =
     let wiki args =
         async {
             match args with
-            | [] -> return Error "No input provided."
+            | [] -> return Message "No input provided."
             | input ->
                 let query = String.concat " " input
 
                 match! getWikiPage query with
-                | Error error -> return Error error
+                | Error err -> return Message err
                 | Ok pages ->
                     match pages.Pages |> List.tryHead with
-                    | None -> return Error "No wikipedia results found."
-                    | Some page -> return Ok <| Message $"https://en.wikipedia.org/wiki/{page.Key} {page.Description}"
+                    | None -> return Message "No wikipedia results found."
+                    | Some page -> return Message $"https://en.wikipedia.org/wiki/{page.Key} {page.Description}"
         }

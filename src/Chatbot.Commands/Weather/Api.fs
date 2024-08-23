@@ -27,11 +27,9 @@ module Weather =
 
             match toResult response with
             | Ok response ->
-                return!
-                    response
-                    |> deserializeJsonAsync<'a>
-                    |-> Ok
-            | Error e -> return Error $"Http response did not indicate success. {(int) e.statusCode} {e.reasonPhrase}"
+                let! deserialized = response |> deserializeJsonAsync<'a>
+                return Ok deserialized
+            | Error err -> return Error $"Azure Weather API HTTP error {err.statusCode |> int} {err.statusCode}"
         }
 
     let getCurrentWeather latitude longitude =

@@ -8,12 +8,12 @@ module Nasa =
     open Chatbot.Commands.Api.Nasa
     open Chatbot.Commands.Types.Nasa
 
-    let private parseApodArgs args =
+    let private parseApodArgs (args: string list) =
         match args with
         | [] -> Ok None
         | date :: _ ->
-            match DateOnly.TryParseExact(date, dateFormat) with
-            | false, _ -> Error $"Couldn't parse provided date. Expected format: yyyy-mm-dd"
+            match DateOnly.TryParse(date) with
+            | false, _ -> Error $"Couldn't parse provided date"
             | true, parsedDate -> Ok <| Some parsedDate
 
     let apod args =
@@ -23,12 +23,12 @@ module Nasa =
                 |> Async.create
                 |> Result.bindAsync getPictureOfTheDay
             with
-            | Error err -> return Error err
+            | Error err -> return Message err
             | Ok apod ->
                 let url =
                     match apod.HdUrl with
                     | None -> apod.Url
                     | Some url -> url
 
-                return Ok <| Message $"{apod.Title} {url}"
+                return Message $"{apod.Title} {url}"
         }

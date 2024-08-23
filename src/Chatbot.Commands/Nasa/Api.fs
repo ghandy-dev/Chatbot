@@ -11,18 +11,15 @@ module Nasa =
 
     open System
 
-    [<Literal>]
-    let private apiUrl = "https://api.nasa.gov"
-
     let private apiKey = Chatbot.Configuration.Nasa.config.ApiKey
+    let private userAgent = configuration.Item("UserAgent")
+
+    let [<Literal>] private apiUrl = "https://api.nasa.gov"
 
     let private pictureOfTheDay date = $"{apiUrl}/planetary/apod?api_key={apiKey}&date={date}"
-
     let private marsRoverPhotos date camera = $"{apiUrl}/mars-photos?api_key={apiKey}&date={date}&camera={camera}"
 
-    let dateFormat = "yyyy-MM-dd"
-
-    let private userAgent = configuration.Item("UserAgent")
+    let private dateFormat = "yyyy-MM-dd"
 
     let private getFromJsonAsync<'a> url =
         async {
@@ -31,15 +28,14 @@ module Nasa =
                     GET url
                     Accept MimeTypes.applicationJson
                     UserAgent userAgent
-
                 }
                 |> sendAsync
 
             match toResult response with
             | Ok response ->
-                let! posts = response |> deserializeJsonAsync<'a>
-                return Ok posts
-            | Error e -> return Error $"Http response did not indicate success. {(int) e.statusCode} {e.reasonPhrase}"
+                let! deserialized = response |> deserializeJsonAsync<'a>
+                return Ok deserialized
+            | Error err -> return Error $"NASA API HTTP error {err.statusCode |> int} {err.statusCode}"
         }
 
     let getPictureOfTheDay (date: DateOnly option) =

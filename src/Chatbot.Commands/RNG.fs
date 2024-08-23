@@ -10,35 +10,29 @@ module RNG =
     [<AutoOpen>]
     module Roll =
 
-        let private defaultArgs = (Some 0, Some 10)
+        let private defaultArgs = Some 1, Some 10
 
         let roll (args: string list) =
 
-            let (min, max) =
+            let a, b =
                 match args with
                 | [] -> defaultArgs
-                | min :: max :: _ -> (Int32.tryParse min, Int32.tryParse max)
-                | n :: _ -> (Int32.tryParse n, Int32.tryParse n)
+                | a :: b :: _ -> Int32.tryParse a, Int32.tryParse b
+                | n :: _ -> Int32.tryParse n, Int32.tryParse n
 
-            match (min, max) with
-            | (None, _) -> Error "Couldn't parse min value"
-            | (_, None) -> Error "Couldn't parse max value"
-            | (Some min, Some max) ->
-
-                let n =
-                    if min > max then
-                        random.Next(max, min)
-                    else
-                        random.Next(min, max)
-
-                Ok <| Message $"{n}"
+            match a, b with
+            | Some a, Some b ->
+                let min, max = if a > b then b, a else a, b
+                let roll = random.Next(min, max)
+                Message $"{roll}"
+            | _ -> Message "Couldn't parse min/max value"
 
     [<AutoOpen>]
     module Percentage =
 
         let chance () =
             let n = random.NextDouble() * 100.0
-            Ok <| Message $"""{n.ToString("n2")}%%"""
+            Message $"""{n.ToString("n2")}%%"""
 
     [<AutoOpen>]
     module CoinFlip =
@@ -47,4 +41,4 @@ module RNG =
 
         let coinFlip () =
             let n = random.Next(1)
-            Ok <| Message $"{coinFlipSide[n]}"
+            Message $"{coinFlipSide[n]}"

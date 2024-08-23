@@ -32,7 +32,7 @@ module Remind =
     let private parseTimedReminder user content context =
         async {
             match context.Source with
-            | Whisper _ -> return Error "Timed reminders can only be used in channels"
+            | Whisper _ -> return Message "Timed reminders can only be used in channels"
             | Channel channel ->
                 let now = utcNow()
                 let whenInput = Regex.Matches(content, whenPattern).[0].Value
@@ -43,31 +43,31 @@ module Remind =
                     |> parseTimeComponents
 
                 if (remindDateTime - now).Days / 365 > 5 then
-                    return Error "Max reminder time span is now +5 years"
+                    return Message "Max reminder time span is now +5 years"
                 else
                     let message = Regex.Replace(content, whenPattern, "")
                     let remindIn = remindDateTime - now
 
                     match! TTVSharp.Helix.Users.getUser user with
-                    | None -> return Error $"{user} doesn't exist"
+                    | None -> return Message $"{user} doesn't exist"
                     | Some targetUser ->
                         let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel) message (Some remindDateTime)
-                        let targetUsername = if (targetUser.Id = context.UserId) then "you" else $"@{targetUser.DisplayName}"
+                        let targetUsername = if targetUser.Id = context.UserId then "you" else $"@{targetUser.DisplayName}"
                         match! ReminderRepository.add reminder with
-                        | DatabaseResult.Success id -> return Ok <| Message $"(ID: {id}) I will remind {targetUsername} in {formatTimeSpan remindIn}"
-                        | DatabaseResult.Failure -> return Error "Error occurred trying to create reminder"
+                        | DatabaseResult.Success id -> return Message $"(ID: {id}) I will remind {targetUsername} in {formatTimeSpan remindIn}"
+                        | DatabaseResult.Failure -> return Message "Error occurred trying to create reminder"
         }
 
     let private parseReminder user message (context: Context) =
         async {
             match! TTVSharp.Helix.Users.getUser user with
-            | None -> return Error $"{user} doesn't exist or is currently banned"
+            | None -> return Message $"{user} doesn't exist or is currently banned"
             | Some targetUser ->
                 let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName None message None
 
                 match! ReminderRepository.add reminder with
-                | DatabaseResult.Success id -> return Ok <| Message $"(ID: {id}) I will remind {targetUser.DisplayName} when they next type in chat"
-                | DatabaseResult.Failure -> return Error "Error occurred trying to create reminder"
+                | DatabaseResult.Success id -> return Message $"(ID: {id}) I will remind {targetUser.DisplayName} when they next type in chat"
+                | DatabaseResult.Failure -> return Message "Error occurred trying to create reminder"
         }
 
     let private remind' args user (context: Context) =
@@ -75,21 +75,21 @@ module Remind =
                 let content = String.concat " " args
                 if Regex.IsMatch(content, whenPattern, RegexOptions.IgnoreCase) then
                     match! ReminderRepository.getPendingTimedReminderCount (context.UserId |> int) with
-                    | -1 -> return Error "Error occured checking current pending reminders"
-                    | c when c > 20 -> return Error "User has too many pending timed reminders"
+                    | -1 -> return Message "Error occured checking current pending reminders"
+                    | c when c > 20 -> return Message "User has too many pending timed reminders"
                     | _ -> return! parseTimedReminder user content context
                 else
                     match! ReminderRepository.getPendingReminderCount (context.UserId |> int) with
-                    | -1 -> return Error "Error occured checking current pending reminders"
-                    | c when c > 10 -> return Error "User has too many pending reminders"
+                    | -1 -> return Message "Error occured checking current pending reminders"
+                    | c when c > 10 -> return Message "User has too many pending reminders"
                     | _ -> return! parseReminder user content context
         }
 
     let remind args context =
         async {
             match args with
-            | [] -> return Error "No user/message provided"
-            | [ _ ] -> return Error "No message provided"
+            | [] -> return Message "No user/message provided"
+            | [ _ ] -> return Message "No message provided"
             | "me" :: rest ->
                 let user = context.Username
                 return! remind' rest user context

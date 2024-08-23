@@ -10,7 +10,7 @@ module Pick =
 
     let pick args =
         match args with
-        | [] -> Error "No items provided"
+        | [] -> Message "No items provided"
         | head :: tail ->
             let delimiterPattern = @"^delimiter:(.+)$"
             let m = Regex.Match(head, delimiterPattern)
@@ -19,10 +19,9 @@ module Pick =
                 match m.Success with
                 | false -> args
                 | true ->
-                    let items =
-                        String.concat " " tail |> fun s -> s.Split(m.Groups[1].Value, StringSplitOptions.TrimEntries)
-
-                    items |> List.ofArray
+                    String.concat " " tail
+                    |> _.Split(m.Groups[1].Value, StringSplitOptions.TrimEntries)
+                    |> List.ofArray
 
             let index = random.Next items.Length
-            Ok <| Message $"{items[index]}"
+            Message $"{items[index]}"

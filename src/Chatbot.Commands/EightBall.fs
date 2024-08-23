@@ -28,4 +28,4 @@ module EightBall =
 
     let eightball () =
         let fortune = fortunes[System.Random.Shared.Next(0, fortunes.Length)]
-        Ok <| Message fortune
+        Message fortune

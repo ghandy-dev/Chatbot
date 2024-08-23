@@ -31,7 +31,7 @@ module News =
                 formatter.ReadFrom(reader)
 
                 return Ok formatter.Feed
-            | Error e -> return Error $"Http response did not indicate success. {(int) e.statusCode} {e.reasonPhrase}"
+            | Error err -> return Error $"News RSS feed HTTP error {err.statusCode |> int} {err.statusCode}"
         }
 
     let private getRandomItem (feed: SyndicationFeed) =
@@ -52,12 +52,12 @@ module News =
                 let url = feed.Urls[Random.Shared.Next(feed.Urls.Length)]
 
                 match cache.TryGetValue url with
-                | true, (updated, feed) when (DateTime.UtcNow - updated) > (feed.TimeToLive |? TimeSpan.FromMinutes(10)) ->
+                | true, (updated, feed) when DateTime.UtcNow - updated > (feed.TimeToLive |? TimeSpan.FromMinutes(10)) ->
                     return Ok(getRandomItem feed)
                 | _, _ ->
                     match! getFromXmlAsync url with
                     | Error err -> return Error err
                     | Ok feed ->
-                        cache[url] <- (DateTime.UtcNow, feed)
+                        cache[url] <- DateTime.UtcNow, feed
                         return Ok(getRandomItem feed)
         }

@@ -10,10 +10,10 @@ open Chatbot.Commands.UrbanDictionary
 
 module Commands =
 
-    let private toKeyValue c =
+    let private toKeyValuePair c =
         match c.Aliases with
-        | [] -> [ (c.Name), c ]
-        | aliases -> c.Name :: aliases |> List.map (fun a -> (a), c)
+        | [] -> [ c.Name, c ]
+        | aliases -> c.Name :: aliases |> List.map (fun a -> a, c)
 
     let commandsList =
         [
@@ -62,6 +62,6 @@ module Commands =
 
     let commands =
         commandsList
-        |> List.map toKeyValue
+        |> List.map toKeyValuePair
         |> List.collect id
         |> Map.ofList

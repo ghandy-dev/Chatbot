@@ -30,9 +30,9 @@ module Api =
 
             match toResult response with
             | Ok response ->
-                let! posts = response |> deserializeJsonAsync<'a>
-                return Ok posts
-            | Error e -> return Error $"Http response did not indicate success. {(int)e.statusCode} {e.reasonPhrase}"
+                let! deserialized = response |> deserializeJsonAsync<'a>
+                return Ok deserialized
+            | Error err -> return Error $"Reddit API HTTP error {err.statusCode |> int} {err.statusCode}"
         }
 
     let getPosts subreddit sorting accessToken =

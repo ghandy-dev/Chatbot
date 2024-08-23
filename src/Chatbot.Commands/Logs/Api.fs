@@ -6,8 +6,7 @@ module Api =
     open FsHttp.Request
     open FsHttp.Response
 
-    [<Literal>]
-    let private apiUrl = "https://logs.ivr.fi"
+    let [<Literal>] private apiUrl = "https://logs.ivr.fi"
 
     let private randomChannelLine channel = $"channel/{channel}/random"
     let private randomUserLine channel user = $"channel/{channel}/user/{user}/random"
@@ -25,7 +24,7 @@ module Api =
             | Ok response ->
                 let! content = response.content.ReadAsStringAsync() |> Async.AwaitTask
                 return Ok (content.TrimEnd())
-            | Error e -> return Error $"Http response did not indicate success. {(int)e.statusCode} {e.reasonPhrase}"
+            | Error err -> return Error $"Logs API HTTP error {err.statusCode |> int} {err.statusCode}"
         }
 
     let getChannelRandomLine channel =

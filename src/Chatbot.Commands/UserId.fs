@@ -8,9 +8,9 @@ module UserId =
     let userId (args: string list) (context: Context) =
         async {
             match args with
-            | [] -> return Ok <| Message context.UserId
+            | [] -> return Message context.UserId
             | username :: _ ->
                 match! Users.getUser username with
-                | Some user -> return Ok <| Message user.Id
-                | None -> return Error "User not found"
+                | Some user -> return Message user.Id
+                | None -> return Message "User not found"
         }

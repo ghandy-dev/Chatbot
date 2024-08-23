@@ -40,9 +40,9 @@ module Api =
 
             match toResult response with
             | Ok response ->
-                let! data = response |> deserializeJsonAsync<'a>
-                return Ok data
-            | Error e -> return Error $"Http response did not indicate success. {(int) e.statusCode} {e.reasonPhrase}"
+                let! deserialized = response |> deserializeJsonAsync<'a>
+                return Ok deserialized
+            | Error err -> return Error $"OpenAI API HTTP error {err.statusCode |> int} {err.statusCode}"
         }
 
     let getImage size prompt =

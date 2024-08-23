@@ -8,23 +8,25 @@ module RockPaperScissors =
     open Chatbot.Database
     open Chatbot.Database.Types.RockPaperScissors
 
+    let private random = Random.Shared
+
     let private shapes = [ "rock" ; "paper" ; "scissors" ]
 
     let private valid shape = shapes |> List.contains shape
 
     let private calculateScore player cpu =
-        match (player, cpu) with
-        | (player, cpu) when cpu = player -> 3
-        | (player, "scissors") when player = "rock" -> 6
-        | (player, "paper") when player = "scissors" -> 6
-        | (player, "rock") when player = "paper" -> 6
-        | (_, _) -> 0
+        match player, cpu with
+        | player, cpu when cpu = player -> 3
+        | player, "scissors" when player = "rock" -> 6
+        | player, "paper" when player = "scissors" -> 6
+        | player, "rock" when player = "paper" -> 6
+        | _, _ -> 0
 
     let rps args (context: Context) =
         async {
             match args with
             | playerShape :: _ when valid playerShape ->
-                let cpuShape = shapes[Random.Shared.Next(3)]
+                let cpuShape = shapes[random.Next(3)]
 
                 let score = calculateScore playerShape cpuShape
 
@@ -43,16 +45,16 @@ module RockPaperScissors =
 
                 match stats with
                 | Ok stats ->
-                    let (scoreMsg, updatedStats) =
+                    let scoreMsg, updatedStats =
                         match score with
-                        | 6 -> ($"you win! +{score} points", stats.addWin ())
-                        | 3 -> ($"it's a draw! +{score} points", stats.addDraw ())
-                        | _ -> ($"you lose! +{score} points", stats.addLoss ())
+                        | 6 -> $"you win! +{score} points", stats.addWin ()
+                        | 3 -> $"it's a draw! +{score} points", stats.addDraw ()
+                        | _ -> $"you lose! +{score} points", stats.addLoss ()
 
                     match! RpsRepository.update updatedStats with
-                    | DatabaseResult.Failure -> return Error "Error occurred updating stats."
+                    | DatabaseResult.Failure -> return Message "Error occurred updating stats."
                     | DatabaseResult.Success _ ->
-                        return Ok <| Message $"CPU picked {cpuShape}, {scoreMsg}. Total points: {updatedStats.Score}"
-                | Error err -> return Error err
-            | _ -> return Error """Invalid shape (valid choices are "rock" "paper" "scissors")"""
+                        return Message $"CPU picked {cpuShape}, {scoreMsg}. Total points: {updatedStats.Score}"
+                | Error err -> return Message err
+            | _ -> return Message """Invalid shape (valid choices are "rock" "paper" "scissors")"""
         }

@@ -7,7 +7,7 @@ module Weather =
     open Types.Weather
     open Google
 
-    let weatherCodeToEmoji iconCode =
+    let private weatherCodeToEmoji iconCode =
         match iconCode with
         | IconCode.DN_Cloudy -> "☁️"
         | IconCode.DN_Dreary -> "☁️"
@@ -50,47 +50,43 @@ module Weather =
         | IconCode.N_MostlyCloudyWithSnow -> "🌨️"
         | _ -> ""
 
+    let private processWeatherResult geocoding weather =
+        let time = weather.DateTime.ToString("dd MMM HH:mm")
+        let location = geocoding.FormattedAddress
+        let emoji = weatherCodeToEmoji weather.IconCode
+        let summary = weather.Phrase
+        let temperature = $"{weather.Temperature.Value}°{weather.Temperature.Unit}"
+
+        let perceivedTemperature =
+            $"{weather.ApparentTemperature.Value}°{weather.ApparentTemperature.Unit}"
+
+        let wind =
+            match weather.Wind.Direction with
+            | Some dir -> $"Wind: {weather.Wind.Speed.Value} {weather.Wind.Speed.Unit} {dir.LocalizedDescription}"
+            | None -> $"Wind: {weather.Wind.Speed.Value} {weather.Wind.Speed.Unit}"
+
+        let dayOrNight = if weather.IsDayTime then "🌅" else "🌛"
+        let precipitation = $"Precipitation {weather.PrecipitationSummary.PastHour.Value} {weather.PrecipitationSummary.PastHour.Unit}"
+        let uv = $"UV: {weather.UvIndexPhrase}"
+
+        Message $"{dayOrNight} {location} 🕒 Updated at: [{time}] {emoji} {summary} {temperature} - feels like {perceivedTemperature}, {wind}, {precipitation}, {uv}"
+
     let weather args =
         async {
             match args with
-            | [] -> return Error "No location provided"
+            | [] -> return Message "No location provided"
             | location ->
-                match!
-                    getLocationGecode location
-                    |> Result.bindZipAsync (fun g ->
-                        let latitude = g.Geometry.Location.Lat
-                        let longitude = g.Geometry.Location.Lng
+                match! getLocationGecode location with
+                | Error statusCode -> return Message statusCode
+                | Ok [] -> return Message "Location not found"
+                | Ok (geocoding :: _) ->
+                    let latitude = geocoding.Geometry.Location.Lat
+                    let longitude = geocoding.Geometry.Location.Lng
 
-                        getCurrentWeather latitude longitude
-                    )
-                with
-                | Error err -> return Error err
-                | Ok(geocoding, weatherResponse) ->
-                    match weatherResponse.Results with
-                    | [] -> return Ok <| Message "No weather conditions found for location"
-                    | weather :: _ ->
-                        let time = weather.DateTime.ToString("dd MMM HH:mm")
-                        let location = geocoding.FormattedAddress
-                        let emoji = weatherCodeToEmoji weather.IconCode
-                        let summary = weather.Phrase
-                        let temperature = $"{weather.Temperature.Value}°{weather.Temperature.Unit}"
-
-                        let perceivedTemperature =
-                            $"{weather.ApparentTemperature.Value}°{weather.ApparentTemperature.Unit}"
-
-                        let wind =
-                            match weather.Wind.Direction with
-                            | Some dir -> $"Wind: {weather.Wind.Speed.Value} {weather.Wind.Speed.Unit} {dir.LocalizedDescription}"
-                            | None -> $"Wind: {weather.Wind.Speed.Value} {weather.Wind.Speed.Unit}"
-
-                        let dayOrNight = if weather.IsDayTime then "🌅" else "🌛"
-
-                        let precipitation = $"Precipitation {weather.PrecipitationSummary.PastHour.Value} {weather.PrecipitationSummary.PastHour.Unit}"
-
-                        let uv = $"UV: {weather.UvIndexPhrase}"
-
-                        return
-                            Ok
-                            <| Message
-                                $"{dayOrNight} {location} 🕒 Updated at: [{time}] {emoji} {summary} {temperature} - feels like {perceivedTemperature}, {wind}, {precipitation}, {uv}"
-        }
+                    match! getCurrentWeather latitude longitude with
+                    | Error statusCode -> return Message statusCode
+                    | Ok w ->
+                        match w.Results with
+                        | [] -> return Message "No weather results found for {geocoding.FormattedAddress}"
+                        | weather :: _ -> return processWeatherResult geocoding weather
+            }

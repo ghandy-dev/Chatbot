@@ -8,11 +8,9 @@ module NameColor =
     let namecolor (args: string list) (context: Context) =
         async {
             let username =
-                match args with
-                | [] -> context.Username
-                | username :: _ -> username
+                args |> List.tryHead |> Option.bind Some |> Option.defaultValue context.Username
 
             match! Chat.getUserChatColor username |-> Result.fromOption "User not found" with
-            | Error err -> return Error err
-            | Ok response -> return Ok <| Message $"{response.UserName} {response.Color}"
+            | Error err -> return Message err
+            | Ok response -> return Message $"{response.UserName} {response.Color}"
         }

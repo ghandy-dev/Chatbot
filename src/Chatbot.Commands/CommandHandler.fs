@@ -51,7 +51,7 @@ let private parseCommandAndParameters (message: string) =
     | [ command ] -> command, []
     | command :: parameters -> command, parameters
 
-let rec handleCommand userId username source message =
+let rec private handleCommand userId username source message =
     async {
         let commandName, parameters = parseCommandAndParameters message
 
@@ -63,7 +63,7 @@ let rec handleCommand userId username source message =
             if cooldownExpired user command then
                 userCommandCooldowns[(user, command.Name)] <- DateTime.UtcNow
 
-                if (command.AdminOnly && not user.IsAdmin) then
+                if command.AdminOnly && not user.IsAdmin then
                     return None
                 else
                     let! response =
@@ -71,33 +71,30 @@ let rec handleCommand userId username source message =
                             let context = Context.createContext userId username user.IsAdmin source
 
                             match! executeCommand command parameters context with
-                            | Ok value ->
-                                match value with
-                                | Message message -> return Some <| (Message <| formatChatMessage message)
-                                | BotAction(action, message) -> return Some <| BotAction(action, formatChatMessage message)
-                                | RunAlias(command, parameters) ->
-                                    let formattedCommand = Utils.Text.formatString command parameters
+                            | Message message -> return Some <| (Message <| formatChatMessage message)
+                            | BotAction(action, message) -> return Some <| BotAction(action, formatChatMessage message)
+                            | RunAlias(command, parameters) ->
+                                let formattedCommand = Utils.Text.formatString command parameters
 
-                                    match! handleCommand userId username source formattedCommand with
-                                    | None -> return None
-                                    | Some(response) -> return Some response
-                                | Pipe commands ->
-                                    let rec executePipe (acc: string) commands =
-                                        match commands with
-                                        | [] -> async { return Some <| Message acc }
-                                        | c :: cs ->
-                                            async {
-                                                match! handleCommand userId username source $"{c} {acc}" with
+                                match! handleCommand userId username source formattedCommand with
+                                | None -> return None
+                                | Some(response) -> return Some response
+                            | Pipe commands ->
+                                let rec executePipe (acc: string) commands =
+                                    match commands with
+                                    | [] -> async { return Some <| Message acc }
+                                    | c :: cs ->
+                                        async {
+                                            match! handleCommand userId username source $"{c} {acc}" with
+                                            | None -> return None
+                                            | Some(Message intermediateResult) ->
+                                                match! executePipe intermediateResult cs with
                                                 | None -> return None
-                                                | Some(Message intermediateResult) ->
-                                                    match! executePipe intermediateResult cs with
-                                                    | None -> return None
-                                                    | Some result -> return Some result
                                                 | Some result -> return Some result
-                                            }
+                                            | Some result -> return Some result
+                                        }
 
-                                    return! executePipe "" commands
-                            | Error err -> return Some <| (Message <| formatChatMessage err)
+                                return! executePipe "" commands
                         }
 
                     return response

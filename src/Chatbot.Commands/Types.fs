@@ -20,13 +20,11 @@ type BotCommand =
     | JoinChannel of channel: string
     | LeaveChannel of channel: string
 
-type CommandValue =
+type CommandResult =
     | Message of string
     | RunAlias of command: string * args: string list
     | Pipe of string list
     | BotAction of BotCommand * string
-
-type CommandResult = Result<CommandValue, string>
 
 type Parameters = string list
 

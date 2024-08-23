@@ -12,24 +12,34 @@ module CatFacts =
         Length: int
     }
 
-    [<Literal>]
-    let private apiUrl = "https://catfact.ninja"
+    let [<Literal>] private apiUrl = "https://catfact.ninja"
 
-    let catFact () =
+    let private fact = $"{apiUrl}/fact"
+
+    let private getFromJsonAsync<'a> url =
         async {
             use! response =
                 http {
-                    GET(apiUrl + "/fact")
-                    CacheControl "no-cache"
+                    GET url
                     Accept MimeTypes.applicationJson
                 }
                 |> sendAsync
 
             match toResult response with
             | Ok response ->
-                let! fact = response |> deserializeJsonAsync<CatFact>
-                return Ok <| Message fact.Fact
-            | Error response ->
-                let! rawResponse = toTextAsync response
-                return Error $"{response.statusCode} {rawResponse}"
+                let! deserialized = response |> deserializeJsonAsync<'a>
+                return Ok deserialized
+            | Error err -> return Error $"CatFacts API HTTP error {err.statusCode |> int} {err.statusCode}"
+        }
+
+    let private getCatFact () =
+        async {
+            return! getFromJsonAsync<CatFact> fact
+        }
+
+    let catFact () =
+        async {
+            match! getCatFact() with
+            | Ok fact -> return Message fact.Fact
+            | Error err -> return Message err
         }

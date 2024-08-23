@@ -12,20 +12,20 @@ module Reddit =
 
     let urban args =
         async {
-            let f =
+            let getTerm =
                 match args with
                 | [] -> random()
                 | _ ->
                     let query = args |> String.concat " "
                     search query
 
-            match! f with
-            | Error err -> return Error err
+            match! getTerm with
+            | Error err -> return Message err
             | Ok terms ->
                 match terms with
-                | [] -> return Ok <| Message "No definition found"
+                | [] -> return Message "No definition found"
                 | t :: _ ->
                     let definition = Regex.Replace(t.Definition, pattern, "")
-                    return Ok <| Message $"{t.Permalink} (+{t.ThumbsUp}/-{t.ThumbsDown}) {t.Word}: {definition}"
+                    return Message $"{t.Permalink} (+{t.ThumbsUp}/-{t.ThumbsDown}) {t.Word}: {definition}"
 
         }
