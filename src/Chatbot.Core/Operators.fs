@@ -9,3 +9,9 @@ let (|->) a f = Async.bind (f >> Async.create) a
 
 // Null coalescing for System.Nullable<'T>
 let (|?) (a: System.Nullable<'a>) b = if a.HasValue then a.Value else b
+
+// Null coalescing for System.Nullable<'T>
+let (|??) (a: 'a option) b =
+    match a with
+    | None -> b
+    | Some v -> v
