@@ -213,13 +213,6 @@ Encode input to base64.
 """
         }
 
-    let EvilGpt =
-        {
-            Name = "Evil Gpt"
-            Description = "Chat with OpenAI's ChatGPT, who is a bit of a bully this time."
-            ExampleUsage = $"""{exampleArgs "evilgpt" "<prompt>"}"""
-        }
-
     let FaceIt =
         {
             Name = "FaceIt"
@@ -248,6 +241,13 @@ Conversations are based on the context of the channel, and Gpt maintains a histo
 i.e. 10 mins after sending no messages through the gpt command will wipe your chatting history with it
 
 {exampleArgs "gpt" "<prompt>"}
+{exampleArgs "gpt" "What are the some of the rarest deep sea creatures?"}
+
+Use a specific persona that affect how GPT interprets the conversation, and its own role in the conversation.
+Currently has:
+    - default - Default model used. GPT is a helpful assistant.
+    - bully - GPT is mocking and belittling in hopefully a light-hearted manner.
+{exampleArgs "gpt" "<persona> <prompt>"}
 """
         }
 

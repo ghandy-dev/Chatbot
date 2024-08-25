@@ -15,15 +15,15 @@ module OpenAI =
 
     let private generateImage size prompt = async { return! getImage size prompt }
 
-    let private keys = [ "size" ]
+    let private dalleKeys = [ "size" ]
 
     let dalle args =
         async {
             match args with
             | [] -> return Message $"No prompt provided"
             | _ ->
-                let keyValues = KeyValueParser.parse args keys
-                let prompt = KeyValueParser.removeKeyValues args keys |> String.concat " "
+                let keyValues = KeyValueParser.parse args dalleKeys
+                let prompt = KeyValueParser.removeKeyValues args dalleKeys |> String.concat " "
 
                 let size = keyValues.TryFind "size" |> Option.defaultValue "square"
 
@@ -31,6 +31,8 @@ module OpenAI =
                 | Error err -> return Message err
                 | Ok url -> return Message url
         }
+
+    let private gptKeys = [ "persona" ]
 
     let gpt args context =
         async {
@@ -40,24 +42,12 @@ module OpenAI =
                 match args with
                 | [] -> return Message "No input provided"
                 | input ->
-                    let message = String.concat " " input
+                    let keyValues = KeyValueParser.parse input gptKeys
+                    let gptKey = keyValues |> Map.tryFind "persona" |?? "default"
 
-                    match! sendGptMessage message context.Username channel false with
-                    | Error err -> return Message err
-                    | Ok message -> return Message(Text.stripMarkdownTags message)
-        }
+                    let message = KeyValueParser.removeKeyValues args gptKeys |> String.concat " "
 
-    let evilgpt args context =
-        async {
-            match context.Source with
-            | Whisper _ -> return Message "Gpt currently cannot be used in whispers"
-            | Channel channel ->
-                match args with
-                | [] -> return Message "No input provided"
-                | input ->
-                    let message = String.concat " " input
-
-                    match! sendGptMessage message context.Username channel true with
+                    match! sendGptMessage message context.Username channel gptKey with
                     | Error err -> return Message err
                     | Ok message -> return Message(Text.stripMarkdownTags message)
         }

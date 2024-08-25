@@ -59,33 +59,36 @@ module Api =
             | Ok response -> return Ok response.Url
         }
 
-    let private systemMessage = {
-        Role = "system"
-        Name = None
-        Content = [
+    let private systemMessages =
+        [
+            "default",
             {
-                Type = "text"
-                Text = "You are a friendly and knowledgeable assistant. Provide brief and clear responses. Respond using plaintext."
+                Role = "system"
+                Name = None
+                Content = [
+                    {
+                        Type = "text"
+                        Text = "You are a friendly and knowledgeable assistant. Provide brief and clear responses. Respond using plaintext."
+                    }
+                ]
             }
-        ]
-    }
-
-    let private evilSystemMessage = {
-        Role = "system"
-        Name = None
-        Content = [
+            "bully",
             {
-                Type = "text"
-                Text = "You are a character who is mean and a bully. Your tone is condescending, sarcastic, and occasionally mocking. You enjoy teasing and belittling others in a playful, non-toxic way."
+                Role = "system"
+                Name = None
+                Content = [
+                    {
+                        Type = "text"
+                        Text = "You are a character who is mean and a bully. Your tone is condescending, sarcastic, and occasionally mocking. You enjoy teasing and belittling others in a playful, non-toxic way."
+                    }
+                ]
             }
-        ]
-    }
+        ] |> Map.ofList
 
-    let sendGptMessage message user channel evil =
+    let sendGptMessage message user channel modelKey =
         async {
-            let evilKey = if evil then "evil" else ""
-            let key = $"{user}_{channel}_{evilKey}"
-            let systemMessage = if evil then evilSystemMessage else systemMessage
+            let historyKey = $"{user}_{channel}_{modelKey}"
+            let systemMessage = systemMessages |> Map.tryFind modelKey |?? (systemMessages |> Map.find "default")
 
             let message = [
                 {
@@ -101,12 +104,12 @@ module Api =
             ]
 
             let messages =
-                match userChatHistory.TryGetValue key with
+                match userChatHistory.TryGetValue historyKey with
                 | false, _ -> systemMessage :: message
                 | true, messages when (DateTime.UtcNow - messages.LastMessage).TotalMinutes > 10 ->
                     let updatedMessages = systemMessage :: message
 
-                    userChatHistory[key] <- {
+                    userChatHistory[historyKey] <- {
                         LastMessage = DateTime.UtcNow
                         Messages = updatedMessages
                     }
@@ -115,7 +118,7 @@ module Api =
                 | true, messages ->
                     let updatedMessages = messages.Messages @ message
 
-                    userChatHistory[key] <- {
+                    userChatHistory[historyKey] <- {
                         LastMessage = DateTime.UtcNow
                         Messages = updatedMessages
                     }
@@ -127,7 +130,7 @@ module Api =
                 Messages = messages
                 MaxTokens = 150
                 n = 1
-                User = key
+                User = historyKey
             }
 
             match! postAsJson<TextGenerationMessageResponse, TextGeneration> chatCompletion request with
@@ -152,7 +155,7 @@ module Api =
                             }
                         ]
 
-                    userChatHistory[key] <- {
+                    userChatHistory[historyKey] <- {
                         LastMessage = DateTime.UtcNow
                         Messages = messages
                     }
