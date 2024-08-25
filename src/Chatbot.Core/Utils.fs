@@ -106,14 +106,16 @@ module Text =
     let stripMarkdownTags content =
         let patterns = [
             @"`{3}", ""                             // Code Blocks
-            @"\*{1,2}([\w].*?)\*{1,2}", "$1"        // Bold
-            @"-{2,3}", "-"                           // Em/en dash
-            @"_{2}([\w].*?)_{2}", "$1"              // Italics
-            @"~{2}([\w].*?)~{2}", "$1"              // Strikethrough
+            @"`{1}([\S].*?)`{1}", "$1"              // Inline code
+            @"\*{1,2}([\S].*?)\*{1,2}", "$1"        // Bold
+            @"-{2,3}", "-"                          // Em/en dash
+            @"_{2}([\S].*?)_{2}", "$1"              // Italics
+            @"~{2}([\S].*?)~{2}", "$1"              // Strikethrough
             @"#{1,6}\s(.*?)", "$1"                  // Headers
             @"=|-{5,}.*\n", ""                      // Other Headers
             @"\[.*?\][\(](.*?)[\)]", "$1"           // Links
-            @"\n{1,}", " "
+            @"\r\n{1,}", " "                        // CRLF
+            @"\n{1,}", " "                          // LF
         ]
 
         let stripped =
