@@ -152,7 +152,7 @@ module ReminderRepository =
                             fromUsername = reminder.FromUsername
                             targetUserId = reminder.TargetUserId
                             targetUsername = reminder.TargetUsername
-                            channel = defaultArg reminder.Channel null // TODO: remove default arg once Dapper.FSharp updated
+                            channel = reminder.Channel
                             message = reminder.Message
                             reminderTimestamp = reminder.ReminderTimestamp
                         |}
