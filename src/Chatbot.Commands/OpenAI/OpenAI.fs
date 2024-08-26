@@ -25,7 +25,7 @@ module OpenAI =
                 let keyValues = KeyValueParser.parse args dalleKeys
                 let prompt = KeyValueParser.removeKeyValues args dalleKeys |> String.concat " "
 
-                let size = keyValues.TryFind "size" |> Option.defaultValue "square"
+                let size = keyValues.TryFind "size" |?? "square"
 
                 match! generateImage size prompt with
                 | Error err -> return Message err

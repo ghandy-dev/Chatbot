@@ -40,7 +40,7 @@ module Nasa =
 
     let getPictureOfTheDay (date: DateOnly option) =
         async {
-            let date = date |> Option.defaultValue (DateOnly.FromDateTime(DateTimeOffset.UtcNow.DateTime))
+            let date = date |?? DateOnly.FromDateTime(DateTimeOffset.UtcNow.DateTime)
             let url = pictureOfTheDay (date.ToString(dateFormat))
 
             return! getFromJsonAsync<APOD> url
@@ -48,7 +48,7 @@ module Nasa =
 
     let getMarsRoverPhoto (camera: RoverCamera) (date: DateOnly option) =
         async {
-            let date = date |> Option.defaultValue (DateOnly.FromDateTime(DateTimeOffset.UtcNow.DateTime))
+            let date = date |?? DateOnly.FromDateTime(DateTimeOffset.UtcNow.DateTime)
             let url = marsRoverPhotos date camera
             return! getFromJsonAsync<APOD> url
         }

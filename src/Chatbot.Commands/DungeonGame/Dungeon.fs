@@ -33,7 +33,7 @@ module Dungeon =
                     | "status" :: _ -> return Message (player.ToString())
                     | "shop" :: _ -> return Message (Shop.displayShop())
                     | "buy" :: id :: _ ->
-                        let id = Option.defaultValue 0 (Int32.tryParse id)
+                        let id = Int32.tryParse id |?? 0
                         match Shop.buyItem id player with
                         | Error err -> return Message err
                         | Ok (player, item) ->

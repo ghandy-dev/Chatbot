@@ -38,7 +38,7 @@ module RandomClip =
         async {
             let values = KeyValueParser.parse args keys
 
-            let period = values.TryFind "period" |> Option.defaultValue "week"
+            let period = values.TryFind "period" |?? "week"
 
             let dateFrom, dateTo = periodToDateRange period
 

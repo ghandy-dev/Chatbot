@@ -67,11 +67,11 @@ let private roomStateMessageHandler (roomStateMsg: Types.RoomStateMessage) =
     | true, roomState ->
         let updatedRoomState = {
             roomState with
-                EmoteOnly = Option.defaultValue roomState.EmoteOnly roomStateMsg.EmoteOnly
-                FollowersOnly = Option.defaultValue roomState.FollowersOnly roomStateMsg.FollowersOnly
-                R9K = Option.defaultValue roomState.R9K roomStateMsg.R9K
-                Slow = Option.defaultValue roomState.Slow roomStateMsg.Slow
-                SubsOnly = Option.defaultValue roomState.SubsOnly roomStateMsg.SubsOnly
+                EmoteOnly = roomStateMsg.EmoteOnly |?? roomState.EmoteOnly
+                FollowersOnly = roomStateMsg.FollowersOnly |?? roomState.FollowersOnly
+                R9K = roomStateMsg.R9K |?? roomState.R9K
+                Slow = roomStateMsg.Slow |?? roomState.Slow
+                SubsOnly = roomStateMsg.SubsOnly |?? roomState.SubsOnly
         }
 
         roomStates[roomStateMsg.RoomId] <- updatedRoomState
