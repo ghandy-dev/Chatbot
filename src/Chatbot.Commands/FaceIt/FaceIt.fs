@@ -44,39 +44,29 @@ module FaceIt =
             with
             | Error error -> return Message error
             | Ok(player, history) ->
-
-                let! matches =
+                match!
                     history.Items
                     |> List.map (fun m -> m.MatchId |> getMatchStats)
                     |> Async.Parallel
                     |> Async.map (Array.choose Result.toOption)
-
-                match matches |> List.ofArray with
+                    |-> List.ofArray
+                with
                 | [] -> return Message "No recent games played!"
                 | matches ->
-
                     let matchResults =
                         matches
                         |> List.map (fun m ->
                             m.Rounds
                             |> List.map (fun r ->
-                                let winner = r.RoundStats.Winner
-
-                                // TODO: consider a rewrite?
                                 let outcome =
                                     r.Teams
-                                    |> List.filter (fun t -> t.TeamId = winner)
-                                    |> List.map (fun t ->
-                                        if t.Players |> List.exists (fun p -> p.PlayerId = player.PlayerId) then
-                                            "Win"
-                                        else
-                                            "Loss"
-                                    )
+                                    |> List.filter (fun t -> t.TeamId = r.RoundStats.Winner)
+                                    |> List.map (fun t -> if t.Players |> List.exists (fun p -> p.PlayerId = player.PlayerId) then "Win" else "Loss")
                                     |> List.exactlyOne // the player should only be on one team
 
                                 let score = $"Map: {r.RoundStats.Map}, Score: [{r.RoundStats.Score}]"
 
-                                (score, outcome)
+                                score, outcome
                             )
                         )
 
@@ -108,24 +98,15 @@ module FaceIt =
                     let playerTeam, otherTeam =
                         m.Teams
                         |> Map.toList
-                        |> List.partition (fun (team, ps) -> ps.Players |> List.exists (fun p -> p.PlayerId = player.PlayerId))
+                        |> List.partition (fun (_, ps) -> ps.Players |> List.exists (fun p -> p.PlayerId = player.PlayerId))
                         |> function
-                            | [ p ], [ o ] -> (p, o)
+                            | [ p ], [ o ] -> p, o
                             | _ -> failwith "Expected 2 lists with one item each"
 
                     match! getMatch m.MatchId with
                     | Error error -> return Message error
                     | Ok matchData ->
-
-                        let! teamPlayers =
-                            [ playerTeam ; otherTeam ]
-                            |> List.map (fun (_, team) -> team.Players |> List.map (fun p -> getPlayerById p.PlayerId) |> Async.Parallel)
-                            |> Async.Parallel
-
-                        let gameMap =
-                            match matchData.Voting.Map.Pick |> List.tryHead with
-                            | None -> ""
-                            | Some map -> map
+                        let gameMap = matchData.Voting.Map.Pick |> List.head
 
                         let date =
                             DateTimeOffset
@@ -141,17 +122,11 @@ module FaceIt =
                             else
                                 $"Winner: {(snd otherTeam).Nickname}"
 
-                        let teamElos =
-                            teamPlayers
-                            |> Array.map (fun ps ->
-                                ps
-                                |> Array.choose (
-                                    function
-                                    | Ok p -> Some p
-                                    | Error _ -> None
-                                )
-                                |> Array.averageBy (fun p -> p.Games["cs2"].FaceItElo |> float)
-                            )
+                        let! teamElos =
+                            [ playerTeam ; otherTeam ]
+                            |> List.map (fun (_, team) -> team.Players |> List.map (fun p -> getPlayerById p.PlayerId) |> Async.Parallel)
+                            |> Async.Parallel
+                            |-> Array.map (Array.choose Result.toOption >> Array.averageBy (fun p -> p.Games["cs2"].FaceItElo |> float))
 
                         let message =
                             (new StringBuilder())
