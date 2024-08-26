@@ -52,7 +52,7 @@ module RandomClip =
                 match clips |> List.ofSeq with
                 | [] -> return Message "No clips found"
                 | clips ->
-                    let clip = clips[System.Random.Shared.Next(clips.Length)]
+                    let clip = clips |> List.randomChoice
 
                     return Message $""""{clip.Title}" ({clip.ViewCount.ToString("N0")} views, {clip.CreatedAt.ToShortDateString()}) {clip.Url}"""
             | Error err -> return Message err

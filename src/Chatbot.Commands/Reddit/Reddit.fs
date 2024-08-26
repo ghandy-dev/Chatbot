@@ -41,7 +41,7 @@ module Reddit =
                         let post =
                             posts
                             |> List.filter postFilter
-                            |> fun ps -> ps[System.Random.Shared.Next(ps.Length)].Data
+                            |> fun ps -> ps |> List.randomChoice |> _.Data
 
                         let title = (System.Web.HttpUtility.HtmlDecode post.Title).Replace("\n", "")
 

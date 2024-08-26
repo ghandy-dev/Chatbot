@@ -34,8 +34,7 @@ module News =
             | Error err -> return Error $"News RSS feed HTTP error {err.statusCode |> int} {err.statusCode}"
         }
 
-    let private getRandomItem (feed: SyndicationFeed) =
-        (feed.Items |> List.ofSeq |> (fun i -> i[Random.Shared.Next(i.Length)]))
+    let private getRandomItem (feed: SyndicationFeed) = feed.Items |> Seq.randomChoice
 
     let getNews category =
         async {
@@ -48,8 +47,8 @@ module News =
             | DatabaseResult.Failure -> return Error "Error occured trying to get RSS feeds"
             | DatabaseResult.Success feeds ->
 
-                let feed = feeds[Random.Shared.Next(feeds.Length)]
-                let url = feed.Urls[Random.Shared.Next(feed.Urls.Length)]
+                let feed = feeds |> List.randomChoice
+                let url = feed.Urls |> List.randomChoice
 
                 match cache.TryGetValue url with
                 | true, (updated, feed) when DateTime.UtcNow - updated > (feed.TimeToLive |? TimeSpan.FromMinutes(10)) ->

@@ -6,8 +6,6 @@ module Pick =
     open System
     open System.Text.RegularExpressions
 
-    let private random = Random.Shared
-
     let pick args =
         match args with
         | [] -> Message "No items provided"
@@ -23,5 +21,4 @@ module Pick =
                     |> _.Split(m.Groups[1].Value, StringSplitOptions.TrimEntries)
                     |> List.ofArray
 
-            let index = random.Next items.Length
-            Message $"{items[index]}"
+            Message $"{items |> List.randomChoice}"

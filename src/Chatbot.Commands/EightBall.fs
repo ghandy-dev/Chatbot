@@ -3,7 +3,7 @@ namespace Chatbot.Commands
 [<AutoOpen>]
 module EightBall =
 
-    let private fortunes = [|
+    let private fortunes = [
         "It is certain."
         "It is decidedly so."
         "Without a doubt."
@@ -24,8 +24,6 @@ module EightBall =
         "My sources say no."
         "Outlook not so good."
         "Very doubtful."
-    |]
+    ]
 
-    let eightball () =
-        let fortune = fortunes[System.Random.Shared.Next(0, fortunes.Length)]
-        Message fortune
+    let eightball () = Message (fortunes |> List.randomChoice)

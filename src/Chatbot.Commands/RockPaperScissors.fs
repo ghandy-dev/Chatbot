@@ -8,8 +8,6 @@ module RockPaperScissors =
     open Chatbot.Database
     open Chatbot.Database.Types.RockPaperScissors
 
-    let private random = Random.Shared
-
     let private shapes = [ "rock" ; "paper" ; "scissors" ]
 
     let private valid shape = shapes |> List.contains shape
@@ -26,7 +24,7 @@ module RockPaperScissors =
         async {
             match args with
             | playerShape :: _ when valid playerShape ->
-                let cpuShape = shapes[random.Next(3)]
+                let cpuShape = shapes |> List.randomChoice
 
                 let score = calculateScore playerShape cpuShape
 

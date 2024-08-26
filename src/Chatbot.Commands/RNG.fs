@@ -39,6 +39,4 @@ module RNG =
 
         let private coinFlipSide = [ "Heads (yes)" ; "Tails (no)" ]
 
-        let coinFlip () =
-            let n = random.Next(1)
-            Message $"{coinFlipSide[n]}"
+        let coinFlip () = Message $"{coinFlipSide |> List.randomChoice}"
