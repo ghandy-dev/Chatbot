@@ -42,8 +42,13 @@ module Reddit =
                             posts
                             |> List.filter postFilter
                             |> fun ps -> ps |> List.randomChoice |> _.Data
+                            |> fun p ->
+                                match p.CrosspostParentList with
+                                | Some (cp :: _) -> cp
+                                | _ -> p
 
                         let title = (System.Web.HttpUtility.HtmlDecode post.Title).Replace("\n", "")
+                        let url = System.Web.HttpUtility.HtmlDecode(post.Url)
 
-                        return Message $"r/{post.Subreddit} \"{title}\" (+{post.Score}) {post.Url}"
+                        return Message $"r/{post.Subreddit} \"{title}\" (+{post.Score}) {url}"
         }
