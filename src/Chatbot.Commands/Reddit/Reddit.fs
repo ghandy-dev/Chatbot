@@ -42,13 +42,16 @@ module Reddit =
                             posts
                             |> List.filter postFilter
                             |> fun ps -> ps |> List.randomChoice |> _.Data
-                            |> fun p ->
-                                match p.CrosspostParentList with
-                                | Some (cp :: _) -> cp
-                                | _ -> p
 
-                        let title = (System.Web.HttpUtility.HtmlDecode post.Title).Replace("\n", "")
-                        let url = System.Web.HttpUtility.HtmlDecode(post.Url)
+                        let crosspostParent = post.CrosspostParentList |?? [] |> List.tryHead
 
-                        return Message $"r/{post.Subreddit} \"{title}\" (+{post.Score}) {url}"
+                        match crosspostParent with
+                        | Some cp ->
+                            let title = (System.Web.HttpUtility.HtmlDecode post.Title).Replace("\n", "")
+                            let url = System.Web.HttpUtility.HtmlDecode(cp.Url)
+                            return Message $"r/{post.Subreddit} (x-posted from r/{cp.Subreddit}) \"{title}\" (+{post.Score}) {url}"
+                        | None ->
+                            let title = (System.Web.HttpUtility.HtmlDecode post.Title).Replace("\n", "")
+                            let url = System.Web.HttpUtility.HtmlDecode(post.Url)
+                            return Message $"r/{post.Subreddit} \"{title}\" (+{post.Score}) {url}"
         }
