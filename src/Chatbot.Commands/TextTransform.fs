@@ -14,7 +14,7 @@ module TextTransform =
         text |> String.concat " " |> (fun t -> t.ToLower())
 
     let private reverse text =
-        text |> String.concat " " |> Seq.rev |> Array.ofSeq |> (fun s -> new string (s))
+        text |> String.concat " " |> Seq.rev |> Array.ofSeq |> fun s -> new string (s)
 
     let private shuffle text =
         let array = text |> Array.ofSeq
@@ -22,15 +22,21 @@ module TextTransform =
         array |> String.concat " "
 
     let private explode text =
-        text |> String.concat " " |> Array.ofSeq |> (fun s -> String.Join(" ", s))
+        text |> String.concat " " |> Array.ofSeq |> fun s -> String.Join(" ", s)
+
+    let private alternating (text: string seq) =
+        text
+        |> Seq.map _.ToCharArray()
+        |> Seq.mapi (fun i a -> a |> Array.mapi(fun i' c -> if (i + i') % 2 = 0 then Char.ToUpper c else Char.ToLower c) |> fun s -> new string (s)) |> String.concat " "
 
     let private transforms =
         [
-            ("uppercase", toUpper)
-            ("lowercase", toLower)
-            ("reverse", reverse)
-            ("shuffle", shuffle)
-            ("explode", explode)
+            "uppercase", toUpper
+            "lowercase", toLower
+            "reverse", reverse
+            "shuffle", shuffle
+            "explode", explode
+            "alternating", alternating
         ]
         |> Map.ofList
 
