@@ -131,6 +131,7 @@ let run (cancellationToken: Threading.CancellationToken) =
         let! user = getAccessTokenUser()
 
         let twitchChatConfig: TwitchChatClientConfig = {
+            UserId = user.Id
             Username = user.DisplayName
             Capabilities = botConfig.Capabilities
         }
