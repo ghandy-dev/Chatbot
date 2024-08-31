@@ -20,7 +20,7 @@ module Reddit =
             match args with
             | [] -> return Message "No subreddit specified"
             | subreddit :: a ->
-                let keyValues = KeyValueParser.parse redditKeys a
+                let keyValues = KeyValueParser.parse a redditKeys
                 let sort = keyValues |> Map.tryFind "sort" |?? "hot"
                 let flair = keyValues |> Map.tryFind "flair"
 
