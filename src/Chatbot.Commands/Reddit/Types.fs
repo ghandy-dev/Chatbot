@@ -19,6 +19,8 @@ module Types =
         IsSelf: bool
         [<JsonPropertyName("crosspost_parent_list")>]
         CrosspostParentList: T3 list option
+        [<JsonPropertyName("link_flair_text")>]
+        Flair: string option
     }
 
     type Listing<'T> = {
