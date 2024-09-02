@@ -156,7 +156,7 @@ module KeyValueParser =
 
     open System.Text.RegularExpressions
 
-    let private patternTemplate = sprintf @"%s:""*(\w+)""*\s*"
+    let private patternTemplate = sprintf @"%s:(("".*?"")|(\S+))"
 
     let tryParseKeyValuePair (string: string) =
         string.Split(":")
