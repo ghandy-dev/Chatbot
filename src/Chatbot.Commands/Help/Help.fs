@@ -490,6 +490,7 @@ Supported transforms are:
     - reverse
     - shuffle
     - explode
+    - alternate/alternating
 
 {exampleArgs "texttransform" "<transform> <text>"}
 {exampleArgs "texttransform" "uppercase hello world!"}

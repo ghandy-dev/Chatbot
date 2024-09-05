@@ -37,6 +37,7 @@ module TextTransform =
             "shuffle", shuffle
             "explode", explode
             "alternating", alternating
+            "alternate", alternating
         ]
         |> Map.ofList
 
