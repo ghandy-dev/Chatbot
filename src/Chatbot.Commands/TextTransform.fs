@@ -25,9 +25,20 @@ module TextTransform =
         text |> String.concat " " |> Array.ofSeq |> fun s -> String.Join(" ", s)
 
     let private alternating (text: string seq) =
+        let mutable alternated = false
+
         text
         |> Seq.map _.ToCharArray()
-        |> Seq.mapi (fun i a -> a |> Array.mapi(fun i' c -> if (i + i') % 2 = 0 then Char.ToUpper c else Char.ToLower c) |> fun s -> new string (s)) |> String.concat " "
+        |> Seq.mapi (fun i a ->
+            a
+            |> Array.map(fun c ->
+                if Char.IsLetter(c) then
+                    alternated <- not alternated
+                    if alternated then Char.ToUpper c else Char.ToLower c
+                else
+                    c
+            )
+            |> fun s -> new string (s)) |> String.concat " "
 
     let private transforms =
         [
