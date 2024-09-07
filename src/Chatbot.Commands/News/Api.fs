@@ -51,7 +51,7 @@ module News =
                 let url = feed.Urls |> List.randomChoice
 
                 match cache.TryGetValue url with
-                | true, (updated, feed) when DateTime.UtcNow - updated > (feed.TimeToLive |? TimeSpan.FromMinutes(10)) ->
+                | true, (updated, feed) when DateTime.UtcNow - updated < (feed.TimeToLive |? TimeSpan.FromMinutes(10)) ->
                     return Ok(getRandomItem feed)
                 | _, _ ->
                     match! getFromXmlAsync url with
