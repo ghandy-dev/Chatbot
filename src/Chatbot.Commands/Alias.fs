@@ -33,7 +33,7 @@ module Alias =
             | DatabaseResult.Success _ -> return Message $"Alias \"{alias}\" successfully removed"
         }
 
-    let private get username alias =
+    let private get (username: string) alias =
         async {
             match! TTVSharp.Helix.Users.getUser username with
             | None -> return Message "User not found"
@@ -110,9 +110,12 @@ module Alias =
             | "update" :: alias :: command -> return! update context.UserId alias command
             | "copy" :: username :: alias :: _ -> return! copy username context.UserId alias
             | "copyplace" :: username :: alias :: _ -> return! copyPlace username context.UserId alias
+            | [ "check" ; alias ]
+            | [ "spy" ; alias ]
+            | ["definition" ; alias ] -> return! get context.Username alias
             | "check" :: username :: alias :: _
             | "spy" :: username :: alias :: _
-            | "definition" :: username :: alias :: _ -> return! get context.UserId alias
+            | "definition" :: username :: alias :: _ -> return! get username alias
             | "run" :: alias :: parameters
             | alias :: parameters -> return! run context.UserId alias parameters
             | [] -> return Message "No definition provided"
