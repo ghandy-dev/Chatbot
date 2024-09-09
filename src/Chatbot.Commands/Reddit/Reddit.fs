@@ -13,7 +13,7 @@ module Reddit =
         not <| p.Data.Over18 && not <| p.Data.IsSelf
 
     let private flairFilter (flair: string) (p: Types.Thing<Types.T3>) =
-        p.Data.Flair |?? "" |> fun f -> System.String.Compare(f, flair) = 0
+        p.Data.Flair |?? "" |> fun f -> System.String.Compare(f, flair, true) = 0
 
     let reddit (args: string list) =
         async {
