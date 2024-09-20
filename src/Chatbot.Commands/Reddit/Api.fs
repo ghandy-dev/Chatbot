@@ -38,6 +38,7 @@ module Api =
                 match sorting with
                 | "hot" -> $"{OAuthApiUrl}/r/{subreddit}/hot.json"
                 | "top" -> $"{OAuthApiUrl}/r/{subreddit}/top.json?t=week"
+                | "best" -> $"{OAuthApiUrl}/r/{subreddit}/best.json"
                 | _ -> failwith "Unsupported post sorting."
 
             return! getFromJsonAsync<Thing<Listing<T3>>> url accessToken
