@@ -15,7 +15,7 @@ module HelpInfo =
 
     let AstronomyPictureOfTheDay =
         {
-            Name = "Astronomy Picture Of TheDay"
+            Name = "Astronomy Picture Of The Day"
             Description = "Get the Astronomy Picture of the Day from NASA."
             ExampleUsage = $"""
 Get todays picture.
@@ -54,8 +54,8 @@ Remove an alias
 {exampleArgs "alias" "remove forsenclip"}
 
 Update an alias
-{exampleArgs "alias" "edit <alias name> <commands>"}
-{exampleArgs "alias" "update <alias name> <commands>"}
+{exampleArgs "alias" "edit <alias name> <command>"}
+{exampleArgs "alias" "update <alias name> <command>"}
 {exampleArgs "alias" "edit forsenclip randomclip forsen"}
 
 Get an alias definition
@@ -192,8 +192,8 @@ Fight an opponent to earn gold:
                 Name = "Echo"
                 Description = "Echo input back to the user."
                 ExampleUsage = $"""
-    {exampleArgs "echo" "<input>"}
-    {exampleArgs "echo" "Hello World!"}
+{exampleArgs "echo" "<input>"}
+{exampleArgs "echo" "Hello World!"}
 """
         }
 
@@ -410,8 +410,9 @@ Get a trending reddit post from a subreddit.
 {exampleArgs "reddit" "linuxmemes"}
 
 Get a trending reddit post based sorted by; "top" / "hot" / "best"
-{exampleArgs "reddit" "<sort> <subreddit>"}
-{exampleArgs "reddit" "top shitposting"}
+(top gets this weeks top posts)
+{exampleArgs "reddit" "sort:<sorting> <subreddit>"}
+{exampleArgs "reddit" "sort:top shitposting"}
 """
         }
 
