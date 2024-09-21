@@ -46,14 +46,14 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
 
             match command with
             | IRC.PrivMsg (channel, _) ->
-                let now = DateTimeOffset.Now.ToUnixTimeSeconds()
+                let now = DateTimeOffset.Now.ToUnixTimeMilliseconds()
                 if chatRateLimiter.CanSend() then
                     match lastMessagesSent.TryGetValue channel with
                     | false, _ ->
                         lastMessagesSent[channel] <- now
                         do! client.SendAsync ircMessage
                     | true, timestamp ->
-                        if (now - timestamp) >= 1 then
+                        if (now - timestamp) > 1000 then
                             lastMessagesSent[channel] <- now
                             do! client.SendAsync ircMessage
                         else
