@@ -12,14 +12,14 @@ let formatChatMessage (response: string) =
         response
 
 let formatTimeSpan (ts: TimeSpan) =
-    let formatComponent value (format: string) =
-        if value > 0 then Some (value.ToString(format)) else None
+    let formatComponent value =
+        if value > 0 then Some (value.ToString()) else None
 
     let years = if ts.Days >= 365 then Some ((ts.Days / 365).ToString()) else None
-    let days = if years.IsSome then formatComponent (ts.Days % 365) "00" else formatComponent ts.Days "00"
-    let hours = formatComponent ts.Hours "00"
-    let minutes = formatComponent ts.Minutes "00"
-    let seconds = formatComponent ts.Seconds "00"
+    let days = if years.IsSome then formatComponent (ts.Days % 365) else formatComponent ts.Days
+    let hours = formatComponent ts.Hours
+    let minutes = formatComponent ts.Minutes
+    let seconds = formatComponent ts.Seconds
 
     match years, days, hours, minutes, seconds with
     | Some y, Some d,Some h, _, _ -> sprintf "%sy, %sd, %sh" y d h
@@ -30,8 +30,8 @@ let formatTimeSpan (ts: TimeSpan) =
     | None, Some d, None, Some m, _ -> sprintf "%sd, %sm" d m
     | None, Some d, Some h, None, _ -> sprintf "%sd, %sh" d h
     | None, Some d, None, None, _ -> sprintf "%sd" d
-    | None, None, Some h, Some m, Some s -> sprintf "%sh, %sm, %ss" h m s
-    | None, None, Some h, None, Some s -> sprintf "%sh, %ss" h s
+    | None, None, Some h, Some m, Some _ -> sprintf "%sh, %sm" h m
+    | None, None, Some h, None, Some _ -> sprintf "%sh" h
     | None, None, Some h, Some m, None -> sprintf "%sh, %sm" h m
     | None, None, Some h, None, None -> sprintf "%sh" h
     | None, None, None, Some m, Some s -> sprintf "%sm, %ss" m s
