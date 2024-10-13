@@ -133,3 +133,12 @@ module Configuration =
         }
 
         let config = configuration.GetSection("Microsoft").Get<MicrosoftConfig>()
+
+    module Pastebin =
+
+        [<CLIMutable>]
+        type PastebinConfig = {
+            ApiKey: string
+        }
+
+        let config = configuration.GetSection("Pastebin").Get<PastebinConfig>()
