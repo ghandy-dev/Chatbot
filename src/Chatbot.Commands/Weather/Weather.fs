@@ -1,9 +1,9 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module Weather =
 
-    open Chatbot.Commands.Api.Weather
+    open Commands.Api.Weather
     open Types.Weather
     open Google
 

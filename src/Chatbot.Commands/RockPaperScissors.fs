@@ -1,12 +1,12 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module RockPaperScissors =
 
     open System
 
-    open Chatbot.Database
-    open Chatbot.Database.Types.RockPaperScissors
+    open Database
+    open Database.Types.RockPaperScissors
 
     let private shapes = [ "rock" ; "paper" ; "scissors" ]
 

@@ -1,9 +1,9 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module NameColor =
 
-    open TTVSharp.Helix
+    open Twitch.Helix
 
     let namecolor (args: string list) (context: Context) =
         async {

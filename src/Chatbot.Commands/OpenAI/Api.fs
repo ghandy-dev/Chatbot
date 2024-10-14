@@ -1,8 +1,8 @@
-namespace Chatbot.Commands.OpenAI
+namespace Commands.OpenAI
 
 module Api =
 
-    open Chatbot.Configuration
+    open Configuration
     open Types.DallE
     open Types.Gpt
 
@@ -126,7 +126,7 @@ module Api =
                     updatedMessages
 
             let request = {
-                Model = Chatbot.Configuration.OpenAI.config.DefaultModel
+                Model = Configuration.OpenAI.config.DefaultModel
                 Messages = messages
                 MaxTokens = 150
                 n = 1

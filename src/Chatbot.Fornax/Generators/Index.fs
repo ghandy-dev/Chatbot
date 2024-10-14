@@ -1,6 +1,6 @@
 module Pages.Index
 
-open Chatbot.Commands
+open Commands
 open Html
 
 let private generate' (ctx: SiteContents) (page: string) =

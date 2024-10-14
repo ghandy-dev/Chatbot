@@ -1,4 +1,4 @@
-namespace Chatbot.Commands.Types
+namespace Commands.Types
 
 module Weather =
 

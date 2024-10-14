@@ -18,13 +18,13 @@
     <Compile Include="Google.fs" />
     <Compile Include="Twitch.fs" />
     <Compile Include="TokenStore.fs" />
+    <Compile Include="Emotes.fs" />
     <Compile Include="IO.fs" />
     <Compile Include="IRC.fs" />
     <Compile Include="IrcMessageParser.fs" />
     <Compile Include="IrcMessages.fs" />
     <Compile Include="IrcClient.fs" />
     <Compile Include="WebSocketClient.fs" />
-    <Compile Include="RateLimiter.fs" />
     <Compile Include="TwitchChatClient.fs" />
   </ItemGroup>
 

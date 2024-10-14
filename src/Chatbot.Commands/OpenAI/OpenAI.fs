@@ -1,9 +1,9 @@
-namespace Chatbot.Commands.OpenAI
+namespace Commands.OpenAI
 
 [<AutoOpen>]
 module OpenAI =
 
-    open Chatbot.Commands
+    open Commands
     open Api
 
     let private toSize =

@@ -2,7 +2,7 @@ module Dungeon.Player
 
 open System.Text.Json
 
-open Chatbot.Database
+open Database
 open Types
 
 let private incrementKills key map =

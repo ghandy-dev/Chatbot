@@ -1,4 +1,4 @@
-namespace Chatbot.IRC
+namespace IRC
 
 [<RequireQualifiedAccess>]
 module IRC =

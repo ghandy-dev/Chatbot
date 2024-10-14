@@ -1,9 +1,9 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module Vod =
 
-    open TTVSharp.Helix
+    open Twitch.Helix
 
     let vod args =
         async {

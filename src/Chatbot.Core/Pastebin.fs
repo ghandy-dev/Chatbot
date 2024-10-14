@@ -45,7 +45,7 @@ let [<Literal>] private apiUrl = "https://pastebin.com/api"
 
 let private createPasteUrl = $"{apiUrl}/api_post.php"
 
-let private apiKey = Chatbot.Configuration.Pastebin.config.ApiKey
+let private apiKey = Configuration.Pastebin.config.ApiKey
 
 let private post<'T> url bodyContent =
     async {

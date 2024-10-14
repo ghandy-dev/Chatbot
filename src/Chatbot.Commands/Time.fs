@@ -1,4 +1,4 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module Time =

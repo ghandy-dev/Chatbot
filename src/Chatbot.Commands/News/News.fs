@@ -1,10 +1,10 @@
-namespace Chatbot.Commands.News
+namespace Commands.News
 
 [<AutoOpen>]
 module News =
 
-    open Chatbot.Commands
-    open Chatbot.Commands.Api.News
+    open Commands
+    open Commands.Api.News
 
     let news args =
         async {

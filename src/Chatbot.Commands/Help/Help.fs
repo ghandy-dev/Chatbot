@@ -1,4 +1,4 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module Help =
@@ -8,7 +8,7 @@ module Help =
 
 module HelpInfo =
 
-    let commandPrefix = Chatbot.Configuration.Bot.config.CommandPrefix
+    let commandPrefix = Configuration.Bot.config.CommandPrefix
     let example = sprintf "%s %s" commandPrefix
     let exampleArgs = sprintf "%s %s %s" commandPrefix
 

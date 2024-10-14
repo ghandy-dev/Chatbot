@@ -1,10 +1,10 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module LeaveChannel =
 
-    open Chatbot.Database
-    open TTVSharp.Helix
+    open Database
+    open Twitch.Helix
 
     let leaveChannel (args: string list) =
         async {

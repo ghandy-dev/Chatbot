@@ -1,9 +1,9 @@
-namespace Chatbot.Commands.UrbanDictionary
+namespace Commands.UrbanDictionary
 
 module Api =
 
     open Types
-    open Chatbot.Configuration
+    open Configuration
 
     open FsHttp
     open FsHttp.Request

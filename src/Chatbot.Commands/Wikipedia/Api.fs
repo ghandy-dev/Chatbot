@@ -1,9 +1,9 @@
-namespace Chatbot.Commands.Api
+namespace Commands.Api
 
 module Wikipedia =
 
-    open Chatbot.Commands.Types.Wikipedia
-    open Chatbot.Configuration
+    open Commands.Types.Wikipedia
+    open Configuration
 
     open FsHttp
     open FsHttp.Request

@@ -1,4 +1,4 @@
-namespace Chatbot
+namespace Clients
 
 [<AllowNullLiteral>]
 type ITwitchConnection =

@@ -1,12 +1,12 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module JoinChannel =
 
-    open Chatbot.Database
-    open Chatbot.Database.Types.Channels
+    open Database
+    open Database.Types.Channels
 
-    open TTVSharp.Helix
+    open Twitch.Helix
 
     let joinChannel (args: string list) =
         async {

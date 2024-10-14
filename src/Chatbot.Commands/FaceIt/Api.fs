@@ -1,9 +1,9 @@
-namespace Chatbot.Commands.FaceIt
+namespace Commands.FaceIt
 
 module Api =
 
     open Types
-    open Chatbot.Configuration
+    open Configuration
 
     open FsHttp
     open FsHttp.Request

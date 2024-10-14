@@ -1,10 +1,10 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module Alias =
 
-    open Chatbot.Database
-    open Chatbot.Database.Types.Aliases
+    open Database
+    open Database.Types.Aliases
 
     let private add userId alias command =
         async {
@@ -35,7 +35,7 @@ module Alias =
 
     let private get (username: string) alias =
         async {
-            match! TTVSharp.Helix.Users.getUser username with
+            match! Twitch.Helix.Users.getUser username with
             | None -> return Message "User not found"
             | Some user ->
                 match! AliasRepository.get (user.Id |> int) alias with
@@ -56,7 +56,7 @@ module Alias =
 
     let private copy sourceUsername targetUserId alias =
         async {
-            match! TTVSharp.Helix.Users.getUser sourceUsername with
+            match! Twitch.Helix.Users.getUser sourceUsername with
             | None -> return Message "User not found"
             | Some user ->
 
@@ -77,7 +77,7 @@ module Alias =
 
     let private copyPlace sourceUsername targetUserId alias =
         async {
-            match! TTVSharp.Helix.Users.getUser sourceUsername with
+            match! Twitch.Helix.Users.getUser sourceUsername with
             | None -> return Message "User not found"
             | Some user ->
 

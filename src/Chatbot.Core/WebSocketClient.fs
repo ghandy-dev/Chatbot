@@ -1,6 +1,6 @@
-namespace Chatbot
+namespace Clients
 
-open Chatbot.IRC
+open IRC
 
 open System
 open System.Net.WebSockets

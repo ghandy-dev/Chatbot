@@ -1,11 +1,11 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module RandomClip =
 
     open System
 
-    open TTVSharp.Helix
+    open Twitch.Helix
 
     let private getChannel args (context: Context) =
         match context.Source with

@@ -1,4 +1,4 @@
-namespace Chatbot.Commands.FaceIt
+namespace Commands.FaceIt
 
 module Types =
 

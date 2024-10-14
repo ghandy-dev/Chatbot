@@ -1,4 +1,4 @@
-namespace Chatbot.Commands
+namespace Commands
 
 type Source = Whisper of username: string | Channel of channel: string
 

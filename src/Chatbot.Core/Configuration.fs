@@ -1,144 +1,142 @@
-﻿namespace Chatbot
+﻿module Configuration
 
-module Configuration =
+open Microsoft.Extensions.Configuration
 
-    open Microsoft.Extensions.Configuration
+DotEnv.load () |> Async.RunSynchronously
 
-    DotEnv.load () |> Async.RunSynchronously
+type Env =
+    | Dev
+    | Prod
 
-    type Env =
-        | Dev
-        | Prod
+    static member fromString s =
+        match s with
+        | "dev" | "Dev" -> Dev
+        | _ -> Prod
 
-        static member fromString s =
-            match s with
-            | "dev" | "Dev" -> Dev
-            | _ -> Prod
+let configuration =
+    ConfigurationBuilder()
+        .AddEnvironmentVariables()
+        .AddJsonFile("appsettings.json", false, true)
+        .AddEnvironmentVariables()
+        .Build()
 
-    let configuration =
-        ConfigurationBuilder()
-            .AddEnvironmentVariables()
-            .AddJsonFile("appsettings.json", false, true)
-            .AddEnvironmentVariables()
-            .Build()
+module Logging =
 
-    module Logging =
+    [<CLIMutable>]
+    type LoggingConfig = { LogLevel: LogLevel }
+    and LogLevel = { Default: string }
 
-        [<CLIMutable>]
-        type LoggingConfig = { LogLevel: LogLevel }
-        and LogLevel = { Default: string }
+    let config = configuration.GetSection("Logging").Get<LoggingConfig>()
 
-        let config = configuration.GetSection("Logging").Get<LoggingConfig>()
+module ConnectionStrings =
 
-    module ConnectionStrings =
+    [<CLIMutable>]
+    type ConnectionStrings = {
+        Database: string
+        Twitch: string
+    }
 
-        [<CLIMutable>]
-        type ConnectionStrings = {
-            Database: string
-            Twitch: string
-        }
+    let config = configuration.GetSection("ConnectionStrings").Get<ConnectionStrings>()
 
-        let config = configuration.GetSection("ConnectionStrings").Get<ConnectionStrings>()
+module Twitch =
 
-    module Twitch =
+    [<CLIMutable>]
+    type TwitchConfig = {
+        ClientId: string
+        ClientSecret: string
+        RefreshToken: string
+    }
 
-        [<CLIMutable>]
-        type TwitchConfig = {
-            ClientId: string
-            ClientSecret: string
-            RefreshToken: string
-        }
+    let config = configuration.GetSection("Twitch").Get<TwitchConfig>()
 
-        let config = configuration.GetSection("Twitch").Get<TwitchConfig>()
+module Bot =
 
-    module Bot =
+    [<CLIMutable>]
+    type BotConfig = {
+        CommandPrefix: string
+        Capabilities: string array
+        Env: string
+    }
 
-        [<CLIMutable>]
-        type BotConfig = {
-            CommandPrefix: string
-            Capabilities: string array
-            Env: string
-        }
+    let config = configuration.GetSection("BotConfig").Get<BotConfig>()
 
-        let config = configuration.GetSection("BotConfig").Get<BotConfig>()
+    let env =
+        match config.Env with
+        | e when System.String.IsNullOrWhiteSpace e -> Prod
+        | e -> Env.fromString e
 
-        let env =
-            match config.Env with
-            | e when System.String.IsNullOrWhiteSpace e -> Prod
-            | e -> Env.fromString e
+module Reddit =
 
-    module Reddit =
+    [<CLIMutable>]
+    type RedditConfig = {
+        ClientId: string
+        ClientSecret: string
+    }
 
-        [<CLIMutable>]
-        type RedditConfig = {
-            ClientId: string
-            ClientSecret: string
-        }
+    let config = configuration.GetSection("Reddit").Get<RedditConfig>()
 
-        let config = configuration.GetSection("Reddit").Get<RedditConfig>()
+module FaceIt =
 
-    module FaceIt =
+    [<CLIMutable>]
+    type FaceItConfig = { ApiKey: string }
 
-        [<CLIMutable>]
-        type FaceItConfig = { ApiKey: string }
+    let config: FaceItConfig = configuration.GetSection("FaceIt").Get<FaceItConfig>()
 
-        let config: FaceItConfig = configuration.GetSection("FaceIt").Get<FaceItConfig>()
+module OpenAI =
 
-    module OpenAI =
+    [<CLIMutable>]
+    type OpenAiConfig = {
+        ApiKey: string
+        DefaultModel: string
+    }
 
-        [<CLIMutable>]
-        type OpenAiConfig = {
-            ApiKey: string
-            DefaultModel: string
-        }
+    let config = configuration.GetSection("OpenAI").Get<OpenAiConfig>()
 
-        let config = configuration.GetSection("OpenAI").Get<OpenAiConfig>()
+module Nasa =
 
-    module Nasa =
+    [<CLIMutable>]
+    type NasaConfig = {
+        ApiKey: string
+    }
 
-        [<CLIMutable>]
-        type NasaConfig = {
-            ApiKey: string
-        }
+    let config = configuration.GetSection("Nasa").Get<NasaConfig>()
 
-        let config = configuration.GetSection("Nasa").Get<NasaConfig>()
+module Google =
 
-    module Google =
+    [<CLIMutable>]
+    type GoogleConfig = {
+        Geocoding: Geocoding
+        Timezone: Timezone
+    }
 
-        [<CLIMutable>]
-        type GoogleConfig = {
-            Geocoding: Geocoding
-            Timezone: Timezone
-        }
+    and Geocoding = {
+        ApiKey: string
+    }
 
-        and Geocoding = {
-            ApiKey: string
-        }
+    and Timezone = {
+        ApiKey: string
+    }
 
-        and Timezone = {
-            ApiKey: string
-        }
+    let config = configuration.GetSection("Google").Get<GoogleConfig>()
 
-        let config = configuration.GetSection("Google").Get<GoogleConfig>()
+module Microsoft =
 
-    module Microsoft =
+    [<CLIMutable>]
+    type MicrosoftConfig = {
+        Weather: Weather
+    }
 
-        [<CLIMutable>]
-        type MicrosoftConfig = {
-            Weather: Weather
-        }
+    and Weather = {
+        ApiKey: string
+    }
 
-        and Weather = {
-            ApiKey: string
-        }
+    let config = configuration.GetSection("Microsoft").Get<MicrosoftConfig>()
 
-        let config = configuration.GetSection("Microsoft").Get<MicrosoftConfig>()
+module Pastebin =
 
-    module Pastebin =
+    [<CLIMutable>]
+    type PastebinConfig = {
+        ApiKey: string
+    }
 
-        [<CLIMutable>]
-        type PastebinConfig = {
-            ApiKey: string
-        }
-
-        let config = configuration.GetSection("Pastebin").Get<PastebinConfig>()
+    let config = configuration.GetSection("Pastebin").Get<PastebinConfig>()

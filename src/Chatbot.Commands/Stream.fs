@@ -1,11 +1,11 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module Stream =
 
     open System
 
-    open TTVSharp.Helix
+    open Twitch.Helix
 
     let stream args =
         async {

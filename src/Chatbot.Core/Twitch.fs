@@ -1,4 +1,4 @@
-module TTVSharp
+module Twitch
 
 open TTVSharp
 open TTVSharp.Helix
@@ -10,7 +10,7 @@ let toResult (response: IApiResponse<'a>) =
 
 module Helix =
 
-    open Chatbot.Configuration
+    open Configuration
 
     open Microsoft.Extensions.Options
 
@@ -39,6 +39,16 @@ module Helix =
 
         let getClips userId (dateFrom: System.DateTime) (dateTo: System.DateTime) =
             helixApi.Clips.GetClipsAsync(new GetClipsRequestByBroadcasterId(BroadcasterId = userId, StartedAt = dateFrom, EndedAt = dateTo, First = 50)) |> Async.AwaitTask
+            |-> tryGetData
+
+    module Emotes =
+
+        let getGlobalEmotes () =
+            helixApi.Chat.GetGlobalEmotesAsync() |> Async.AwaitTask
+            |-> tryGetData
+
+        let getChannelEmotes channelId =
+            helixApi.Chat.GetChannelEmotesAsync(new GetChannelEmotesRequest(BroadcasterId = channelId)) |> Async.AwaitTask
             |-> tryGetData
 
     module Streams =

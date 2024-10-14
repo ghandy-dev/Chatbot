@@ -1,9 +1,9 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module Channel =
 
-    open TTVSharp.Helix
+    open Twitch.Helix
 
     let channel args =
         async {

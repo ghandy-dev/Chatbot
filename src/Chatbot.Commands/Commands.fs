@@ -1,13 +1,13 @@
-namespace Chatbot.Commands
+namespace Commands
 
-open Chatbot.Configuration
-open Chatbot.Commands
-open Chatbot.Commands.FaceIt
-open Chatbot.Commands.Logs
-open Chatbot.Commands.News
-open Chatbot.Commands.OpenAI
-open Chatbot.Commands.Reddit
-open Chatbot.Commands.UrbanDictionary
+open Configuration
+open Commands
+open Commands.FaceIt
+open Commands.Logs
+open Commands.News
+open Commands.OpenAI
+open Commands.Reddit
+open Commands.UrbanDictionary
 
 module Commands =
 
@@ -25,7 +25,7 @@ module Commands =
     let commandsList =
         [
             Command.createCommand ("addbetween", [ "ab" ], HelpInfo.AddBetween, SyncFunctionWithArgs addBetween, 10000, false)
-            Command.createCommand ("alias", [ $"{Chatbot.Configuration.Bot.config.CommandPrefix}" ], HelpInfo.Alias, AsyncFunctionWithArgsAndContext alias, 5000, false)
+            Command.createCommand ("alias", [ $"{Configuration.Bot.config.CommandPrefix}" ], HelpInfo.Alias, AsyncFunctionWithArgsAndContext alias, 5000, false)
             Command.createCommand ("apod", [], HelpInfo.AstronomyPictureOfTheDay, AsyncFunctionWithArgs apod, 20000, false)
             Command.createCommand ("braille", [], HelpInfo.Braille, AsyncFunctionWithArgs braille, 20000, false)
             Command.createCommand ("calculator", [ "calc" ], HelpInfo.Calculator, SyncFunctionWithArgs calculate, 5000, false)

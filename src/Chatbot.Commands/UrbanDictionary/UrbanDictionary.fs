@@ -1,10 +1,10 @@
-namespace Chatbot.Commands.UrbanDictionary
+namespace Commands.UrbanDictionary
 
 [<AutoOpen>]
 module Reddit =
 
     open Api
-    open Chatbot.Commands
+    open Commands
 
     open System.Text.RegularExpressions
 

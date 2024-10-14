@@ -1,9 +1,9 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module UserId =
 
-    open TTVSharp.Helix
+    open Twitch.Helix
 
     let userId (args: string list) (context: Context) =
         async {

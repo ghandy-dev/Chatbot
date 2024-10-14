@@ -1,4 +1,4 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module Remind =
@@ -6,8 +6,8 @@ module Remind =
     open System
     open System.Text.RegularExpressions
 
-    open Chatbot.Database
-    open Chatbot.Database.Types.Reminders
+    open Database
+    open Database.Types.Reminders
 
     let private whenPattern = @"(in\s*)+((\d+)\s+(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)+?,*\s*)+"
     let private timePattern = @"(\d+)\s+(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)"
@@ -48,7 +48,7 @@ module Remind =
                     let message = Regex.Replace(content, whenPattern, "")
                     let remindIn = remindDateTime - now
 
-                    match! TTVSharp.Helix.Users.getUser user with
+                    match! Twitch.Helix.Users.getUser user with
                     | None -> return Message $"{user} doesn't exist"
                     | Some targetUser ->
                         let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel) message (Some remindDateTime)
@@ -60,7 +60,7 @@ module Remind =
 
     let private parseReminder user message (context: Context) =
         async {
-            match! TTVSharp.Helix.Users.getUser user with
+            match! Twitch.Helix.Users.getUser user with
             | None -> return Message $"{user} doesn't exist or is currently banned"
             | Some targetUser ->
                 let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName None message None

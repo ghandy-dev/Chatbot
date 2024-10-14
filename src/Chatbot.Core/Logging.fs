@@ -1,5 +1,5 @@
 [<RequireQualifiedAccess>]
-module Chatbot.Logging
+module Logging
 
 open System
 open System.Collections.Generic

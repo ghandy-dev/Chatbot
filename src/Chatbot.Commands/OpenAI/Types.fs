@@ -1,4 +1,4 @@
-namespace Chatbot.Commands.OpenAI
+namespace Commands.OpenAI
 
 module Types =
 

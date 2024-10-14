@@ -1,7 +1,7 @@
-module Chatbot.Types
+module Types
 
 open System
-open Chatbot.Commands
+open Commands
 
 type RoomState = {
     Channel: string

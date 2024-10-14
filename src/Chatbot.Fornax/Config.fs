@@ -17,7 +17,7 @@ let config: PageGenerators = {
             Output = Config.NewFileName "index.html"
         }
         yield!
-            Chatbot.Commands.Commands.commandsList |> List.map (fun (command) ->
+            Commands.Commands.commandsList |> List.map (fun (command) ->
                 {
                     Page = command.Name
                     GenerateOutput = Pages.Command.generate siteContents ProjectRoot command.Name

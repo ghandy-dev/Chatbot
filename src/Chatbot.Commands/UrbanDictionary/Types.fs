@@ -1,4 +1,4 @@
-namespace Chatbot.Commands.UrbanDictionary
+namespace Commands.UrbanDictionary
 
 module Types =
 

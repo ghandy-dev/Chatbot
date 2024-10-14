@@ -1,9 +1,9 @@
-namespace Chatbot.Commands.Reddit
+namespace Commands.Reddit
 
 module Api =
 
     open Types
-    open Chatbot.Configuration
+    open Configuration
 
     open FsHttp
     open FsHttp.Request

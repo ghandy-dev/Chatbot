@@ -1,8 +1,7 @@
-﻿namespace Chatbot.Database
+﻿namespace Database
 
 module DungeonRepository =
 
-    open Chatbot
     open DB
     open Types.Dungeon
 

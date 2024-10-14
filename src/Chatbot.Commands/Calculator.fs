@@ -1,4 +1,4 @@
-namespace Chatbot.Commands
+namespace Commands
 
 // https://github.com/stephan-tolksdorf/fparsec/blob/fdd990ad5abe32fd65d926005b4c7bd71dd2384f/Samples/Calculator/calculator.fs
 [<AutoOpen>]

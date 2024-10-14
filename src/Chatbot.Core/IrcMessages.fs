@@ -1,8 +1,8 @@
-namespace Chatbot.IRC
+namespace IRC
 
 module Messages =
 
-    open Chatbot.IRC.Parsing.Types
+    open IRC.Parsing.Types
 
     [<AutoOpen>]
     module Types =

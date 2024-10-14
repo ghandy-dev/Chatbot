@@ -1,4 +1,4 @@
-namespace Chatbot.Commands.Reddit
+namespace Commands.Reddit
 
 module Types =
 

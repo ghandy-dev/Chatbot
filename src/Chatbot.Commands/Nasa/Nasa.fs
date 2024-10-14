@@ -1,12 +1,12 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module Nasa =
 
     open System
 
-    open Chatbot.Commands.Api.Nasa
-    open Chatbot.Commands.Types.Nasa
+    open Commands.Api.Nasa
+    open Commands.Types.Nasa
 
     let private parseApodArgs (args: string list) =
         match args with

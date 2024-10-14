@@ -1,4 +1,4 @@
-﻿namespace Chatbot.Database
+﻿namespace Database
 
 [<RequireQualifiedAccess>]
 module Entities =

@@ -1,8 +1,7 @@
-﻿namespace Chatbot.Database
+﻿namespace Database
 
 module RpsRepository =
 
-    open Chatbot
     open DB
     open Types.RockPaperScissors
 

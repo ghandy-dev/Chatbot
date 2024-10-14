@@ -1,9 +1,8 @@
-module Chatbot.Commands.Handler
+module Commands.Handler
 
-open Chatbot
-open Chatbot.Commands
-open Chatbot.Database
-open Chatbot.Database.Types.Users
+open Commands
+open Database
+open Database.Types.Users
 
 open System
 

@@ -1,9 +1,9 @@
-namespace Chatbot.Commands.Api
+namespace Commands.Api
 
 module Nasa =
 
-    open Chatbot.Commands.Types.Nasa
-    open Chatbot.Configuration
+    open Commands.Types.Nasa
+    open Configuration
 
     open FsHttp
     open FsHttp.Request
@@ -11,7 +11,7 @@ module Nasa =
 
     open System
 
-    let private apiKey = Chatbot.Configuration.Nasa.config.ApiKey
+    let private apiKey = Configuration.Nasa.config.ApiKey
     let private userAgent = configuration.Item("UserAgent")
 
     let [<Literal>] private ApiUrl = "https://api.nasa.gov"

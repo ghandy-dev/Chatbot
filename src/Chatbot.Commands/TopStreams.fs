@@ -1,9 +1,9 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module TopStreams =
 
-    open TTVSharp
+    open Twitch
 
     let topStreams () =
         async {

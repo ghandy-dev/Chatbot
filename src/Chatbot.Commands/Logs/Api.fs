@@ -1,4 +1,4 @@
-namespace Chatbot.Commands.Logs
+namespace Commands.Logs
 
 module Api =
 

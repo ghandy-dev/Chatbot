@@ -87,8 +87,8 @@ type Status =
         | "UNKNOWN_ERROR" -> Some UnknownError
         | _ -> None
 
-let private geocodeApiKeey = Chatbot.Configuration.Google.config.Geocoding.ApiKey
-let private timezoneApiKey = Chatbot.Configuration.Google.config.Timezone.ApiKey
+let private geocodeApiKeey = Configuration.Google.config.Geocoding.ApiKey
+let private timezoneApiKey = Configuration.Google.config.Timezone.ApiKey
 
 let [<Literal>] private  ApiUrl = "https://maps.googleapis.com/maps/api"
 

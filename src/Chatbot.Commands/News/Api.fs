@@ -1,8 +1,8 @@
-namespace Chatbot.Commands.Api
+namespace Commands.Api
 
 module News =
 
-    open Chatbot.Database
+    open Database
 
     open FsHttp
     open FsHttp.Request

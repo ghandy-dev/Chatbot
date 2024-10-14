@@ -1,7 +1,7 @@
 module Loaders.CommandLoader
 
 let private loadCommands =
-    Chatbot.Commands.Commands.commandsList
+    Commands.Commands.commandsList
     |> Seq.map (fun (command) ->
         {
             Title = command.Details.Name

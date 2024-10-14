@@ -1,4 +1,4 @@
-﻿namespace Chatbot.Database
+﻿namespace Database
 
 module DB =
 
@@ -8,10 +8,9 @@ module DB =
     open Dapper
     open Dapper.FSharp.SQLite
 
-    open Chatbot
-    open Chatbot.Database
+    open Database
 
-    let private connectionString = Chatbot.Configuration.ConnectionStrings.config.Database
+    let private connectionString = Configuration.ConnectionStrings.config.Database
 
     OptionTypes.register ()
     DefaultTypeMap.MatchNamesWithUnderscores <- true

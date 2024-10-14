@@ -1,8 +1,7 @@
-﻿namespace Chatbot.Database
+﻿namespace Database
 
 module ChannelRepository =
 
-    open Chatbot
     open DB
     open Types.Channels
 

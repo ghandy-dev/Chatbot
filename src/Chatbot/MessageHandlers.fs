@@ -1,10 +1,9 @@
-module Chatbot.MessageHandlers
+module MessageHandlers
 
-open Chatbot
-open Chatbot.Commands
-open Chatbot.Commands.Handler
-open Chatbot.IRC.Messages
-open Chatbot.Types
+open Commands
+open Commands.Handler
+open IRC.Messages
+open Types
 
 let roomStates = new System.Collections.Concurrent.ConcurrentDictionary<string, RoomState>()
 let commandPrefix = Configuration.Bot.config.CommandPrefix

@@ -1,10 +1,10 @@
-namespace Chatbot.Commands.Logs
+namespace Commands.Logs
 
 [<AutoOpen>]
 module Logs =
 
     open Api
-    open Chatbot.Commands
+    open Commands
 
     let randomLine args context =
         async {

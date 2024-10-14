@@ -1,4 +1,4 @@
-namespace Chatbot
+namespace IRC
 
 open System
 open System.IO
@@ -7,8 +7,11 @@ open System.Net.Security
 
 type IrcClient(host: string, port: int) =
 
-    let [<Literal>] WriterBufferSize = 1024
-    let [<Literal>] ReaderBufferSize = 10240
+    [<Literal>]
+    let WriterBufferSize = 1024
+
+    [<Literal>]
+    let ReaderBufferSize = 10240
 
     let socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
     let mutable reader: TextReader = null
@@ -17,10 +20,7 @@ type IrcClient(host: string, port: int) =
     let mutable isConnected = true
 
     let connected () =
-        if isConnected = false then
-            false
-        else
-            socket.Connected
+        if isConnected = false then false else socket.Connected
 
     let connect cancellationToken =
         async {
@@ -61,7 +61,7 @@ type IrcClient(host: string, port: int) =
             do! flush ()
         }
 
-    interface ITwitchConnection with
+    interface Clients.ITwitchConnection with
         member _.Connected = connected ()
 
         member _.ConnectAsync (cancellationToken) = connect cancellationToken
@@ -73,11 +73,11 @@ type IrcClient(host: string, port: int) =
         member _.AuthenticateAsync (user: string, accessToken: string, capabilities: string array) =
             async {
                 if (capabilities.Length > 0) then
-                    do! writeLine($"""CAP REQ :{String.concat " " capabilities}""")
+                    do! writeLine ($"""CAP REQ :{String.concat " " capabilities}""")
 
-                do! writeLine($"PASS oauth:{accessToken}")
-                do! writeLine($"NICK {user}")
-                do! flush()
+                do! writeLine ($"PASS oauth:{accessToken}")
+                do! writeLine ($"NICK {user}")
+                do! flush ()
             }
 
     interface IDisposable with

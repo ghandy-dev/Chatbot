@@ -1,9 +1,9 @@
-namespace Chatbot.Commands
+namespace Commands
 
 [<AutoOpen>]
 module Wikipedia =
 
-    open Chatbot.Commands.Api.Wikipedia
+    open Commands.Api.Wikipedia
 
     let wiki args =
         async {

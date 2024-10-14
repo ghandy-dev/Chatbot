@@ -1,8 +1,8 @@
-namespace Chatbot.Commands.Api
+namespace Commands.Api
 
 module Weather =
 
-    open Chatbot.Commands.Types.Weather
+    open Commands.Types.Weather
 
     open FsHttp
     open FsHttp.Request
@@ -10,7 +10,7 @@ module Weather =
 
     let [<Literal>] private  apiUrl = "https://atlas.microsoft.com/weather"
 
-    let private apiKey = Chatbot.Configuration.Microsoft.config.Weather.ApiKey
+    let private apiKey = Configuration.Microsoft.config.Weather.ApiKey
 
     let private apiVersion = "api-version=1.1"
 

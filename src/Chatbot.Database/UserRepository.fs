@@ -1,8 +1,7 @@
-﻿namespace Chatbot.Database
+﻿namespace Database
 
 module UserRepository =
 
-    open Chatbot
     open DB
     open Types.Users
 

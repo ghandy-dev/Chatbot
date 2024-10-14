@@ -1,11 +1,11 @@
-namespace Chatbot.Commands.Reddit
+namespace Commands.Reddit
 
 [<AutoOpen>]
 module Reddit =
 
     open Api
-    open Chatbot.Authorization
-    open Chatbot.Commands
+    open Authorization
+    open Commands
 
     let redditKeys = [ "sort" ; "flair" ]
 

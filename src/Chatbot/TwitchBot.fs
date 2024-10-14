@@ -1,15 +1,15 @@
-module Chatbot.Bot
+module Bot
 
-open Chatbot
-open Chatbot.Commands
-open Chatbot.Database
-open Chatbot.IRC
-open Chatbot.IRC.Messages.Types
-open Chatbot.MessageHandlers
-open Chatbot.Types
+open Commands
+open Clients
+open Database
+open IRC
+open IRC.Messages.Types
+open MessageHandlers
+open Types
 
 open Authorization
-open TTVSharp
+open Twitch
 
 open System
 

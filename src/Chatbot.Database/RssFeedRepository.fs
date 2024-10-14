@@ -1,8 +1,7 @@
-﻿namespace Chatbot.Database
+﻿namespace Database
 
 module RssFeedRepository =
 
-    open Chatbot
     open DB
     open Types.News
 

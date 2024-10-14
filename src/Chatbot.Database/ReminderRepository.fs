@@ -1,8 +1,7 @@
-﻿namespace Chatbot.Database
+﻿namespace Database
 
 module ReminderRepository =
 
-    open Chatbot
     open DB
     open Types.Reminders
 
