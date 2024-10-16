@@ -18,12 +18,19 @@ module Remind =
             match duration, timeComp.ToLower() with
             | d, "year"
             | d, "years" -> dateTime.AddYears(d)
+            | d, "month"
             | d, "months" -> dateTime.AddMonths(d)
+            | d, "day"
             | d, "days" -> dateTime.AddDays(d)
+            | d, "hour"
             | d, "hours" -> dateTime.AddHours(d)
+            | d, "minute"
             | d, "minutes"
+            | d, "min"
             | d, "mins" -> dateTime.AddMinutes(d)
+            | d, "second"
             | d, "seconds"
+            | d, "sec"
             | d, "secs" -> dateTime.AddSeconds(d)
             | _ -> dateTime
 
