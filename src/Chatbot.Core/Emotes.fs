@@ -382,22 +382,22 @@ type EmoteService() =
             match emoteProvider with
             | EmoteProvider.Twitch ->
                 let! emotes =  Twitch.channelEmotes channelId
-                match this.ChannelEmotes.TryGetValue(channelId) with
-                | true, e -> this.ChannelEmotes[channelId] <- { e with Twitch = emotes }
+                match this.ChannelEmotes |> ConcurrentDictionary.tryGetValue channelId with
+                | Some e -> this.ChannelEmotes[channelId] <- { e with Twitch = emotes }
                 | _ -> ()
             | EmoteProvider.Bttv ->
                 let! emotes =  Bttv.channelEmotes channelId
-                match this.ChannelEmotes.TryGetValue(channelId) with
-                | true, e -> this.ChannelEmotes[channelId] <- { e with Bttv = emotes }
+                match this.ChannelEmotes |> ConcurrentDictionary.tryGetValue channelId with
+                | Some e -> this.ChannelEmotes[channelId] <- { e with Bttv = emotes }
                 | _ -> ()
             | EmoteProvider.Ffz ->
                 let! emotes =  Ffz.channelEmotes channelId
-                match this.ChannelEmotes.TryGetValue(channelId) with
-                | true, e -> this.ChannelEmotes[channelId] <- { e with Ffz = emotes }
+                match this.ChannelEmotes |> ConcurrentDictionary.tryGetValue channelId with
+                | Some e -> this.ChannelEmotes[channelId] <- { e with Ffz = emotes }
                 | _ -> ()
             | EmoteProvider.SevenTv ->
                 let! emotes =  SevenTv.channelEmotes channelId
-                match this.ChannelEmotes.TryGetValue(channelId) with
-                | true, e -> this.ChannelEmotes[channelId] <- { e with SevenTv = emotes }
+                match this.ChannelEmotes |> ConcurrentDictionary.tryGetValue channelId with
+                | Some e -> this.ChannelEmotes[channelId] <- { e with SevenTv = emotes }
                 | _ -> ()
         }
