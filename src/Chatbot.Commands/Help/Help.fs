@@ -197,16 +197,6 @@ Fight an opponent to earn gold:
 """
         }
 
-    let RandomEmote =
-        {
-            Name = "Random Emote"
-            Description = "Get a random avaiable emote (globally and/or based on the current channel)"
-            ExampleUsage = $"""
-Get a random emote (global or channel emote from Twitch / BTTV / FFZ / 7TV)
-{exampleArgs "randomemote"}
-"""
-        }
-
     let Encode =
         {
             Name = "Encode"
@@ -386,6 +376,16 @@ Valid periods are:
 """
         }
 
+    let RandomEmote =
+        {
+            Name = "Random Emote"
+            Description = "Get a random avaiable emote (globally and/or based on the current channel)"
+            ExampleUsage = $"""
+Get a random emote (global or channel emote from Twitch / BTTV / FFZ / 7TV)
+{exampleArgs "randomemote"}
+"""
+        }
+
     let RandomLine =
         {
             Name = "Random Line"
@@ -423,6 +423,30 @@ Get a trending reddit post based sorted by; "top" / "hot" / "best"
 (top gets this weeks top posts)
 {exampleArgs "reddit" "sort:<sorting> <subreddit>"}
 {exampleArgs "reddit" "sort:top shitposting"}
+"""
+        }
+
+    let RefreshChannelEmotes =
+        {
+            Name = "Refresh Channel Emotes"
+            Description = "Refresh the cached channel emotes for one of the available emote providers"
+            ExampleUsage = $"""
+Refresh global emotes.
+{exampleArgs "rce" "<emote provider>"}
+{exampleArgs "rce" "twitch"}
+{exampleArgs "rce" "bttv"}
+"""
+        }
+
+    let RefreshGlobalEmotes =
+        {
+            Name = "Refresh Global Emotes"
+            Description = "Refresh the cached global emotes for one of the available emote providers"
+            ExampleUsage = $"""
+Refresh global emotes.
+{exampleArgs "rge" "<emote provider>"}
+{exampleArgs "rge" "twitch"}
+{exampleArgs "rge" "bttv"}
 """
         }
 

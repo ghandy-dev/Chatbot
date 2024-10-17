@@ -110,6 +110,16 @@ let getChannelEmotes channels =
              do! emoteService.RefreshChannelEmotes channel
     }
 
+let refreshGlobalEmotes emoteProvider  =
+    async {
+        do! emoteService.RefreshGlobalEmotes emoteProvider
+    }
+
+let refreshChannelEmotes channelId emoteProvider =
+    async {
+        do! emoteService.RefreshChannelEmotes (channelId, emoteProvider)
+    }
+
 let chatAgent (twitchChatClient: TwitchChatClient) cancellationToken =
     new MailboxProcessor<ClientRequest>(
         (fun mb ->
@@ -134,8 +144,12 @@ let chatAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                             | None -> Logging.info "Unable to send whisper. Couldn't retrieve access token for Twitch API."
                             | Some token -> do! twitchChatClient.WhisperAsync(userId, message, token)
                         | SendRawIrcMessage msg -> do! twitchChatClient.SendAsync(IRC.Command.Raw msg)
-                        | BotCommand(JoinChannel channel) -> do! twitchChatClient.SendAsync(IRC.Command.Join channel)
-                        | BotCommand(LeaveChannel channel) -> do! twitchChatClient.SendAsync(IRC.Command.Part channel)
+                        | BotCommand command ->
+                            match command with
+                            | JoinChannel channel -> do! twitchChatClient.SendAsync(IRC.Command.Join channel)
+                            | LeaveChannel channel -> do! twitchChatClient.SendAsync(IRC.Command.Part channel)
+                            | RefreshGlobalEmotes provider -> do! refreshGlobalEmotes provider
+                            | RefreshChannelEmotes(channelId, provider) -> do! refreshChannelEmotes channelId provider
                         | Reconnect ->
                             Logging.info "Twitch servers requested we reconnect..."
                             do! reconnect()
