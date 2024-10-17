@@ -15,8 +15,8 @@ module Helix =
     open Microsoft.Extensions.Options
 
     let private selectHelix = fun response -> response |> Result.bind (fun r -> Ok (r :> HelixResponse<_>).Data)
-    let private tryGetData (response: IApiResponse<'a>) = toResult response |> selectHelix
-    let private tryHead (response: IApiResponse<'a>) = tryGetData response |> Result.toOption |> Option.bind Seq.tryHead
+    let private tryGetData (response: IApiResponse<'a>) = toResult response |> selectHelix |> Result.toOption
+    let private tryHead response = tryGetData response |> Option.bind Seq.tryHead
 
     let private options =
         Options.Create<HelixApiOptions>(new HelixApiOptions(ClientId = Twitch.config.ClientId, ClientSecret = Twitch.config.ClientSecret))
@@ -67,9 +67,13 @@ module Helix =
             helixApi.Users.GetUsersAsync(new GetUsersRequest(Logins = [ username ])) |> Async.AwaitTask
             |-> tryHead
 
-        let getUsers usernames =
+        let getUsersByUsername usernames =
             helixApi.Users.GetUsersAsync(new GetUsersRequest(Logins = usernames)) |> Async.AwaitTask
-            |-> tryHead
+            |-> tryGetData
+
+        let getUsersById userIds =
+            helixApi.Users.GetUsersAsync(new GetUsersRequest(Ids = userIds)) |> Async.AwaitTask
+            |-> tryGetData
 
         let getAccessTokenUser accessToken =
             helixApi.Users.GetUsersAsync(accessToken) |> Async.AwaitTask

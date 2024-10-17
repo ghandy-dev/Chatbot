@@ -3,16 +3,16 @@ module MessageHandlers
 open Commands
 open Commands.Handler
 open IRC.Messages
+open State
 open Types
 
-let roomStates = new System.Collections.Concurrent.ConcurrentDictionary<string, RoomState>()
 let commandPrefix = Configuration.Bot.config.CommandPrefix
 
 let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProcessor<ClientRequest>) =
     async {
         match msg.Message.StartsWith(commandPrefix) with
         | true ->
-            let! response = safeHandleCommand msg.UserId msg.Username (Channel msg.Channel) msg.Message[1..]
+            let! response = safeHandleCommand msg.UserId msg.Username (Channel channelStates[msg.Channel]) msg.Message[1..]
 
             match response with
             | Some commandOutcome ->
@@ -49,7 +49,7 @@ let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProces
     }
 
 let private roomStateMessageHandler (roomStateMsg: Types.RoomStateMessage) =
-    match roomStates.TryGetValue roomStateMsg.RoomId with
+    match channelStates.TryGetValue roomStateMsg.RoomId with
     | false, _ ->
         let roomState =
             RoomState.create (
@@ -62,7 +62,7 @@ let private roomStateMessageHandler (roomStateMsg: Types.RoomStateMessage) =
                 roomStateMsg.SubsOnly
             )
 
-        roomStates[roomStateMsg.RoomId] <- roomState
+        channelStates[roomStateMsg.Channel] <- roomState
     | true, roomState ->
         let updatedRoomState = {
             roomState with
@@ -73,7 +73,7 @@ let private roomStateMessageHandler (roomStateMsg: Types.RoomStateMessage) =
                 SubsOnly = roomStateMsg.SubsOnly |?? roomState.SubsOnly
         }
 
-        roomStates[roomStateMsg.RoomId] <- updatedRoomState
+        channelStates[roomStateMsg.RoomId] <- updatedRoomState
 
 let private handleIrcMessage msg (mb: MailboxProcessor<_>) =
     async {

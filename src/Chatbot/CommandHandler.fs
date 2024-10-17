@@ -3,11 +3,9 @@ module Commands.Handler
 open Commands
 open Database
 open Database.Types.Users
+open State
 
 open System
-
-let private userCommandCooldowns =
-    new Collections.Concurrent.ConcurrentDictionary<(User * string), DateTime>()
 
 let private applyFunction =
     function
@@ -22,7 +20,7 @@ let private getUser (userId: string) username =
     async {
         match! UserRepository.getByUserId (userId |> int) with
         | None ->
-            let user = (User.create (userId |> int) username)
+            let user = User.create (userId |> int) username
             UserRepository.add user |> Async.Ignore |> ignore
             return user
         | Some user -> return user
@@ -45,8 +43,9 @@ let private parseCommandAndParameters (message: string) =
     match
         message.Replace("\U000e0000", "")
         |> fun m -> m.Split(" ", StringSplitOptions.RemoveEmptyEntries)
-        |> List.ofArray with
-    | [] -> failwith "No command?"
+        |> List.ofArray
+    with
+    | [] -> failwith "Empty message, expected command"
     | [ command ] -> command, []
     | command :: parameters -> command, parameters
 
@@ -55,6 +54,11 @@ let rec private handleCommand userId username source message =
         let commandName, parameters = parseCommandAndParameters message
 
         let! user = getUser userId username
+
+        let channel =
+            match source with
+            | Channel c -> Some c
+            | Whisper _ -> None
 
         match Map.tryFind commandName Commands.commands with
         | None -> return None
@@ -67,7 +71,20 @@ let rec private handleCommand userId username source message =
                 else
                     let! response =
                         async {
-                            let context = Context.createContext userId username user.IsAdmin source
+                            let context =
+                                Context.createContext
+                                    userId
+                                    username
+                                    user.IsAdmin
+                                    source
+                                    { GlobalEmotes = emoteService.GlobalEmotes
+                                      ChannelEmotes = channel
+                                        |> Option.bind (fun c ->
+                                            emoteService.ChannelEmotes
+                                            |> ConcurrentDictionary.tryGetValue c.RoomId
+                                            |> Option.orElse (Some Emotes.Emotes.empty
+                                        )
+                                    )}
 
                             match! executeCommand command parameters context with
                             | Message message -> return Some <| (Message <| formatChatMessage message)
@@ -77,7 +94,7 @@ let rec private handleCommand userId username source message =
 
                                 match! handleCommand userId username source formattedCommand with
                                 | None -> return None
-                                | Some(response) -> return Some response
+                                | Some response -> return Some response
                             | Pipe commands ->
                                 let rec executePipe (acc: string) commands =
                                     match commands with

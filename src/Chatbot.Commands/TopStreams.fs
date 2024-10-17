@@ -8,8 +8,8 @@ module TopStreams =
     let topStreams () =
         async {
             match! Helix.Streams.getStreams 10 with
-            | Error err -> return Message err
-            | Ok streams ->
+            | None -> return Message "Twitch API error"
+            | Some streams ->
                 match streams |> List.ofSeq with
                 | [] -> return Message "No one is streaming!"
                 | streams ->

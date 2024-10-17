@@ -6,6 +6,8 @@
 
   <ItemGroup>
     <Compile Include="Types.fs" />
+    <Compile Include="State.fs" />
+    <Compile Include="CommandHandler.fs" />
     <Compile Include="MessageHandlers.fs" />
     <Compile Include="TwitchBot.fs" />
     <Compile Include="Program.fs" />

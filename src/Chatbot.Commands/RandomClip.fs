@@ -15,7 +15,7 @@ module RandomClip =
             | _ -> Error "You must specify a channel if using this command in whispers"
         | Channel channel ->
             match args with
-            | [] -> Ok channel
+            | [] -> Ok channel.Channel
             | channel :: _ -> Ok channel
 
     let private keys = [ "period" ]
@@ -46,8 +46,9 @@ module RandomClip =
                 getChannel args context
                 |> Async.create
                 |> Result.bindAsync (fun username -> Users.getUser username |-> Result.fromOption "User not found")
-                |> Result.bindAsync (fun user -> Clips.getClips user.Id dateFrom dateTo)
+                |> Result.bindAsync (fun user -> Clips.getClips user.Id dateFrom dateTo |> Result.fromOptionAsync "Twitch API error")
             with
+            | Error err -> return Message err
             | Ok clips ->
                 match clips |> List.ofSeq with
                 | [] -> return Message "No clips found"
@@ -55,5 +56,4 @@ module RandomClip =
                     let clip = clips |> List.randomChoice
 
                     return Message $""""{clip.Title}" ({clip.ViewCount.ToString("N0")} views, {clip.CreatedAt.ToShortDateString()}) {clip.Url}"""
-            | Error err -> return Message err
         }

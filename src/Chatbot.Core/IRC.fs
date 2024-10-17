@@ -11,7 +11,7 @@ module IRC =
         | Pong of message: string
         | Part of channel: string
         | Join of channel: string
-        | JoinM of channels: string list
+        | JoinM of channels: string seq
         | Raw of string
 
         static member ToString =

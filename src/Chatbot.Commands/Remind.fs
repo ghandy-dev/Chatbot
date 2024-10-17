@@ -58,7 +58,7 @@ module Remind =
                     match! Twitch.Helix.Users.getUser user with
                     | None -> return Message $"{user} doesn't exist"
                     | Some targetUser ->
-                        let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel) message (Some remindDateTime)
+                        let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some remindDateTime)
                         let targetUsername = if targetUser.Id = context.UserId then "you" else $"@{targetUser.DisplayName}"
                         match! ReminderRepository.add reminder with
                         | DatabaseResult.Success id -> return Message $"(ID: {id}) I will remind {targetUsername} in {formatTimeSpan remindIn}"

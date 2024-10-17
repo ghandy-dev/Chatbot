@@ -1,14 +1,14 @@
 module Bot
 
+open Authorization
 open Commands
 open Clients
 open Database
 open IRC
 open IRC.Messages.Types
 open MessageHandlers
+open State
 open Types
-
-open Authorization
 open Twitch
 
 open System
@@ -23,7 +23,21 @@ let getAccessTokenUser () =
     }
 
 let getChannelJoinList () =
-    async { return! ChannelRepository.getAll () |-> List.ofSeq |-> List.map (fun c -> c.ChannelName) }
+    async {
+        let! channels = ChannelRepository.getAll ()
+
+        match!
+            channels
+            |> Seq.map (fun c -> c.ChannelId)
+            |> Async.create
+            |> Async.bind Twitch.Helix.Users.getUsersById
+        with
+        | None ->
+            Logging.error "Twitch API error, falling back on database channel names" (new Exception())
+            return channels |> Seq.map (fun c -> c.ChannelId, c.ChannelName)
+        | Some channels ->
+            return channels |> Seq.map (fun u -> u.Id, u.Login)
+    }
 
 let connectionConfig =
     let uri = new Uri(Configuration.ConnectionStrings.config.Twitch)
@@ -85,10 +99,15 @@ let reminderAgent (twitchChatClient: TwitchChatClient) =
         loop ()
     )
 
-let joinChannels (twitchChatClient: TwitchChatClient) =
+let joinChannels (twitchChatClient: TwitchChatClient) channels =
     async {
-        let! channels = getChannelJoinList ()
         do! twitchChatClient.SendAsync(IRC.JoinM channels)
+    }
+
+let getChannelEmotes channels =
+    async {
+        for channel in channels do
+             do! emoteService.RefreshChannelEmotes channel
     }
 
 let chatAgent (twitchChatClient: TwitchChatClient) cancellationToken =
@@ -99,7 +118,8 @@ let chatAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                 let reconnect () =
                     async {
                             do! twitchChatClient.ReconnectAsync(cancellationToken)
-                            do! joinChannels (twitchChatClient)
+                            let! channels = getChannelJoinList ()
+                            do! joinChannels twitchChatClient (channels |> Seq.map snd)
                     }
 
                 let rec loop () =
@@ -146,6 +166,7 @@ let run (cancellationToken: Threading.CancellationToken) =
         let reminderAgent = reminderAgent twitchChatClient
 
         twitchChatClient.MessageReceived.Subscribe(fun messages -> handleMessages messages chatAgent |> Async.Start) |> ignore
+
         twitchChatClient.MessageReceived
         |> Event.filter (fun messages ->
             messages
@@ -166,7 +187,11 @@ let run (cancellationToken: Threading.CancellationToken) =
         |> ignore
 
         do! twitchChatClient.StartAsync(cancellationToken)
-        do! joinChannels(twitchChatClient)
+
+        let! channels = getChannelJoinList ()
+        do! joinChannels twitchChatClient (channels |> Seq.map snd)
+        do! emoteService.RefreshGlobalEmotes ()
+        do! getChannelEmotes (channels |> Seq.map fst)
 
         chatAgent.Start()
         reminderAgent.Start()

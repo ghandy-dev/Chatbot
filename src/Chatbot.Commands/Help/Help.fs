@@ -197,6 +197,16 @@ Fight an opponent to earn gold:
 """
         }
 
+    let RandomEmote =
+        {
+            Name = "Random Emote"
+            Description = "Get a random avaiable emote (globally and/or based on the current channel)"
+            ExampleUsage = $"""
+Get a random emote (global or channel emote from Twitch / BTTV / FFZ / 7TV)
+{exampleArgs "randomemote"}
+"""
+        }
+
     let Encode =
         {
             Name = "Encode"

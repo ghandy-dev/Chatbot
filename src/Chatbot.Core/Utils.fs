@@ -196,3 +196,13 @@ module KeyValueParser =
         let values = matches |> List.choose tryParseKeyValuePair |> Map.ofList
 
         values
+
+
+module ConcurrentDictionary =
+
+    open System.Collections.Concurrent
+
+    let tryGetValue key (dict: ConcurrentDictionary<_,_>) =
+        match dict.TryGetValue key with
+        | false, _ -> None
+        | true, value -> Some value
