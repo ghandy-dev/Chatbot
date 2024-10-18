@@ -78,9 +78,7 @@ let private getFromJsonAsync<'T> url =
             |> sendAsync
 
         match response |> toResult with
-        | Error err ->
-            Logging.error $"Emote API HTTP error {err.statusCode |> int} {err.statusCode}" (new System.Exception())
-            return None
+        | Error _ -> return None
         | Ok res -> return! res |> deserializeJsonAsync<'T> |-> Some
     }
 
@@ -89,9 +87,7 @@ module Twitch =
     let globalEmotes () =
         async {
             match! Twitch.Helix.Emotes.getGlobalEmotes () with
-            | None ->
-                Logging.error "Twitch Emote API error" (new System.Exception())
-                return Map.empty
+            | None -> return Map.empty
             | Some emotes ->
                 return
                     emotes
@@ -107,9 +103,7 @@ module Twitch =
     let channelEmotes channelId =
         async {
             match! Twitch.Helix.Emotes.getChannelEmotes channelId with
-            | None ->
-                Logging.error "Twitch Emote API error" (new System.Exception())
-                return Map.empty
+            | None -> return Map.empty
             | Some emotes ->
                 return
                     emotes
