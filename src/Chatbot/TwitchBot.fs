@@ -65,7 +65,7 @@ let reminderAgent (twitchChatClient: TwitchChatClient) =
                         let reminderMessage = $"@{reminder.TargetUsername}, reminder from {sender} ({formatTimeSpan ts} ago): {reminder.Message}" |> formatChatMessage
                         do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(reminder.Channel, reminderMessage))
 
-                    do! Async.Sleep(1000)
+                    do! Async.Sleep(250)
                     mb.Post CheckReminders
                 | UserTyped(channel, userId, username) ->
                     let! reminderCount = ReminderRepository.getPendingReminderCount userId
