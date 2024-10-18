@@ -3,9 +3,11 @@ namespace Commands
 [<AutoOpen>]
 module Pipe =
 
+    let pipeSeperator = "|"
+
     let pipe args =
         let recombined = String.concat " " args
-        let commands = recombined.Split("|") |> List.ofArray
+        let commands = recombined.Split(pipeSeperator) |> List.ofArray
 
         match commands with
         | []

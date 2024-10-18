@@ -6,6 +6,8 @@
 
   <ItemGroup>
     <Compile Include="Types.fs" />
+    <Compile Include="Pipe.fs" />
+    <Compile Include="Alias.fs" />
     <Compile Include="Logs/Api.fs" />
     <Compile Include="Logs/Logs.fs" />
     <Compile Include="Help/Help.fs" />
@@ -65,8 +67,6 @@
     <Compile Include="TopStreams.fs" />
     <Compile Include="AddBetween.fs" />
     <Compile Include="Remind.fs" />
-    <Compile Include="Pipe.fs" />
-    <Compile Include="Alias.fs" />
     <Compile Include="Commands.fs" />
   </ItemGroup>
 

@@ -9,12 +9,13 @@ open System
 
 let private applyFunction =
     function
-    | SyncFunction f -> fun _ _ -> async { return f () }
-    | SyncFunctionWithArgs f -> fun args _ -> async { return f args }
-    | SyncFunctionWithArgsAndContext f -> fun args ctx -> async { return f args ctx }
-    | AsyncFunction f -> fun _ _ -> f ()
-    | AsyncFunctionWithArgs f -> fun args _ -> f args
-    | AsyncFunctionWithArgsAndContext f -> fun args ctx -> f args ctx
+    | S f -> fun _ _ _ -> async { return f () }
+    | SA f -> fun args _ _ -> async { return f args }
+    | SAC f -> fun args ctx _ -> async { return f args ctx }
+    | A f -> fun _ _ _ -> f ()
+    | AA f -> fun args _ _ -> f args
+    | AAC f -> fun args ctx _ -> f args ctx
+    | AACM f -> fun args ctx cmd -> f args ctx cmd
 
 let private getUser (userId: string) username =
     async {
@@ -35,7 +36,7 @@ let private cooldownExpired user (command: Command) =
 
 let private executeCommand command parameters context =
     async {
-        let! response = applyFunction command.Execute parameters context
+        let! response = applyFunction command.Execute parameters context Commands.commands
         return response
     }
 

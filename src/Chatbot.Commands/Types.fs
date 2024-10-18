@@ -78,20 +78,15 @@ type CommandResult =
 type Parameters = string list
 
 type CommandFunction =
-    | SyncFunction of (unit -> CommandResult)
-    | SyncFunctionWithArgs of (Parameters -> CommandResult)
-    | SyncFunctionWithArgsAndContext of (Parameters -> Context -> CommandResult)
-    | AsyncFunction of (unit -> Async<CommandResult>)
-    | AsyncFunctionWithArgs of (Parameters -> Async<CommandResult>)
-    | AsyncFunctionWithArgsAndContext of (Parameters -> Context -> Async<CommandResult>)
+    | S of (unit -> CommandResult)                                                              // SyncFunction
+    | SA of (Parameters -> CommandResult)                                                       // SyncFunctionWithArgs
+    | SAC of (Parameters -> Context -> CommandResult)                                           // SyncFunctionWithArgsAndContext
+    | A of (unit -> Async<CommandResult>)                                                       // AsyncFunction
+    | AA of (Parameters -> Async<CommandResult>)                                                // AsyncFunctionWithArgs
+    | AAC of (Parameters -> Context -> Async<CommandResult>)                                    // AsyncFunctionWithArgsAndContext
+    | AACM of (Parameters -> Context -> Map<string, Command> -> Async<CommandResult>)           // AsyncFunctionWithArgsAndContextAndCommands
 
-type Details = {
-    Name: string
-    Description: string
-    ExampleUsage: string
-}
-
-type Command = {
+and Command = {
     Name: string
     Aliases: string list
     Details: Details
@@ -108,3 +103,9 @@ type Command = {
         Cooldown = cooldown
         AdminOnly = adminOnly
     }
+
+and Details = {
+    Name: string
+    Description: string
+    ExampleUsage: string
+}

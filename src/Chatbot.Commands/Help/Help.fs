@@ -5,7 +5,6 @@ module Help =
 
     let help () = Message "See https://ghandy-dev.github.io/Chatbot/ for a list of commands"
 
-
 module HelpInfo =
 
     let commandPrefix = Configuration.Bot.config.CommandPrefix
@@ -336,7 +335,7 @@ Custom delimiter:
             Name = "Pipe"
             Description = "Pipe together 2 or more commands, taking the result from the previous command, and sending it to the next."
             ExampleUsage = $"""
-Commands must be delimited by a "|" character
+Commands must be delimited by a "{pipeSeperator}" character
 
 {exampleArgs "pipe" "<command> | <command> | ..."}
 {exampleArgs "pipe" "pick one two three | texttransform uppercase"}

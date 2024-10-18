@@ -6,23 +6,45 @@ module Alias =
     open Database
     open Database.Types.Aliases
 
-    let private add userId alias command =
+    let private validateCommand (command: string list) (commands: Map<string, _>) =
+        let aliasCommands =
+            command
+            |> String.concat " "
+            |> fun s -> s.Split(pipeSeperator)
+            |> fun a ->
+                a |> Array.map (fun s -> s.Split(" ", System.StringSplitOptions.TrimEntries ||| System.StringSplitOptions.RemoveEmptyEntries) |> Array.tryHead) |> Array.choose id
+
+        match aliasCommands.Length with
+        | 0 -> false
+        | _ ->
+            match aliasCommands |> Array.exists (fun ac -> commands |> Map.containsKey ac |> not) with
+            | true -> false
+            | false -> true
+
+
+    let private add userId alias command commands =
         async {
-            match! AliasRepository.get (userId |> int) alias with
-            | Some _ -> return Message $"Alias {alias} already exists"
-            | None ->
-                match! AliasRepository.add (Alias.create (userId |> int) alias (String.concat " " command)) with
-                | DatabaseResult.Failure -> return Message "Error occured trying to add alias"
-                | DatabaseResult.Success 0 -> return Message $"You already have alias \"{alias}\""
-                | DatabaseResult.Success _ -> return Message $"Alias \"{alias}\" successfully added"
+            match validateCommand command commands with
+            | false -> return Message "Invalid command definition"
+            | true ->
+                match! AliasRepository.get (userId |> int) alias with
+                | Some _ -> return Message $"Alias {alias} already exists"
+                | None ->
+                    match! AliasRepository.add (Alias.create (userId |> int) alias (String.concat " " command)) with
+                    | DatabaseResult.Failure -> return Message "Error occured trying to add alias"
+                    | DatabaseResult.Success 0 -> return Message $"You already have alias \"{alias}\""
+                    | DatabaseResult.Success _ -> return Message $"Alias \"{alias}\" successfully added"
         }
 
-    let private update userId alias command =
+    let private update userId alias command commands =
         async {
-            match! AliasRepository.update (Alias.create (userId |> int) alias (String.concat " " command)) with
-            | DatabaseResult.Failure -> return Message "Error occurred trying to update alias"
-            | DatabaseResult.Success 0 -> return Message $"You don't have the alias \"{alias}\""
-            | DatabaseResult.Success _ -> return Message $"Alias \"{alias}\" successfully updated"
+            match validateCommand command commands with
+            | false -> return Message "Invalid command definition"
+            | true ->
+                match! AliasRepository.update (Alias.create (userId |> int) alias (String.concat " " command)) with
+                | DatabaseResult.Failure -> return Message "Error occurred trying to update alias"
+                | DatabaseResult.Success 0 -> return Message $"You don't have the alias \"{alias}\""
+                | DatabaseResult.Success _ -> return Message $"Alias \"{alias}\" successfully updated"
         }
 
     let private delete userId alias =
@@ -100,14 +122,14 @@ module Alias =
                     | DatabaseResult.Success _ -> return Message $"Alias \"{sa.Name}\" successfully copied"
         }
 
-    let alias args (context: Context) =
+    let alias args (context: Context) (commands: Map<string, _>) =
         async {
             match args with
-            | "add" :: alias :: command -> return! add context.UserId alias command
+            | "add" :: alias :: command -> return! add context.UserId alias command commands
             | "remove" :: alias :: _
             | "delete" :: alias :: _ -> return! delete context.UserId alias
             | "edit" :: alias :: command
-            | "update" :: alias :: command -> return! update context.UserId alias command
+            | "update" :: alias :: command -> return! update context.UserId alias command commands
             | "copy" :: username :: alias :: _ -> return! copy username context.UserId alias
             | "copyplace" :: username :: alias :: _ -> return! copyPlace username context.UserId alias
             | [ "check" ; alias ]
