@@ -85,7 +85,7 @@ module Api =
             }
         ] |> Map.ofList
 
-    let sendGptMessage message user channel modelKey =
+    let sendGptMessage (message: string) (user: string) (channel: string) (modelKey: string) =
         async {
             let historyKey = $"{user}_{channel}_{modelKey}"
             let systemMessage = systemMessages |> Map.tryFind modelKey |?? (systemMessages |> Map.find "default")

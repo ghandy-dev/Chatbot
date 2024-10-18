@@ -47,7 +47,7 @@ module OpenAI =
 
                     let message = KeyValueParser.removeKeyValues args gptKeys |> String.concat " "
 
-                    match! sendGptMessage message context.Username channel gptKey with
+                    match! sendGptMessage message context.Username channel.Channel gptKey with
                     | Error err -> return Message err
                     | Ok message -> return Message(Text.stripMarkdownTags message)
         }

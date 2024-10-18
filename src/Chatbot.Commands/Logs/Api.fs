@@ -27,13 +27,13 @@ module Api =
             | Error err -> return Error $"Logs API HTTP error {err.statusCode |> int} {err.statusCode}"
         }
 
-    let getChannelRandomLine channel =
+    let getChannelRandomLine (channel: string) =
         async {
             let url = $"{ApiUrl}/{randomChannelLine channel}"
             return! sendRequest url
         }
 
-    let getUserRandomLine channel user =
+    let getUserRandomLine (channel: string) (user: string) =
         async {
             let url = $"{ApiUrl}/{randomUserLine channel user}"
             return! sendRequest url

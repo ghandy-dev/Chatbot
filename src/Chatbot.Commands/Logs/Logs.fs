@@ -13,12 +13,12 @@ module Logs =
             | Channel channel ->
                 match args with
                 | [] ->
-                    match! getChannelRandomLine channel with
+                    match! getChannelRandomLine channel.Channel with
                     | Error err -> return Message err
                     | Ok message -> return Message message
                 | [ user ]
                 | user :: _ ->
-                    match! getUserRandomLine channel user  with
+                    match! getUserRandomLine channel.Channel user  with
                     | Error err -> return Message err
                     | Ok message -> return Message message
         }
@@ -30,7 +30,7 @@ module Logs =
             | Channel channel ->
                 match args with
                 | _ ->
-                    match! getUserRandomLine channel context.Username with
+                    match! getUserRandomLine channel.Channel context.Username with
                     | Error err -> return Message err
                     | Ok message -> return Message message
         }
