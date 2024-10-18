@@ -106,18 +106,7 @@ let joinChannels (twitchChatClient: TwitchChatClient) channels =
 
 let getChannelEmotes channels =
     async {
-        for channel in channels do
-             do! emoteService.RefreshChannelEmotes channel
-    }
-
-let refreshGlobalEmotes emoteProvider  =
-    async {
-        do! emoteService.RefreshGlobalEmotes emoteProvider
-    }
-
-let refreshChannelEmotes channelId emoteProvider =
-    async {
-        do! emoteService.RefreshChannelEmotes (channelId, emoteProvider)
+        channels |> Seq.map (fun c -> emoteService.RefreshChannelEmotes c) |> Async.Parallel |> ignore
     }
 
 let chatAgent (twitchChatClient: TwitchChatClient) cancellationToken =
@@ -146,10 +135,12 @@ let chatAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                         | SendRawIrcMessage msg -> do! twitchChatClient.SendAsync(IRC.Command.Raw msg)
                         | BotCommand command ->
                             match command with
-                            | JoinChannel channel -> do! twitchChatClient.SendAsync(IRC.Command.Join channel)
+                            | JoinChannel (channel, channelId) ->
+                                do! emoteService.RefreshChannelEmotes channelId
+                                do! twitchChatClient.SendAsync(IRC.Command.Join channel)
                             | LeaveChannel channel -> do! twitchChatClient.SendAsync(IRC.Command.Part channel)
-                            | RefreshGlobalEmotes provider -> do! refreshGlobalEmotes provider
-                            | RefreshChannelEmotes(channelId, provider) -> do! refreshChannelEmotes channelId provider
+                            | RefreshGlobalEmotes provider -> do! emoteService.RefreshGlobalEmotes provider
+                            | RefreshChannelEmotes(channelId, provider) -> do! emoteService.RefreshChannelEmotes(channelId, provider)
                         | Reconnect ->
                             Logging.info "Twitch servers requested we reconnect..."
                             do! reconnect()

@@ -64,7 +64,7 @@ type Context = {
     }
 
 type BotCommand =
-    | JoinChannel of channel: string
+    | JoinChannel of channel: string * channelId: string
     | LeaveChannel of channel: string
     | RefreshChannelEmotes of channelId: string * emoteProvider: Emotes.EmoteProvider
     | RefreshGlobalEmotes of emoteProvider: Emotes.EmoteProvider
