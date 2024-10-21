@@ -47,6 +47,9 @@ type Emotes = {
             | _ -> failwith "Expect random between 0 and 1 (inclusive)"
         | _ -> this.GlobalEmotes.Random ()
 
+    member this.Random provider =
+        this.ChannelEmotes |> Option.bind (fun p -> p.Random provider)
+
 type Context = {
     UserId: string
     Username: string

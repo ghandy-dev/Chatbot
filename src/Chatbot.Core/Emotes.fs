@@ -59,14 +59,14 @@ type Emotes = {
           this.Ffz.Values
           this.SevenTv.Values ]
         |> Seq.concat
-        |> Seq.randomChoice
+        |> Seq.tryRandomChoice
 
     member this.Random (provider: EmoteProvider) =
         match provider with
-        | EmoteProvider.Twitch -> this.Twitch.Values |> Seq.randomChoice
-        | EmoteProvider.Bttv -> this.Bttv.Values |> Seq.randomChoice
-        | EmoteProvider.Ffz -> this.Ffz.Values |> Seq.randomChoice
-        | EmoteProvider.SevenTv -> this.SevenTv.Values |> Seq.randomChoice
+        | EmoteProvider.Twitch -> this.Twitch.Values |> Seq.tryRandomChoice
+        | EmoteProvider.Bttv -> this.Bttv.Values |> Seq.tryRandomChoice
+        | EmoteProvider.Ffz -> this.Ffz.Values |> Seq.tryRandomChoice
+        | EmoteProvider.SevenTv -> this.SevenTv.Values |> Seq.tryRandomChoice
 
 let private getFromJsonAsync<'T> url =
     async {

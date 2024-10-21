@@ -3,10 +3,6 @@ namespace Commands
 [<AutoOpen>]
 module Emote =
 
-    let randomEmote args context =
-        let emote = context.Emotes.Random ()
-        Message $"{emote.Name}"
-
     let private getEmoteProvider =
         function
         | "twitch" -> Emotes.EmoteProvider.Twitch
@@ -14,6 +10,26 @@ module Emote =
         | "ffz" -> Emotes.EmoteProvider.Ffz
         | "7tv" -> Emotes.EmoteProvider.SevenTv
         | _ -> failwith "Unexpected emote provider, expected twitch/bttv/ffz/7tv"
+
+    let private randomEmoteKeys = [
+        "provider"
+    ]
+
+    let randomEmote args context =
+        let keyValues = KeyValueParser.parse args randomEmoteKeys
+        let maybeProvider = keyValues |> Map.tryFind "provider"
+
+        let maybeEmote =
+            match maybeProvider with
+            | None ->
+                context.Emotes.Random ()
+            | Some p ->
+                let provider = getEmoteProvider p
+                context.Emotes.Random provider
+
+        match maybeEmote with
+        | None -> Message "Kappa"
+        | Some emote -> Message $"{emote}"
 
     let refreshChannelEmotes args context =
         match context.Source with

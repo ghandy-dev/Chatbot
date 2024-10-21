@@ -381,7 +381,17 @@ Valid periods are:
             Description = "Get a random avaiable emote (globally and/or based on the current channel)"
             ExampleUsage = $"""
 Get a random emote (global or channel emote from Twitch / BTTV / FFZ / 7TV)
-{exampleArgs "randomemote"}
+{example "randomemote"}
+
+Get a random emote from an emote provider.
+Valid providers:
+    - twitch
+    - bttv
+    - ffz
+    - 7tv
+
+{exampleArgs "randomemote" "provider:<emote provider>"}
+{exampleArgs "randomemote" "provider:bttv"}
 """
         }
 

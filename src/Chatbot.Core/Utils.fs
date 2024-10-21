@@ -40,6 +40,20 @@ let formatTimeSpan (ts: TimeSpan) =
     | _ -> "0s"
 
 
+module Seq =
+
+    let tryRandomChoice (source: 'T seq) : 'T option =
+        if source |> Seq.length = 0 then
+            None
+        else
+            source |> Seq.randomChoice |> Some
+
+module List =
+
+    let doesNotContain value list = not <| (list |> List.contains value)
+
+    let tryRandomChoice (source: 'T list) : 'T option = source |> Seq.tryRandomChoice
+
 module String =
 
     let notEmpty = not << String.IsNullOrWhiteSpace
@@ -148,10 +162,6 @@ module Array =
         array[n] <- array[k]
         array[k] <- copy
 
-module List =
-
-    let doesNotContain value list = not <| (list |> List.contains value)
-
 module KeyValueParser =
 
     open System.Text.RegularExpressions
@@ -183,9 +193,9 @@ module KeyValueParser =
 
     let parse list keys =
         let pattern =
-                keys
-                |> Seq.map patternTemplate
-                |> String.concat "|"
+            keys
+            |> Seq.map patternTemplate
+            |> String.concat "|"
 
         let matches =
             list
@@ -193,10 +203,9 @@ module KeyValueParser =
             |> List.filter (fun m -> m.Success)
             |> List.map (fun m -> m.Value)
 
-        let values = matches |> List.choose tryParseKeyValuePair |> Map.ofList
+        let keyValues = matches |> List.choose tryParseKeyValuePair |> Map.ofList
 
-        values
-
+        keyValues
 
 module ConcurrentDictionary =
 
@@ -206,3 +215,4 @@ module ConcurrentDictionary =
         match dict.TryGetValue key with
         | false, _ -> None
         | true, value -> Some value
+
