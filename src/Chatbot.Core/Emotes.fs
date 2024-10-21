@@ -116,6 +116,22 @@ module Twitch =
                     |> Map.ofSeq
         }
 
+    let subEmotes (emoteSetIds) =
+        async {
+            match! Twitch.Helix.Emotes.getEmoteSets emoteSetIds with
+            | None -> return Map.empty
+            | Some emotes ->
+                return
+                    emotes
+                    |> Seq.map (fun e ->
+                        e.Name,
+                        { Name = e.Name
+                          Url = ""
+                          DirectUrl = e.Images.Url2x}
+                    )
+                    |> Map.ofSeq
+        }
+
 module Bttv =
 
     type UserEmotes = {

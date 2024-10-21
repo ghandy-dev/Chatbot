@@ -176,22 +176,20 @@ module KeyValueParser =
                 Some(key, value)
             | _ -> None
 
-    let removeKeyValues list keys  =
+    let removeKeyValues (list: string seq) (keys: string seq)  =
         let string = list |> String.concat " "
 
         let pattern =
-                keys
-                |> Seq.map patternTemplate
-                |> String.concat "|"
+            keys
+            |> Seq.map patternTemplate
+            |> String.concat "|"
 
-        let newString =
-            Regex.Replace(string, pattern, "")
-            |> (fun s -> s.Split(" "))
-            |> List.ofArray
+        Regex.Replace(string, pattern, "")
+        |> (fun s -> s.Split(" "))
+        |> List.ofArray
 
-        newString
 
-    let parse list keys =
+    let parse (list: string seq) (keys: string seq) =
         let pattern =
             keys
             |> Seq.map patternTemplate
@@ -199,11 +197,11 @@ module KeyValueParser =
 
         let matches =
             list
-            |> List.map (fun a -> Regex.Match(a, pattern))
-            |> List.filter (fun m -> m.Success)
-            |> List.map (fun m -> m.Value)
+            |> Seq.map (fun a -> Regex.Match(a, pattern))
+            |> Seq.filter (fun m -> m.Success)
+            |> Seq.map (fun m -> m.Value)
 
-        let keyValues = matches |> List.choose tryParseKeyValuePair |> Map.ofList
+        let keyValues = matches |> Seq.choose tryParseKeyValuePair |> Map.ofSeq
 
         keyValues
 

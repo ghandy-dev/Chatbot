@@ -51,6 +51,14 @@ module Helix =
             helixApi.Chat.GetChannelEmotesAsync(new GetChannelEmotesRequest(BroadcasterId = channelId)) |> Async.AwaitTask
             |-> tryGetData
 
+        let getEmoteSet emoteSetId =
+            helixApi.Chat.GetEmoteSetsAsync(new GetEmoteSetsRequest(EmoteSetIds = [ emoteSetId ])) |> Async.AwaitTask
+            |-> tryGetData
+
+        let getEmoteSets emoteSetIds =
+            helixApi.Chat.GetEmoteSetsAsync(new GetEmoteSetsRequest(EmoteSetIds = emoteSetIds)) |> Async.AwaitTask
+            |-> tryGetData
+
     module Streams =
 
         let getStreams (first: int) =

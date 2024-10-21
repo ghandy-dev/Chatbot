@@ -14,7 +14,7 @@ module Api =
 
     let userAgent = configuration.Item("UserAgent")
 
-    let getFromJsonAsync<'a> url accessToken =
+    let getFromJsonAsync<'a> (url: string) (accessToken: string) =
         async {
             use! response =
                 http {
@@ -32,7 +32,7 @@ module Api =
             | Error err -> return Error $"Reddit API HTTP error {err.statusCode |> int} {err.statusCode}"
         }
 
-    let getPosts subreddit sorting accessToken =
+    let getPosts (subreddit: string) (sorting: string) (accessToken: string) =
         async {
             let url =
                 match sorting with
