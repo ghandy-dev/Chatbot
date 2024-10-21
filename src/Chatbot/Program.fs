@@ -17,16 +17,16 @@ let cancelSubscription =
 let main args =
     async {
         try
-            try
-                Logging.info "Starting..."
-                do! Bot.run cancellationToken
-                Async.AwaitWaitHandle cancellationToken.WaitHandle |> ignore
-            with ex ->
-                Logging.error "Exception caught" ex
-        finally
-            cancellationTokenSource.Token.WaitHandle.WaitOne() |> ignore
+            Logging.info "Starting..."
+            do! Bot.run cancellationToken
+            Async.AwaitWaitHandle cancellationToken.WaitHandle |> ignore
+        with ex ->
+            Logging.error "Exception caught" ex
+
+        cancellationTokenSource.Token.WaitHandle.WaitOne() |> ignore
 
         Logging.info "Stopped."
-    } |> Async.RunSynchronously
+    }
+    |> Async.RunSynchronously
 
     0
