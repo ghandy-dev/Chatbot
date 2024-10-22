@@ -11,16 +11,16 @@ open TTVSharp.Auth
 
 type AccessToken = {
     AccessToken: string
-    ExpiresAt: DateTime option
+    ExpiresAt: DateTimeOffset option
 }
 
 type TokenType =
     | Twitch
     | Reddit
 
-let private hasExpired dateTime = DateTime.UtcNow > dateTime
+let private hasExpired dateTime = DateTimeOffset.UtcNow > dateTime
 
-let private maybeHasExpired dateTime =
+let private maybeHasExpired (dateTime: DateTimeOffset option) =
     match dateTime with
     | None -> false
     | Some dateTime -> hasExpired dateTime
