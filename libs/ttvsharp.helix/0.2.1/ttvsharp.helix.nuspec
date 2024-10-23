@@ -2,13 +2,13 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>TTVSharp.Helix</id>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
     <authors>ghandy-dev</authors>
     <description>Package Description</description>
-    <repository type="git" url="https://github.com/ghandy-dev/TTVSharp" commit="5c173c3ffe8343f6cd3f0978ae15b1bbe99922e2" />
+    <repository type="git" url="https://github.com/ghandy-dev/TTVSharp" commit="cd70cb02bee8076e7b7d115ab6dd3f805adfcbb0" />
     <dependencies>
       <group targetFramework="net8.0">
-        <dependency id="TTVSharp.Core" version="0.2.0" exclude="Build,Analyzers" />
+        <dependency id="TTVSharp.Core" version="0.2.1" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.DependencyInjection" version="8.0.0" exclude="Build,Analyzers" />
         <dependency id="Microsoft.Extensions.Logging" version="8.0.0" exclude="Build,Analyzers" />
       </group>
