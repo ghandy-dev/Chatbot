@@ -19,7 +19,7 @@ let getAccessTokenUser () =
     async {
         match! tokenStore.GetToken(TokenType.Twitch) |> Option.bindAsync Helix.Users.getAccessTokenUser with
         | Some user -> return user
-        | None -> return failwith "Expect access token (or user?)"
+        | None -> return failwith "Failed to get an access token, or failed to look up user associated with the retrieved access token"
     }
 
 let getChannelJoinList () =
