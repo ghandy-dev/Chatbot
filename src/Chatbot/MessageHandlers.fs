@@ -48,32 +48,37 @@ let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProces
         | false -> ()
     }
 
-let private roomStateMessageHandler (roomStateMsg: Types.RoomStateMessage) =
-    match channelStates.TryGetValue roomStateMsg.RoomId with
+let private roomStateMessageHandler (msg: Types.RoomStateMessage) =
+    match channelStates.TryGetValue msg.RoomId with
     | false, _ ->
         let roomState =
             RoomState.create (
-                roomStateMsg.Channel,
-                roomStateMsg.EmoteOnly,
-                roomStateMsg.FollowersOnly,
-                roomStateMsg.R9K,
-                roomStateMsg.RoomId,
-                roomStateMsg.Slow,
-                roomStateMsg.SubsOnly
+                msg.Channel,
+                msg.EmoteOnly,
+                msg.FollowersOnly,
+                msg.R9K,
+                msg.RoomId,
+                msg.Slow,
+                msg.SubsOnly
             )
 
-        channelStates[roomStateMsg.Channel] <- roomState
+        channelStates[msg.Channel] <- roomState
     | true, roomState ->
         let updatedRoomState = {
             roomState with
-                EmoteOnly = roomStateMsg.EmoteOnly |?? roomState.EmoteOnly
-                FollowersOnly = roomStateMsg.FollowersOnly |?? roomState.FollowersOnly
-                R9K = roomStateMsg.R9K |?? roomState.R9K
-                Slow = roomStateMsg.Slow |?? roomState.Slow
-                SubsOnly = roomStateMsg.SubsOnly |?? roomState.SubsOnly
+                EmoteOnly = msg.EmoteOnly |?? roomState.EmoteOnly
+                FollowersOnly = msg.FollowersOnly |?? roomState.FollowersOnly
+                R9K = msg.R9K |?? roomState.R9K
+                Slow = msg.Slow |?? roomState.Slow
+                SubsOnly = msg.SubsOnly |?? roomState.SubsOnly
         }
 
-        channelStates[roomStateMsg.RoomId] <- updatedRoomState
+        channelStates[msg.RoomId] <- updatedRoomState
+
+let private globalUserStateMessageHandler (msg: Types.GlobalUserStateMessage) =
+    async {
+        do! emoteService.RefreshSubscriptionEmotes (msg.EmoteSets)
+    }
 
 let private handleIrcMessage msg (mb: MailboxProcessor<_>) =
     async {
@@ -84,6 +89,7 @@ let private handleIrcMessage msg (mb: MailboxProcessor<_>) =
         | ReconnectMessage -> mb.Post(Reconnect)
         | RoomStateMessage msg -> roomStateMessageHandler msg
         | UserNoticeMessage msg -> ()
+        | GlobalUserStateMessage msg -> do! globalUserStateMessageHandler msg
         | _ -> ()
     }
 
