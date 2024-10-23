@@ -34,10 +34,7 @@ type Emotes = {
     }
 
     member this.Count () =
-        this.Twitch.Count +
-        this.Bttv.Count +
-        this.Ffz.Count +
-        this.SevenTv.Count
+        this.Twitch.Count + this.Bttv.Count + this.Ffz.Count + this.SevenTv.Count
 
     member this.Count (provider: EmoteProvider) =
         match provider with
@@ -54,10 +51,12 @@ type Emotes = {
 
 
     member this.Random () =
-        [ this.Twitch.Values
-          this.Bttv.Values
-          this.Ffz.Values
-          this.SevenTv.Values ]
+        [
+            this.Twitch.Values
+            this.Bttv.Values
+            this.Ffz.Values
+            this.SevenTv.Values
+        ]
         |> Seq.concat
         |> Seq.tryRandomChoice
 
@@ -93,9 +92,11 @@ module Twitch =
                     emotes
                     |> Seq.map (fun e ->
                         e.Name,
-                        { Name = e.Name
-                          Url = ""
-                          DirectUrl = e.Images.Url2x}
+                        {
+                            Name = e.Name
+                            Url = ""
+                            DirectUrl = e.Images.Url2x
+                        }
                     )
                     |> Map.ofSeq
         }
@@ -109,9 +110,11 @@ module Twitch =
                     emotes
                     |> Seq.map (fun e ->
                         e.Name,
-                        { Name = e.Name
-                          Url = ""
-                          DirectUrl = e.Images.Url2x}
+                        {
+                            Name = e.Name
+                            Url = ""
+                            DirectUrl = e.Images.Url2x
+                        }
                     )
                     |> Map.ofSeq
         }
@@ -125,9 +128,11 @@ module Twitch =
                     emotes
                     |> Seq.map (fun e ->
                         e.Name,
-                        { Name = e.Name
-                          Url = ""
-                          DirectUrl = e.Images.Url2x}
+                        {
+                            Name = e.Name
+                            Url = ""
+                            DirectUrl = e.Images.Url2x
+                        }
                     )
                     |> Map.ofSeq
         }
@@ -146,13 +151,19 @@ module Bttv =
         Animated: bool
     }
 
-    let [<Literal>] ApiUrl = "https://api.betterttv.net/3"
+    [<Literal>]
+    let ApiUrl = "https://api.betterttv.net/3"
 
     let globalEmotesUrl = $"{ApiUrl}/cached/emotes/global"
-    let channelEmotesUrl channelId = $"{ApiUrl}/cached/users/twitch/{channelId}"
 
-    let emoteUrl emoteId = $"https://betterttv.com/emotes/{emoteId}"
-    let directUrl emoteId = $"https://cdn.betterttv.net/emote/{emoteId}/2x"
+    let channelEmotesUrl channelId =
+        $"{ApiUrl}/cached/users/twitch/{channelId}"
+
+    let emoteUrl emoteId =
+        $"https://betterttv.com/emotes/{emoteId}"
+
+    let directUrl emoteId =
+        $"https://cdn.betterttv.net/emote/{emoteId}/2x"
 
     let globalEmotes () =
         async {
@@ -163,9 +174,11 @@ module Bttv =
                     emotes
                     |> List.map (fun e ->
                         e.Code,
-                        { Name = e.Code
-                          Url = emoteUrl e.Id
-                          DirectUrl = directUrl e.Id }
+                        {
+                            Name = e.Code
+                            Url = emoteUrl e.Id
+                            DirectUrl = directUrl e.Id
+                        }
                     )
                     |> Map.ofList
         }
@@ -183,18 +196,18 @@ module Bttv =
                     emotes
                     |> List.map (fun e ->
                         e.Code,
-                        { Name = e.Code
-                          Url = emoteUrl e.Id
-                          DirectUrl = directUrl e.Id }
+                        {
+                            Name = e.Code
+                            Url = emoteUrl e.Id
+                            DirectUrl = directUrl e.Id
+                        }
                     )
                     |> Map.ofList
         }
 
 module Ffz =
 
-    type EmoteSet = {
-        Emoticons: FfzEmote list
-    }
+    type EmoteSet = { Emoticons: FfzEmote list }
 
     and FfzEmote = {
         Id: int
@@ -218,16 +231,16 @@ module Ffz =
         Sets: Map<int, EmoteSet>
     }
 
-    type Room = {
-        Sets: Map<int, EmoteSet>
-    }
+    type Room = { Sets: Map<int, EmoteSet> }
 
-    let [<Literal>] ApiUrl = "https://api.frankerfacez.com"
+    [<Literal>]
+    let ApiUrl = "https://api.frankerfacez.com"
 
     let globalEmotesUrl = $"{ApiUrl}/v1/set/global"
     let channelEmotesUrl channelId = $"{ApiUrl}/v1/room/id/{channelId}"
 
-    let emoteUrl emoteId = $"https://www.frankerfacez.com/emoticon/{emoteId}"
+    let emoteUrl emoteId =
+        $"https://www.frankerfacez.com/emoticon/{emoteId}"
 
     let globalEmotes () =
         async {
@@ -242,9 +255,11 @@ module Ffz =
                     |> List.concat
                     |> List.map (fun e ->
                         e.Name,
-                        { Name = e.Name
-                          Url = emoteUrl e.Id
-                          DirectUrl = (e.Animated |?? e.Urls).Medium }
+                        {
+                            Name = e.Name
+                            Url = emoteUrl e.Id
+                            DirectUrl = (e.Animated |?? e.Urls).Medium
+                        }
                     )
                     |> Map.ofList
         }
@@ -264,9 +279,11 @@ module Ffz =
                     |> List.concat
                     |> List.map (fun e ->
                         e.Name,
-                        { Name = e.Name
-                          Url = emoteUrl e.Id
-                          DirectUrl = (e.Animated |?? e.Urls).Medium }
+                        {
+                            Name = e.Name
+                            Url = emoteUrl e.Id
+                            DirectUrl = (e.Animated |?? e.Urls).Medium
+                        }
                     )
                     |> Map.ofList
         }
@@ -278,16 +295,15 @@ module SevenTv =
         EmoteSet: EmoteSet
     }
 
-    and EmoteSet = {
-        Emotes: Emote list
-    }
+    and EmoteSet = { Emotes: Emote list }
 
     and Emote = {
         Id: string
         Name: string
     }
 
-    let [<Literal>] ApiUrl = "https://7tv.io"
+    [<Literal>]
+    let ApiUrl = "https://7tv.io"
 
     let globalEmotesUrl = $"{ApiUrl}/v3/emote-sets/global"
     let channelEmotesUrl channelId = $"{ApiUrl}/v3/users/twitch/{channelId}"
@@ -304,9 +320,11 @@ module SevenTv =
                     set.Emotes
                     |> List.map (fun e ->
                         e.Name,
-                        { Name = e.Name
-                          Url = emoteUrl e.Id
-                          DirectUrl = directUrl e.Id }
+                        {
+                            Name = e.Name
+                            Url = emoteUrl e.Id
+                            DirectUrl = directUrl e.Id
+                        }
                     )
                     |> Map.ofList
         }
@@ -322,9 +340,11 @@ module SevenTv =
                     channel.EmoteSet.Emotes
                     |> List.map (fun e ->
                         e.Name,
-                        { Name = e.Name
-                          Url = emoteUrl e.Id
-                          DirectUrl = directUrl e.Id }
+                        {
+                            Name = e.Name
+                            Url = emoteUrl e.Id
+                            DirectUrl = directUrl e.Id
+                        }
                     )
                     |> Map.ofList
         }
@@ -333,21 +353,24 @@ type EmoteService() =
 
     let mutable globalEmotes = Emotes.empty
 
-    member _.GlobalEmotes
-        with get () = globalEmotes
-        and private set (value) = globalEmotes <- value
+    let mutable channelEmotes =
+        new System.Collections.Concurrent.ConcurrentDictionary<string, Emotes>()
 
-    member val ChannelEmotes = new System.Collections.Concurrent.ConcurrentDictionary<string, Emotes>() with get
+    let mutable subscriptionEmotes: Map<string, Map<string, Emote>> = Map.empty
 
-    member this.RefreshGlobalEmotes () =
+    member _.GlobalEmotes = globalEmotes
+    member _.ChannelEmotes = channelEmotes
+    member _.SubscriptionEmotes = subscriptionEmotes
+
+    member _.RefreshGlobalEmotes () =
         async {
-            let! twitchEmotes =  Twitch.globalEmotes ()
-            let! bttvEmotes =  Bttv.globalEmotes ()
-            let! ffzEmotes =  Ffz.globalEmotes ()
-            let! sevenTvEmotes =  SevenTv.globalEmotes ()
+            let! twitchEmotes = Twitch.globalEmotes ()
+            let! bttvEmotes = Bttv.globalEmotes ()
+            let! ffzEmotes = Ffz.globalEmotes ()
+            let! sevenTvEmotes = SevenTv.globalEmotes ()
 
-            this.GlobalEmotes <- {
-                this.GlobalEmotes with
+            globalEmotes <- {
+                globalEmotes with
                     Twitch = twitchEmotes
                     Bttv = bttvEmotes
                     Ffz = ffzEmotes
@@ -355,31 +378,31 @@ type EmoteService() =
             }
         }
 
-    member this.RefreshGlobalEmotes emoteProvider =
+    member _.RefreshGlobalEmotes emoteProvider =
         async {
             match emoteProvider with
             | EmoteProvider.Twitch ->
-                let! emotes =  Twitch.globalEmotes ()
-                this.GlobalEmotes <- { this.GlobalEmotes with Twitch = emotes }
+                let! emotes = Twitch.globalEmotes ()
+                globalEmotes <- { globalEmotes with Twitch = emotes }
             | EmoteProvider.Bttv ->
-                let! emotes =  Bttv.globalEmotes ()
-                this.GlobalEmotes <- { this.GlobalEmotes with Bttv = emotes }
+                let! emotes = Bttv.globalEmotes ()
+                globalEmotes <- { globalEmotes with Bttv = emotes }
             | EmoteProvider.Ffz ->
-                let! emotes =  Ffz.globalEmotes ()
-                this.GlobalEmotes <- { this.GlobalEmotes with Ffz = emotes }
+                let! emotes = Ffz.globalEmotes ()
+                globalEmotes <- { globalEmotes with Ffz = emotes }
             | EmoteProvider.SevenTv ->
-                let! emotes =  SevenTv.globalEmotes ()
-                this.GlobalEmotes <- { this.GlobalEmotes with SevenTv = emotes }
+                let! emotes = SevenTv.globalEmotes ()
+                globalEmotes <- { globalEmotes with SevenTv = emotes }
         }
 
-    member this.RefreshChannelEmotes channelId =
+    member _.RefreshChannelEmotes channelId =
         async {
-            let! twitchEmotes =  Twitch.channelEmotes channelId
-            let! bttvEmotes =  Bttv.channelEmotes channelId
-            let! ffzEmotes =  Ffz.channelEmotes channelId
-            let! sevenTvEmotes =  SevenTv.channelEmotes channelId
+            let! twitchEmotes = Twitch.channelEmotes channelId
+            let! bttvEmotes = Bttv.channelEmotes channelId
+            let! ffzEmotes = Ffz.channelEmotes channelId
+            let! sevenTvEmotes = SevenTv.channelEmotes channelId
 
-            this.ChannelEmotes[channelId] <- {
+            channelEmotes[channelId] <- {
                 Twitch = twitchEmotes
                 Bttv = bttvEmotes
                 Ffz = ffzEmotes
@@ -387,27 +410,59 @@ type EmoteService() =
             }
         }
 
-    member this.RefreshChannelEmotes (channelId, emoteProvider) =
+    member _.RefreshChannelEmotes (channelId, emoteProvider) =
         async {
             match emoteProvider with
             | EmoteProvider.Twitch ->
-                let! emotes =  Twitch.channelEmotes channelId
-                match this.ChannelEmotes |> ConcurrentDictionary.tryGetValue channelId with
-                | Some e -> this.ChannelEmotes[channelId] <- { e with Twitch = emotes }
+                let! emotes = Twitch.channelEmotes channelId
+
+                match channelEmotes |> ConcurrentDictionary.tryGetValue channelId with
+                | Some e -> channelEmotes[channelId] <- { e with Twitch = emotes }
                 | _ -> ()
             | EmoteProvider.Bttv ->
-                let! emotes =  Bttv.channelEmotes channelId
-                match this.ChannelEmotes |> ConcurrentDictionary.tryGetValue channelId with
-                | Some e -> this.ChannelEmotes[channelId] <- { e with Bttv = emotes }
+                let! emotes = Bttv.channelEmotes channelId
+
+                match channelEmotes |> ConcurrentDictionary.tryGetValue channelId with
+                | Some e -> channelEmotes[channelId] <- { e with Bttv = emotes }
                 | _ -> ()
             | EmoteProvider.Ffz ->
-                let! emotes =  Ffz.channelEmotes channelId
-                match this.ChannelEmotes |> ConcurrentDictionary.tryGetValue channelId with
-                | Some e -> this.ChannelEmotes[channelId] <- { e with Ffz = emotes }
+                let! emotes = Ffz.channelEmotes channelId
+
+                match channelEmotes |> ConcurrentDictionary.tryGetValue channelId with
+                | Some e -> channelEmotes[channelId] <- { e with Ffz = emotes }
                 | _ -> ()
             | EmoteProvider.SevenTv ->
-                let! emotes =  SevenTv.channelEmotes channelId
-                match this.ChannelEmotes |> ConcurrentDictionary.tryGetValue channelId with
-                | Some e -> this.ChannelEmotes[channelId] <- { e with SevenTv = emotes }
+                let! emotes = SevenTv.channelEmotes channelId
+
+                match channelEmotes |> ConcurrentDictionary.tryGetValue channelId with
+                | Some e -> channelEmotes[channelId] <- { e with SevenTv = emotes }
                 | _ -> ()
+        }
+
+    member _.RefreshSubscriptionEmotes (emoteSetIds) =
+        async {
+            match!
+                Twitch.Helix.Emotes.getEmoteSets emoteSetIds
+                |-> Option.bind (fun es ->
+                    es |> Seq.filter (fun e -> e.EmoteType = "subscriptions") |> Seq.groupBy (fun e -> e.OwnerId) |> Some
+                )
+            with
+            | None -> ()
+            | Some emotes ->
+                subscriptionEmotes <-
+                    emotes
+                    |> Seq.map (fun (channelId, emotes) ->
+                        channelId,
+                        emotes
+                        |> Seq.map (fun e ->
+                            e.Name,
+                            {
+                                Name = e.Name
+                                Url = ""
+                                DirectUrl = e.Images.Url2x
+                            }
+                        )
+                        |> Map.ofSeq
+                    )
+                    |> Map.ofSeq
         }
