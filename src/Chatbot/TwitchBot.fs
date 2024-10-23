@@ -33,7 +33,7 @@ let getChannelJoinList () =
             |> Async.bind Twitch.Helix.Users.getUsersById
         with
         | None ->
-            Logging.error "Twitch API error, falling back on database channel names" (new Exception())
+            Logging.warning "Twitch API error, falling back on database channel names"
             return channels |> Seq.map (fun c -> c.ChannelId, c.ChannelName)
         | Some channels ->
             return channels |> Seq.map (fun u -> u.Id, u.Login)
