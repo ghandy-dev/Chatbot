@@ -113,7 +113,6 @@ let chatAgent (twitchChatClient: TwitchChatClient) cancellationToken =
     new MailboxProcessor<ClientRequest>(
         (fun mb ->
             async {
-
                 let reconnect () =
                     async {
                             do! twitchChatClient.ReconnectAsync(cancellationToken)
