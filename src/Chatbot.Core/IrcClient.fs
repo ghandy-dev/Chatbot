@@ -19,8 +19,7 @@ type IrcClient(host: string, port: int) =
 
     let mutable isConnected = true
 
-    let connected () =
-        if isConnected = false then false else socket.Connected
+    let connected () = isConnected && socket.Connected
 
     let connect cancellationToken =
         async {
