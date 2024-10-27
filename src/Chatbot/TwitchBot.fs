@@ -113,6 +113,8 @@ let chatAgent (twitchChatClient: TwitchChatClient) cancellationToken =
     new MailboxProcessor<ClientRequest>(
         (fun mb ->
             async {
+                let mutable lastPingTime = DateTime.UtcNow
+
                 let reconnect () =
                     async {
                             do! twitchChatClient.ReconnectAsync(cancellationToken)
@@ -122,9 +124,13 @@ let chatAgent (twitchChatClient: TwitchChatClient) cancellationToken =
 
                 let rec loop () =
                     async {
+                        if (DateTime.UtcNow - lastPingTime).Seconds > 360 then
+                            mb.Post Reconnect
+
                         match! mb.Receive() with
                         | SendPongMessage pong ->
                             Logging.info $"PONG :{pong}"
+                            lastPingTime <- DateTime.UtcNow
                             do! twitchChatClient.SendAsync(IRC.Command.Pong pong)
                         | SendPrivateMessage(channel, message) -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, message))
                         | SendWhisperMessage(userId, username, message) ->
