@@ -11,19 +11,19 @@ module Api =
     open FsHttp.Response
 
     open System
+    open System.Collections.Concurrent
 
     type UserChatHistory = {
         LastMessage: DateTime
         Messages: TextGenerationMessage list
     }
 
-    let userChatHistory =
-        new Collections.Concurrent.ConcurrentDictionary<string, UserChatHistory>()
+    let private userChatHistory = new ConcurrentDictionary<string, UserChatHistory>()
 
-    let [<Literal>] private apiUrl = "https://api.openai.com/v1"
+    let [<Literal>] private ApiUrl = "https://api.openai.com/v1"
 
-    let private imageGeneration = $"{apiUrl}/images/generation"
-    let private chatCompletion = $"{apiUrl}/chat/completions"
+    let private imageGenerationUrl = $"{ApiUrl}/images/generation"
+    let private chatCompletionUrl = $"{ApiUrl}/chat/completions"
 
     // Untested - DallE API documentation lacks model definitions (particularly the response model)
     let private postAsJson<'a, 'b> url (request: 'b) =
@@ -54,7 +54,7 @@ module Api =
                 Size = size
             }
 
-            match! postAsJson<GenerateImageResponse, GenerateImage> imageGeneration request with
+            match! postAsJson<GenerateImageResponse, GenerateImage> imageGenerationUrl request with
             | Error err -> return Error err
             | Ok response -> return Ok response.Url
         }
@@ -133,7 +133,7 @@ module Api =
                 User = historyKey
             }
 
-            match! postAsJson<TextGenerationMessageResponse, TextGeneration> chatCompletion request with
+            match! postAsJson<TextGenerationMessageResponse, TextGeneration> chatCompletionUrl request with
             | Error err -> return Error err
             | Ok response ->
                 match response.Choices with
