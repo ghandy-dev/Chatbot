@@ -41,7 +41,8 @@ module Timezone =
             | Error (content, statusCode) ->
                 Logging.error $"Timezone API error: {content}" (new System.Net.Http.HttpRequestException("Timezone API error", null, statusCode = statusCode))
                 return Error "Timezone API Error"
-            | Ok response -> return Ok response
+            | Ok response ->
+                match Status.tryParse response.Status with
+                | Some Status.Ok -> return Ok response
+                | _ -> return Error $"Timezone API error: {response.Status}"
         }
-
-
