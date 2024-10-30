@@ -25,9 +25,7 @@
     <Compile Include="OpenAI/OpenAI.fs" />
     <Compile Include="News/Api.fs" />
     <Compile Include="News/News.fs" />
-    <Compile Include="Weather/Types.fs" />
-    <Compile Include="Weather/Api.fs" />
-    <Compile Include="Weather/Weather.fs" />
+    <Compile Include="Weather.fs" />
     <Compile Include="DungeonGame/Types.fs" />
     <Compile Include="DungeonGame/Helpers.fs" />
     <Compile Include="DungeonGame/Enemies.fs" />

@@ -123,10 +123,10 @@ module Microsoft =
 
     [<CLIMutable>]
     type MicrosoftConfig = {
-        Weather: Weather
+        Maps: Maps
     }
 
-    and Weather = {
+    and Maps = {
         ApiKey: string
     }
 

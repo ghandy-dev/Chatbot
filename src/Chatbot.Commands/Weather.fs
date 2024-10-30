@@ -3,9 +3,8 @@ namespace Commands
 [<AutoOpen>]
 module Weather =
 
-    open Commands.Api.Weather
-    open Types.Weather
-    open Google
+    open Azure.Types
+    open Azure.Maps.Weather
 
     let private weatherCodeToEmoji iconCode =
         match iconCode with
@@ -50,9 +49,9 @@ module Weather =
         | IconCode.N_MostlyCloudyWithSnow -> "🌨️"
         | _ -> ""
 
-    let private processWeatherResult geocoding weather =
+    let private processWeatherResult (geocoding: SearchAddressResultItem) (weather: CurrentConditions) =
         let time = weather.DateTime.ToString("dd MMM HH:mm")
-        let location = geocoding.FormattedAddress
+        let location = geocoding.Address.FreeformAddress
         let emoji = weatherCodeToEmoji weather.IconCode
         let summary = weather.Phrase
         let temperature = $"{weather.Temperature.Value}°{weather.Temperature.Unit}"
@@ -75,18 +74,14 @@ module Weather =
         async {
             match args with
             | [] -> return Message "No location provided"
-            | location ->
-                match! getLocationGecode location with
-                | Error statusCode -> return Message statusCode
-                | Ok [] -> return Message "Location not found"
-                | Ok (geocoding :: _) ->
-                    let latitude = geocoding.Geometry.Location.Lat
-                    let longitude = geocoding.Geometry.Location.Lng
+            | address ->
+                match! Services.Geolocation.api.getSearchAddress (address |> String.concat " ") with
+                | Error err -> return Message err
+                | Ok geocoding ->
+                    let latitude = geocoding.Position.Lat
+                    let longitude = geocoding.Position.Lon
 
                     match! getCurrentWeather latitude longitude with
-                    | Error statusCode -> return Message statusCode
-                    | Ok w ->
-                        match w.Results with
-                        | [] -> return Message "No weather results found for {geocoding.FormattedAddress}"
-                        | weather :: _ -> return processWeatherResult geocoding weather
+                    | Error err -> return Message err
+                    | Ok weather -> return processWeatherResult geocoding weather
             }

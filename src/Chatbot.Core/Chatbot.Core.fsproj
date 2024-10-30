@@ -14,8 +14,13 @@
     <Compile Include="Configuration.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Utils.fs" />
+    <Compile Include="Http.fs" />
     <Compile Include="Pastebin.fs" />
-    <Compile Include="Google.fs" />
+    <Compile Include="Azure/Geolocation.fs" />
+    <Compile Include="Azure/Weather.fs" />
+    <Compile Include="Azure/Api.fs" />
+    <Compile Include="Google/Types.fs" />
+    <Compile Include="Google/Api.fs" />
     <Compile Include="Twitch.fs" />
     <Compile Include="TokenStore.fs" />
     <Compile Include="Emotes.fs" />
@@ -26,6 +31,7 @@
     <Compile Include="IrcClient.fs" />
     <Compile Include="WebSocketClient.fs" />
     <Compile Include="TwitchChatClient.fs" />
+    <Compile Include="Services.fs" />
   </ItemGroup>
 
   <ItemGroup>
