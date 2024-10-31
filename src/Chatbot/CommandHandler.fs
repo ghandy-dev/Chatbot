@@ -41,11 +41,7 @@ let private executeCommand command parameters context =
     }
 
 let private parseCommandAndParameters (message: string) =
-    match
-        message.Replace("\U000e0000", "")
-        |> fun m -> m.Split(" ", StringSplitOptions.RemoveEmptyEntries)
-        |> List.ofArray
-    with
+    match message.Replace("\U000e0000", "") |> (fun m -> m.Split(" ", StringSplitOptions.RemoveEmptyEntries)) |> List.ofArray with
     | [] -> failwith "Empty message, expected command"
     | [ command ] -> command, []
     | command :: parameters -> command, parameters
@@ -73,19 +69,13 @@ let rec private handleCommand userId username source message =
                     let! response =
                         async {
                             let context =
-                                Context.createContext
-                                    userId
-                                    username
-                                    user.IsAdmin
-                                    source
-                                    { GlobalEmotes = emoteService.GlobalEmotes
-                                      ChannelEmotes = channel
-                                        |> Option.bind (fun c ->
-                                            emoteService.ChannelEmotes
-                                            |> ConcurrentDictionary.tryGetValue c.RoomId
-                                            |> Option.orElse (Some Emotes.Emotes.empty
-                                        )
-                                    )}
+                                Context.createContext userId username user.IsAdmin source {
+                                    GlobalEmotes = emoteService.GlobalEmotes
+                                    ChannelEmotes =
+                                        channel
+                                        |> Option.bind (fun c -> emoteService.ChannelEmotes |> ConcurrentDictionary.tryGetValue c.RoomId)
+                                        |?? []
+                                }
 
                             match! executeCommand command parameters context with
                             | Message message -> return Some <| (Message <| formatChatMessage message)

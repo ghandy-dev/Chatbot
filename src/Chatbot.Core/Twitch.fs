@@ -59,6 +59,22 @@ module Helix =
             helixApi.Chat.GetEmoteSetsAsync(new GetEmoteSetsRequest(EmoteSetIds = emoteSetIds)) |> Async.AwaitTask
             |-> tryGetData
 
+        let getUserEmotes userId accessToken =
+            async {
+                let rec pageRequest emotes cursor =
+                    async {
+                        let! r = helixApi.Chat.GetUserEmotesAsync(new GetUserEmotesRequest(UserId = userId, After = cursor), accessToken) |> Async.AwaitTask
+                        let data = r |> tryGetData
+
+                        match data, r.Body.Pagination.HasNextPage with
+                        | Some d, true -> return! pageRequest (d |> Seq.append emotes) r.Body.Pagination.Cursor
+                        | Some d, false -> return d |> Seq.append emotes |> Seq.toList :> System.Collections.Generic.IReadOnlyList<UserEmote>
+                        | _ -> return emotes |> Seq.toList :> System.Collections.Generic.IReadOnlyList<UserEmote>
+                    }
+
+                return! pageRequest Seq.empty "" |-> Some
+            }
+
     module Streams =
 
         let getStreams (first: int) =

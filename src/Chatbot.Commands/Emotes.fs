@@ -34,10 +34,7 @@ module Emote =
     let refreshChannelEmotes args context =
         match context.Source with
         | Whisper _ -> Message "This command can only be used from a channel"
-        | Channel channelState ->
-            match args with
-            | emoteProvider :: _ -> BotAction(RefreshChannelEmotes(channelState.RoomId, getEmoteProvider emoteProvider), "Refreshing channel emotes...")
-            | _ -> Message "Unknown emote provider (expected twitch/bttv/ffz/7tv)"
+        | Channel channelState -> BotAction(RefreshChannelEmotes channelState.RoomId, "Refreshing channel emotes...")
 
     let refreshGlobalEmotes args =
         match args with

@@ -144,8 +144,8 @@ let chatAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                                 do! emoteService.RefreshChannelEmotes channelId
                                 do! twitchChatClient.SendAsync(IRC.Command.Join channel)
                             | LeaveChannel channel -> do! twitchChatClient.SendAsync(IRC.Command.Part channel)
-                            | RefreshGlobalEmotes provider -> do! emoteService.RefreshGlobalEmotes provider
-                            | RefreshChannelEmotes(channelId, provider) -> do! emoteService.RefreshChannelEmotes(channelId, provider)
+                            | RefreshGlobalEmotes provider -> do! emoteService.RefreshGlobalEmotes ()
+                            | RefreshChannelEmotes channelId -> do! emoteService.RefreshChannelEmotes(channelId)
                         | Reconnect ->
                             Logging.info "Twitch servers requested we reconnect..."
                             do! reconnect()

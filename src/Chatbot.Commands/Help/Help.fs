@@ -438,24 +438,24 @@ Get a trending reddit post based sorted by; "top" / "hot" / "best"
     let RefreshChannelEmotes =
         {
             Name = "Refresh Channel Emotes"
-            Description = "Refresh the cached channel emotes for one of the available emote providers"
+            Description = "Refresh the emotes cached for a channel"
             ExampleUsage = $"""
 Refresh global emotes.
-{exampleArgs "rce" "<emote provider>"}
-{exampleArgs "rce" "twitch"}
-{exampleArgs "rce" "bttv"}
+{exampleArgs "refreshchannelemotes" "<channel>"}
+{exampleArgs "rce" "<channel>"}
+{exampleArgs "refreshchannelemotes" "forsen"}
+{exampleArgs "rce" "clintstevens"}
 """
         }
 
     let RefreshGlobalEmotes =
         {
             Name = "Refresh Global Emotes"
-            Description = "Refresh the cached global emotes for one of the available emote providers"
+            Description = "Refresh the cached global emotes"
             ExampleUsage = $"""
 Refresh global emotes.
-{exampleArgs "rge" "<emote provider>"}
-{exampleArgs "rge" "twitch"}
-{exampleArgs "rge" "bttv"}
+{example "refreshglobalemotes"}
+{example "rge"}
 """
         }
 

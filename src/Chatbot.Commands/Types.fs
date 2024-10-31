@@ -11,7 +11,7 @@ type RoomState = {
     LastMessageSent: System.DateTime
 } with
 
-    static member create (channel, emoteOnly, followersOnly, r9k, roomId, slow, subsOnly) = {
+    static member create channel emoteOnly followersOnly r9k roomId slow subsOnly = {
         Channel = channel
         EmoteOnly = emoteOnly |?? false
         FollowersOnly = followersOnly |?? false
@@ -24,31 +24,43 @@ type RoomState = {
 
 type RoomStates = Map<string, RoomState>
 
-type Source = Whisper of username: string | Channel of channel: RoomState
+type Source =
+    | Whisper of username: string
+    | Channel of channel: RoomState
 
 type Emotes = {
-    GlobalEmotes: Emotes.Emotes
-    ChannelEmotes: Emotes.Emotes option
+    GlobalEmotes: Emotes.Emote list
+    ChannelEmotes: Emotes.Emote list
 } with
 
-    member this.Find emote =
-        this.GlobalEmotes.Find emote
-        |> Option.orElseWith (fun _ ->
-            this.ChannelEmotes |> Option.bind (fun ce -> ce.Find emote)
-        )
+    member this.TryFind emote =
+        this.GlobalEmotes |> List.tryFind emote |> Option.orElseWith (fun _ -> this.ChannelEmotes |> List.tryFind emote)
 
     member this.Random () =
-        match this.ChannelEmotes with
-        | Some ce when ce.Count () > 0 ->
-            System.Random.Shared.Next(0, 2)
+        match this.GlobalEmotes, this.ChannelEmotes with
+        | [], [] -> None
+        | g, [] -> g |> List.tryRandomChoice
+        | [], c -> c |> List.tryRandomChoice
+        | g, c ->
+            [ g ; c ]
+            |> List.randomChoice
             |> function
-            | 0 -> this.GlobalEmotes.Random ()
-            | 1 -> ce.Random ()
-            | _ -> failwith "Expect random between 0 and 1 (inclusive)"
-        | _ -> this.GlobalEmotes.Random ()
+                | e -> e |> List.tryRandomChoice
 
     member this.Random provider =
-        this.ChannelEmotes |> Option.bind (fun p -> p.Random provider)
+        match
+            this.GlobalEmotes |> List.filter (fun e -> e.Provider = provider),
+            this.ChannelEmotes |> List.filter (fun e -> e.Provider = provider)
+        with
+        | [], [] -> None
+        | g, [] -> g |> List.tryRandomChoice
+        | [], c -> c |> List.tryRandomChoice
+        | g, c ->
+            [ g ; c ]
+            |> List.randomChoice
+            |> function
+                | e -> e |> List.tryRandomChoice
+
 
 type Context = {
     UserId: string
@@ -69,7 +81,7 @@ type Context = {
 type BotCommand =
     | JoinChannel of channel: string * channelId: string
     | LeaveChannel of channel: string
-    | RefreshChannelEmotes of channelId: string * emoteProvider: Emotes.EmoteProvider
+    | RefreshChannelEmotes of channelId: string
     | RefreshGlobalEmotes of emoteProvider: Emotes.EmoteProvider
 
 type CommandResult =
@@ -81,13 +93,13 @@ type CommandResult =
 type Parameters = string list
 
 type CommandFunction =
-    | S of (unit -> CommandResult)                                                              // SyncFunction
-    | SA of (Parameters -> CommandResult)                                                       // SyncFunctionWithArgs
-    | SAC of (Parameters -> Context -> CommandResult)                                           // SyncFunctionWithArgsAndContext
-    | A of (unit -> Async<CommandResult>)                                                       // AsyncFunction
-    | AA of (Parameters -> Async<CommandResult>)                                                // AsyncFunctionWithArgs
-    | AAC of (Parameters -> Context -> Async<CommandResult>)                                    // AsyncFunctionWithArgsAndContext
-    | AACM of (Parameters -> Context -> Map<string, Command> -> Async<CommandResult>)           // AsyncFunctionWithArgsAndContextAndCommands
+    | S of (unit -> CommandResult) // SyncFunction
+    | SA of (Parameters -> CommandResult) // SyncFunctionWithArgs
+    | SAC of (Parameters -> Context -> CommandResult) // SyncFunctionWithArgsAndContext
+    | A of (unit -> Async<CommandResult>) // AsyncFunction
+    | AA of (Parameters -> Async<CommandResult>) // AsyncFunctionWithArgs
+    | AAC of (Parameters -> Context -> Async<CommandResult>) // AsyncFunctionWithArgsAndContext
+    | AACM of (Parameters -> Context -> Map<string, Command> -> Async<CommandResult>) // AsyncFunctionWithArgsAndContextAndCommands
 
 and Command = {
     Name: string

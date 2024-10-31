@@ -52,15 +52,14 @@ let private roomStateMessageHandler (msg: Types.RoomStateMessage) =
     match channelStates.TryGetValue msg.RoomId with
     | false, _ ->
         let roomState =
-            RoomState.create (
-                msg.Channel,
-                msg.EmoteOnly,
-                msg.FollowersOnly,
-                msg.R9K,
-                msg.RoomId,
-                msg.Slow,
+            RoomState.create
+                msg.Channel
+                msg.EmoteOnly
+                msg.FollowersOnly
+                msg.R9K
+                msg.RoomId
+                msg.Slow
                 msg.SubsOnly
-            )
 
         channelStates[msg.Channel] <- roomState
     | true, roomState ->
@@ -77,7 +76,7 @@ let private roomStateMessageHandler (msg: Types.RoomStateMessage) =
 
 let private globalUserStateMessageHandler (msg: Types.GlobalUserStateMessage) =
     async {
-        do! emoteService.RefreshSubscriptionEmotes (msg.EmoteSets)
+        do! emoteService.RefreshGlobalEmotes ()
     }
 
 let private handleIrcMessage msg (mb: MailboxProcessor<_>) =
