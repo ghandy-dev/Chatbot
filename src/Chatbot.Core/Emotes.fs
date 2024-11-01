@@ -61,7 +61,7 @@ module Twitch =
                     |> List.ofSeq
         }
 
-    let userEmotes (userId: string, accessToken: string) =
+    let userEmotes (userId: string) (accessToken: string) =
         async {
             match! Twitch.Helix.Emotes.getUserEmotes userId accessToken with
             | None -> return []
@@ -314,7 +314,17 @@ type EmoteService() =
             globalEmotes <- [ twitchEmotes ; bttvEmotes ; ffzEmotes ; sevenTvEmotes ] |> List.concat
         }
 
-    member _.RefreshChannelEmotes channelId =
+    member _.RefreshGlobalEmotes (userId: string, accessToken: string) =
+        async {
+            let! twitchEmotes = Twitch.userEmotes userId accessToken
+            let! bttvEmotes = Bttv.globalEmotes ()
+            let! ffzEmotes = Ffz.globalEmotes ()
+            let! sevenTvEmotes = SevenTv.globalEmotes ()
+
+            globalEmotes <- [ twitchEmotes ; bttvEmotes ; ffzEmotes ; sevenTvEmotes ] |> List.concat
+        }
+
+    member _.RefreshChannelEmotes (channelId: string) =
         async {
             let! twitchEmotes = Twitch.channelEmotes channelId
             let! bttvEmotes = Bttv.channelEmotes channelId

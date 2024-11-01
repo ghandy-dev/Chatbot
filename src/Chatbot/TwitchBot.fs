@@ -15,11 +15,18 @@ open System
 
 let botConfig = Configuration.Bot.config
 
-let getAccessTokenUser () =
+let getAccessToken () =
     async {
-        match! tokenStore.GetToken(TokenType.Twitch) |> Option.bindAsync Helix.Users.getAccessTokenUser with
+        match! tokenStore.GetToken(TokenType.Twitch) with
+        | None -> return failwith "Failed to get access token"
+        | Some token -> return token
+    }
+
+let getAccessTokenUser token =
+    async {
+        match! Helix.Users.getAccessTokenUser token with
         | Some user -> return user
-        | None -> return failwith "Failed to get an access token, or failed to look up user associated with the retrieved access token"
+        | None -> return failwith "Failed to look up user associated with access token"
     }
 
 let getChannelJoinList () =
@@ -104,12 +111,7 @@ let joinChannels (twitchChatClient: TwitchChatClient) channels =
         do! twitchChatClient.SendAsync(IRC.JoinM channels)
     }
 
-let getChannelEmotes channels =
-    async {
-        channels |> Seq.map (fun c -> emoteService.RefreshChannelEmotes c) |> Async.Parallel |> ignore
-    }
-
-let chatAgent (twitchChatClient: TwitchChatClient) cancellationToken =
+let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) cancellationToken =
     new MailboxProcessor<ClientRequest>(
         (fun mb ->
             async {
@@ -144,7 +146,9 @@ let chatAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                                 do! emoteService.RefreshChannelEmotes channelId
                                 do! twitchChatClient.SendAsync(IRC.Command.Join channel)
                             | LeaveChannel channel -> do! twitchChatClient.SendAsync(IRC.Command.Part channel)
-                            | RefreshGlobalEmotes provider -> do! emoteService.RefreshGlobalEmotes ()
+                            | RefreshGlobalEmotes provider ->
+                                let! accessToken = getAccessToken ()
+                                do! emoteService.RefreshGlobalEmotes(user.Id, accessToken)
                             | RefreshChannelEmotes channelId -> do! emoteService.RefreshChannelEmotes(channelId)
                         | Reconnect ->
                             Logging.info "Twitch servers requested we reconnect..."
@@ -162,7 +166,8 @@ let chatAgent (twitchChatClient: TwitchChatClient) cancellationToken =
 
 let run (cancellationToken: Threading.CancellationToken) =
     async {
-        let! user = getAccessTokenUser()
+        let! accessToken = getAccessToken ()
+        let! user = getAccessTokenUser accessToken
 
         let twitchChatConfig: TwitchChatClientConfig = {
             UserId = user.Id
@@ -172,7 +177,7 @@ let run (cancellationToken: Threading.CancellationToken) =
 
         let twitchChatClient = new TwitchChatClient(connectionConfig, twitchChatConfig)
 
-        let chatAgent = chatAgent twitchChatClient cancellationToken
+        let chatAgent = chatAgent twitchChatClient user cancellationToken
         let reminderAgent = reminderAgent twitchChatClient
 
         twitchChatClient.MessageReceived.Subscribe(fun messages -> handleMessages messages chatAgent |> Async.Start) |> ignore
@@ -200,8 +205,9 @@ let run (cancellationToken: Threading.CancellationToken) =
 
         let! channels = getChannelJoinList ()
         do! joinChannels twitchChatClient (channels |> Seq.map snd)
-        do! emoteService.RefreshGlobalEmotes ()
-        do! getChannelEmotes (channels |> Seq.map fst)
+        do! emoteService.RefreshGlobalEmotes(user.Id, accessToken)
+        let refreshChannelEmotes = channels |> Seq.map fst |> Seq.map (fun c -> emoteService.RefreshChannelEmotes c)
+        do! refreshChannelEmotes |> Async.Parallel |> Async.Ignore
 
         chatAgent.Start()
         reminderAgent.Start()
