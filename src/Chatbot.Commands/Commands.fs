@@ -27,7 +27,7 @@ module Commands =
             Command.createCommand ("addbetween", [ "ab" ], HelpInfo.AddBetween, SA addBetween, 10000, false)
             Command.createCommand ("alias", [ $"{Configuration.Bot.config.CommandPrefix}" ], HelpInfo.Alias, AACM alias, 5000, false)
             Command.createCommand ("apod", [], HelpInfo.AstronomyPictureOfTheDay, AA apod, 20000, false)
-            Command.createCommand ("braille", [], HelpInfo.Braille, AA braille, 20000, false)
+            Command.createCommand ("braille", [], HelpInfo.Braille, AAC braille, 20000, false)
             Command.createCommand ("calculator", [ "calc" ], HelpInfo.Calculator, SA calculate, 5000, false)
             Command.createCommand ("catfact", [], HelpInfo.CatFact, A catFact, 20000, false)
             Command.createCommand ("chance", [ "%" ], HelpInfo.Chance, S chance, 10000, false)

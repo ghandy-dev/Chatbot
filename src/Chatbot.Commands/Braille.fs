@@ -22,29 +22,33 @@ module Braille =
         (1, 3, 128)
     ]
 
-    let private conversions =
+    let private colorIntensityFunctions =
         [
             "luminance", (fun (s: SKColor) -> (0.299 * float s.Red) + (0.587 * float s.Green) + (0.114 * float s.Blue))
             "average", (fun (s: SKColor) -> ((s.Red + s.Green + s.Blue) |> float) / 3.0)
             "max", (fun (s: SKColor) -> [ s.Red ; s.Green ; s.Blue ] |> List.max |> float)
             "lightness",
             fun (s: SKColor) ->
-                let max = ([ s.Red ; s.Green ; s.Blue ] |> List.max) |> float
-                let min = ([ s.Red ; s.Green ; s.Blue ] |> List.min) |> float
+                let max = [ s.Red ; s.Green ; s.Blue ] |> List.max |> float
+                let min = [ s.Red ; s.Green ; s.Blue ] |> List.min |> float
                 (max + min) / 2.0
 
         ]
         |> Map.ofList
 
+    let [<Literal>] private DefaultColorFunction = "luminance"
+
     let private getPixelValue (bitmap: SKBitmap) x y f =
         let pixel = bitmap.GetPixel(x, y)
-        conversions.[f] pixel
+        colorIntensityFunctions.[f] pixel
 
     let private calcAverage (bitmap: SKBitmap) f =
         let average =
-            List.fold (fun acc y -> List.fold (fun innerAcc x -> innerAcc + getPixelValue bitmap x y f) acc [ 0 .. bitmap.Width - 1 ]) 0.0 [
-                0 .. bitmap.Height - 1
-            ]
+            List.fold (fun acc y ->
+                List.fold (fun innerAcc x ->
+                    innerAcc + getPixelValue bitmap x y f
+                ) acc [ 0 .. bitmap.Width - 1 ]
+            ) 0.0 [ 0 .. bitmap.Height - 1 ]
 
         average / (float bitmap.Height * float bitmap.Width)
 
@@ -148,44 +152,51 @@ module Braille =
             let pattern = @"^image\/(jpeg|jpg|jfif|pjpeg|pjp|png|bmp|webp|avif|apng)$"
 
             match toResult response with
+            | Error _ -> return None
             | Ok response ->
                 let! bytes = response |> toBytesAsync
 
                 if
-                    (response.originalHttpResponseMessage.Content.Headers.Contains("Content-Type")
-                     && RegularExpressions.Regex.IsMatch(
-                         response.originalHttpResponseMessage.Content.Headers.ContentType.MediaType,
-                         pattern
-                     ))
+                    response.originalHttpResponseMessage.Content.Headers.Contains("Content-Type")
+                    && RegularExpressions.Regex.IsMatch(response.originalHttpResponseMessage.Content.Headers.ContentType.MediaType, pattern)
                     || isImage bytes
                 then
                     return Some bytes
                 else
                     return None
-            | Error _ -> return None
         }
 
-    let private internalBraille (url, setting) =
+    let private internalBraille url setting =
         async {
             match! getImage url with
-            | None -> return Error "Couldn't retrieve image, invalid url provided, or an unsupported image format is used"
+            | None -> return Message "Couldn't retrieve image, invalid url provided, or an unsupported image format is used"
             | Some image ->
-                let braille = imageToBraille 30 image setting
-                return Ok braille
+                let brailleAscii = imageToBraille 30 image setting
+                return Message brailleAscii
         }
 
-    let braille args =
+    let braille args context =
         async {
-            let argsResult =
+            let url, colorFunc =
                 match args with
-                | [] -> Error "No url specified"
-                | [ url ] -> Ok(url, "luminance")
-                | setting :: url :: _ ->
-                    match conversions.ContainsKey setting with
-                    | false -> Error "Unknown conversion specified"
-                    | true -> Ok(url, setting)
+                | [] -> None, None
+                | [ value ] ->
+                    match context.Emotes.TryFind value with
+                    | Some emote -> Some emote.DirectUrl, Some DefaultColorFunction
+                    | None -> Some value, Some DefaultColorFunction
+                | colorFunc :: value :: _ ->
+                    match
+                        colorIntensityFunctions |> Map.containsKey colorFunc,
+                        context.Emotes.TryFind value
+                    with
+                    | true, Some emote -> Some emote.DirectUrl, Some colorFunc
+                    | false, Some emote -> None, Some emote.DirectUrl
+                    | true, None -> Some colorFunc, None
+                    | _ -> None, None
 
-            match! argsResult |> Async.create |> Result.bindAsync (internalBraille) with
-            | Error err -> return Message err
-            | Ok brailleAscii -> return Message brailleAscii
+            match url, colorFunc with
+            | None, None -> return Message "Invalid setting and url/emote specified"
+            | None, Some _ -> return Message "Invalid url/emote specified"
+            | Some _, None-> return Message "Invalid setting specified"
+            | Some u, Some s -> return! internalBraille u s
         }
