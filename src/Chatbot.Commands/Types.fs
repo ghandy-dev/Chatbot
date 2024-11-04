@@ -33,8 +33,8 @@ type Emotes = {
     ChannelEmotes: Emotes.Emote list
 } with
 
-    member this.TryFind emote =
-        this.GlobalEmotes |> List.tryFind emote |> Option.orElseWith (fun _ -> this.ChannelEmotes |> List.tryFind emote)
+    member this.TryFind (emote: string) =
+        this.GlobalEmotes |> List.tryFind (fun e -> e.Name = emote) |> Option.orElseWith (fun _ -> this.ChannelEmotes |> List.tryFind (fun e -> e.Name = emote))
 
     member this.Random () =
         match this.GlobalEmotes, this.ChannelEmotes with
@@ -90,16 +90,16 @@ type CommandResult =
     | Pipe of string list
     | BotAction of BotCommand * string
 
-type Parameters = string list
+type Args = string list
 
 type CommandFunction =
     | S of (unit -> CommandResult) // SyncFunction
-    | SA of (Parameters -> CommandResult) // SyncFunctionWithArgs
-    | SAC of (Parameters -> Context -> CommandResult) // SyncFunctionWithArgsAndContext
+    | SA of (Args -> CommandResult) // SyncFunctionWithArgs
+    | SAC of (Args -> Context -> CommandResult) // SyncFunctionWithArgsAndContext
     | A of (unit -> Async<CommandResult>) // AsyncFunction
-    | AA of (Parameters -> Async<CommandResult>) // AsyncFunctionWithArgs
-    | AAC of (Parameters -> Context -> Async<CommandResult>) // AsyncFunctionWithArgsAndContext
-    | AACM of (Parameters -> Context -> Map<string, Command> -> Async<CommandResult>) // AsyncFunctionWithArgsAndContextAndCommands
+    | AA of (Args -> Async<CommandResult>) // AsyncFunctionWithArgs
+    | AAC of (Args -> Context -> Async<CommandResult>) // AsyncFunctionWithArgsAndContext
+    | AACM of (Args -> Context -> Map<string, Command> -> Async<CommandResult>) // AsyncFunctionWithArgsAndContextAndCommands
 
 and Command = {
     Name: string
