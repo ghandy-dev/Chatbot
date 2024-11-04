@@ -54,7 +54,7 @@ module Twitch =
                     |> Seq.map (fun e -> {
                         Name = e.Name
                         Url = ""
-                        DirectUrl = $"https://static-cdn.jtvnw.net/emoticons/v2/{e.Id}/{{format}}/dark/{e.Scale[1]}"
+                        DirectUrl = $"https://static-cdn.jtvnw.net/emoticons/v2/{e.Id}/static/dark/{e.Scale[1]}"
                         Type = EmoteType.Global
                         Provider = EmoteProvider.Twitch
                     })
@@ -71,7 +71,7 @@ module Twitch =
                     |> Seq.map (fun e -> {
                         Name = e.Name
                         Url = ""
-                        DirectUrl = $"https://static-cdn.jtvnw.net/emoticons/v2/{e.Id}/{{format}}/dark/{e.Scale[1]}"
+                        DirectUrl = $"https://static-cdn.jtvnw.net/emoticons/v2/{e.Id}/static/dark/{e.Scale[1]}"
                         Type = EmoteType.tryParse e.EmoteType
                         Provider = EmoteProvider.Twitch
                     })
@@ -258,7 +258,7 @@ module SevenTv =
     let channelEmotesUrl channelId = $"{ApiUrl}/v3/users/twitch/{channelId}"
 
     let emoteUrl emoteId = $"https://7tv.app/emotes/{emoteId}"
-    let directUrl emoteId = $"https://cdn.7tv.app/emote/{emoteId}"
+    let directUrl emoteId = $"https://cdn.7tv.app/emote/{emoteId}/2x.webp"
 
     let globalEmotes () =
         async {
