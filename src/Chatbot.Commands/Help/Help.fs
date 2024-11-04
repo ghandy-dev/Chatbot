@@ -82,17 +82,28 @@ Run an alias
             Name = "Braille"
             Description = "Generate ASCII braille art of an image."
             ExampleUsage = $"""
+Specify an image URL
 {exampleArgs "braille" "<url>"}
 {exampleArgs "braille" "https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0"}
 
-Supported conversions:
+Specify an emote.
+Can be a Twitch/BTTV/FFZ/7TV emote, but due to limitations; if a Twitch Emote is specified it must be one accessible to the bot (i.e. either it must be a global emote, or an emote from a channel the bot is subscribed to)
+{exampleArgs "braille" "<emote>"}
+{exampleArgs "braille" "Kappa"}
+
+Specify a color intensity function:
+
+Supported color intensity functions:
     - lightness (default)
     - luminance
     - average
     - max
 
-{exampleArgs "braille" "<setting> <url>"}
-{exampleArgs "braille" "lightness https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0"}
+{exampleArgs "braille" "<function> <url>"}
+{exampleArgs "braille" "average https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0"}
+
+{exampleArgs "braille" "<function> <emote>"}
+{exampleArgs "braille" "average Kappa"}
 """
         }
 
