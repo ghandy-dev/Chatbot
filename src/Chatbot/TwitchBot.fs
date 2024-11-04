@@ -75,11 +75,10 @@ let reminderAgent (twitchChatClient: TwitchChatClient) =
                     do! Async.Sleep(250)
                     mb.Post CheckReminders
                 | UserTyped(channel, userId, username) ->
-                    let! reminderCount = ReminderRepository.getPendingReminderCount userId
-
-                    if reminderCount = 0 then
-                        ()
-                    else
+                    match! ReminderRepository.getPendingReminderCount userId with
+                    | DatabaseResult.Failure -> ()
+                    | DatabaseResult.Success c when c = 0 -> ()
+                    | DatabaseResult.Success _ ->
                         let! reminders = ReminderRepository.getReminders userId
 
                         let reminderMessages =
@@ -94,7 +93,7 @@ let reminderAgent (twitchChatClient: TwitchChatClient) =
                         if reminderMessages.Length > 500 then
                             match! Pastebin.createPaste "" reminderMessages with
                             | Error err -> Logging.error err (new Exception())
-                            | Ok url -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@{username}, reminders were too long to send in chat, check {url} for your reminders"))
+                            | Ok url -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@{username}, reminders were too long to send, check {url} for your reminders"))
                         else
                             do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@{username}, {reminderMessages}"))
 

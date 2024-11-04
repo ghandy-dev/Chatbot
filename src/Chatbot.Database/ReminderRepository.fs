@@ -106,10 +106,10 @@ module ReminderRepository =
 
             try
                 let! count = connection.ExecuteScalarAsync<int>(query, {| userId = userId |}) |> Async.AwaitTask
-                return count
+                return DatabaseResult.Success count
             with ex ->
                 Logging.error "Error executing query" ex
-                return -1
+                return DatabaseResult.Failure
         }
 
     let getPendingReminderCount (userId: int) =
@@ -125,10 +125,10 @@ module ReminderRepository =
 
             try
                 let! count = connection.ExecuteScalarAsync<int>(query, {| userId = userId |}) |> Async.AwaitTask
-                return count
+                return DatabaseResult.Success count
             with ex ->
                 Logging.error "Error executing query" ex
-                return -1
+                return DatabaseResult.Failure
         }
 
     let add (reminder: CreateReminder) =

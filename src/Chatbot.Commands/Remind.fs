@@ -44,25 +44,29 @@ module Remind =
                 let now = utcNow()
                 let whenInput = Regex.Matches(content, whenPattern).[0].Value
                 let timeComponents = Regex.Matches(whenInput, timePattern)
-                let remindDateTime =
-                    timeComponents
-                    |> Seq.map (fun m -> m.Groups[1].Value, m.Groups[2].Value)
-                    |> parseTimeComponents
 
-                if (remindDateTime - now).Days / 365 > 5 then
-                    return Message "Max reminder time span is now +5 years"
+                if timeComponents.Count = 0 then
+                    return Message "Couldn't parse reminder time"
                 else
-                    let message = Regex.Replace(content, whenPattern, "")
-                    let remindIn = remindDateTime - now
+                    let remindDateTime =
+                        timeComponents
+                        |> Seq.map (fun m -> m.Groups[1].Value, m.Groups[2].Value)
+                        |> parseTimeComponents
 
-                    match! Twitch.Helix.Users.getUser user with
-                    | None -> return Message $"{user} doesn't exist"
-                    | Some targetUser ->
-                        let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some remindDateTime)
-                        let targetUsername = if targetUser.Id = context.UserId then "you" else $"@{targetUser.DisplayName}"
-                        match! ReminderRepository.add reminder with
-                        | DatabaseResult.Success id -> return Message $"(ID: {id}) I will remind {targetUsername} in {formatTimeSpan remindIn}"
-                        | DatabaseResult.Failure -> return Message "Error occurred trying to create reminder"
+                    if (remindDateTime - now).Days / 365 > 5 then
+                        return Message "Max reminder time span is now +5 years"
+                    else
+                        let message = Regex.Replace(content, whenPattern, "")
+                        let remindIn = remindDateTime - now
+
+                        match! Twitch.Helix.Users.getUser user with
+                        | None -> return Message $"{user} doesn't exist"
+                        | Some targetUser ->
+                            let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some remindDateTime)
+                            let targetUsername = if targetUser.Id = context.UserId then "you" else $"@{targetUser.DisplayName}"
+                            match! ReminderRepository.add reminder with
+                            | DatabaseResult.Success id -> return Message $"(ID: {id}) I will remind {targetUsername} in {formatTimeSpan remindIn}"
+                            | DatabaseResult.Failure -> return Message "Error occurred trying to create reminder"
         }
 
     let private parseReminder user message (context: Context) =
@@ -79,17 +83,17 @@ module Remind =
 
     let private remind' args user (context: Context) =
         async {
-                let content = String.concat " " args
-                if Regex.IsMatch(content, whenPattern, RegexOptions.IgnoreCase) then
-                    match! ReminderRepository.getPendingTimedReminderCount (context.UserId |> int) with
-                    | -1 -> return Message "Error occured checking current pending reminders"
-                    | c when c > 20 -> return Message "User has too many pending timed reminders"
-                    | _ -> return! parseTimedReminder user content context
-                else
-                    match! ReminderRepository.getPendingReminderCount (context.UserId |> int) with
-                    | -1 -> return Message "Error occured checking current pending reminders"
-                    | c when c > 10 -> return Message "User has too many pending reminders"
-                    | _ -> return! parseReminder user content context
+            let content = String.concat " " args
+            if Regex.IsMatch(content, whenPattern, RegexOptions.IgnoreCase) then
+                match! ReminderRepository.getPendingTimedReminderCount (context.UserId |> int) with
+                | DatabaseResult.Failure -> return Message "Error occured checking current pending reminders"
+                | DatabaseResult.Success c when c > 20 -> return Message "User has too many pending timed reminders"
+                | DatabaseResult.Success _ -> return! parseTimedReminder user content context
+            else
+                match! ReminderRepository.getPendingReminderCount (context.UserId |> int) with
+                | DatabaseResult.Failure -> return Message "Error occured checking current pending reminders"
+                | DatabaseResult.Success c when c > 10 -> return Message "User has too many pending reminders"
+                | DatabaseResult.Success _ -> return! parseReminder user content context
         }
 
     let remind args context =
