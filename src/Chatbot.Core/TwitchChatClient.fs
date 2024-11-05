@@ -82,7 +82,7 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
 
     let send (command: IRC.Command) =
         async {
-            let ircMessage = IRC.Command.ToString command
+            let ircMessage = command.ToString()
 
             match command with
             | IRC.PrivMsg (channel, _) ->

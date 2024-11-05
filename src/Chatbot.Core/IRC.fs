@@ -15,8 +15,8 @@ module IRC =
         | JoinM of channels: string seq
         | Raw of string
 
-        static member ToString =
-            function
+        override this.ToString () =
+            match this with
             | CapReq capabilities -> sprintf """CAP REQ :%s""" (String.concat " " capabilities)
             | Pass token -> sprintf "PASS oauth:%s" token
             | Nick username -> sprintf "NICK %s" username
