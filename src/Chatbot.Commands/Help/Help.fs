@@ -12,6 +12,20 @@ module HelpInfo =
     let exampleArgs = sprintf "%s %s %s" commandPrefix
 
 
+    let AccountAge =
+        {
+            Name = "Account Age"
+            Description = "Look up a users' account age and creation date."
+            ExampleUsage = $"""
+Look up your own account age
+{example "accountage"}
+
+Look up another users' account age
+{exampleArgs "accountage" "<username>"}
+{exampleArgs "accountage" "k4yfour"}
+"""
+        }
+
     let AstronomyPictureOfTheDay =
         {
             Name = "Astronomy Picture Of The Day"

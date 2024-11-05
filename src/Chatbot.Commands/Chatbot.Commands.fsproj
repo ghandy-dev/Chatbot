@@ -65,6 +65,7 @@
     <Compile Include="TopStreams.fs" />
     <Compile Include="AddBetween.fs" />
     <Compile Include="Remind.fs" />
+    <Compile Include="AccountAge.fs" />
     <Compile Include="Commands.fs" />
   </ItemGroup>
 

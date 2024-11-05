@@ -24,6 +24,7 @@ module Commands =
 
     let commandsList =
         [
+            Command.createCommand ("accountage", [ "accage" ], HelpInfo.AccountAge, AAC accountAge, 10000, false)
             Command.createCommand ("addbetween", [ "ab" ], HelpInfo.AddBetween, SA addBetween, 10000, false)
             Command.createCommand ("alias", [ $"{Configuration.Bot.config.CommandPrefix}" ], HelpInfo.Alias, AACM alias, 5000, false)
             Command.createCommand ("apod", [], HelpInfo.AstronomyPictureOfTheDay, AA apod, 20000, false)
