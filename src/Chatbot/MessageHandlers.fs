@@ -10,9 +10,16 @@ let commandPrefix = Configuration.Bot.config.CommandPrefix
 
 let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProcessor<ClientRequest>) =
     async {
-        match msg.Message.StartsWith(commandPrefix) with
+        let message =
+            match msg.ReplyParentMessageBody, msg.ReplyParentUserLogin with
+            | Some message, Some username ->
+                let regex = new System.Text.RegularExpressions.Regex(sprintf "@%s " username)
+                sprintf "%s %s" (regex.Replace(msg.Message, "", 1)) message
+            | _, _ -> msg.Message
+
+        match message.StartsWith(commandPrefix) with
         | true ->
-            let! response = safeHandleCommand msg.UserId msg.Username (Channel channelStates[msg.Channel]) msg.Message[1..]
+            let! response = safeHandleCommand msg.UserId msg.Username (Channel channelStates[msg.Channel]) message[1..]
 
             match response with
             | Some commandOutcome ->

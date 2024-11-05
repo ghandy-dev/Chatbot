@@ -374,10 +374,19 @@ module Messages =
         type PingMessage = { message: string }
 
         type PrivateMessage = {
+            Id: string
             Channel: string
             Message: string
             Username: string
             UserId: string
+            RoomId: string
+            Mod: bool
+            ReplyParentUserId: string option
+            ReplyParentUserLogin: string option
+            ReplyParentDisplayName: string option
+            ReplyParentMessageBody: string option
+            ReplyThreadParentUserLogin: string option
+            Bits: string option
         }
 
         type JoinMessage = {
@@ -551,8 +560,17 @@ module Messages =
                 Some {
                     Channel = parts.[0].[1..]
                     Message = parts.[1].[1..]
+                    Id = message.Tags["id"]
                     Username = message.Tags["display-name"]
                     UserId = message.Tags["user-id"]
+                    RoomId = message.Tags["room-id"]
+                    Mod = message.Tags["mod"] |> Boolean.parseBit
+                    ReplyParentUserId = message.Tags.TryFind "reply-parent-user-id"
+                    ReplyParentUserLogin = message.Tags.TryFind "reply-parent-user-login"
+                    ReplyParentDisplayName = message.Tags.TryFind "reply-parent-display-name"
+                    ReplyParentMessageBody = message.Tags.TryFind "reply-parent-msg-body" |> Option.bind (fun s -> Some (s.Replace(@"\s", " ")))
+                    ReplyThreadParentUserLogin = message.Tags.TryFind "reply-thread-parent-user-login"
+                    Bits = message.Tags.TryFind "bits"
                 }
             | _ -> None
 
@@ -565,7 +583,7 @@ module Messages =
                     match parts |> List.ofArray with
                     | "*" :: "ACK" :: cs ->
                         System.String.Join(" ", cs)
-                        |> (fun ps -> ps.Split(":"))
+                        |> _.Split(":")
                         |> List.ofArray
                         |> function
                             | [ _ ; cs ] -> true, cs.Split(" ")
