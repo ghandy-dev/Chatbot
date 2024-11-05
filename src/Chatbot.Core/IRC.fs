@@ -8,6 +8,7 @@ module IRC =
         | Pass of token: string
         | Nick of username: string
         | PrivMsg of channel: string * message: string
+        | ReplyMsg of messageId: string * channel: string * message: string
         | Pong of message: string
         | Part of channel: string
         | Join of channel: string
@@ -16,12 +17,13 @@ module IRC =
 
         static member ToString =
             function
-            | CapReq(capabilities) -> $"""CAP REQ :{String.concat " " capabilities}"""
-            | Pass token -> $"PASS oauth:{token}"
-            | Nick username -> $"NICK {username}"
-            | PrivMsg(channel, message) -> $"PRIVMSG #{channel} :{message}"
-            | Pong message -> $"PONG :{message}"
-            | Part channel -> $"PART #{channel}"
-            | Join channel -> $"JOIN #{channel}"
-            | JoinM channels -> channels |> Seq.map (fun c -> $"#{c}") |> String.concat "," |> (fun cs -> $"JOIN {cs}")
+            | CapReq capabilities -> sprintf """CAP REQ :%s""" (String.concat " " capabilities)
+            | Pass token -> sprintf "PASS oauth:%s" token
+            | Nick username -> sprintf "NICK %s" username
+            | PrivMsg(channel, message) -> sprintf "PRIVMSG #%s :%s" channel message
+            | ReplyMsg(messageId, channel, message) -> sprintf "@reply-parent-msg-id=%s PRIVMSG #%s :%s" messageId channel message
+            | Pong message -> sprintf "PONG :%s" message
+            | Part channel -> sprintf "PART #%s" channel
+            | Join channel -> sprintf "JOIN #%s" channel
+            | JoinM channels -> channels |> Seq.map (sprintf "#%s") |> String.concat "," |> sprintf "JOIN %s"
             | Raw message -> message
