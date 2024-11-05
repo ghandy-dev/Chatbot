@@ -3,13 +3,13 @@ namespace Commands
 [<AutoOpen>]
 module Emote =
 
-    let private getEmoteProvider =
+    let private parseEmoteProvider =
         function
-        | "twitch" -> Emotes.EmoteProvider.Twitch
-        | "bttv" -> Emotes.EmoteProvider.Bttv
-        | "ffz" -> Emotes.EmoteProvider.Ffz
-        | "7tv" -> Emotes.EmoteProvider.SevenTv
-        | _ -> failwith "Unexpected emote provider, expected twitch/bttv/ffz/7tv"
+        | "twitch" -> Some Emotes.EmoteProvider.Twitch
+        | "bttv" -> Some Emotes.EmoteProvider.Bttv
+        | "ffz" -> Some Emotes.EmoteProvider.Ffz
+        | "7tv" -> Some Emotes.EmoteProvider.SevenTv
+        | _ -> None
 
     let private randomEmoteKeys = [
         "provider"
@@ -17,15 +17,12 @@ module Emote =
 
     let randomEmote args context =
         let keyValues = KeyValueParser.parse args randomEmoteKeys
-        let maybeProvider = keyValues |> Map.tryFind "provider"
+        let maybeProvider = keyValues |> Map.tryFind "provider" |> Option.bind parseEmoteProvider
 
         let maybeEmote =
             match maybeProvider with
-            | None ->
-                context.Emotes.Random ()
-            | Some p ->
-                let provider = getEmoteProvider p
-                context.Emotes.Random provider
+            | None -> context.Emotes.Random ()
+            | Some p -> context.Emotes.Random p
 
         match maybeEmote with
         | None -> Message "Kappa"
@@ -38,5 +35,8 @@ module Emote =
 
     let refreshGlobalEmotes args =
         match args with
-        | emoteProvider :: _ -> BotAction(RefreshGlobalEmotes(getEmoteProvider emoteProvider), "Refreshing global emotes...")
-        | _ -> Message "Unknown emote provider (expected twitch/bttv/ffz/7tv)"
+        | [] -> Message "No emote provider specified"
+        | provider :: _ ->
+            match parseEmoteProvider provider with
+            | None -> Message "Unknown emote provider specified"
+            | Some p -> BotAction(RefreshGlobalEmotes p, "Refreshing global emotes...")
