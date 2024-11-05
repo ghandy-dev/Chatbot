@@ -3,43 +3,26 @@ namespace Commands
 [<AutoOpen>]
 module CatFacts =
 
-    open FsHttp
-    open FsHttp.Request
-    open FsHttp.Response
-
     type CatFact = {
         Fact: string
         Length: int
     }
 
     let [<Literal>] private ApiUrl = "https://catfact.ninja"
-
-    let private FactUrl = $"{ApiUrl}/fact"
-
-    let private getFromJsonAsync<'a> url =
-        async {
-            use! response =
-                http {
-                    GET url
-                    Accept MimeTypes.applicationJson
-                }
-                |> sendAsync
-
-            match toResult response with
-            | Ok response ->
-                let! deserialized = response |> deserializeJsonAsync<'a>
-                return Ok deserialized
-            | Error err -> return Error $"CatFacts API HTTP error {err.statusCode |> int} {err.statusCode}"
-        }
+    let private factUrl = $"{ApiUrl}/fact"
 
     let private getCatFact () =
         async {
-            return! getFromJsonAsync<CatFact> FactUrl
+            match! Http.getFromJsonAsync<CatFact> factUrl with
+            | Error (msg, statusCode) ->
+                Logging.error $"Cat Fact API error: {msg}" (new System.Net.Http.HttpRequestException("", null, statusCode))
+                return None
+            | Ok catFact -> return Some catFact
         }
 
     let catFact () =
         async {
             match! getCatFact() with
-            | Ok fact -> return Message fact.Fact
-            | Error err -> return Message err
+            | None -> return Message "Error getting cat fact"
+            | Some fact -> return Message fact.Fact
         }
