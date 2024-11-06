@@ -10,11 +10,12 @@ let private parseLine (line: string) =
 
 let load () =
     async {
-        let filePath = Path.Combine(".env")
+        let fileName = ".env"
 
-        if (filePath |> File.Exists) then
-            let! lines = filePath |> File.ReadAllLinesAsync |> Async.AwaitTask
+        if File.Exists(fileName) then
+            let! lines = fileName |> File.ReadAllLinesAsync |> Async.AwaitTask
+
             lines
             |> Seq.choose parseLine
-            |> Seq.iter (fun (key, value) -> Environment.SetEnvironmentVariable(key, value))
+            |> Seq.iter Environment.SetEnvironmentVariable
     }
