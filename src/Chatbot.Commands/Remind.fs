@@ -44,32 +44,36 @@ module Remind =
                 let now = utcNow()
                 let pattern = whenPattern user
 
-                match Regex.Matches(sprintf "%s %s" user content, pattern) |> List.ofSeq with
-                | [] -> return Message "Couldn't parse reminder time"
-                | ``match`` :: _ ->
+                match
+                    Regex.Matches(sprintf "%s %s" user content, pattern)
+                    |> Seq.tryHead
+                    |> Option.bind (fun m ->
+                        Regex.Matches(m.Value, timeComponentPattern)
+                        |> fun ms -> if ms.Count > 0 then Some ms else None
+                    )
+                with
+                | None -> return Message "Couldn't parse reminder time"
+                | Some timeComponents ->
+                    let remindDateTime =
+                        timeComponents
+                        |> Seq.map (fun m -> m.Groups[1].Value, m.Groups[2].Value)
+                        |> parseTimeComponents
 
-                    match Regex.Matches(``match``.Value, timeComponentPattern) |> List.ofSeq with
-                    | [] -> return Message "Couldn't parse reminder time"
-                    | timeComponents ->
-                        let remindDateTime =
-                            timeComponents
-                            |> Seq.map (fun m -> m.Groups[1].Value, m.Groups[2].Value)
-                            |> parseTimeComponents
+                    if (remindDateTime - now).Days / 365 > 5 then
+                        return Message "Max reminder time span is now + 5 years"
+                    else
+                        let message = Regex.Replace(content, pattern, "")
+                        let remindIn = remindDateTime - now
 
-                        if (remindDateTime - now).Days / 365 > 5 then
-                            return Message "Max reminder time span is now +5 years"
-                        else
-                            let message = Regex.Replace(content, pattern, "")
-                            let remindIn = remindDateTime - now
+                        match! Twitch.Helix.Users.getUser user with
+                        | None -> return Message (sprintf "%s doesn't exist" user)
+                        | Some targetUser ->
+                            let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some remindDateTime)
+                            let targetUsername = if targetUser.Id = context.UserId then "you" else sprintf "@%s" targetUser.DisplayName
 
-                            match! Twitch.Helix.Users.getUser user with
-                            | None -> return Message $"{user} doesn't exist"
-                            | Some targetUser ->
-                                let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some remindDateTime)
-                                let targetUsername = if targetUser.Id = context.UserId then "you" else $"@{targetUser.DisplayName}"
-                                match! ReminderRepository.add reminder with
-                                | DatabaseResult.Success id -> return Message $"(ID: {id}) I will remind {targetUsername} in {formatTimeSpan remindIn}"
-                                | DatabaseResult.Failure -> return Message "Error occurred trying to create reminder"
+                            match! ReminderRepository.add reminder with
+                            | DatabaseResult.Success id -> return Message (sprintf "(ID: %d) I will remind %s in %s" id targetUsername (formatTimeSpan remindIn))
+                            | DatabaseResult.Failure -> return Message "Error occurred trying to create reminder"
         }
 
     let private setReminder (user: string) (message: string) (context: Context) =
