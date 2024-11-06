@@ -9,8 +9,8 @@ module Remind =
     open Database
     open Database.Types.Reminders
 
-    let private whenPattern = @"(in\s*)+((\d+)\s+(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)+?,*\s*)+"
-    let private timePattern = @"(\d+)\s+(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)"
+    let private whenPattern username = sprintf @"(%s) (in\s*)+((\d+)\s+(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)+?,*\s*)+" username
+    let private timeComponentPattern = @"(\d+)\s+(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)"
 
     let private parseTimeComponents (durations: (string * string) seq) =
         let parseTimeComponent (dateTime: DateTime) (duration: string) (timeComp: string) =
@@ -36,14 +36,15 @@ module Remind =
 
         durations |> Seq.fold (fun dt (d, tc) -> parseTimeComponent dt d tc) (utcNow())
 
-    let private parseTimedReminder user content context =
+    let private parseTimedReminder (user: string) (content: string) (context: Context) =
         async {
             match context.Source with
             | Whisper _ -> return Message "Timed reminders can only be used in channels"
             | Channel channel ->
                 let now = utcNow()
-                let whenInput = Regex.Matches(content, whenPattern).[0].Value
-                let timeComponents = Regex.Matches(whenInput, timePattern)
+                let pattern = whenPattern user
+                let whenInput = Regex.Matches(sprintf "%s %s" user content, pattern).[0].Value
+                let timeComponents = Regex.Matches(whenInput, timeComponentPattern)
 
                 if timeComponents.Count = 0 then
                     return Message "Couldn't parse reminder time"
@@ -56,7 +57,7 @@ module Remind =
                     if (remindDateTime - now).Days / 365 > 5 then
                         return Message "Max reminder time span is now +5 years"
                     else
-                        let message = Regex.Replace(content, whenPattern, "")
+                        let message = Regex.Replace(content, pattern, "")
                         let remindIn = remindDateTime - now
 
                         match! Twitch.Helix.Users.getUser user with
@@ -69,7 +70,7 @@ module Remind =
                             | DatabaseResult.Failure -> return Message "Error occurred trying to create reminder"
         }
 
-    let private parseReminder user message (context: Context) =
+    let private setReminder (user: string) (message: string) (context: Context) =
         async {
             match! Twitch.Helix.Users.getUser user with
             | None -> return Message $"{user} doesn't exist or is currently banned"
@@ -81,10 +82,11 @@ module Remind =
                 | DatabaseResult.Failure -> return Message "Error occurred trying to create reminder"
         }
 
-    let private remind' args user (context: Context) =
+    let private remind' (args: string seq) (user: string) (context: Context) =
         async {
             let content = String.concat " " args
-            if Regex.IsMatch(content, whenPattern, RegexOptions.IgnoreCase) then
+
+            if Regex.IsMatch(sprintf "%s %s" user content, whenPattern user, RegexOptions.IgnoreCase) then
                 match! ReminderRepository.getPendingTimedReminderCount (context.UserId |> int) with
                 | DatabaseResult.Failure -> return Message "Error occured checking current pending reminders"
                 | DatabaseResult.Success c when c > 20 -> return Message "User has too many pending timed reminders"
@@ -93,7 +95,7 @@ module Remind =
                 match! ReminderRepository.getPendingReminderCount (context.UserId |> int) with
                 | DatabaseResult.Failure -> return Message "Error occured checking current pending reminders"
                 | DatabaseResult.Success c when c > 10 -> return Message "User has too many pending reminders"
-                | DatabaseResult.Success _ -> return! parseReminder user content context
+                | DatabaseResult.Success _ -> return! setReminder user content context
         }
 
     let remind args context =
