@@ -47,11 +47,10 @@ module Remind =
                 match Regex.Matches(sprintf "%s %s" user content, pattern) |> List.ofSeq with
                 | [] -> return Message "Couldn't parse reminder time"
                 | ``match`` :: _ ->
-                    let timeComponents = Regex.Matches(``match``.Value, timeComponentPattern)
 
-                    if timeComponents.Count = 0 then
-                        return Message "Couldn't parse reminder time"
-                    else
+                    match Regex.Matches(``match``.Value, timeComponentPattern) |> List.ofSeq with
+                    | [] -> return Message "Couldn't parse reminder time"
+                    | timeComponents ->
                         let remindDateTime =
                             timeComponents
                             |> Seq.map (fun m -> m.Groups[1].Value, m.Groups[2].Value)
