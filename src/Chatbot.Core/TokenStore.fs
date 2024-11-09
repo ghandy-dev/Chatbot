@@ -71,29 +71,27 @@ type TokenStore() =
 
     member _.GetToken (tokenType) =
         async {
-            match tokenType with
-            | Twitch ->
-                match tokenStoreDict.TryGetValue(tokenType) with
-                | true, token when not <| maybeHasExpired token.ExpiresAt -> return Some token.AccessToken
-                | _ ->
-                    match! getTwitchTokenAsync authClient with
-                    | Error err ->
-                        Logging.error "Failed to get reddit access token" err
-                        return None
-                    | Ok token ->
-                        tokenStoreDict[tokenType] <- { AccessToken = token.AccessToken ; ExpiresAt = Some token.ExpiresAt }
-                        return Some token.AccessToken
-            | Reddit ->
-                match tokenStoreDict.TryGetValue(tokenType) with
-                | true, token when not <| maybeHasExpired token.ExpiresAt -> return Some token.AccessToken
-                | _ ->
-                    match! getRedditTokenAsync () with
-                    | Error err ->
-                        Logging.error "Failed to get reddit access token" err
-                        return None
-                    | Ok token ->
-                        tokenStoreDict[tokenType] <- { AccessToken = token.AccessToken ; ExpiresAt = token.ExpiresAt }
-                        return Some token.AccessToken
+            let maybeToken = tokenStoreDict |> ConcurrentDictionary.tryGetValue(tokenType)
+
+            match tokenType, maybeToken with
+            | Twitch, Some token when not <| maybeHasExpired token.ExpiresAt -> return Some token.AccessToken
+            | Twitch, _ ->
+                match! getTwitchTokenAsync authClient with
+                | Error err ->
+                    Logging.error "Failed to get reddit access token" err
+                    return None
+                | Ok token ->
+                    tokenStoreDict[tokenType] <- { AccessToken = token.AccessToken ; ExpiresAt = Some token.ExpiresAt }
+                    return Some token.AccessToken
+            | Reddit, Some token when not <| maybeHasExpired token.ExpiresAt -> return Some token.AccessToken
+            | Reddit, _ ->
+                match! getRedditTokenAsync () with
+                | Error err ->
+                    Logging.error "Failed to get reddit access token" err
+                    return None
+                | Ok token ->
+                    tokenStoreDict[tokenType] <- { AccessToken = token.AccessToken ; ExpiresAt = token.ExpiresAt }
+                    return Some token.AccessToken
         }
 
 let tokenStore = new TokenStore()
