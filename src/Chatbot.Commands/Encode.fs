@@ -5,21 +5,21 @@ module Rot13 =
 
     open System
 
-    let caeser (text: string) (shift: int) =
+    let caesar (text: string) (shift: int) =
         let chars = text.ToCharArray()
 
         chars
         |> Array.map (fun c ->
             if Char.IsAsciiLetter(c) then
                 let shiftBase = if Char.IsUpper(c) then 65 else 97
-                ((((c |> int) - shiftBase + shift) % 26) + shiftBase) |> char
+                ((c |> int) - shiftBase + shift) % 26 + shiftBase |> char
             else
                 c
         )
-        |> (fun cs -> new string (cs))
+        |> String
 
-    // caeser cipher, but if you apply it again to the output then it decodes it
-    let rot13 text = caeser text 13
+    // caesar cipher, but if you apply it again to the output then it decodes it
+    let rot13 text = caesar text 13
 
     let base64 (text: string) =
         text |> System.Text.Encoding.UTF8.GetBytes |> System.Convert.ToBase64String
@@ -28,8 +28,9 @@ module Rot13 =
         [
             "base64", base64
             "rot13", rot13
-            "caesar", fun s -> caeser s (System.Random.Shared.Next(1, 27))
-        ] |> Map.ofList
+            "caesar", (fun s -> caesar s (System.Random.Shared.Next(1, 27)))
+        ]
+        |> Map.ofList
 
     let encode args =
         match args with
