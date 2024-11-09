@@ -8,6 +8,13 @@ let toResult (response: IApiResponse<'a>) =
     | code when code >= 200 && code < 300 -> Ok response.Body
     | _ -> Error response.Error.Message
 
+let private logError r =
+    match r with
+    | Error err -> Logging.error (sprintf "Twitch API error: %s" err) (new exn())
+    | Ok _ -> ()
+
+    r
+
 module Helix =
 
     open Configuration
@@ -15,7 +22,7 @@ module Helix =
     open Microsoft.Extensions.Options
 
     let private selectHelix = fun response -> response |> Result.bind (fun r -> Ok (r :> HelixResponse<_>).Data)
-    let private tryGetData (response: IApiResponse<'a>) = toResult response |> selectHelix |> Result.toOption
+    let private tryGetData (response: IApiResponse<'a>) = toResult response |> selectHelix |> logError |> Result.toOption
     let private tryHead response = tryGetData response |> Option.bind Seq.tryHead
 
     let private options =
