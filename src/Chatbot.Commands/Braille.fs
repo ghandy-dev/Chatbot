@@ -1,6 +1,52 @@
 namespace Commands
 
-module Dithering =
+module private Helper =
+
+    open System.Text.RegularExpressions
+
+    open FsHttp
+    open FsHttp.Request
+    open FsHttp.Response
+
+    let private png: byte[] = [| 0x89uy ; 0x50uy ; 0x4Euy ; 0x47uy |]
+    let private jpg: byte[] = [| 0xFFuy; 0xD8uy; 0xFFuy; 0xE0uy; 0x00uy; 0x10uy; 0x4Auy; 0x46uy; 0x49uy; 0x46uy |]
+    let private bmp: byte[] = [| 0x42uy ; 0x4Duy |]
+    let private webp: (byte[] * byte[]) = [| 0x52uy ; 0x49uy ; 0x46uy ; 0x46uy |], [| 0x57uy ; 0x45uy ; 0x42uy ; 0x50uy |]
+
+    let private isPng (bytes: byte[]) = bytes.Length > 3 && bytes[0..3] = png
+    let private isJpg (bytes: byte[]) = bytes.Length > 8 && bytes[0..8] = jpg
+    let private isBmp (bytes: byte[]) = bytes.Length > 1 && bytes[0..1] = bmp
+    let private isWebp (bytes: byte[]) = bytes.Length > 11 && (bytes[0..3], bytes[8..11]) = webp
+    let private isImage (bytes: byte[]) = isPng bytes || isJpg bytes || isBmp bytes || isWebp bytes
+
+    let getImage url =
+        async {
+            use! response =
+                http {
+                    GET url
+                    Accept "image/*"
+                }
+                |> sendAsync
+
+            let pattern = @"^image\/(jpeg|jpg|jfif|pjpeg|pjp|png|bmp|webp|avif|apng)$"
+
+            match toResult response with
+            | Error _ -> return None
+            | Ok response ->
+                let! bytes = response |> toBytesAsync
+
+                if
+                    response.originalHttpResponseMessage.Content.Headers.Contains("Content-Type")
+                    && Regex.IsMatch(response.originalHttpResponseMessage.Content.Headers.ContentType.MediaType, pattern)
+                    || isImage bytes
+                then
+                    return Some bytes
+                else
+                    return None
+        }
+
+
+module private Dithering =
 
     open SkiaSharp
 
@@ -63,61 +109,12 @@ module Dithering =
                 addError bitmap (x + 1) (y + 1) quantError (1.0 / 16.0)
 
 
-module Helper =
-
-    open System.Text.RegularExpressions
-
-    open FsHttp
-    open FsHttp.Request
-    open FsHttp.Response
-
-    let private png: byte[] = [| 0x89uy ; 0x50uy ; 0x4Euy ; 0x47uy |]
-    let private jpg: byte[] = [| 0xFFuy; 0xD8uy; 0xFFuy; 0xE0uy; 0x00uy; 0x10uy; 0x4Auy; 0x46uy; 0x49uy; 0x46uy |]
-    let private bmp: byte[] = [| 0x42uy ; 0x4Duy |]
-    let private webp: (byte[] * byte[]) = [| 0x52uy ; 0x49uy ; 0x46uy ; 0x46uy |], [| 0x57uy ; 0x45uy ; 0x42uy ; 0x50uy |]
-
-    let private isPng (bytes: byte[]) = bytes.Length > 3 && bytes[0..3] = png
-    let private isJpg (bytes: byte[]) = bytes.Length > 8 && bytes[0..8] = jpg
-    let private isBmp (bytes: byte[]) = bytes.Length > 1 && bytes[0..1] = bmp
-    let private isWebp (bytes: byte[]) = bytes.Length > 11 && (bytes[0..3], bytes[8..11]) = webp
-    let private isImage (bytes: byte[]) = isPng bytes || isJpg bytes || isBmp bytes || isWebp bytes
-
-    let getImage url =
-        async {
-            use! response =
-                http {
-                    GET url
-                    Accept "image/*"
-                }
-                |> sendAsync
-
-            let pattern = @"^image\/(jpeg|jpg|jfif|pjpeg|pjp|png|bmp|webp|avif|apng)$"
-
-            match toResult response with
-            | Error _ -> return None
-            | Ok response ->
-                let! bytes = response |> toBytesAsync
-
-                if
-                    response.originalHttpResponseMessage.Content.Headers.Contains("Content-Type")
-                    && Regex.IsMatch(response.originalHttpResponseMessage.Content.Headers.ContentType.MediaType, pattern)
-                    || isImage bytes
-                then
-                    return Some bytes
-                else
-                    return None
-        }
-
 [<AutoOpen>]
 module Braille =
 
     open System.Text
 
     open SkiaSharp
-
-    open FsHttp
-    open FsHttp.Request
-    open FsHttp.Response
 
     let private offsets = [
         (0, 0, 1)
