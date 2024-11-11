@@ -1,11 +1,71 @@
 namespace Commands
 
-[<AutoOpen>]
-module Braille =
-
-    open System.Text
+module Dithering =
 
     open SkiaSharp
+
+    let clamp = fun v -> System.Math.Clamp(v, 0, 255)
+
+    let private difference (a: SKColor) (b: SKColor) =
+        float a.Red - float b.Red,
+        float a.Green - float b.Green,
+        float a.Blue - float b.Blue
+
+    let private findClosestPaletteColor (pixel: SKColor)  =
+        let value =
+            0.2126 * float pixel.Red +
+            0.7152 * float pixel.Green +
+            0.0722 * float pixel.Blue |> int
+
+        if value > 128 then
+            new SKColor(255uy, 255uy, 255uy)
+        else
+            new SKColor(0uy, 0uy, 0uy)
+
+    let private addError (bitmap: SKBitmap) (x: int) (y: int) (error: float * float * float) (factor: float) =
+        if x >= 0 && x < bitmap.Width && y >= 0 && y < bitmap.Height then
+            let pixel = bitmap.GetPixel(x, y)
+            let errorRed, errorGreen, errorBlue = error
+            let r,g,b =
+                clamp (float pixel.Red + errorRed * factor |> int) |> byte,
+                clamp (float pixel.Green + errorGreen * factor |> int) |> byte,
+                clamp (float pixel.Blue + errorBlue * factor |> int) |> byte
+
+            bitmap.SetPixel(x, y, new SKColor(r, g, b))
+
+    let atkinson (bitmap: SKBitmap) =
+        for y in 0 .. bitmap.Height - 1 do
+            for x in 0 .. bitmap.Width - 1 do
+                let oldPixel = bitmap.GetPixel(x, y)
+                let newPixel = findClosestPaletteColor oldPixel
+                bitmap.SetPixel(x, y, newPixel)
+                let quantError = difference oldPixel newPixel
+                let factor = 1.0 / 8.0
+
+                addError bitmap (x + 1)  y quantError factor
+                addError bitmap (x + 2)  y quantError factor
+                addError bitmap (x - 1) (y + 1) quantError factor
+                addError bitmap  x      (y + 1) quantError factor
+                addError bitmap (x + 1) (y + 1) quantError factor
+                addError bitmap  x      (y + 2) quantError factor
+
+    let floydSteinberg (bitmap: SKBitmap) =
+        for y in 0 .. bitmap.Height - 1 do
+            for x in 0 .. bitmap.Width - 1 do
+                let oldPixel = bitmap.GetPixel(x, y)
+                let newPixel = findClosestPaletteColor oldPixel
+                bitmap.SetPixel(x, y, newPixel)
+                let quantError = difference oldPixel newPixel
+
+                addError bitmap (x + 1) y quantError (7.0 / 16.0)
+                addError bitmap (x - 1) (y + 1) quantError (3.0 / 16.0)
+                addError bitmap x (y + 1) quantError (5.0 / 16.0)
+                addError bitmap (x + 1) (y + 1) quantError (1.0 / 16.0)
+
+
+module Helper =
+
+    open System.Text.RegularExpressions
 
     open FsHttp
     open FsHttp.Request
@@ -22,11 +82,11 @@ module Braille =
     let private isWebp (bytes: byte[]) = bytes.Length > 11 && (bytes[0..3], bytes[8..11]) = webp
     let private isImage (bytes: byte[]) = isPng bytes || isJpg bytes || isBmp bytes || isWebp bytes
 
-    let private getImage url =
+    let getImage url =
         async {
             use! response =
                 http {
-                    GET(url)
+                    GET url
                     Accept "image/*"
                 }
                 |> sendAsync
@@ -40,13 +100,24 @@ module Braille =
 
                 if
                     response.originalHttpResponseMessage.Content.Headers.Contains("Content-Type")
-                    && RegularExpressions.Regex.IsMatch(response.originalHttpResponseMessage.Content.Headers.ContentType.MediaType, pattern)
+                    && Regex.IsMatch(response.originalHttpResponseMessage.Content.Headers.ContentType.MediaType, pattern)
                     || isImage bytes
                 then
                     return Some bytes
                 else
                     return None
         }
+
+[<AutoOpen>]
+module Braille =
+
+    open System.Text
+
+    open SkiaSharp
+
+    open FsHttp
+    open FsHttp.Request
+    open FsHttp.Response
 
     let private offsets = [
         (0, 0, 1)
@@ -118,41 +189,6 @@ module Braille =
 
         croppedBitmap
 
-    let private getClosestPaletteColor (pixel: SKColor) average =
-        let luminance = (0.2126 * float pixel.Red) + (0.7152 * float pixel.Green) + (0.0722 * float pixel.Blue)
-
-        if luminance <= 128.0 then
-            new SKColor(255uy, 255uy, 255uy)
-        else
-            new SKColor(0uy, 0uy, 0uy)
-
-    let private colorDifference (a: SKColor) (b: SKColor) = new SKColor(a.Red - b.Red, a.Green - b.Green, a.Blue - b.Blue)
-
-    let private colorAddError (bitmap: SKBitmap) (x: int) (y: int) (error: SKColor) (factor: float) =
-        let clamp = fun v -> System.Math.Clamp(v, 0uy, 255uy)
-
-        if (x >= 0 && x < bitmap.Width && y >= 0 && y < bitmap.Height) then
-            let oldPixel = bitmap.GetPixel(x, y)
-            let r, g, b =
-                clamp (double oldPixel.Red + double error.Red * factor |> byte),
-                clamp (double oldPixel.Green + double error.Green * factor |> byte),
-                clamp (double oldPixel.Blue + double error.Blue * factor |> byte)
-
-            bitmap.SetPixel(x, y, new SKColor(r, g, b))
-
-    let floydSteinberdDithering (image: SKBitmap) threshold =
-        for y in 0 .. image.Height - 1 do
-            for x in 0 .. image.Width - 1 do
-                let oldPixel = image.GetPixel(x, y)
-                let newPixel = getClosestPaletteColor oldPixel threshold
-                image.SetPixel(x, y, newPixel)
-                let quantError = colorDifference oldPixel newPixel
-
-                colorAddError image (x + 1) y quantError (7.0 / 16.0)
-                colorAddError image (x - 1) (y + 1) quantError (3.0 / 16.0)
-                colorAddError image x (y + 1) quantError (5.0 / 16.0)
-                colorAddError image (x + 1) (y + 1) quantError (1.0 / 16.0)
-
     let loadImage (bytes: byte array) width =
         use bitmap = SKBitmap.Decode(bytes)
         use bitmap = if bitmap.Height > bitmap.Width then crop bitmap else bitmap
@@ -165,12 +201,11 @@ module Braille =
 
         bitmap.Resize(new SKImageInfo(width, height), SKFilterQuality.High)
 
-    let private imageToBraille (width: int) (image: byte array) (setting: string) (dithering: bool) (invert: bool) =
-        use bitmap = loadImage image width
+    let private imageToBraille (bitmap: SKBitmap) (setting: string) (dithering: bool) (invert: bool) =
         let threshold = calcAverage bitmap setting
 
         if dithering then
-            floydSteinberdDithering bitmap threshold
+            Dithering.floydSteinberg bitmap
 
         let sb = new StringBuilder()
 
@@ -189,10 +224,11 @@ module Braille =
 
     let private internalBraille (url: string) (setting: string) (dithering: bool) (invert: bool) =
         async {
-            match! getImage url with
+            match! Helper.getImage url with
             | None -> return Message "Couldn't retrieve image, invalid url provided, or an unsupported image format is used"
             | Some image ->
-                let brailleAscii = imageToBraille 30 image setting dithering invert
+                use bitmap = loadImage image 30
+                let brailleAscii = imageToBraille bitmap setting dithering invert
                 return Message brailleAscii
         }
 
