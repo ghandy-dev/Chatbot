@@ -142,7 +142,7 @@ module Braille =
 
         average / (float bitmap.Height * float bitmap.Width)
 
-    let private toBraille (pixels: SKColor array array) mode (average: float) (invert: bool) : int =
+    let private toBraille (pixels: SKColor array array) mode (invert: bool) : int =
         let predicateGreyscale = fun (pixel: SKColor) ->
             if invert then
                 if pixel.Alpha > 128uy then
@@ -194,8 +194,6 @@ module Braille =
         bitmap.Resize(new SKImageInfo(width, height), SKFilterQuality.High)
 
     let private imageToBraille (bitmap: SKBitmap) (setting: string) (dithering: bool) (invert: bool) =
-        let threshold = calcAverage bitmap setting
-
         if dithering then
             Dithering.floydSteinberg bitmap
 
@@ -207,7 +205,7 @@ module Braille =
                     [| bitmap.GetPixel(x, y) ; bitmap.GetPixel(x, y+1) ; bitmap.GetPixel(x, y+2) ;  bitmap.GetPixel(x, y+3) |]
                     [| bitmap.GetPixel(x+1, y) ; bitmap.GetPixel(x+1, y+1) ;  bitmap.GetPixel(x+1, y+2) ; bitmap.GetPixel(x+1, y+3) |]
                 |]
-                let brailleValue = toBraille pixels setting threshold invert
+                let brailleValue = toBraille pixels setting invert
                 let braille = System.Convert.ToChar(brailleValue)
                 sb.Append(braille) |> ignore
 
