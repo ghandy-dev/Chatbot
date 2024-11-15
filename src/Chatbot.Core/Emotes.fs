@@ -54,7 +54,7 @@ module Twitch =
                     |> Seq.map (fun e -> {
                         Name = e.Name
                         Url = ""
-                        DirectUrl = $"https://static-cdn.jtvnw.net/emoticons/v2/{e.Id}/static/dark/{e.Scale[1]}"
+                        DirectUrl = $"https://static-cdn.jtvnw.net/emoticons/v2/{e.Id}/static/dark/{e.Scale |> Array.last}"
                         Type = EmoteType.Global
                         Provider = EmoteProvider.Twitch
                     })
@@ -71,7 +71,7 @@ module Twitch =
                     |> Seq.map (fun e -> {
                         Name = e.Name
                         Url = ""
-                        DirectUrl = $"https://static-cdn.jtvnw.net/emoticons/v2/{e.Id}/static/dark/{e.Scale[1]}"
+                        DirectUrl = $"https://static-cdn.jtvnw.net/emoticons/v2/{e.Id}/static/dark/{e.Scale |> Array.last}"
                         Type = EmoteType.tryParse e.EmoteType
                         Provider = EmoteProvider.Twitch
                     })
@@ -121,7 +121,7 @@ module Bttv =
         $"https://betterttv.com/emotes/{emoteId}"
 
     let directUrl emoteId =
-        $"https://cdn.betterttv.net/emote/{emoteId}/2x"
+        $"https://cdn.betterttv.net/emote/{emoteId}/3x"
 
     let globalEmotes () =
         async {
@@ -209,7 +209,7 @@ module Ffz =
                     |> List.map (fun e -> {
                         Name = e.Name
                         Url = emoteUrl e.Id
-                        DirectUrl = (e.Animated |?? e.Urls).Medium
+                        DirectUrl = (e.Animated |?? e.Urls).Large
                         Type = EmoteType.Global
                         Provider = EmoteProvider.Ffz
                     })
@@ -231,7 +231,7 @@ module Ffz =
                     |> List.map (fun e -> {
                         Name = e.Name
                         Url = emoteUrl e.Id
-                        DirectUrl = (e.Animated |?? e.Urls).Medium
+                        DirectUrl = (e.Animated |?? e.Urls).Large
                         Type = EmoteType.Channel
                         Provider = EmoteProvider.Ffz
                     })
@@ -258,7 +258,7 @@ module SevenTv =
     let channelEmotesUrl channelId = $"{ApiUrl}/v3/users/twitch/{channelId}"
 
     let emoteUrl emoteId = $"https://7tv.app/emotes/{emoteId}"
-    let directUrl emoteId = $"https://cdn.7tv.app/emote/{emoteId}/2x.webp"
+    let directUrl emoteId = $"https://cdn.7tv.app/emote/{emoteId}/3x.webp"
 
     let globalEmotes () =
         async {
