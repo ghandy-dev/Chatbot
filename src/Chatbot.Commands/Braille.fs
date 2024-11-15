@@ -79,22 +79,6 @@ module private Dithering =
 
             bitmap.SetPixel(x, y, new SKColor(r, g, b))
 
-    let atkinson (bitmap: SKBitmap) =
-        for y in 0 .. bitmap.Height - 1 do
-            for x in 0 .. bitmap.Width - 1 do
-                let oldPixel = bitmap.GetPixel(x, y)
-                let newPixel = findClosestPaletteColor oldPixel
-                bitmap.SetPixel(x, y, newPixel)
-                let quantError = difference oldPixel newPixel
-                let factor = 1.0 / 8.0
-
-                addError bitmap (x + 1)  y quantError factor
-                addError bitmap (x + 2)  y quantError factor
-                addError bitmap (x - 1) (y + 1) quantError factor
-                addError bitmap  x      (y + 1) quantError factor
-                addError bitmap (x + 1) (y + 1) quantError factor
-                addError bitmap  x      (y + 2) quantError factor
-
     let floydSteinberg (bitmap: SKBitmap) =
         for y in 0 .. bitmap.Height - 1 do
             for x in 0 .. bitmap.Width - 1 do
@@ -148,23 +132,34 @@ module Braille =
         let average =
             List.fold (fun acc y ->
                 List.fold (fun innerAcc x ->
-                    innerAcc + greyscaleMode.[mode] (bitmap.GetPixel(x, y)))
-                    acc [ 0 .. bitmap.Width - 1 ])
-                0.0 [ 0 .. bitmap.Height - 1 ]
+                    let pixel = bitmap.GetPixel(x, y)
+                    if pixel.Alpha >= 128uy then
+                        innerAcc + greyscaleMode.[mode] pixel
+                    else
+                        innerAcc
+                ) acc [ 0 .. bitmap.Width - 1 ]
+            ) 0.0 [ 0 .. bitmap.Height - 1 ]
 
         average / (float bitmap.Height * float bitmap.Width)
 
     let private toBraille (pixels: SKColor array array) mode (average: float) (invert: bool) : int =
-        let predicate = fun (pixel: SKColor) -> if invert then greyscaleMode.[mode] pixel >= average else greyscaleMode.[mode] pixel <= average
+        let predicateGreyscale = fun (pixel: SKColor) ->
+            if invert then
+                if pixel.Alpha > 128uy then
+                    greyscaleMode.[mode] pixel > 128.0
+                else
+                    greyscaleMode.[mode] pixel <= 128.0
+            else
+                if pixel.Alpha > 128uy then
+                    greyscaleMode.[mode] pixel <= 128.0
+                else
+                    greyscaleMode.[mode] pixel > 128.0
 
         let brailleValue =
             List.fold (fun acc (x, y, offsetValue) ->
                 let pixel = pixels[x][y]
-                if pixel.Alpha > 128uy then
-                    if predicate pixel then
-                        acc + offsetValue
-                    else
-                        acc
+                if predicateGreyscale pixel then
+                    acc + offsetValue
                 else
                     acc
             ) 10240 offsets
