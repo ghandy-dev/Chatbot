@@ -16,5 +16,5 @@ module AccountAge =
             | None -> return Message "User not found"
             | Some user ->
                 let age = formatTimeSpan (DateTimeOffset.UtcNow - user.CreatedAt)
-                return Message (sprintf "Account created %s ago on %s" age (user.CreatedAt.ToString("dd MMM yyyy")))
+                return Message $"""Account created %s{age} ago on %s{user.CreatedAt.ToString("dd MMM yyyy")}"""
         }

@@ -66,13 +66,13 @@ module Remind =
                         let remindIn = remindDateTime - now
 
                         match! Twitch.Helix.Users.getUser user with
-                        | None -> return Message (sprintf "%s doesn't exist" user)
+                        | None -> return Message $"%s{user} doesn't exist"
                         | Some targetUser ->
                             let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some remindDateTime)
-                            let targetUsername = if targetUser.Id = context.UserId then "you" else sprintf "@%s" targetUser.DisplayName
+                            let targetUsername = if targetUser.Id = context.UserId then "you" else $"@%s{targetUser.DisplayName}"
 
                             match! ReminderRepository.add reminder with
-                            | DatabaseResult.Success id -> return Message (sprintf "(ID: %d) I will remind %s in %s" id targetUsername (formatTimeSpan remindIn))
+                            | DatabaseResult.Success id -> return Message $"(ID: %d{id}) I will remind %s{targetUsername} in %s{formatTimeSpan remindIn}"
                             | DatabaseResult.Failure -> return Message "Error occurred trying to create reminder"
         }
 
@@ -92,7 +92,7 @@ module Remind =
         async {
             let content = String.concat " " args
 
-            if Regex.IsMatch(sprintf "%s %s" user content, whenPattern user, RegexOptions.IgnoreCase) then
+            if Regex.IsMatch(sprintf $"%s{user} %s{content}", whenPattern user, RegexOptions.IgnoreCase) then
                 match! ReminderRepository.getPendingTimedReminderCount (context.UserId |> int) with
                 | DatabaseResult.Failure -> return Message "Error occured checking current pending reminders"
                 | DatabaseResult.Success c when c > 20 -> return Message "User has too many pending timed reminders"

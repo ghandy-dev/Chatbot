@@ -13,7 +13,7 @@ let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProces
         let message =
             match msg.ReplyParentMessageBody, msg.ReplyParentUserLogin with
             | Some message, Some username ->
-                let regex = new System.Text.RegularExpressions.Regex(sprintf "@%s " username)
+                let regex = new System.Text.RegularExpressions.Regex($"@%s{username}")
                 sprintf "%s %s" (regex.Replace(msg.Message, "", 1)) message
             | _, _ -> msg.Message
 

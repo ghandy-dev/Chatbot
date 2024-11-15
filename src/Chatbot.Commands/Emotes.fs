@@ -26,7 +26,7 @@ module Emote =
 
         match maybeEmote with
         | None -> Message "Kappa"
-        | Some emote -> Message (sprintf "%s" emote.Name)
+        | Some emote -> Message $"%s{emote.Name}"
 
     let refreshChannelEmotes args context =
         match context.Source with

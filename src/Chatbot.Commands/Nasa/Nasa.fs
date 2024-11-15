@@ -19,7 +19,7 @@ module Nasa =
             | None -> apod.Url
             | Some url -> url
 
-        sprintf "%s %s" apod.Title url
+        $"%s{apod.Title} %s{url}"
 
     let apod args =
         async {
