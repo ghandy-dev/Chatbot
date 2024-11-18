@@ -28,47 +28,12 @@ type MessageSource =
     | Whisper of username: string
     | Channel of channel: RoomState
 
-type Emotes = {
-    GlobalEmotes: Emotes.Emote list
-    ChannelEmotes: Emotes.Emote list
-    MessageEmotes: Map<string, string>
-} with
-
-    member this.TryFind (emote: string) =
-        this.GlobalEmotes |> List.tryFind (fun e -> e.Name = emote) |> Option.orElseWith (fun _ -> this.ChannelEmotes |> List.tryFind (fun e -> e.Name = emote))
-
-    member this.Random () =
-        match this.GlobalEmotes, this.ChannelEmotes with
-        | [], [] -> None
-        | g, [] -> g |> List.tryRandomChoice
-        | [], c -> c |> List.tryRandomChoice
-        | g, c ->
-            [ g ; c ]
-            |> List.randomChoice
-            |> function
-                | e -> e |> List.tryRandomChoice
-
-    member this.Random provider =
-        match
-            this.GlobalEmotes |> List.filter (fun e -> e.Provider = provider),
-            this.ChannelEmotes |> List.filter (fun e -> e.Provider = provider)
-        with
-        | [], [] -> None
-        | g, [] -> g |> List.tryRandomChoice
-        | [], c -> c |> List.tryRandomChoice
-        | g, c ->
-            [ g ; c ]
-            |> List.randomChoice
-            |> function
-                | e -> e |> List.tryRandomChoice
-
-
 type Context = {
     UserId: string
     Username: string
     IsAdmin: bool
     Source: MessageSource
-    Emotes: Emotes
+    Emotes: Emotes.Emotes
 } with
 
     static member createContext id username admin source emotes = {
