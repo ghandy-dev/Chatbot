@@ -237,9 +237,12 @@ module Braille =
                 match args with
                 | [] -> None
                 | value :: _ ->
-                    match context.Emotes.TryFind value with
-                    | Some emote -> Some emote.DirectUrl
-                    | None -> Some value
+                    context.Emotes.MessageEmotes |> Map.tryFind value
+                    |> Option.orElseWith (fun _ ->
+                        match context.Emotes.TryFind value with
+                        | Some emote -> Some emote.DirectUrl
+                        | None -> Some value
+                    )
 
             match url with
             | None -> return Message "Bad url/emote specified"

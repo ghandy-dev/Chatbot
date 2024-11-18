@@ -19,7 +19,7 @@ let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProces
 
         match message.StartsWith(commandPrefix) with
         | true ->
-            let! response = safeHandleCommand msg.UserId msg.Username (Channel channelStates[msg.Channel]) message[1..]
+            let! response = safeHandleCommand msg.UserId msg.Username (Channel channelStates[msg.Channel]) message[1..] msg.Emotes
 
             match response with
             | Some commandOutcome ->
@@ -39,7 +39,7 @@ let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProces
     async {
         match msg.Message.StartsWith(commandPrefix) with
         | true ->
-            let! response = safeHandleCommand msg.UserId msg.DisplayName (Whisper msg.UserId) msg.Message[1..]
+            let! response = safeHandleCommand msg.UserId msg.DisplayName (Whisper msg.UserId) msg.Message[1..] msg.Emotes
 
             match response with
             | Some commandOutcome ->

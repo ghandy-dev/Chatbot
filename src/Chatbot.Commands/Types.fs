@@ -24,13 +24,14 @@ type RoomState = {
 
 type RoomStates = Map<string, RoomState>
 
-type Source =
+type MessageSource =
     | Whisper of username: string
     | Channel of channel: RoomState
 
 type Emotes = {
     GlobalEmotes: Emotes.Emote list
     ChannelEmotes: Emotes.Emote list
+    MessageEmotes: Map<string, string>
 } with
 
     member this.TryFind (emote: string) =
@@ -66,7 +67,7 @@ type Context = {
     UserId: string
     Username: string
     IsAdmin: bool
-    Source: Source
+    Source: MessageSource
     Emotes: Emotes
 } with
 

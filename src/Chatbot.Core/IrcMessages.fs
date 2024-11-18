@@ -361,11 +361,6 @@ module Messages =
                 | "bitsbadgetier" -> BitsBadgeTier
                 | et -> Unknown et
 
-        type EmotePosition = {
-            StartPosition: string
-            EndPosition: string
-        }
-
         [<RequireQualifiedAccess>]
         type ChannelHost =
             | StoppedHosting
@@ -381,6 +376,7 @@ module Messages =
             UserId: string
             RoomId: string
             Mod: bool
+            Emotes: Map<string, string>
             ReplyParentUserId: string option
             ReplyParentUserLogin: string option
             ReplyParentDisplayName: string option
@@ -452,7 +448,7 @@ module Messages =
             BadgeInfo: string list
             Badges: string list
             DisplayName: string
-            Emotes: Map<string, EmotePosition list>
+            Emotes: Map<string, string>
             Id: string
             Login: string
             Moderator: bool
@@ -483,7 +479,7 @@ module Messages =
             Badges: string list
             Color: string
             DisplayName: string
-            Emotes: Map<string, EmotePosition list>
+            Emotes: Map<string, string>
             MessageId: string
             ThreadId: string
             UserId: string
@@ -514,6 +510,8 @@ module Messages =
 
     module MessageMapping =
 
+        open System.Text.RegularExpressions
+
         let private parseBadges (badges: string) =
             match badges with
             | "" -> []
@@ -524,47 +522,46 @@ module Messages =
             | "" -> []
             | _ -> emoteSets.Split(",") |> List.ofArray
 
-        let private parseEmote (emote: string) =
-            emote.Split(":", 2)
-            |> function
-                | [| id ; positions |] ->
-                    let ps =
-                        positions.Split(",")
-                        |> Array.map (fun p ->
-                            p.Split("-")
-                            |> fun p -> {
-                                StartPosition = p.[0]
-                                EndPosition = p.[1]
-                            }
-                        )
-                        |> List.ofArray
-
-                    Map.empty<string, EmotePosition list>.Add(id, ps)
-                | _ -> failwith "Unexpected size when trying to parseEmotes"
-
-        let private parseEmotes (emotes: string) =
-            match emotes with
-            | "" -> Map.empty
-            | _ -> emotes.Split("/") |> Array.map parseEmote |> Array.reduce Map.merge
-
         let private parseChannelHost =
             function
             | "-" -> ChannelHost.StoppedHosting
             | channel -> ChannelHost.Channel channel
 
+        let private emotePositionRegex = new Regex("([\w]+):([\d]+)-([\d]+)", RegexOptions.Compiled)
+
+        let parseEmotes (message: string) (emotes: string) =
+            let parseEmotes' (emotePositions: string) =
+                let matches = emotePositionRegex.Match(emotePositions)
+
+                match matches.Groups |> Seq.toList with
+                | _ :: emoteId :: startPos :: endPos :: _ ->
+                        let start = startPos.ValueSpan
+                        let startIndex = System.Int32.Parse start
+                        let ``end`` = endPos.ValueSpan
+                        let endIndex = System.Int32.Parse ``end``
+
+                        Some (message[startIndex..endIndex], emoteId.Value)
+                | _ -> None
+
+            emotes.Split(",")
+            |> Array.choose parseEmotes'
+            |> Map.ofArray
+
         let (|PrivateMessageCommand|_|) (message: IrcMessage) : PrivateMessage option =
             match message.Command with
             | PrivMsg ->
                 let parts = message.Parameters.Split(" ", 2)
+                let msg = parts.[1].[1..]
 
                 Some {
                     Channel = parts.[0].[1..]
-                    Message = parts.[1].[1..]
+                    Message = msg
                     Id = message.Tags["id"]
                     Username = message.Tags["display-name"]
                     UserId = message.Tags["user-id"]
                     RoomId = message.Tags["room-id"]
                     Mod = message.Tags["mod"] |> Boolean.parseBit
+                    Emotes = parseEmotes msg message.Tags["emotes"]
                     ReplyParentUserId = message.Tags.TryFind "reply-parent-user-id"
                     ReplyParentUserLogin = message.Tags.TryFind "reply-parent-user-login"
                     ReplyParentDisplayName = message.Tags.TryFind "reply-parent-display-name"
@@ -717,7 +714,7 @@ module Messages =
                     BadgeInfo = parseBadges message.Tags["badge-info"]
                     Badges = parseBadges message.Tags["badges"]
                     DisplayName = message.Tags["display-name"]
-                    Emotes = parseEmotes message.Tags["emotes"]
+                    Emotes = msg |> Option.bind (fun m -> Some (parseEmotes m message.Tags["emotes"])) |?? Map.empty
                     Id = message.Tags["id"]
                     Login = message.Tags["login"]
                     Moderator = message.Tags["mod"] |> Boolean.parseBit
@@ -750,15 +747,16 @@ module Messages =
             match message.Command with
             | Whisper ->
                 let parts = message.Parameters.Split(" ", 2)
+                let msg = parts.[1].[1..]
 
                 Some {
                     FromUser = message.Tags["display-name"]
                     ToUser = parts[0]
-                    Message = parts.[1].[1..]
+                    Message = msg
                     Badges = parseBadges message.Tags["badges"]
                     Color = message.Tags["color"]
                     DisplayName = message.Tags["display-name"]
-                    Emotes = parseEmotes message.Tags["emotes"]
+                    Emotes = parseEmotes msg message.Tags["emotes"]
                     MessageId = message.Tags["message-id"]
                     ThreadId = message.Tags["thread-id"]
                     UserId = message.Tags["user-id"]
