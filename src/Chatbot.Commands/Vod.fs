@@ -16,5 +16,5 @@ module Vod =
                     |> Result.bindAsync (fun user -> Videos.getLatestVod user.Id |-> Result.fromOption "No VOD found")
                 with
                 | Error err -> return Message err
-                | Ok video -> return Message $""""{video.Title}" {video.CreatedAt.ToString("t")} {video.Url} [{video.Duration}]"""
+                | Ok video -> return Message $""""{video.Title}" {video.CreatedAt.ToString(DateTime.DateStringFormat)} {video.Url} [{video.Duration}]"""
         }
