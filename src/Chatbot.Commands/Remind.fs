@@ -84,7 +84,7 @@ module Remind =
                 let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName None message None
 
                 match! ReminderRepository.add reminder with
-                | DatabaseResult.Success id -> return Message $"(ID: {id}) I will remind {targetUser.DisplayName} when they next type in chat"
+                | DatabaseResult.Success id -> return Message $"(ID: %d{id}) I will remind {targetUser.DisplayName} when they next type in chat"
                 | DatabaseResult.Failure -> return Message "Error occurred trying to create reminder"
         }
 
