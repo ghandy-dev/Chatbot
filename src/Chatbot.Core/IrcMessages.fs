@@ -581,9 +581,8 @@ module Messages =
                     | "*" :: "ACK" :: cs ->
                         System.String.Join(" ", cs)
                         |> _.Split(":")
-                        |> List.ofArray
                         |> function
-                            | [ _ ; cs ] -> true, cs.Split(" ")
+                            | [| _ ; cs |] -> true, cs.Split(" ")
                             | _ -> false, [||]
                     | _ -> false, [||]
 
