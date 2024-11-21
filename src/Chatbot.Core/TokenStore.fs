@@ -37,7 +37,7 @@ let private getTwitchTokenAsync (authClient: OAuthClient) =
             let statusCode = enum<System.Net.HttpStatusCode> response.Error.Status
             return Error (new System.Net.Http.HttpRequestException(response.Error.Message, null, statusCode))
         else
-            return Ok response.Token
+            return Ok response.Data
     }
 
 let private getRedditTokenAsync () =

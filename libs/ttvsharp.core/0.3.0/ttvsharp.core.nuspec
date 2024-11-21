@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>TTVSharp.Core</id>
+    <version>0.3.0</version>
+    <authors>ghandy-dev</authors>
+    <description>Package Description</description>
+    <repository type="git" url="https://github.com/ghandy-dev/TTVSharp" commit="000574e2aa881139a6011334502afb3b0472183a" />
+    <dependencies>
+      <group targetFramework="net8.0">
+        <dependency id="Microsoft.Extensions.DependencyInjection" version="9.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.Http" version="9.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.Http.Polly" version="9.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.Logging" version="9.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.Logging.Console" version="9.0.0" exclude="Build,Analyzers" />
+        <dependency id="Polly" version="8.5.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net9.0">
+        <dependency id="Microsoft.Extensions.DependencyInjection" version="9.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.Http" version="9.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.Http.Polly" version="9.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.Logging" version="9.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.Logging.Console" version="9.0.0" exclude="Build,Analyzers" />
+        <dependency id="Polly" version="8.5.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>
