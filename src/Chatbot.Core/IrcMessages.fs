@@ -529,7 +529,7 @@ module Messages =
 
         let private emotePositionRegex = new Regex("([\w]+):([\d]+)-([\d]+)", RegexOptions.Compiled)
 
-        let parseEmotes (message: string) (emotes: string) =
+        let private parseEmotes (message: string) (emotes: string) =
             let parseEmotes' (emotePositions: string) =
                 let matches = emotePositionRegex.Match(emotePositions)
 
