@@ -66,7 +66,7 @@ module Remind =
                         let remindIn = remindDateTime - now
 
                         match! Twitch.Helix.Users.getUser user with
-                        | None -> return Message $"%s{user} doesn't exist"
+                        | None -> return Message $"Couldn't find user %s{user}"
                         | Some targetUser ->
                             let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some remindDateTime)
                             let targetUsername = if targetUser.Id = context.UserId then "you" else $"@%s{targetUser.DisplayName}"
@@ -79,7 +79,7 @@ module Remind =
     let private setReminder (user: string) (message: string) (context: Context) =
         async {
             match! Twitch.Helix.Users.getUser user with
-            | None -> return Message $"{user} doesn't exist or is currently banned"
+            | None -> return Message $"Couldn't find user, %s{user}"
             | Some targetUser ->
                 let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName None message None
 
