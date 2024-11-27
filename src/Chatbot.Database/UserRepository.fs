@@ -50,3 +50,12 @@ module UserRepository =
                 Logging.error ex.Message ex
                 return DatabaseResult.Failure
         }
+
+    let getOrAdd (user: User) =
+        async {
+            match! getByUserId user.UserId with
+            | None ->
+                match! add user with
+                | _ -> return user
+            | Some user -> return user
+        }
