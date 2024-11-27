@@ -136,9 +136,8 @@ module ReminderRepository =
             let query =
                 """
                 INSERT INTO reminders (timestamp, from_user_id, from_username, target_user_id, target_username, channel, message, reminder_timestamp)
-                VALUES (@timestamp, @fromUserId, @fromUsername, @targetUserId, @targetUsername, @channel, @message, @reminderTimestamp);
-
-                SELECT last_insert_rowid();
+                VALUES (@timestamp, @fromUserId, @fromUsername, @targetUserId, @targetUsername, @channel, @message, @reminderTimestamp)
+                RETURNING reminder_id
                 """
 
             try
