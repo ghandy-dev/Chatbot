@@ -9,8 +9,8 @@ module Remind =
     open Database
     open Database.Types.Reminders
 
-    let private whenPattern username = sprintf @"(%s) (in\s*)+((\d+)\s+(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)+?,*\s*)+" username
-    let private timeComponentPattern = @"(\d+)\s+(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)"
+    let private whenPattern username = sprintf @"(%s) (in\s*)+((\d+)\s*(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)+?,*\s*)+" username
+    let private timeComponentPattern = @"(\d+)\s*(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)"
 
     let private parseTimeComponents (durations: (string * string) seq) =
         let parseTimeComponent (dateTime: DateTime) (duration: string) (timeComp: string) =
