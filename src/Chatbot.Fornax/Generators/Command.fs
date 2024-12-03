@@ -49,12 +49,12 @@ let private generate' (ctx: SiteContents) (page: string) =
                 tr [] [
                     td [] [ !! "Usage" ]
                     td [] [
-                        let groupedLines = command.ExampleUsage.Split("\r\n\r\n")
+                        let groupedLines = command.ExampleUsage.Split("\n\n")
                         yield!
                             seq {
                                 for i in 0 .. groupedLines.Length - 1 do
                                     let groupedLine = groupedLines[i]
-                                    let lines = groupedLine |> _.Split("\r\n")
+                                    let lines = groupedLine |> _.Split("\n")
 
                                     yield
                                         div [] [
