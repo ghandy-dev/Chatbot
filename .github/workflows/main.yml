@@ -13,29 +13,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
      - uses: actions/checkout@v2
-     
+
      # setup dotnet sdk
      - name: Setup .NET SDK
        uses: actions/setup-dotnet@v4.0.0
        with:
           # Optional SDK version to use. If not provided, will install global.json version when available. Examples: 2.2.104, 3.1, 3.1.x
           dotnet-version: 9.0.x
-          
+
      # build static HTML pages
      - name: Run .NET Project
        run: dotnet run --project ./src/Chatbot.Fornax/Chatbot.Fornax.fsproj build
 
      # change href
      - name: Change base-tag href
-       run: sed -i 's/<base href="\/"\/>/<base href="\/Chatbot\/"\/>/g' ./src/Chatbot.Fornax/wwwroot/index.html
+       run: find ./src/Chatbot.Fornax/wwwroot -type f -name '*.html' -exec sed -i 's/<base href="\/"\/>/<base href="\/Chatbot\/"\/>/g' {} +
 
      # page to handle 404's when resource not found
      - name: copy index.html to 404.html
        run: cp ./src/Chatbot.Fornax/wwwroot/index.html ./src/Chatbot.Fornax/wwwroot/404.html
-      
+
      - name: Deploy to GitHub Pags
        uses: JamesIves/github-pages-deploy-action@v4.6.1
-       with: 
+       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         branch: gh-pages
         folder: ./src/Chatbot.Fornax/wwwroot
