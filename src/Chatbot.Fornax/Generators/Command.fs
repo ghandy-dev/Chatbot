@@ -11,7 +11,7 @@ let private generate' (ctx: SiteContents) (page: string) =
     let content =
         div [] [
             div [] [
-                a [ Href "/" ] [ !! "Commands" ]
+                a [ Href "" ] [ !! "Commands" ]
             ]
 
             h1 [] [ !! command.Title ]
