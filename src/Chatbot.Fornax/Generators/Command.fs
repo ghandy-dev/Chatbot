@@ -10,6 +10,10 @@ let private generate' (ctx: SiteContents) (page: string) =
 
     let content =
         div [] [
+            div [] [
+                a [ Href "/" ] [ !! "Commands" ]
+            ]
+
             h1 [] [ !! command.Title ]
 
             table [] [
@@ -44,7 +48,32 @@ let private generate' (ctx: SiteContents) (page: string) =
                 ]
                 tr [] [
                     td [] [ !! "Usage" ]
-                    td [] [ yield! command.ExampleUsage.Split("\n") |> Array.map (fun l ->  p [] [ !! (System.Web.HttpUtility.HtmlEncode l) ] ) ]
+                    td [] [
+                        let groupedLines = command.ExampleUsage.Split("\r\n\r\n")
+                        yield!
+                            seq {
+                                for i in 0 .. groupedLines.Length - 1 do
+                                    let groupedLine = groupedLines[i]
+                                    let lines = groupedLine |> _.Split("\r\n")
+
+                                    yield
+                                        div [] [
+                                            yield!
+                                                seq {
+                                                    for j in 0 .. lines.Length - 1 do
+                                                        let line = lines[j]
+
+                                                        if line.StartsWith(">") then
+                                                            yield code [] [ !! (System.Web.HttpUtility.HtmlEncode line) ]
+                                                            yield br []
+                                                        else
+                                                            yield div [] [ !! (System.Web.HttpUtility.HtmlEncode line) ]
+                                                }
+                                            ]
+
+                                    yield br []
+                            }
+                    ]
                 ]
             ]
         ]
