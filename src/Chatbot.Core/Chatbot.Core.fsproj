@@ -16,6 +16,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Http.fs" />
     <Compile Include="Pastebin.fs" />
+    <Compile Include="Ivr.fs" />
     <Compile Include="Azure/Geolocation.fs" />
     <Compile Include="Azure/Weather.fs" />
     <Compile Include="Azure/Api.fs" />

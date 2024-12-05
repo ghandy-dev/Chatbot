@@ -14,6 +14,19 @@ module Emote =
     let private randomEmoteKeys = [
         "provider"
     ]
+    let whatemoteisit args context =
+        async {
+            match args with
+            | [] -> return Message "No emote specified"
+            | emote :: _ ->
+                match! IVR.getEmoteByName emote with
+                | Error _ -> return Message "Emote not found"
+                | Ok emote ->
+                    match emote.ChannelName, emote.EmoteTier, emote.EmoteSetId with
+                    | Some channel, Some tier, None -> return Message $"%s{emote.EmoteCode}, Channel: %s{channel}, ID: %s{emote.EmoteId}, Tier %s{tier}, %s{emote.EmoteUrl}"
+                    | None, None, Some set -> return Message $"%s{emote.EmoteCode}, ID: %s{emote.EmoteId}, Set %s{set}, %s{emote.EmoteUrl}"
+                    | _, _, _ -> return Message $"%s{emote.EmoteCode}, ID: %s{emote.EmoteId}, %s{emote.EmoteUrl}"
+        }
 
     let randomEmote args context =
         let keyValues = KeyValueParser.parse args randomEmoteKeys

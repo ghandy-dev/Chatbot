@@ -611,6 +611,17 @@ Doesn't return anything if the user is currently banned.
 {exampleArgs "vod" "forsen"} """
         }
 
+    let WhatEmoteIsIt =
+        {
+            Name = "What Emote is it"
+            Description = "Look up a twitch emote by emote name."
+            ExampleUsage = $"""
+{exampleArgs "whatemoteisit" "<emote>"}
+{exampleArgs "whatemoteisit" "Kappa"}
+{exampleArgs "whatemoteisit" "elisBall"}
+"""
+        }
+
     let Weather =
         {
             Name = "Weather"

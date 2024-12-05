@@ -65,6 +65,7 @@ module Commands =
             Command.createCommand ("urban", [ "ud" ], HelpInfo.UrbanDictionary, AA urban, 20000, false)
             Command.createCommand ("userid", [ "uid" ], HelpInfo.UserId, AAC userId, 20000, false)
             Command.createCommand ("vod", [], HelpInfo.Vod, AA vod, 20000, false)
+            Command.createCommand ("whatemoteisit", [], HelpInfo.WhatEmoteIsIt, AAC whatemoteisit, 10000, false)
             Command.createCommand ("weather", [], HelpInfo.Weather, AA weather, 20000, false)
             Command.createCommand ("wiki", [], HelpInfo.Wiki, AA wiki, 20000, false)
             Command.createCommand ("xd", [], HelpInfo.xd, S xd, 60000, false)

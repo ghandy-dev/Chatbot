@@ -8,8 +8,7 @@
     <Compile Include="Types.fs" />
     <Compile Include="Pipe.fs" />
     <Compile Include="Alias.fs" />
-    <Compile Include="Logs/Api.fs" />
-    <Compile Include="Logs/Logs.fs" />
+    <Compile Include="Logs.fs" />
     <Compile Include="Help/Help.fs" />
     <Compile Include="Nasa/Types.fs" />
     <Compile Include="Nasa/Api.fs" />

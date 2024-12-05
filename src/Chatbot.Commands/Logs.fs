@@ -3,7 +3,6 @@ namespace Commands.Logs
 [<AutoOpen>]
 module Logs =
 
-    open Api
     open Commands
 
     let randomLine args context =
@@ -13,12 +12,12 @@ module Logs =
             | Channel channel ->
                 match args with
                 | [] ->
-                    match! getChannelRandomLine channel.Channel with
+                    match! IVR.getChannelRandomLine channel.Channel with
                     | Error err -> return Message err
                     | Ok message -> return Message message
                 | [ user ]
                 | user :: _ ->
-                    match! getUserRandomLine channel.Channel user  with
+                    match! IVR.getUserRandomLine channel.Channel user  with
                     | Error err -> return Message err
                     | Ok message -> return Message message
         }
@@ -30,7 +29,7 @@ module Logs =
             | Channel channel ->
                 match args with
                 | _ ->
-                    match! getUserRandomLine channel.Channel context.Username with
+                    match! IVR.getUserRandomLine channel.Channel context.Username with
                     | Error err -> return Message err
                     | Ok message -> return Message message
         }
