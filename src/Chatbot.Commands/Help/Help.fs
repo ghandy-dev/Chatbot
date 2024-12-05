@@ -533,6 +533,25 @@ Roll a random number between a min and max value.
 """
         }
 
+    let SubAge =
+        {
+            Name = "Sub Age"
+            Description = "Get how many months a twitch user has been subscribed to a twitch channel for."
+            ExampleUsage = $"""
+
+Get how many months you've been subscribed to the current channel.
+{example "subage"}
+
+Get how many months you've been subscribed to a channel for.
+{exampleArgs "subage" "<channel>"}
+{exampleArgs "stream" "forsen"}
+
+Get how many months a user has been subscribed to a channel for.
+{exampleArgs "subage" "<user> <channel>"}
+{exampleArgs "stream" "nymn forsen"}
+"""
+        }
+
     let Time =
         {
             Name = "Time"

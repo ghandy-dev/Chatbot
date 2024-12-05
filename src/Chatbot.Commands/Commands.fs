@@ -59,6 +59,7 @@ module Commands =
             Command.createCommand ("rockpaperscissors", [ "rps" ], HelpInfo.RockPaperScissors, AAC rps, 10000, false)
             Command.createCommand ("roll", [], HelpInfo.Roll, SA roll, 10000, false)
             Command.createCommand ("stream", [], HelpInfo.Stream, AA stream, 20000, false)
+            Command.createCommand ("subage", [ "sa" ], HelpInfo.SubAge, AAC subAge, 10000, false)
             Command.createCommand ("time", [], HelpInfo.Time, AA time, 5000, false)
             Command.createCommand ("texttransform", [ "tt" ], HelpInfo.TextTransform, SA texttransform, 5000, false)
             Command.createCommand ("topstreams", [ "ts" ], HelpInfo.TopStreams, A topStreams, 20000, false)
