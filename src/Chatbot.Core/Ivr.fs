@@ -10,7 +10,7 @@ type Emote = {
     ChannelName: string option
     ChannelLogin: string option
     ChannelId: string option
-    Artist: string option
+    Artist: Artist option
     EmoteId: string
     EmoteCode: string
     EmoteUrl: string
@@ -19,6 +19,12 @@ type Emote = {
     EmoteState: string
     EmoteType: string
     EmoteTier: string option
+}
+
+and Artist = {
+    DisplayName: string
+    Login: string
+    Id: string
 }
 
 type SubAge = {
