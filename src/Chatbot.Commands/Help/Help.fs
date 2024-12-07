@@ -256,6 +256,24 @@ Get a players recent win/loss history:
 """
         }
 
+    let FollowAge =
+        {
+            Name = "Follow Age"
+            Description = "Get how long a twitch user has been following a twitch channel for."
+            ExampleUsage = $"""
+Get how long you've followed the current channel for.
+{example "followage"}
+
+Get how long a user has been following the current channel for.
+{exampleArgs "followage" "<channel>"}
+{exampleArgs "followage" "forsen"}
+
+Get how long a user has been following a channel for.
+{exampleArgs "followage" "<user> <channel>"}
+{exampleArgs "followage" "nymn forsen"}
+"""
+        }
+
     let Gpt =
         {
             Name = "Gpt"
@@ -542,13 +560,13 @@ Roll a random number between a min and max value.
 Get how many months you've been subscribed to the current channel.
 {example "subage"}
 
-Get how many months you've been subscribed to a channel for.
+Get how many months a user has been subscribed to the current channel for.
 {exampleArgs "subage" "<channel>"}
-{exampleArgs "stream" "forsen"}
+{exampleArgs "subage" "forsen"}
 
 Get how many months a user has been subscribed to a channel for.
 {exampleArgs "subage" "<user> <channel>"}
-{exampleArgs "stream" "nymn forsen"}
+{exampleArgs "subage" "nymn forsen"}
 """
         }
 

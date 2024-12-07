@@ -3,11 +3,9 @@ namespace Commands
 [<AutoOpen>]
 module SubAge =
 
-    open System
-
     let subAge args context =
         async {
-            let maybeData =
+            let maybeData: (string * string) option =
                 match context.Source with
                 | Whisper _ ->
                     match args with
@@ -21,7 +19,7 @@ module SubAge =
                     | user :: _ -> Some (user, channel.Channel)
 
             match maybeData with
-            | None -> return Message "Missing parameters"
+            | None -> return Message "You must specify a user and channel when using this command in whispers"
             | Some (user, channel) ->
 
                 match! IVR.getSubAge user channel with
@@ -31,11 +29,19 @@ module SubAge =
                     | None -> return Message $"Unable to look up subscription status to channel {channel}"
                     | Some true -> return Message "Subscription status hidden"
                     | Some false ->
-                        match subage.Cumulative, subage.Streak with
-                        | Some cum, Some streak ->
+                        let self = if System.String.Compare(user, context.Username, ignoreCase = true) = 0 then true else false
+
+                        match subage.Cumulative, subage.Streak, self with
+                        | Some cum, Some streak, false ->
+                            return Message $"You have been subscribed to %s{subage.Channel.DisplayName} for %d{cum.Months} months (%d{streak.Months} month streak)"
+                        | Some cum, Some streak, true ->
                             return Message $"%s{user} has been subscribed to %s{subage.Channel.DisplayName} for %d{cum.Months} months (%d{streak.Months} month streak)"
-                        | Some cum, None ->
+                        | Some cum, None, false ->
                             return Message $"%s{user} is not currently subscribed to %s{subage.Channel.DisplayName}. Previously subscribed for %d{cum.Months} months. Subscription ended on %s{cum.End.ToString(Utils.DateTime.DateStringFormat)}"
-                        | _, _ ->
+                        | Some cum, None, true ->
+                            return Message $"You are not currently subscribed to %s{subage.Channel.DisplayName}. Previously subscribed for %d{cum.Months} months. Subscription ended on %s{cum.End.ToString(Utils.DateTime.DateStringFormat)}"
+                        | _, _, false ->
                             return Message $"%s{user} has not subscribed to %s{subage.Channel.DisplayName} before"
+                        | _, _, true ->
+                            return Message $"You have not subscribed to %s{subage.Channel.DisplayName} before"
         }
