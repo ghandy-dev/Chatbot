@@ -54,7 +54,7 @@ and Stats = {
 and SubMeta = {
     Type: string
     Tier: string
-    EndsAt: DateTimeOffset
+    EndsAt: DateTimeOffset option
     RenewsAt: DateTimeOffset option
     GiftMeta: GiftMeta option
 }
