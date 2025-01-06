@@ -7,6 +7,7 @@ ARG configuration=Release
 
 WORKDIR /src
 COPY "Directory.Build.props" .
+COPY "fonts" .
 COPY "NuGet.config" "src/"
 COPY "libs" "src/libs"
 COPY "src/Chatbot/Chatbot.fsproj" "src/Chatbot/"
@@ -26,4 +27,5 @@ RUN dotnet publish "src/Chatbot/Chatbot.fsproj" -c $configuration -o /app/publis
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY --from=publish /src/fonts/*.ttf /usr/share/fonts/
 ENTRYPOINT ["dotnet", "Chatbot.dll"]
