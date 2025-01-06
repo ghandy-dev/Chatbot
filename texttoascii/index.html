@@ -18,7 +18,7 @@
         </a>
       </div>
       <h1>
-        Braille
+        Text to Ascii
       </h1>
       <table>
         <colgroup>
@@ -30,7 +30,7 @@
             Description
           </td>
           <td>
-            Generate ASCII braille art of an image.
+            Transform text to ascii text.
           </td>
         </tr>
         <tr>
@@ -38,7 +38,7 @@
             Command
           </td>
           <td>
-            braille
+            texttoascii
           </td>
         </tr>
         <tr>
@@ -46,7 +46,7 @@
             Aliases
           </td>
           <td>
-            ascii
+            tta
           </td>
         </tr>
         <tr>
@@ -54,7 +54,7 @@
             Cooldown
           </td>
           <td>
-            20 seconds
+            15 seconds
           </td>
         </tr>
         <tr>
@@ -74,32 +74,15 @@
               <div>
                 
               </div>
-              <div>
-                Specify an image URL
-              </div>
               <code>
-                &gt; braille &lt;url&gt;
-              </code>
-              <br/>
-              <code>
-                &gt; braille https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0
+                &gt; texttoascii &lt;text&gt;
               </code>
               <br/>
             </div>
             <br/>
             <div>
-              <div>
-                Specify an emote.
-              </div>
-              <div>
-                Can be a Twitch/BTTV/FFZ/7TV emote, but due to limitations; if a Twitch Emote is specified it must be one accessible to the bot (i.e. either it must be a global emote, or an emote from a channel the bot is subscribed to)
-              </div>
               <code>
-                &gt; braille &lt;emote&gt;
-              </code>
-              <br/>
-              <code>
-                &gt; braille Kappa
+                &gt; texttoascii KAPPA
               </code>
               <br/>
             </div>
@@ -145,18 +128,6 @@
                 invert:
               </div>
               <div>
-                    - false
-              </div>
-              <div>
-                    - true (default)
-              </div>
-            </div>
-            <br/>
-            <div>
-              <div>
-                monospace:
-              </div>
-              <div>
                     - false (default)
               </div>
               <div>
@@ -165,23 +136,24 @@
             </div>
             <br/>
             <div>
-              <code>
-                &gt; braille &lt;optional args&gt; ... &lt;url&gt;
-              </code>
-              <br/>
-              <code>
-                &gt; braille greyscale:average dithering:true invert:false monospace:true https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0
-              </code>
-              <br/>
+              <div>
+                monospace:
+              </div>
+              <div>
+                    - false
+              </div>
+              <div>
+                    - true (default)
+              </div>
             </div>
             <br/>
             <div>
               <code>
-                &gt; braille &lt;optional args&gt; ... &lt;emote&gt;
+                &gt; texttoascii &lt;optional arg&gt; ... &lt;text&gt;
               </code>
               <br/>
               <code>
-                &gt; braille greyscale:average dithering:true invert:false monospace:true Kappa
+                &gt; texttoascii greyscale:average dithering:true invert:false monospace:true JEBAITED
               </code>
               <br/>
               <div>
