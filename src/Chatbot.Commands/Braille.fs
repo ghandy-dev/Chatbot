@@ -142,7 +142,7 @@ module Braille =
 
         average / (float bitmap.Height * float bitmap.Width)
 
-    let private toBraille (pixels: SKColor array array) mode (invert: bool) : int =
+    let private toBraille (pixels: SKColor array array) mode (invert: bool) (monospace: bool) : int =
         let predicateGreyscale = fun (pixel: SKColor) ->
             if invert then
                 if pixel.Alpha > 128uy then
@@ -164,9 +164,8 @@ module Braille =
                     acc
             ) 10240 offsets
 
-        // blank braille char
-        if brailleValue = 10240 then
-            10241 // single dot braille char
+        if brailleValue = 10240 && not <| monospace then
+            10241
         else
             brailleValue
 
@@ -191,9 +190,32 @@ module Braille =
         // 4 vertical pixels per braille ascii symbol, max 15 lines (15 * 4 = 60 vertical dots)
         let height = min ((roundUpToMultiple (float bitmap.Height / ratio) 4.0) |> int) (15 * 4)
 
-        bitmap.Resize(new SKImageInfo(width, height), SKFilterQuality.High)
+        bitmap.Resize(new SKImageInfo(width, height), SKSamplingOptions.Default)
 
-    let private imageToBraille (bitmap: SKBitmap) (setting: string) (dithering: bool) (invert: bool) =
+    let private drawText (text: string) =
+        use font = new SKFont(SKTypeface.Default)
+        font.Size <- 70f / 100f * 20f
+        font.Embolden <- true
+
+        use paint = new SKPaint()
+        paint.IsAntialias <- true
+        paint.IsStroke <- true
+        paint.Color <- SKColors.Black
+        paint.StrokeWidth <- 0.5f
+
+        let width = System.Math.Clamp(font.MeasureText(text, paint) |> int, 50, 63)
+
+        let info = new SKImageInfo(width, 12)
+        use surface = SKSurface.Create(info)
+        let canvas = surface.Canvas
+
+        canvas.Clear(SKColors.White)
+
+        canvas.DrawText(text, 0f, 11f, font, paint)
+
+        surface.Snapshot()
+
+    let private imageToBraille (bitmap: SKBitmap) (setting: string) (dithering: bool) (invert: bool) (monospace: bool) =
         if dithering then
             Dithering.floydSteinberg bitmap
 
@@ -205,24 +227,30 @@ module Braille =
                     [| bitmap.GetPixel(x, y) ; bitmap.GetPixel(x, y+1) ; bitmap.GetPixel(x, y+2) ;  bitmap.GetPixel(x, y+3) |]
                     [| bitmap.GetPixel(x+1, y) ; bitmap.GetPixel(x+1, y+1) ;  bitmap.GetPixel(x+1, y+2) ; bitmap.GetPixel(x+1, y+3) |]
                 |]
-                let brailleValue = toBraille pixels setting invert
+                let brailleValue = toBraille pixels setting invert monospace
                 let braille = System.Convert.ToChar(brailleValue)
                 sb.Append(braille) |> ignore
 
             sb.Append(" ") |> ignore
         sb.ToString()
 
-    let private internalBraille (url: string) (setting: string) (dithering: bool) (invert: bool) =
+    let private textToBraille (text: string) (setting: string) (dithering: bool) (invert: bool) (monospace: bool) =
+        let image = drawText text
+        let bitmap = SKBitmap.Decode(image.Encode(SKEncodedImageFormat.Png, 80))
+
+        imageToBraille bitmap setting dithering invert monospace
+
+    let private internalBraille (url: string) (setting: string) (dithering: bool) (invert: bool) (monospace: bool) =
         async {
             match! Helper.getImage url with
             | None -> return Message "Couldn't retrieve image, invalid url provided, or an unsupported image format is used"
             | Some image ->
                 use bitmap = loadImage image 30
-                let brailleAscii = imageToBraille bitmap setting dithering invert
+                let brailleAscii = imageToBraille bitmap setting dithering invert monospace
                 return Message brailleAscii
         }
 
-    let brailleKeys = [ "greyscale" ; "dithering" ; "invert" ]
+    let brailleKeys = [ "greyscale" ; "dithering" ; "invert" ; "monospace" ]
 
     let braille args context =
         async {
@@ -232,6 +260,7 @@ module Braille =
             let greyscaleMode = keyValues |> Map.tryFind "greyscale" |?? DefaultGreyscaleFunction
             let dithering = keyValues |> Map.tryFind "dithering" |> Option.bind (fun d -> Boolean.tryParse d) |?? false
             let invert = keyValues |> Map.tryFind "invert" |> Option.bind (fun i -> Boolean.tryParse i) |?? true
+            let monospace = keyValues |> Map.tryFind "monospace" |> Option.bind (fun i -> Boolean.tryParse i) |?? false
 
             let url =
                 match args with
@@ -246,5 +275,21 @@ module Braille =
 
             match url with
             | None -> return Message "Bad url/emote specified"
-            | Some url -> return! internalBraille url greyscaleMode dithering invert
+            | Some url -> return! internalBraille url greyscaleMode dithering invert monospace
         }
+
+    let textToAscii args =
+        let keyValues = KeyValueParser.parse args brailleKeys
+        let args = KeyValueParser.removeKeyValues args brailleKeys
+
+        let greyscaleMode = keyValues |> Map.tryFind "greyscale" |?? DefaultGreyscaleFunction
+        let dithering = keyValues |> Map.tryFind "dithering" |> Option.bind (fun d -> Boolean.tryParse d) |?? false
+        let invert = keyValues |> Map.tryFind "invert" |> Option.bind (fun i -> Boolean.tryParse i) |?? false
+        let monospace = keyValues |> Map.tryFind "monospace" |> Option.bind (fun i -> Boolean.tryParse i) |?? true
+
+        match args with
+        | [] -> Message "No text specified"
+        | text ->
+            let text = System.String.Join(" ", text)
+            let ascii = textToBraille text greyscaleMode dithering invert monospace
+            Message ascii

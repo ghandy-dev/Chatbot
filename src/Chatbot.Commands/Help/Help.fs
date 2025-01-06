@@ -105,19 +105,31 @@ Can be a Twitch/BTTV/FFZ/7TV emote, but due to limitations; if a Twitch Emote is
 {exampleArgs "braille" "<emote>"}
 {exampleArgs "braille" "Kappa"}
 
-Specify a color intensity function:
+Optional arguments:
 
-Supported color intensity functions:
+greyscale:
     - lightness (default)
     - luminance
     - average
     - max
 
-{exampleArgs "braille" "<function> <url>"}
-{exampleArgs "braille" "average https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0"}
+dithering:
+    - false (default)
+    - true
 
-{exampleArgs "braille" "<function> <emote>"}
-{exampleArgs "braille" "average Kappa"}
+invert:
+    - false
+    - true (default)
+
+monospace:
+    - false (default)
+    - true
+
+{exampleArgs "braille" "<optional args> ... <url>"}
+{exampleArgs "braille" "greyscale:average dithering:true invert:false monospace:true https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0"}
+
+{exampleArgs "braille" "<optional args> ... <emote>"}
+{exampleArgs "braille" "greyscale:average dithering:true invert:false monospace:true Kappa"}
 """
         }
 
@@ -582,6 +594,40 @@ Get current time of location.
 {exampleArgs "time" "<location>"}
 {exampleArgs "time" "Paraguay"}
 {exampleArgs "time" "California, US"}
+"""
+        }
+
+    let TextToAscii =
+        {
+            Name = "Text to Ascii"
+            Description = "Transform text to ascii text."
+            ExampleUsage = $"""
+{exampleArgs "texttoascii" "<text>"}
+
+{exampleArgs "texttoascii" "KAPPA"}
+
+Optional arguments:
+
+greyscale:
+    - lightness (default)
+    - luminance
+    - average
+    - max
+
+dithering:
+    - false (default)
+    - true
+
+invert:
+    - false (default)
+    - true
+
+monospace:
+    - false
+    - true (default)
+
+{exampleArgs "texttoascii" "<optional arg> ... <text>"}
+{exampleArgs "texttoascii" "greyscale:average dithering:true invert:false monospace:true JEBAITED"}
 """
         }
 

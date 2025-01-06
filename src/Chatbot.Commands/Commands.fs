@@ -62,6 +62,7 @@ module Commands =
             Command.createCommand ("stream", [], HelpInfo.Stream, AA stream, 20000, false)
             Command.createCommand ("subage", [ "sa" ], HelpInfo.SubAge, AAC subAge, 10000, false)
             Command.createCommand ("time", [], HelpInfo.Time, AA time, 5000, false)
+            Command.createCommand ("texttoascii", [ "tta" ], HelpInfo.TextToAscii, SA textToAscii, 15000, false)
             Command.createCommand ("texttransform", [ "tt" ], HelpInfo.TextTransform, SA texttransform, 5000, false)
             Command.createCommand ("topstreams", [ "ts" ], HelpInfo.TopStreams, A topStreams, 20000, false)
             Command.createCommand ("urban", [ "ud" ], HelpInfo.UrbanDictionary, AA urban, 20000, false)
