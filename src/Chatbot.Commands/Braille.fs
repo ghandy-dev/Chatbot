@@ -193,7 +193,7 @@ module Braille =
         bitmap.Resize(new SKImageInfo(width, height), SKSamplingOptions.Default)
 
     let private drawText (text: string) =
-        use font = new SKFont(SKTypeface.Default)
+        use font = new SKFont(SKTypeface.FromFamilyName("Segoe UI"))
         font.Size <- 70f / 100f * 20f
         font.Embolden <- true
 
