@@ -118,16 +118,23 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) c
 
                 let reconnect () =
                     async {
-                            do! twitchChatClient.ReconnectAsync(cancellationToken)
-                            let! channels = getChannelJoinList ()
-                            do! joinChannels twitchChatClient (channels |> Seq.map snd)
+                        do! twitchChatClient.ReconnectAsync(cancellationToken)
+                        let! channels = getChannelJoinList ()
+                        do! joinChannels twitchChatClient (channels |> Seq.map snd)
+                    }
+
+                let rec reconnectHelper () =
+                    async {
+                        if (DateTime.UtcNow - lastPingTime).Seconds > 360 then
+                            Logging.info "Connection dropped unexpectedly, reconnecting"
+                            do! reconnect()
+                        else
+                            do! Async.Sleep(1000)
+                            do! reconnectHelper ()
                     }
 
                 let rec loop () =
                     async {
-                        if (DateTime.UtcNow - lastPingTime).Seconds > 360 then
-                            mb.Post Reconnect
-
                         match! mb.Receive() with
                         | SendPongMessage pong ->
                             Logging.info $"PONG :{pong}"
@@ -157,6 +164,7 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) c
                         do! loop ()
                     }
 
+                Async.Start (reconnectHelper (), cancellationToken)
                 do! loop ()
             }
         ),
