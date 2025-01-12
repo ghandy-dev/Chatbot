@@ -32,14 +32,14 @@ module SubAge =
                         let self = if System.String.Compare(user, context.Username, ignoreCase = true) = 0 then true else false
 
                         match subage.Cumulative, subage.Streak, self with
-                        | Some stats, Some streak, false ->
-                            return Message $"You have been subscribed to %s{subage.Channel.DisplayName} for %d{stats.Months} months (%d{streak.Months} month streak)"
                         | Some stats, Some streak, true ->
-                            return Message $"%s{user} has been subscribed to %s{subage.Channel.DisplayName} for %d{stats.Months} months (%d{streak.Months} month streak)"
+                            return Message $"You have been subscribed to %s{subage.Channel.DisplayName} for %d{stats.Months} month(s) (%d{streak.Months} month streak)"
+                        | Some stats, Some streak, false ->
+                            return Message $"%s{user} has been subscribed to %s{subage.Channel.DisplayName} for %d{stats.Months} month(s) (%d{streak.Months} month streak)"
                         | Some stats, None, false ->
-                            return Message $"%s{user} is not currently subscribed to %s{subage.Channel.DisplayName}. Previously subscribed for %d{stats.Months} months. Subscription ended on %s{stats.End.ToString(Utils.DateTime.DateStringFormat)}"
+                            return Message $"%s{user} is not currently subscribed to %s{subage.Channel.DisplayName}. Previously subscribed for %d{stats.Months} month(s). Subscription ended on %s{stats.End.ToString(Utils.DateTime.DateStringFormat)}"
                         | Some stats, None, true ->
-                            return Message $"You are not currently subscribed to %s{subage.Channel.DisplayName}. Previously subscribed for %d{stats.Months} months. Subscription ended on %s{stats.End.ToString(Utils.DateTime.DateStringFormat)}"
+                            return Message $"You are not currently subscribed to %s{subage.Channel.DisplayName}. Previously subscribed for %d{stats.Months} month(s). Subscription ended on %s{stats.End.ToString(Utils.DateTime.DateStringFormat)}"
                         | _, _, false ->
                             return Message $"%s{user} has not subscribed to %s{subage.Channel.DisplayName} before"
                         | _, _, true ->
