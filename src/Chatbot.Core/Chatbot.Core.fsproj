@@ -14,6 +14,7 @@
     <Compile Include="Configuration.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Utils.fs" />
+    <Compile Include="Serialization/UnixEpochDateTimeConverter.fs" />
     <Compile Include="Http.fs" />
     <Compile Include="Pastebin.fs" />
     <Compile Include="Ivr.fs" />
