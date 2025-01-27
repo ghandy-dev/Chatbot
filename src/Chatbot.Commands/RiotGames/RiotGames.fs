@@ -8,7 +8,7 @@ module RiotGames =
     open Api
     open Commands
 
-    let regions =
+    let private regions =
         [
             "euw", "euw1"
             "eune", "eun1"
@@ -22,18 +22,18 @@ module RiotGames =
         ]
         |> Map.ofList
 
-    let parseRiotId riotId =
+    let private parseRiotId riotId =
         riotId |> String.concat " "  |> _.Split("#", StringSplitOptions.TrimEntries)
         |> function
         | [| gameName ; tagLine |] -> Ok (gameName, tagLine)
         | _ -> Error "Bad username/#tag provided"
 
-    let parseRegion region =
+    let private parseRegion region =
         regions
         |> Map.tryFind region
         |> Result.fromOption "Invalid region specified"
 
-    let parse region riotId =
+    let private parse region riotId =
         parseRegion region
         |> Result.bindZip (fun _ -> parseRiotId riotId)
 
@@ -47,11 +47,14 @@ module RiotGames =
                 | Ok (region, (gameName, tagLine)) ->
                     match!
                         getAccount gameName tagLine
-                        |> Result.bindAsync (fun account -> getSummoner region account.PUUID)
-                        |> Result.bindAsync (fun summoner -> getLeagueEntries region summoner.Id)
+                        |> Result.bindZipAsync (fun account -> getSummoner region account.PUUID)
+                        |> Result.bindZipAsync (fun (_, summoner) -> getLeagueEntries region summoner.Id)
                     with
-                    | Error err -> return Message err
-                    | Ok leagueEntries ->
+                    | Error (err, statusCode) ->
+                        match int statusCode with
+                        | 404 -> return Message "Account/Summoner not found"
+                        | _ -> return Message err
+                    | Ok ((account, _), leagueEntries) ->
                         match leagueEntries |> List.filter (fun e -> e.QueueType = "RANKED_SOLO_5x5") |> List.tryHead with
                         | None -> return Message "Player has not played ranked solo this season, or hasn't finished their ranked placement matches yet"
                         | Some leagueEntry ->
@@ -62,5 +65,5 @@ module RiotGames =
                             let losses = leagueEntry.Losses
                             let winRate =  int <| float leagueEntry.Wins / (float leagueEntry.Wins + float leagueEntry.Losses) * 100.0
 
-                            return Message $"Ranked Solo, Rank: %s{tier} %s{rank} (%d{lp} LP). Wins: %d{wins}, Losses: %d{losses}, W/R: %d{winRate}%%"
+                            return Message $"%s{account.GameName |?? gameName}#%s{account.TagLine |?? tagLine} (Summoners Rift 5v5 Ranked Solo), Rank: %s{tier} %s{rank} (%d{lp} LP). W/L: %d{wins}/%d{losses}, W/R: %d{winRate}%%"
         }

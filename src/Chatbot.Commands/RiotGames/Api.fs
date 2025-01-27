@@ -32,7 +32,7 @@ module Api =
             | Error err ->
                 let! content = response.content.ReadAsStringAsync() |> Async.AwaitTask
                 Logging.error content (new System.Net.Http.HttpRequestException(content))
-                return Error $"Riot Games API HTTP error {err.statusCode |> int} {err.statusCode}"
+                return Error ($"Riot Games API HTTP error {err.statusCode |> int} {err.statusCode}", err.statusCode)
         }
 
     let getAccount (gameName: string) (tagLine: string) =
