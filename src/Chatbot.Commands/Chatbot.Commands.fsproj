@@ -39,6 +39,9 @@
     <Compile Include="Reddit/Types.fs" />
     <Compile Include="Reddit/Api.fs" />
     <Compile Include="Reddit/Reddit.fs" />
+    <Compile Include="RiotGames/Types.fs" />
+    <Compile Include="RiotGames/Api.fs" />
+    <Compile Include="RiotGames/RiotGames.fs" />
     <Compile Include="Braille.fs" />
     <Compile Include="TextTransform.fs" />
     <Compile Include="RandomClip.fs" />

@@ -332,6 +332,28 @@ Currently has:
 """
         }
 
+    let LeagueOfLegends =
+        {
+            Name = "League of Legends"
+            Description = "Look up a players' league of legends rank and stats."
+            ExampleUsage = $"""
+Available regions:
+EUW (Europe West)
+EUNE (Europe Nordic + East)
+KR (Korea)
+JP (Japan)
+BR (Brazil)
+LA (Latin America)
+OCE (Oceania)
+TR (Turkey)
+RU (Russia)
+
+{exampleArgs "leagueoflegends" "<region> <username>#<tag>"}
+{exampleArgs "leagueoflegends" "euw forsenxd#EUW"}
+{exampleArgs "lol" "kr hide on bush#KR1"}
+"""
+        }
+
     let NameColor =
         {
             Name = "Name Color"

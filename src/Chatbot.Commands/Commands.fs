@@ -7,6 +7,7 @@ open Commands.Logs
 open Commands.News
 open Commands.OpenAI
 open Commands.Reddit
+open Commands.RiotGames
 open Commands.UrbanDictionary
 
 module Commands =
@@ -44,6 +45,7 @@ module Commands =
             Command.createCommand ("help", [],  HelpInfo.Help, S help, 10000, false)
             Command.createCommand ("joinchannel", [], HelpInfo.JoinChannel, AA joinChannel, 5000, true)
             Command.createCommand ("leavechannel", [], HelpInfo.LeaveChannel, AA leaveChannel, 5000, true)
+            Command.createCommand ("leagueoflegends", [ "lol" ; "league" ], HelpInfo.LeagueOfLegends, AA league, 15000, true)
             Command.createCommand ("namecolor", [ "color" ], HelpInfo.NameColor, AAC namecolor, 20000, false)
             Command.createCommand ("news", [], HelpInfo.News, AA news, 15000, false)
             Command.createCommand ("pick", [], HelpInfo.Pick, SA pick, 10000, false)

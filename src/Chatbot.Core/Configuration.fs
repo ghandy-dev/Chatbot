@@ -140,3 +140,12 @@ module Pastebin =
     }
 
     let config = configuration.GetSection("Pastebin").Get<PastebinConfig>()
+
+module RiotGames =
+
+    [<CLIMutable>]
+    type RiotGamesConfig = {
+        ApiKey: string
+    }
+
+    let config = configuration.GetSection("RiotGames").Get<RiotGamesConfig>()
