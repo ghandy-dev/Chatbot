@@ -36,14 +36,12 @@ let bindZipAsync binder asyncValue =
     }
 
 let bindZip binder value =
-    async {
-        match value with
-        | Ok x ->
-            match! binder x with
-            | Ok y -> return Ok(x, y)
-            | Error error -> return Error error
-        | Error error -> return Error error
-    }
+    match value with
+    | Ok x ->
+        match binder x with
+        | Ok y -> Ok(x, y)
+        | Error error -> Error error
+    | Error error -> Error error
 
 let fromOption error option =
     match option with

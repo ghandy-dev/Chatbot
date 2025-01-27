@@ -14,7 +14,7 @@ module FaceIt =
         async {
             match!
                 getPlayer playerName
-                |+> Result.bindZip (fun p -> getPlayerStats p.PlayerId)
+                |> Result.bindZipAsync (fun p -> getPlayerStats p.PlayerId)
             with
             | Error error -> return Message error
             | Ok(player, stats) ->
@@ -40,7 +40,7 @@ module FaceIt =
         async {
             match!
                 getPlayer playerName
-                |+> Result.bindZip (fun p -> getPlayerMatchHistory p.PlayerId 5)
+                |> Result.bindZipAsync (fun p -> getPlayerMatchHistory p.PlayerId 5)
             with
             | Error error -> return Message error
             | Ok(player, history) ->
@@ -88,7 +88,7 @@ module FaceIt =
         async {
             match!
                 getPlayer playerName
-                |+> Result.bindZip (fun p -> getPlayerMatchHistory p.PlayerId 1)
+                |> Result.bindZipAsync (fun p -> getPlayerMatchHistory p.PlayerId 1)
             with
             | Error error -> return Message error
             | Ok(player, lastMatch) ->
