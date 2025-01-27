@@ -26,7 +26,7 @@ module RiotGames =
         riotId |> String.concat " "  |> _.Split("#", StringSplitOptions.TrimEntries)
         |> function
         | [| gameName ; tagLine |] -> Ok (gameName, tagLine)
-        | _ -> Error "Bad riot gameName/tagLine provided"
+        | _ -> Error "Bad username/#tag provided"
 
     let parseRegion region =
         regions
