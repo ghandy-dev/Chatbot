@@ -1,18 +1,19 @@
-namespace Commands.Reddit
+namespace Commands
 
 [<AutoOpen>]
 module Reddit =
 
-    open Api
     open Authorization
     open Commands
+    open Commands.Reddit.Api
+    open Commands.Reddit.Types
 
     let redditKeys = [ "sort" ; "flair" ]
 
-    let private postFilter (p: Types.Thing<Types.T3>) =
+    let private postFilter (p: Thing<T3>) =
         not <| p.Data.Over18 && not <| p.Data.IsSelf
 
-    let private flairFilter (flair: string) (p: Types.Thing<Types.T3>) =
+    let private flairFilter (flair: string) (p: Thing<T3>) =
         p.Data.Flair |?? "" |> fun f -> System.String.Compare(f, flair, true) = 0
 
     let reddit (args: string list) =

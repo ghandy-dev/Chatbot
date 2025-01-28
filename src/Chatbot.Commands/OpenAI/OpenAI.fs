@@ -1,10 +1,10 @@
-namespace Commands.OpenAI
+namespace Commands
 
 [<AutoOpen>]
 module OpenAI =
 
     open Commands
-    open Api
+    open Commands.OpenAI.Api
 
     let private toSize =
         function

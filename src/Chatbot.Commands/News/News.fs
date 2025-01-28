@@ -1,4 +1,4 @@
-namespace Commands.News
+namespace Commands
 
 [<AutoOpen>]
 module News =

@@ -1,4 +1,4 @@
-namespace Commands.Logs
+namespace Commands
 
 [<AutoOpen>]
 module Logs =

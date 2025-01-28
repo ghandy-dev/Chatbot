@@ -2,13 +2,6 @@ namespace Commands
 
 open Configuration
 open Commands
-open Commands.FaceIt
-open Commands.Logs
-open Commands.News
-open Commands.OpenAI
-open Commands.Reddit
-open Commands.RiotGames
-open Commands.UrbanDictionary
 
 module Commands =
 

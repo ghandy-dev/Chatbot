@@ -1,12 +1,12 @@
-namespace Commands.UrbanDictionary
+namespace Commands
 
 [<AutoOpen>]
-module Reddit =
-
-    open Api
-    open Commands
+module UrbanDictionary =
 
     open System.Text.RegularExpressions
+
+    open Commands
+    open Commands.UrbanDictionary.Api
 
     let urban args =
         async {

@@ -1,14 +1,13 @@
-namespace Commands.FaceIt
+namespace Commands
 
 [<AutoOpen>]
 module FaceIt =
 
-    open Api
-    open Types
-    open Commands
-
     open System
     open System.Text
+
+    open Commands
+    open Commands.FaceIt.Api
 
     let private stats playerName =
         async {

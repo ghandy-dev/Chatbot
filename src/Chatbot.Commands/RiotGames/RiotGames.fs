@@ -1,12 +1,12 @@
-namespace Commands.RiotGames
+namespace Commands
 
 [<AutoOpen>]
 module RiotGames =
 
     open System
 
-    open Api
     open Commands
+    open Commands.RiotGames.Api
 
     let private regions =
         [
