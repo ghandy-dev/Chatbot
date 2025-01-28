@@ -56,6 +56,7 @@ module Bot =
         CommandPrefix: string
         Capabilities: string array
         Env: string
+        HelpUrl: string
     }
 
     let config = configuration.GetSection("BotConfig").Get<BotConfig>()

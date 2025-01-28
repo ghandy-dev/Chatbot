@@ -3,7 +3,7 @@ namespace Commands
 [<AutoOpen>]
 module Help =
 
-    let help () = Message "See https://ghandy-dev.github.io/Chatbot/ for a list of commands"
+    let help () = Message $"See %s{Configuration.Bot.config.HelpUrl} for a list of commands"
 
 module HelpInfo =
 
