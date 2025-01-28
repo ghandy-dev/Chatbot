@@ -22,18 +22,18 @@ module RiotGames =
         ]
         |> Map.ofList
 
-    let private parseRiotId riotId =
+    let private parseRiotId (riotId: string seq) =
         riotId |> String.concat " "  |> _.Split("#", StringSplitOptions.TrimEntries)
         |> function
         | [| gameName ; tagLine |] -> Ok (gameName, tagLine)
         | _ -> Error "Bad username/#tag provided"
 
-    let private parseRegion region =
+    let private parseRegion (region: string) =
         regions
-        |> Map.tryFind region
+        |> Map.tryFind (region.ToLower())
         |> Result.fromOption "Invalid region specified"
 
-    let private parse region riotId =
+    let private parse (region: string) (riotId: string seq) =
         parseRegion region
         |> Result.bindZip (fun _ -> parseRiotId riotId)
 
