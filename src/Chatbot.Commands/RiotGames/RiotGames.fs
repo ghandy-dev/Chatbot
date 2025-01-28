@@ -55,7 +55,7 @@ module RiotGames =
                         | 404 -> return Message "Account/Summoner not found"
                         | _ -> return Message err
                     | Ok ((account, _), leagueEntries) ->
-                        match leagueEntries |> List.filter (fun e -> e.QueueType = "RANKED_SOLO_5x5") |> List.tryHead with
+                        match leagueEntries |> List.tryFind (fun e -> e.QueueType = "RANKED_SOLO_5x5") with
                         | None -> return Message "Player has not played ranked solo this season, or hasn't finished their ranked placement matches yet"
                         | Some leagueEntry ->
                             let tier = leagueEntry.Tier
