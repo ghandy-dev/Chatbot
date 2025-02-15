@@ -23,7 +23,7 @@ module Emote =
                 | Error _ -> return Message "Emote not found"
                 | Ok emote ->
                     match emote.ChannelName, emote.EmoteTier, emote.EmoteSetId with
-                    | Some channel, Some tier, None -> return Message $"https://twitch.tv/%s{channel} %s{emote.EmoteCode}, ID: %s{emote.EmoteId}, Tier %s{tier}, %s{emote.EmoteUrl}"
+                    | Some channel, Some tier, _ -> return Message $"https://twitch.tv/%s{channel} %s{emote.EmoteCode}, ID: %s{emote.EmoteId}, Tier %s{tier}, %s{emote.EmoteUrl}"
                     | None, None, Some set -> return Message $"%s{emote.EmoteCode}, ID: %s{emote.EmoteId}, Set %s{set}, %s{emote.EmoteUrl}"
                     | _, _, _ -> return Message $"%s{emote.EmoteCode}, ID: %s{emote.EmoteId}, %s{emote.EmoteUrl}"
         }
