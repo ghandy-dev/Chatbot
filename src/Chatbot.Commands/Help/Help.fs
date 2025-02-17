@@ -548,6 +548,11 @@ Remind a user when they next type in chat:
 Set a timed reminder to remind the user after a set duration in the current channel (can't be set in whispers):
 {exampleArgs "remind" "<user> in <time period> <message>"}
 {exampleArgs "remind" "forsen in 20 mins go live forsenSWA"}
+{exampleArgs "remind" "ClintStevens next month OOT speedrun?"}
+
+Set a timed reminder for yourself:
+{exampleArgs "remind" "me in 10 minutes pasta" }
+{exampleArgs "remind" "me tomorrow update stream title" }
 """
         }
 
