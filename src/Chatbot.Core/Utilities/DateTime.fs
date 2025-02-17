@@ -33,7 +33,7 @@ let tryParseNaturalLanguageDateTime (query: string) =
                         let difference = date - DateTime.Now.Date
                         let datetime = DateTime.Now.AddDays(difference.Days)
                         Some (datetime, result.Start, result.End)
-                    | (true, _), (true, "time"), (true, t) ->
+                    | (true, t), (true, "time"), (true, _) ->
                         let time = TimeOnly.Parse(t)
                         let datetime = DateTime.Now.Date.AddSeconds(time.ToTimeSpan().TotalSeconds)
                         Some (datetime, result.Start, result.End)
