@@ -1,7 +1,7 @@
 module Dungeon.Helpers
 
 open System
-open Utils.Int32
+open Int32
 
 let getRandomItem list (rand: Random) =
     let totalWeight = list |> List.sumBy fst

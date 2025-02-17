@@ -9,70 +9,32 @@ module Remind =
     open Database
     open Database.Types.Reminders
 
-    let private whenPattern username = sprintf @"(%s) (in\s*)+((\d+)\s*(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)+?,*\s*)+" username
-    let private timeComponentPattern = @"(\d+)\s*(years?|months?|days?|hours?|minutes?|mins?|seconds?|secs?)"
+    let private whenPattern username = sprintf @"(%s) (in|at\s*)" username
 
-    let private parseTimeComponents (durations: (string * string) seq) =
-        let parseTimeComponent (dateTime: DateTime) (duration: string) (timeComp: string) =
-            let duration = Int32.Parse duration
-            match duration, timeComp.ToLower() with
-            | d, "year"
-            | d, "years" -> dateTime.AddYears(d)
-            | d, "month"
-            | d, "months" -> dateTime.AddMonths(d)
-            | d, "day"
-            | d, "days" -> dateTime.AddDays(d)
-            | d, "hour"
-            | d, "hours" -> dateTime.AddHours(d)
-            | d, "minute"
-            | d, "minutes"
-            | d, "min"
-            | d, "mins" -> dateTime.AddMinutes(d)
-            | d, "second"
-            | d, "seconds"
-            | d, "sec"
-            | d, "secs" -> dateTime.AddSeconds(d)
-            | _ -> dateTime
-
-        durations |> Seq.fold (fun dt (d, tc) -> parseTimeComponent dt d tc) (utcNow())
-
-    let private parseTimedReminder (user: string) (content: string) (context: Context) =
+    let private setTimedReminder (user: string) (content: string) (context: Context) =
         async {
             match context.Source with
             | Whisper _ -> return Message "Timed reminders can only be used in channels"
             | Channel channel ->
-                let now = utcNow()
-                let pattern = whenPattern user
+                let now = now()
 
-                match
-                    Regex.Matches(sprintf "%s %s" user content, pattern)
-                    |> Seq.tryHead
-                    |> Option.bind (fun m ->
-                        Regex.Matches(m.Value, timeComponentPattern)
-                        |> fun ms -> if ms.Count > 0 then Some ms else None
-                    )
-                with
+                match DateTime.tryParseNaturalLanguageDateTime content with
                 | None -> return Message "Couldn't parse reminder time"
-                | Some timeComponents ->
-                    let remindDateTime =
-                        timeComponents
-                        |> Seq.map (fun m -> m.Groups[1].Value, m.Groups[2].Value)
-                        |> parseTimeComponents
-
-                    if (remindDateTime - now).Days / 365 > 5 then
+                | Some (datetime, start, ``end``) ->
+                    if (datetime - now).Days / 365 > 5 then
                         return Message "Max reminder time span is now + 5 years"
                     else
-                        let message = Regex.Replace(content, pattern, "")
-                        let remindIn = remindDateTime - now
+                        let message = content[``end``..]
+                        let timespan = datetime - now
 
                         match! Twitch.Helix.Users.getUser user with
                         | None -> return Message $"Couldn't find user %s{user}"
                         | Some targetUser ->
-                            let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some remindDateTime)
+                            let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some datetime)
                             let targetUsername = if targetUser.Id = context.UserId then "you" else $"@%s{targetUser.DisplayName}"
 
                             match! ReminderRepository.add reminder with
-                            | DatabaseResult.Success id -> return Message $"(ID: %d{id}) I will remind %s{targetUsername} in %s{formatTimeSpan remindIn}"
+                            | DatabaseResult.Success id -> return Message $"(ID: %d{id}) I will remind %s{targetUsername} in %s{formatTimeSpan timespan}"
                             | DatabaseResult.Failure -> return Message "Error occurred trying to create reminder"
         }
 
@@ -96,7 +58,7 @@ module Remind =
                 match! ReminderRepository.getPendingTimedReminderCount (context.UserId |> int) with
                 | DatabaseResult.Failure -> return Message "Error occured checking current pending reminders"
                 | DatabaseResult.Success c when c > 20 -> return Message "User has too many pending timed reminders"
-                | DatabaseResult.Success _ -> return! parseTimedReminder user content context
+                | DatabaseResult.Success _ -> return! setTimedReminder user content context
             else
                 match! ReminderRepository.getPendingReminderCount (context.UserId |> int) with
                 | DatabaseResult.Failure -> return Message "Error occured checking current pending reminders"

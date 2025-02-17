@@ -13,7 +13,17 @@
     <Compile Include="DotEnv.fs" />
     <Compile Include="Configuration.fs" />
     <Compile Include="Logging.fs" />
-    <Compile Include="Utils.fs" />
+    <Compile Include="Utilities/Utils.fs" />
+    <Compile Include="Utilities/Seq.fs" />
+    <Compile Include="Utilities/List.fs" />
+    <Compile Include="Utilities/Map.fs" />
+    <Compile Include="Utilities/DateTime.fs" />
+    <Compile Include="Utilities/DateOnly.fs" />
+    <Compile Include="Utilities/Boolean.fs" />
+    <Compile Include="Utilities/Int32.fs" />
+    <Compile Include="Utilities/Array.fs" />
+    <Compile Include="Utilities/Text.fs" />
+    <Compile Include="Utilities/KeyValueParser.fs" />
     <Compile Include="Serialization/UnixEpochDateTimeConverter.fs" />
     <Compile Include="Http.fs" />
     <Compile Include="Pastebin.fs" />
@@ -50,6 +60,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Recognizers.Text.DateTime" Version="1.8.12" />
     <PackageReference Include="TTVSharp.Helix" Version="0.3.0" />
     <PackageReference Include="FsHttp" Version="12.0.0" />
   </ItemGroup>

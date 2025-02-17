@@ -77,7 +77,7 @@ let rec private handleCommand (userId: string) (username: string) (source: Messa
                             | Message message -> return Some <| (Message <| formatChatMessage message)
                             | BotAction(action, message) -> return Some <| BotAction(action, formatChatMessage message)
                             | RunAlias(command, parameters) ->
-                                let formattedCommand = Utils.Text.formatString command parameters
+                                let formattedCommand = Text.formatString command parameters
 
                                 match! handleCommand userId username source formattedCommand parsedEmotes with
                                 | None -> return None

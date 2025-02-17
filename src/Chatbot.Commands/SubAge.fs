@@ -37,9 +37,9 @@ module SubAge =
                         | Some stats, Some streak, false ->
                             return Message $"%s{user} has been subscribed to %s{subage.Channel.DisplayName} for %d{stats.Months} month(s) (%d{streak.Months} month streak)"
                         | Some stats, None, false ->
-                            return Message $"%s{user} is not currently subscribed to %s{subage.Channel.DisplayName}. Previously subscribed for %d{stats.Months} month(s). Subscription ended on %s{stats.End.ToString(Utils.DateTime.DateStringFormat)}"
+                            return Message $"%s{user} is not currently subscribed to %s{subage.Channel.DisplayName}. Previously subscribed for %d{stats.Months} month(s). Subscription ended on %s{stats.End.ToString(Utils.DateStringFormat)}"
                         | Some stats, None, true ->
-                            return Message $"You are not currently subscribed to %s{subage.Channel.DisplayName}. Previously subscribed for %d{stats.Months} month(s). Subscription ended on %s{stats.End.ToString(Utils.DateTime.DateStringFormat)}"
+                            return Message $"You are not currently subscribed to %s{subage.Channel.DisplayName}. Previously subscribed for %d{stats.Months} month(s). Subscription ended on %s{stats.End.ToString(Utils.DateStringFormat)}"
                         | _, _, false ->
                             return Message $"%s{user} has not subscribed to %s{subage.Channel.DisplayName} before"
                         | _, _, true ->
