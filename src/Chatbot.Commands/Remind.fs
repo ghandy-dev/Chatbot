@@ -9,7 +9,7 @@ module Remind =
     open Database
     open Database.Types.Reminders
 
-    let private whenPattern username = sprintf @"(%s) (in|at\s*)" username
+    let private whenPattern username = sprintf @"(%s) (in|at|on|tomorrow|next\s*)" username
 
     let private setTimedReminder (user: string) (content: string) (context: Context) =
         async {
