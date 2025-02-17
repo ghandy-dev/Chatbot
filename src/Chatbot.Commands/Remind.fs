@@ -16,16 +16,15 @@ module Remind =
             match context.Source with
             | Whisper _ -> return Message "Timed reminders can only be used in channels"
             | Channel channel ->
-                let now = now()
-
                 match DateTime.tryParseNaturalLanguageDateTime content with
                 | None -> return Message "Couldn't parse reminder time"
                 | Some (datetime, start, ``end``) ->
+                    let now = now()
                     if (datetime - now).Days / 365 > 5 then
                         return Message "Max reminder time span is now + 5 years"
                     else
-                        let message = content[``end``..]
-                        let timespan = datetime - now
+                        let message = content[``end`` + 1..]
+                        let timespan = datetime.AddSeconds(1) - now
 
                         match! Twitch.Helix.Users.getUser user with
                         | None -> return Message $"Couldn't find user %s{user}"
