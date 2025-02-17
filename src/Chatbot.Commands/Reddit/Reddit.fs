@@ -4,9 +4,8 @@ namespace Commands
 module Reddit =
 
     open Authorization
-    open Commands
-    open Commands.Reddit.Api
-    open Commands.Reddit.Types
+    open Reddit.Api
+    open Reddit.Types
 
     let redditKeys = [ "sort" ; "flair" ]
 

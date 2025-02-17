@@ -3,8 +3,7 @@ namespace Commands
 [<AutoOpen>]
 module News =
 
-    open Commands
-    open Commands.Api.News
+    open News.Api
 
     let news args =
         async {

@@ -5,8 +5,8 @@ module Nasa =
 
     open System
 
-    open Commands.Api.Nasa
-    open Commands.Types.Nasa
+    open Nasa.Api
+    open Nasa.Types
 
     let private parseApodArgs (date: string) =
         match DateOnly.TryParse(date) with

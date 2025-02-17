@@ -1,8 +1,8 @@
-namespace Commands.Api
+namespace Nasa
 
-module Nasa =
+module Api =
 
-    open Commands.Types.Nasa
+    open Types
     open Configuration
 
     open System

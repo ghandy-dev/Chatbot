@@ -1,4 +1,4 @@
-namespace Commands.OpenAI
+namespace OpenAI
 
 module Types =
 

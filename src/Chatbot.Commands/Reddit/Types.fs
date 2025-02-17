@@ -1,4 +1,4 @@
-namespace Commands.Reddit
+namespace Reddit
 
 module Types =
 

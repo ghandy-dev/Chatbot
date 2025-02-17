@@ -1,4 +1,4 @@
-namespace Commands.UrbanDictionary
+namespace UrbanDictionary
 
 module Api =
 

@@ -1,4 +1,4 @@
-namespace Commands.FaceIt
+namespace FaceIt
 
 module Types =
 

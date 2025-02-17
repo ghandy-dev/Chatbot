@@ -6,8 +6,7 @@ module FaceIt =
     open System
     open System.Text
 
-    open Commands
-    open Commands.FaceIt.Api
+    open FaceIt.Api
 
     let private stats playerName =
         async {

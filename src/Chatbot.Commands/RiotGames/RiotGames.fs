@@ -5,8 +5,7 @@ module RiotGames =
 
     open System
 
-    open Commands
-    open Commands.RiotGames.Api
+    open RiotGames.Api
 
     let private regions =
         [

@@ -1,4 +1,4 @@
-namespace Commands.RiotGames
+namespace RiotGames
 
 module Api =
 

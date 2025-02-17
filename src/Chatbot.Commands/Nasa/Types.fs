@@ -1,6 +1,6 @@
-namespace Commands.Types
+namespace Nasa
 
-module Nasa =
+module Types =
 
     open System
     open System.Text.Json.Serialization

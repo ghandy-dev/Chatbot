@@ -1,6 +1,6 @@
-namespace Commands.Api
+namespace News
 
-module News =
+module Api =
 
     open Database
 
