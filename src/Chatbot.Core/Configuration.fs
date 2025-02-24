@@ -35,7 +35,8 @@ and LogLevel = {
 [<CLIMutable>]
 type ConnectionStrings = {
     Database: string
-    Twitch: string
+    TwitchIrc: string
+    TwitchWss: string
 }
 
 [<CLIMutable>]
@@ -47,8 +48,9 @@ type TwitchConfig = {
 
 [<CLIMutable>]
 type BotConfig = {
-    CommandPrefix: string
     Capabilities: string array
+    CommandPrefix: string
+    ConnectionProtocol: string
 }
 
 [<CLIMutable>]

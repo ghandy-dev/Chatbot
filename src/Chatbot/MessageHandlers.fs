@@ -7,16 +7,27 @@ open IRC.Messages
 open State
 open Types
 
+open System.Text.RegularExpressions
+
 let commandPrefix = appConfig.Bot.CommandPrefix
 
 let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProcessor<ClientRequest>) =
     async {
+        let postMessage message =
+            match msg.ReplyParentMessageId with
+            | None -> mb.Post(SendPrivateMessage(msg.Channel, message))
+            | Some msgId -> mb.Post(SendReplyMessage(msgId, msg.Channel, message))
+
         let message =
-            match msg.ReplyParentMessageBody, msg.ReplyParentUserLogin with
-            | Some parentMessage, Some username ->
-                let regex = new System.Text.RegularExpressions.Regex($"@%s{username}\s*")
-                sprintf "%s %s" (regex.Replace(msg.Message, "", 1)) parentMessage
-            | _, _ -> msg.Message
+            match msg.ReplyParentMessageBody with
+            | Some parentMessage ->
+                let usernameRegex = new Regex($"@\w+\s*")
+
+                if msg.ReplyParentMessageId <> msg.ReplyThreadParentMessageId then
+                    sprintf "%s %s" (usernameRegex.Replace(msg.Message, "", 1)) (usernameRegex.Replace(parentMessage, "", 1))
+                else
+                    sprintf "%s %s" (usernameRegex.Replace(msg.Message, "", 1)) parentMessage
+            | _ -> msg.Message
 
         match message.StartsWith(commandPrefix) with
         | true ->
@@ -27,16 +38,16 @@ let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProces
                 match commandOutcome with
                 | BotAction(action, message) ->
                     mb.Post(BotCommand(action))
-                    mb.Post(SendPrivateMessage(msg.Channel, message))
+                    postMessage message
                 | Message message ->
-                    mb.Post(SendPrivateMessage(msg.Channel, message))
+                    postMessage message
                 | RunAlias _
                 | Pipe _ -> ()
             | None -> ()
         | false -> ()
     }
 
-let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProcessor<_>) =
+let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProcessor<ClientRequest>) =
     async {
         match msg.Message.StartsWith(commandPrefix) with
         | true ->
@@ -87,7 +98,7 @@ let private globalUserStateMessageHandler (msg: Types.GlobalUserStateMessage) =
         do! emoteService.RefreshGlobalEmotes ()
     }
 
-let private handleIrcMessage msg (mb: MailboxProcessor<_>) =
+let private handleIrcMessage msg (mb: MailboxProcessor<ClientRequest>) =
     async {
         match msg with
         | PingMessage msg -> do mb.Post(SendPongMessage msg.message)

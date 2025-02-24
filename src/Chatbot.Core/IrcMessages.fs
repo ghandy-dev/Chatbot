@@ -377,10 +377,12 @@ module Messages =
             RoomId: string
             Mod: bool
             Emotes: Map<string, string>
+            ReplyParentMessageId: string option
             ReplyParentUserId: string option
             ReplyParentUserLogin: string option
             ReplyParentDisplayName: string option
             ReplyParentMessageBody: string option
+            ReplyThreadParentMessageId: string option
             ReplyThreadParentUserLogin: string option
             Bits: string option
         }
@@ -562,10 +564,12 @@ module Messages =
                     RoomId = message.Tags["room-id"]
                     Mod = message.Tags["mod"] |> Boolean.parseBit
                     Emotes = parseEmotes msg message.Tags["emotes"]
+                    ReplyParentMessageId = message.Tags.TryFind "reply-parent-msg-id"
                     ReplyParentUserId = message.Tags.TryFind "reply-parent-user-id"
                     ReplyParentUserLogin = message.Tags.TryFind "reply-parent-user-login"
                     ReplyParentDisplayName = message.Tags.TryFind "reply-parent-display-name"
                     ReplyParentMessageBody = message.Tags.TryFind "reply-parent-msg-body" |> Option.bind (fun s -> Some (s.Replace(@"\s", " ")))
+                    ReplyThreadParentMessageId = message.Tags.TryFind "reply-thread-parent-msg-id"
                     ReplyThreadParentUserLogin = message.Tags.TryFind "reply-thread-parent-user-login"
                     Bits = message.Tags.TryFind "bits"
                 }

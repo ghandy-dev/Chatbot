@@ -1,12 +1,13 @@
 namespace Azure
 
+open Configuration
 open Http
 
 [<AutoOpen>]
 module private Shared =
 
     let [<Literal>] BaseApiUrl = "https://atlas.microsoft.com"
-    let apiKey = Configuration.Microsoft.config.Maps.ApiKey
+    let apiKey = appConfig.Microsoft.Maps.ApiKey
 
 module Maps =
 

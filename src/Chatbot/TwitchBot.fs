@@ -135,6 +135,7 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) c
                             match! tokenStore.GetToken TokenType.Twitch with
                             | None -> Logging.info "Unable to send whisper. Couldn't retrieve access token for Twitch API."
                             | Some token -> do! twitchChatClient.WhisperAsync(userId, message, token)
+                        | SendReplyMessage(messageId, channel, message) -> do! twitchChatClient.SendAsync(IRC.Command.ReplyMsg(messageId, channel, message))
                         | SendRawIrcMessage msg -> do! twitchChatClient.SendAsync(IRC.Command.Raw msg)
                         | BotCommand command ->
                             match command with
@@ -167,12 +168,14 @@ let run (cancellationToken: Threading.CancellationToken) =
         let! user = getAccessTokenUser accessToken
 
         let connectionConfig =
-            let uri = new Uri(Configuration.appConfig.ConnectionStrings.Twitch)
-
-            match uri.Scheme with
-            | "irc" -> ConnectionType.IRC(uri.Host, uri.Port)
-            | "wss" -> ConnectionType.Websocket(uri.Host, uri.Port)
-            | _ -> failwith "Unknown protocol used for twitch connection string"
+            match appConfig.Bot.ConnectionProtocol with
+            | "irc" ->
+                let uri = new Uri(appConfig.ConnectionStrings.TwitchIrc)
+                ConnectionType.IRC(uri.Host, uri.Port)
+            | "wss" ->
+                let uri = new Uri(appConfig.ConnectionStrings.TwitchWss)
+                ConnectionType.Websocket(uri.Host, uri.Port)
+            | _ -> failwith "Unsupported connection protocol set"
 
         let twitchChatConfig: TwitchChatClientConfig = {
             UserId = user.Id
