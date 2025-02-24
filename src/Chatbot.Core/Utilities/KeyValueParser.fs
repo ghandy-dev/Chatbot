@@ -20,10 +20,8 @@ let removeKeyValues (list: string seq) (keys: string seq)  =
         |> Seq.map patternTemplate
         |> String.concat "|"
 
-    Regex.Replace(string, pattern, "")
-    |> (fun s -> s.Split(" "))
+    Regex.Replace(string, pattern, "").Split(" ", System.StringSplitOptions.RemoveEmptyEntries)
     |> List.ofArray
-
 
 let parse (list: string seq) (keys: string seq) =
     let pattern =
