@@ -12,9 +12,9 @@ let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProces
     async {
         let message =
             match msg.ReplyParentMessageBody, msg.ReplyParentUserLogin with
-            | Some message, Some username ->
-                let regex = new System.Text.RegularExpressions.Regex($"@%s{username}")
-                sprintf "%s %s" (regex.Replace(msg.Message, "", 1)) message
+            | Some parentMessage, Some username ->
+                let regex = new System.Text.RegularExpressions.Regex($"@%s{username}\s*")
+                sprintf "%s %s" (regex.Replace(msg.Message, "", 1)) parentMessage
             | _, _ -> msg.Message
 
         match message.StartsWith(commandPrefix) with
