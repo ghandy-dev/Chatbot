@@ -126,7 +126,6 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) c
                 let rec reconnectHelper () =
                     async {
                         if (DateTime.UtcNow - lastPingTime).Seconds > 360 then
-                            Logging.info "Connection dropped unexpectedly, reconnecting"
                             mb.Post Reconnect
                         else
                             do! Async.Sleep(1000)
@@ -157,7 +156,7 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) c
                                 do! emoteService.RefreshGlobalEmotes(user.Id, accessToken)
                             | RefreshChannelEmotes channelId -> do! emoteService.RefreshChannelEmotes(channelId)
                         | Reconnect ->
-                            Logging.info "Twitch servers requested we reconnect..."
+                            Logging.info "Reconnecting..."
                             do! reconnect()
                             do! loop ()
 
