@@ -21,7 +21,7 @@ module Api =
                 http {
                     GET url
                     Accept MimeTypes.applicationJson
-                    header "X-Riot-Token" RiotGames.config.ApiKey
+                    header "X-Riot-Token" appConfig.RiotGames.ApiKey
                 }
                 |> sendAsync
 

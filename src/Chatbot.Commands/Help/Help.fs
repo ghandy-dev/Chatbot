@@ -1,13 +1,15 @@
 namespace Commands
 
+open Configuration
+
 [<AutoOpen>]
 module Help =
 
-    let help () = Message $"See %s{Configuration.Bot.config.HelpUrl} for a list of commands"
+    let help () = Message $"See %s{appConfig.HelpUrl} for a list of commands"
 
 module HelpInfo =
 
-    let commandPrefix = Configuration.Bot.config.CommandPrefix
+    let commandPrefix = appConfig.Bot.CommandPrefix
     let example = sprintf "%s %s" commandPrefix
     let exampleArgs = sprintf "%s %s %s" commandPrefix
 

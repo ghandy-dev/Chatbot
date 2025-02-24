@@ -1,6 +1,8 @@
 [<RequireQualifiedAccess>]
 module Logging
 
+open Configuration
+
 open System
 open System.Collections.Generic
 
@@ -52,7 +54,7 @@ let private parseLogLevel logLevel =
 
 let private defaultLogLevel = LogLevel.Info
 
-let currentLogLevel = parseLogLevel Configuration.Logging.config.LogLevel.Default
+let currentLogLevel = parseLogLevel appConfig.Logging.LogLevel.Default
 
 let private toColor logLevel =
     match logLevel with

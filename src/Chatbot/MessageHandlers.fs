@@ -2,11 +2,12 @@ module MessageHandlers
 
 open Commands
 open Commands.Handler
+open Configuration
 open IRC.Messages
 open State
 open Types
 
-let commandPrefix = Configuration.Bot.config.CommandPrefix
+let commandPrefix = appConfig.Bot.CommandPrefix
 
 let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProcessor<ClientRequest>) =
     async {

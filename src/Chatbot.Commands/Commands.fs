@@ -6,7 +6,7 @@ open Commands
 module Commands =
 
     let private toKeyValuePair c =
-        match Bot.env with
+        match appConfig.Env with
         | Dev ->
             match c.Aliases with
             | [] -> [ $"dev_{c.Name}", c ]
@@ -20,7 +20,7 @@ module Commands =
         [
             Command.createCommand ("accountage", [ "accage" ], HelpInfo.AccountAge, AAC accountAge, 10000, false)
             Command.createCommand ("addbetween", [ "ab" ], HelpInfo.AddBetween, SA addBetween, 10000, false)
-            Command.createCommand ("alias", [ $"{Configuration.Bot.config.CommandPrefix}" ], HelpInfo.Alias, AACM alias, 5000, false)
+            Command.createCommand ("alias", [ $"{appConfig.Bot.CommandPrefix}" ], HelpInfo.Alias, AACM alias, 5000, false)
             Command.createCommand ("apod", [], HelpInfo.AstronomyPictureOfTheDay, AA apod, 20000, false)
             Command.createCommand ("braille", [ "ascii" ], HelpInfo.Braille, AAC braille, 20000, false)
             Command.createCommand ("calculator", [ "calc" ], HelpInfo.Calculator, SA calculate, 5000, false)

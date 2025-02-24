@@ -2,6 +2,7 @@ module Bot
 
 open Authorization
 open Commands
+open Configuration
 open Clients
 open Database
 open IRC
@@ -12,8 +13,6 @@ open Types
 open Twitch
 
 open System
-
-let botConfig = Configuration.Bot.config
 
 let getAccessToken () =
     async {
@@ -45,14 +44,6 @@ let getChannelJoinList () =
         | Some channels ->
             return channels |> Seq.map (fun u -> u.Id, u.Login)
     }
-
-let connectionConfig =
-    let uri = new Uri(Configuration.ConnectionStrings.config.Twitch)
-
-    match uri.Scheme with
-    | "irc" -> ConnectionType.IRC(uri.Host, uri.Port)
-    | "wss" -> ConnectionType.Websocket(uri.Host, uri.Port)
-    | _ -> failwith "Unknown protocol used for twitch connection string"
 
 type ReminderMessage =
     | CheckReminders
@@ -175,10 +166,18 @@ let run (cancellationToken: Threading.CancellationToken) =
         let! accessToken = getAccessToken ()
         let! user = getAccessTokenUser accessToken
 
+        let connectionConfig =
+            let uri = new Uri(Configuration.appConfig.ConnectionStrings.Twitch)
+
+            match uri.Scheme with
+            | "irc" -> ConnectionType.IRC(uri.Host, uri.Port)
+            | "wss" -> ConnectionType.Websocket(uri.Host, uri.Port)
+            | _ -> failwith "Unknown protocol used for twitch connection string"
+
         let twitchChatConfig: TwitchChatClientConfig = {
             UserId = user.Id
             Username = user.DisplayName
-            Capabilities = botConfig.Capabilities
+            Capabilities = appConfig.Bot.Capabilities
         }
 
         let twitchChatClient = new TwitchChatClient(connectionConfig, twitchChatConfig)

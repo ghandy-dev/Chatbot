@@ -25,7 +25,7 @@ module Api =
                 http {
                     GET url
                     Accept MimeTypes.applicationJson
-                    AuthorizationBearer FaceIt.config.ApiKey
+                    AuthorizationBearer appConfig.FaceIt.ApiKey
                 }
                 |> sendAsync
 

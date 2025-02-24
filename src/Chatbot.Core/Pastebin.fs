@@ -1,5 +1,7 @@
 module Pastebin
 
+open Configuration
+
 open FsHttp
 open FsHttp.Request
 open FsHttp.Response
@@ -45,7 +47,7 @@ let [<Literal>] private apiUrl = "https://pastebin.com/api"
 
 let private createPasteUrl = $"{apiUrl}/api_post.php"
 
-let private apiKey = Configuration.Pastebin.config.ApiKey
+let private apiKey = appConfig.Pastebin.ApiKey
 
 let private post<'T> url bodyContent =
     async {

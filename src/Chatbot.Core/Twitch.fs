@@ -1,5 +1,7 @@
 module Twitch
 
+open Configuration
+
 open TTVSharp
 open TTVSharp.Helix
 
@@ -26,7 +28,7 @@ module Helix =
     let private tryHead response = tryGetData response |> Option.bind Seq.tryHead
 
     let private options =
-        Options.Create<HelixApiOptions>(new HelixApiOptions(ClientId = Twitch.config.ClientId, ClientSecret = Twitch.config.ClientSecret))
+        Options.Create<HelixApiOptions>(new HelixApiOptions(ClientId = appConfig.Twitch.ClientId, ClientSecret = appConfig.Twitch.ClientSecret))
 
     let helixApi = new HelixApi(options)
 

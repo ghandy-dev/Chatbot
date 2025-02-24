@@ -32,7 +32,7 @@ module Api =
                 http {
                     POST url
                     Accept MimeTypes.applicationJson
-                    AuthorizationBearer OpenAI.config.ApiKey
+                    AuthorizationBearer appConfig.OpenAI.ApiKey
                     body
                     jsonSerialize request
                 }
@@ -126,7 +126,7 @@ module Api =
                     updatedMessages
 
             let request = {
-                Model = Configuration.OpenAI.config.DefaultModel
+                Model = appConfig.OpenAI.DefaultModel
                 Messages = messages
                 MaxTokens = 150
                 n = 1

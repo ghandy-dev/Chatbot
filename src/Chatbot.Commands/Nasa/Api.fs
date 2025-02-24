@@ -7,8 +7,7 @@ module Api =
 
     open System
 
-    let private apiKey = Configuration.Nasa.config.ApiKey
-    let private userAgent = configuration.Item("UserAgent")
+    let private apiKey = appConfig.Nasa.ApiKey
 
     let [<Literal>] private ApiUrl = "https://api.nasa.gov"
 

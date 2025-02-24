@@ -2,15 +2,17 @@
 
 module DB =
 
+    open Configuration
+    open Database
+
     open System.Data
     open Microsoft.Data.Sqlite
 
     open Dapper
     open Dapper.FSharp.SQLite
 
-    open Database
 
-    let private connectionString = Configuration.ConnectionStrings.config.Database
+    let private connectionString = appConfig.ConnectionStrings.Database
 
     OptionTypes.register ()
     DefaultTypeMap.MatchNamesWithUnderscores <- true

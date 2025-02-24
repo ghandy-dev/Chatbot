@@ -1,5 +1,7 @@
 namespace Google
 
+open Configuration
+
 [<AutoOpen>]
 module private Shared =
 
@@ -10,7 +12,7 @@ module Geolocation =
     open Google.Types
 
     let private geocodeApiUrl = $"{ApiUrl}/maps/api/geocode/json?"
-    let private geocodeApiKey = Configuration.Google.config.Geocoding.ApiKey
+    let private geocodeApiKey = appConfig.Google.Geocoding.ApiKey
     let private geoCodeAddressUrl address = $"{geocodeApiUrl}address={address}&key={geocodeApiKey}"
 
     let getLocationGeocode (address) =
@@ -29,7 +31,7 @@ module Timezone =
 
     open Google.Types
 
-    let private timezoneApiKey = Configuration.Google.config.Timezone.ApiKey
+    let private timezoneApiKey = appConfig.Google.Timezone.ApiKey
     let private TimezoneApiUrl = $"{ApiUrl}/maps/api/timezone/json?"
     let private timezoneUrl latitude longitude timestamp = $"{TimezoneApiUrl}location={latitude},{longitude}&timestamp={timestamp}&key={timezoneApiKey}"
 

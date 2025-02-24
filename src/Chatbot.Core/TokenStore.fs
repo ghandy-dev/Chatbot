@@ -1,5 +1,7 @@
 module Authorization
 
+open Configuration
+
 open System
 open System.Collections.Concurrent
 
@@ -27,9 +29,9 @@ let private maybeHasExpired (dateTime: DateTimeOffset option) =
 
 let private getTwitchTokenAsync (authClient: OAuthClient) =
     async {
-        let refreshToken = Configuration.Twitch.config.RefreshToken
-        let clientId = Configuration.Twitch.config.ClientId
-        let clientSecret = Configuration.Twitch.config.ClientSecret
+        let refreshToken = appConfig.Twitch.RefreshToken
+        let clientId = appConfig.Twitch.ClientId
+        let clientSecret = appConfig.Twitch.ClientSecret
 
         let! response = authClient.RefreshTokenAsync(clientId, clientSecret, refreshToken) |> Async.AwaitTask
 
@@ -43,14 +45,14 @@ let private getTwitchTokenAsync (authClient: OAuthClient) =
 let private getRedditTokenAsync () =
     async {
         use! response =
-            let clientId = Configuration.Reddit.config.ClientId
-            let clientSecret = Configuration.Reddit.config.ClientSecret
+            let clientId = appConfig.Reddit.ClientId
+            let clientSecret = appConfig.Reddit.ClientSecret
 
             http {
                 POST "https://www.reddit.com/api/v1/access_token"
                 Accept MimeTypes.applicationJson
                 AuthorizationUserPw clientId clientSecret
-                UserAgent(Configuration.configuration.Item("UserAgent"))
+                UserAgent appConfig.UserAgent
                 body
                 formUrlEncoded [ ("grant_type", "client_credentials") ]
             }
