@@ -127,7 +127,7 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) c
                     async {
                         if (DateTime.UtcNow - lastPingTime).Seconds > 360 then
                             Logging.info "Connection dropped unexpectedly, reconnecting"
-                            do! reconnect()
+                            mb.Post Reconnect
                         else
                             do! Async.Sleep(1000)
                             do! reconnectHelper ()
