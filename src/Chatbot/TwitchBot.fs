@@ -24,8 +24,8 @@ let getAccessToken () =
 let getAccessTokenUser token =
     async {
         match! Helix.Users.getAccessTokenUser token with
-        | Some user -> return user
         | None -> return failwith "Failed to look up user associated with access token"
+        | Some user -> return user
     }
 
 let getChannelJoinList () =
