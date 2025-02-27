@@ -23,10 +23,11 @@ module Emote =
                 match! IVR.getEmoteByName emote with
                 | Error _ -> return Message "Emote not found"
                 | Ok emote ->
-                    match emote.ChannelName, emote.EmoteTier, emote.EmoteSetId with
-                    | Some channel, Some tier, _ -> return Message $"https://twitch.tv/%s{channel} %s{emote.EmoteCode}, ID: %s{emote.EmoteId}, Tier %s{tier}, %s{emote.EmoteUrl}"
-                    | None, None, Some set -> return Message $"%s{emote.EmoteCode}, ID: %s{emote.EmoteId}, Set %s{set}, %s{emote.EmoteUrl}"
-                    | _, _, _ -> return Message $"%s{emote.EmoteCode}, ID: %s{emote.EmoteId}, %s{emote.EmoteUrl}"
+                    match emote.ChannelName, emote.EmoteTier, emote.EmoteType, emote.EmoteSetId with
+                    | Some channel, Some tier, emoteType, _ -> return Message $"https://twitch.tv/%s{channel} %s{emoteType} Tier %s{tier} emote, %s{emote.EmoteCode}, ID: %s{emote.EmoteId}, %s{emote.EmoteUrl}"
+                    | Some channel, None, emoteType, _ -> return Message $"https://twitch.tv/%s{channel} %s{emoteType} emote, %s{emote.EmoteCode}, ID: %s{emote.EmoteId}, %s{emote.EmoteUrl}"
+                    | None, None, _, Some set -> return Message $"%s{emote.EmoteCode}, ID: %s{emote.EmoteId}, Set %s{set}, %s{emote.EmoteUrl}"
+                    | _ -> return Message $"%s{emote.EmoteCode}, ID: %s{emote.EmoteId}, %s{emote.EmoteUrl}"
         }
 
     let randomEmote args context =
