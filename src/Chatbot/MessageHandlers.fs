@@ -98,6 +98,21 @@ let private globalUserStateMessageHandler (msg: Types.GlobalUserStateMessage) =
         do! emoteService.RefreshGlobalEmotes ()
     }
 
+let private userStateMessageHandler (msg: UserStateMessage) =
+    match msg.Id with
+    | None ->
+        match userStates.TryGetValue msg.DisplayName with
+        | false, _ -> ()
+        | true, userState ->
+            let updatedUserState = {
+                userState with
+                    Moderator = msg.Moderator
+                    Subscriber = msg.Subscriber
+            }
+
+            userStates[msg.DisplayName] <- updatedUserState
+    | Some _ -> ()
+
 let private handleIrcMessage msg (mb: MailboxProcessor<ClientRequest>) =
     async {
         match msg with
@@ -108,6 +123,7 @@ let private handleIrcMessage msg (mb: MailboxProcessor<ClientRequest>) =
         | RoomStateMessage msg -> roomStateMessageHandler msg
         | UserNoticeMessage msg -> ()
         | GlobalUserStateMessage msg -> do! globalUserStateMessageHandler msg
+        | UserStateMessage msg -> userStateMessageHandler msg
         | _ -> ()
     }
 

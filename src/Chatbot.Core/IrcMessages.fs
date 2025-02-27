@@ -469,6 +469,7 @@ module Messages =
             Color: string
             DisplayName: string
             EmoteSets: string list
+            Id: string option
             Moderator: bool
             Subscriber: bool
             UserType: string
@@ -740,6 +741,7 @@ module Messages =
                     Color = message.Tags["color"]
                     DisplayName = message.Tags["display-name"]
                     EmoteSets = parseEmoteSets message.Tags["emote-sets"]
+                    Id = message.Tags.TryFind "id"
                     Moderator = message.Tags["mod"] |> Boolean.parseBit
                     Subscriber = message.Tags["subscriber"] |> Boolean.parseBit
                     UserType = message.Tags["user-type"]
