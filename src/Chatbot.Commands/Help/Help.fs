@@ -115,9 +115,9 @@ greyscale:
     - average
     - max
 
-dithering:
-    - false (default)
-    - true
+dithering (default no dithering):
+    - floydsteinberg / fs
+    - bayer
 
 invert:
     - false
@@ -128,10 +128,10 @@ monospace:
     - true
 
 {exampleArgs "braille" "<optional args> ... <url>"}
-{exampleArgs "braille" "greyscale:average dithering:true invert:false monospace:true https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0"}
+{exampleArgs "braille" "greyscale:average dithering:fs invert:false monospace:true https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0"}
 
 {exampleArgs "braille" "<optional args> ... <emote>"}
-{exampleArgs "braille" "greyscale:average dithering:true invert:false monospace:true Kappa"}
+{exampleArgs "braille" "greyscale:average dithering:fs invert:false monospace:true Kappa"}
 """
         }
 

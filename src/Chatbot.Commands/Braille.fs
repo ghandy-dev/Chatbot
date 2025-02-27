@@ -45,25 +45,26 @@ module private Helper =
                     return None
         }
 
+    let getPixelLuminance (pixel: SkiaSharp.SKColor) =
+        0.2126 * float pixel.Red +
+        0.7152 * float pixel.Green +
+        0.0722 * float pixel.Blue |> int
 
 module private Dithering =
 
     open SkiaSharp
 
-    let clamp = fun v -> System.Math.Clamp(v, 0, 255)
+    let private clamp = fun v -> System.Math.Clamp(v, 0, 255)
 
     let private difference (a: SKColor) (b: SKColor) =
         float a.Red - float b.Red,
         float a.Green - float b.Green,
         float a.Blue - float b.Blue
 
-    let private findClosestPaletteColor (pixel: SKColor)  =
-        let value =
-            0.2126 * float pixel.Red +
-            0.7152 * float pixel.Green +
-            0.0722 * float pixel.Blue |> int
+    let private findClosestPaletteColor (pixel: SKColor) (threshold: int)  =
+        let luminance = Helper.getPixelLuminance pixel
 
-        if value > 128 then
+        if luminance > threshold then
             new SKColor(255uy, 255uy, 255uy)
         else
             new SKColor(0uy, 0uy, 0uy)
@@ -80,10 +81,12 @@ module private Dithering =
             bitmap.SetPixel(x, y, new SKColor(r, g, b))
 
     let floydSteinberg (bitmap: SKBitmap) =
+        let threshold = 128
+
         for y in 0 .. bitmap.Height - 1 do
             for x in 0 .. bitmap.Width - 1 do
                 let oldPixel = bitmap.GetPixel(x, y)
-                let newPixel = findClosestPaletteColor oldPixel
+                let newPixel = findClosestPaletteColor oldPixel threshold
                 bitmap.SetPixel(x, y, newPixel)
                 let quantError = difference oldPixel newPixel
 
@@ -92,6 +95,24 @@ module private Dithering =
                 addError bitmap x (y + 1) quantError (5.0 / 16.0)
                 addError bitmap (x + 1) (y + 1) quantError (1.0 / 16.0)
 
+    let bayer (bitmap: SKBitmap) =
+        let bayerMatrix = [|
+            [| 0  ; 32 ;  8 ; 40 ;  2  ; 34 ; 10 ; 42 |]
+            [| 48 ; 16 ; 56 ; 24 ; 50  ; 18 ; 58 ; 26 |]
+            [| 12 ; 44 ;  4 ; 36 ; 14  ; 46 ;  6 ; 38 |]
+            [| 60 ; 28 ; 52 ; 20 ; 62  ; 30 ; 54 ; 22 |]
+            [|  3 ; 35 ; 11 ; 43 ;  1  ; 33 ;  9 ; 41 |]
+            [| 51 ; 19 ; 59 ; 27 ; 49  ; 17 ; 57 ; 25 |]
+            [| 15 ; 47 ;  7 ; 39 ; 13  ; 45 ;  5 ; 37 |]
+            [| 63 ; 31 ; 55 ; 23 ; 61  ; 29 ; 53 ; 21 |]
+        |]
+
+        for y in 0 .. bitmap.Height - 1 do
+            for x in 0 .. bitmap.Width - 1 do
+                let threshold = bayerMatrix[y % bayerMatrix.Length][x % bayerMatrix.Length] * 255 / 64
+                let oldPixel = bitmap.GetPixel(x, y)
+                let newPixel = findClosestPaletteColor oldPixel threshold
+                bitmap.SetPixel(x, y, newPixel)
 
 [<AutoOpen>]
 module Braille =
@@ -116,8 +137,8 @@ module Braille =
 
     let private greyscaleMode =
         [
-            "luminance", (fun (s: SKColor) -> (0.2126 * float s.Red) + (0.7152 * float s.Green) + (0.0722 * float s.Blue))
-            "average", (fun (s: SKColor) -> (float (s.Red + s.Green + s.Blue)) / 3.0)
+            "luminance", (fun (s: SKColor) -> 0.2126 * float s.Red + 0.7152 * float s.Green + 0.0722 * float s.Blue)
+            "average", (fun (s: SKColor) -> (float s.Red + float s.Green + float s.Blue) / 3.0)
             "max", (fun (s: SKColor) -> [ s.Red ; s.Green ; s.Blue ] |> List.max |> float)
             "lightness",
             fun (s: SKColor) ->
@@ -128,32 +149,18 @@ module Braille =
         ]
         |> Map.ofList
 
-    let private calcAverage (bitmap: SKBitmap) mode =
-        let average =
-            List.fold (fun acc y ->
-                List.fold (fun innerAcc x ->
-                    let pixel = bitmap.GetPixel(x, y)
-                    if pixel.Alpha >= 128uy then
-                        innerAcc + greyscaleMode.[mode] pixel
-                    else
-                        innerAcc
-                ) acc [ 0 .. bitmap.Width - 1 ]
-            ) 0.0 [ 0 .. bitmap.Height - 1 ]
-
-        average / (float bitmap.Height * float bitmap.Width)
-
-    let private toBraille (pixels: SKColor array array) mode (invert: bool) (monospace: bool) : int =
+    let private toBraille (pixels: SKColor array array) mode (invert: bool) (monospace: bool) (threshold: float) : int =
         let predicateGreyscale = fun (pixel: SKColor) ->
             if invert then
                 if pixel.Alpha > 128uy then
-                    greyscaleMode.[mode] pixel > 128.0
+                    greyscaleMode.[mode] pixel > threshold
                 else
-                    greyscaleMode.[mode] pixel <= 128.0
+                    greyscaleMode.[mode] pixel <= threshold
             else
                 if pixel.Alpha > 128uy then
-                    greyscaleMode.[mode] pixel <= 128.0
+                    greyscaleMode.[mode] pixel <= threshold
                 else
-                    greyscaleMode.[mode] pixel > 128.0
+                    greyscaleMode.[mode] pixel > threshold
 
         let brailleValue =
             List.fold (fun acc (x, y, offsetValue) ->
@@ -215,11 +222,14 @@ module Braille =
 
         surface.Snapshot()
 
-    let private imageToBraille (bitmap: SKBitmap) (setting: string) (dithering: bool) (invert: bool) (monospace: bool) =
-        if dithering then
-            Dithering.floydSteinberg bitmap
+    let private imageToBraille (bitmap: SKBitmap) (setting: string) (dithering: (SKBitmap -> unit) option) (invert: bool) (monospace: bool) =
+        match dithering with
+        | None -> ()
+        | Some f -> f bitmap
 
         let sb = new StringBuilder()
+
+        let threshold = 128
 
         for y in 0..4 .. bitmap.Height - 1 do
             for x in 0..2 .. bitmap.Width - 1 do
@@ -227,20 +237,20 @@ module Braille =
                     [| bitmap.GetPixel(x, y) ; bitmap.GetPixel(x, y+1) ; bitmap.GetPixel(x, y+2) ;  bitmap.GetPixel(x, y+3) |]
                     [| bitmap.GetPixel(x+1, y) ; bitmap.GetPixel(x+1, y+1) ;  bitmap.GetPixel(x+1, y+2) ; bitmap.GetPixel(x+1, y+3) |]
                 |]
-                let brailleValue = toBraille pixels setting invert monospace
+                let brailleValue = toBraille pixels setting invert monospace threshold
                 let braille = System.Convert.ToChar(brailleValue)
                 sb.Append(braille) |> ignore
 
             sb.Append(" ") |> ignore
         sb.ToString()
 
-    let private textToBraille (text: string) (setting: string) (dithering: bool) (invert: bool) (monospace: bool) =
+    let private textToBraille (text: string) (setting: string) (dithering: (SKBitmap -> unit) option) (invert: bool) (monospace: bool) =
         let image = drawText text
         let bitmap = SKBitmap.Decode(image.Encode(SKEncodedImageFormat.Png, 80))
 
         imageToBraille bitmap setting dithering invert monospace
 
-    let private internalBraille (url: string) (setting: string) (dithering: bool) (invert: bool) (monospace: bool) =
+    let private internalBraille (url: string) (setting: string) (dithering: (SKBitmap -> unit) option) (invert: bool) (monospace: bool) =
         async {
             match! Helper.getImage url with
             | None -> return Message "Couldn't retrieve image, invalid url provided, or an unsupported image format is used"
@@ -250,7 +260,13 @@ module Braille =
                 return Message brailleAscii
         }
 
-    let brailleKeys = [ "greyscale" ; "dithering" ; "invert" ; "monospace" ]
+    let private brailleKeys = [ "greyscale" ; "dithering" ; "invert" ; "monospace" ]
+
+    let private parseDitheringMethod =
+        function
+        | "floydsteinberg" | "fs" -> Some Dithering.floydSteinberg
+        | "bayer" -> Some Dithering.bayer
+        | _ -> None
 
     let braille args context =
         async {
@@ -258,7 +274,7 @@ module Braille =
             let args = KeyValueParser.removeKeyValues args brailleKeys
 
             let greyscaleMode = keyValues |> Map.tryFind "greyscale" |?? DefaultGreyscaleFunction
-            let dithering = keyValues |> Map.tryFind "dithering" |> Option.bind (fun d -> Boolean.tryParse d) |?? false
+            let dithering = keyValues |> Map.tryFind "dithering" |> Option.bind parseDitheringMethod
             let invert = keyValues |> Map.tryFind "invert" |> Option.bind (fun i -> Boolean.tryParse i) |?? true
             let monospace = keyValues |> Map.tryFind "monospace" |> Option.bind (fun i -> Boolean.tryParse i) |?? false
 
@@ -283,7 +299,7 @@ module Braille =
         let args = KeyValueParser.removeKeyValues args brailleKeys
 
         let greyscaleMode = keyValues |> Map.tryFind "greyscale" |?? DefaultGreyscaleFunction
-        let dithering = keyValues |> Map.tryFind "dithering" |> Option.bind (fun d -> Boolean.tryParse d) |?? false
+        let dithering = keyValues |> Map.tryFind "dithering" |> Option.bind parseDitheringMethod
         let invert = keyValues |> Map.tryFind "invert" |> Option.bind (fun i -> Boolean.tryParse i) |?? false
         let monospace = keyValues |> Map.tryFind "monospace" |> Option.bind (fun i -> Boolean.tryParse i) |?? true
 
