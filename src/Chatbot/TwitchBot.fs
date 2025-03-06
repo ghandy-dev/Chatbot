@@ -59,9 +59,9 @@ let reminderAgent (twitchChatClient: TwitchChatClient) =
 
                     for reminder in reminders do
                         let ts = DateTime.UtcNow - reminder.Timestamp
-                        let sender = if reminder.FromUsername = reminder.TargetUsername then "yourself" else $"@{reminder.FromUsername}"
-                        let reminderMessage = $"@{reminder.TargetUsername}, reminder from {sender} ({formatTimeSpan ts} ago): {reminder.Message}" |> formatChatMessage
-                        do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(reminder.Channel, reminderMessage))
+                        let sender = if reminder.FromUsername = reminder.TargetUsername then "yourself" else $"@%s{reminder.FromUsername}"
+                        let message = $"@%s{reminder.TargetUsername}, reminder from %s{sender} (%s{formatTimeSpan ts} ago): %s{reminder.Message}" |> formatChatMessage
+                        do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(reminder.Channel, message))
 
                     do! Async.Sleep(250)
                     mb.Post CheckReminders
@@ -72,21 +72,33 @@ let reminderAgent (twitchChatClient: TwitchChatClient) =
                     | DatabaseResult.Success _ ->
                         let! reminders = ReminderRepository.getReminders userId
 
-                        let reminderMessages =
+                        let message =
                             reminders
-                            |> Seq.map (fun r ->
-                                let ts = DateTime.UtcNow - r.Timestamp
-                                let sender = if r.FromUsername = r.TargetUsername then "yourself" else $"@{r.FromUsername}"
-                                $" reminder from {sender} ({formatTimeSpan ts} ago): {r.Message}"
+                            |> Seq.groupBy (fun r -> r.FromUsername)
+                            |> Seq.map (fun (_, rs) ->
+                                let sender = rs |> Seq.head |> fun r -> if r.FromUsername = r.TargetUsername then "yourself" else $"@%s{r.FromUsername}"
+
+                                let message =
+                                    rs
+                                    |> Seq.map (fun r ->
+                                        let ts = DateTime.UtcNow - r.Timestamp
+                                        $"(%s{formatTimeSpan ts} ago): %s{r.Message}"
+                                    )
+                                    |> String.concat ", "
+
+                                if rs |> Seq.length = 1 then
+                                    $"reminder from %s{sender} %s{message}"
+                                else
+                                    $"reminders from %s{sender} %s{message}"
                             )
                             |> String.concat ", "
 
-                        if reminderMessages.Length > 500 then
-                            match! Pastebin.createPaste "" reminderMessages with
+                        if message.Length > 500 then
+                            match! Pastebin.createPaste "" message with
                             | Error err -> Logging.error err (new Exception())
-                            | Ok url -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@{username}, reminders were too long to send, check {url} for your reminders"))
+                            | Ok url -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@%s{username}, reminders were too long to send, check %s{url} for your reminders"))
                         else
-                            do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@{username}, {reminderMessages}"))
+                            do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@%s{username}, %s{message}"))
 
                 return! loop ()
             }
