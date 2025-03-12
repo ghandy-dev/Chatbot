@@ -46,7 +46,7 @@ module Emote =
     let refreshChannelEmotes args context =
         match context.Source with
         | Whisper _ -> Message "This command can only be used from a channel"
-        | Channel channelState -> BotAction(RefreshChannelEmotes channelState.RoomId, "Refreshing channel emotes...")
+        | Channel channelState -> BotAction(RefreshChannelEmotes channelState.RoomId, Some "Refreshing channel emotes...")
 
     let refreshGlobalEmotes args =
         match args with
@@ -54,4 +54,4 @@ module Emote =
         | provider :: _ ->
             match parseEmoteProvider provider with
             | None -> Message "Unknown emote provider specified"
-            | Some p -> BotAction(RefreshGlobalEmotes p, "Refreshing global emotes...")
+            | Some p -> BotAction(RefreshGlobalEmotes p, Some "Refreshing global emotes...")

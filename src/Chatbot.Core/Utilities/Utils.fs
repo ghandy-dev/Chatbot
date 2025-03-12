@@ -48,11 +48,11 @@ module String =
 
     let notEmpty = not << String.IsNullOrWhiteSpace
 
-module ConcurrentDictionary =
+module Dictionary =
 
-    open System.Collections.Concurrent
+    open System.Collections.Generic
 
-    let tryGetValue key (dict: ConcurrentDictionary<_,_>) =
+    let tryGetValue key (dict: IDictionary<_,_>) =
         match dict.TryGetValue key with
         | false, _ -> None
         | true, value -> Some value

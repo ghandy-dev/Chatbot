@@ -36,9 +36,11 @@ let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProces
             match response with
             | Some commandOutcome ->
                 match commandOutcome with
-                | BotAction(action, message) ->
+                | BotAction(action, Some message) ->
                     mb.Post(BotCommand(action))
                     postMessage message
+                | BotAction(action, None) ->
+                    mb.Post(BotCommand action)
                 | Message message ->
                     postMessage message
                 | RunAlias _
@@ -56,9 +58,11 @@ let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProces
             match response with
             | Some commandOutcome ->
                 match commandOutcome with
-                | BotAction(action, message) ->
+                | BotAction(action, Some message) ->
                     mb.Post(BotCommand action)
                     mb.Post(SendWhisperMessage (msg.UserId, msg.DisplayName, message))
+                | BotAction(action, None) ->
+                    mb.Post(BotCommand action)
                 | Message message ->
                     mb.Post(SendWhisperMessage (msg.UserId, msg.DisplayName, message))
                 | RunAlias _

@@ -73,7 +73,7 @@ type TokenStore() =
 
     member _.GetToken (tokenType) =
         async {
-            let maybeToken = tokenStoreDict |> ConcurrentDictionary.tryGetValue(tokenType)
+            let maybeToken = tokenStoreDict |> Dictionary.tryGetValue(tokenType)
 
             match tokenType, maybeToken with
             | Twitch, Some token when not <| maybeHasExpired token.ExpiresAt -> return Some token.AccessToken

@@ -20,6 +20,6 @@ module JoinChannel =
                 | Some _ -> return Message "Channel already added"
                 | None ->
                     match! ChannelRepository.add (Channel.create user.Id user.DisplayName) with
-                    | DatabaseResult.Success _ -> return BotAction(JoinChannel (user.DisplayName, user.Id), $"Channel added ({user.DisplayName})")
+                    | DatabaseResult.Success _ -> return BotAction(JoinChannel (user.DisplayName, user.Id), Some $"Channel added (%s{user.DisplayName})")
                     | DatabaseResult.Failure -> return Message "Failed to add and join channel"
         }

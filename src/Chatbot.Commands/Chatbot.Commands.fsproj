@@ -42,6 +42,9 @@
     <Compile Include="RiotGames/Types.fs" />
     <Compile Include="RiotGames/Api.fs" />
     <Compile Include="RiotGames/RiotGames.fs" />
+    <Compile Include="Trivia/Types.fs" />
+    <Compile Include="Trivia/Api.fs" />
+    <Compile Include="Trivia/Trivia.fs" />
     <Compile Include="Braille.fs" />
     <Compile Include="TextTransform.fs" />
     <Compile Include="RandomClip.fs" />

@@ -88,7 +88,7 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
             | IRC.PrivMsg (channel, _) ->
                 let now = DateTimeOffset.Now.ToUnixTimeMilliseconds()
                 if chatRateLimiter.CanSend() then
-                    match lastMessagesSent |> ConcurrentDictionary.tryGetValue channel with
+                    match lastMessagesSent |> Dictionary.tryGetValue channel with
                     | None ->
                         lastMessagesSent[channel] <- now
                         do! client.SendAsync ircMessage

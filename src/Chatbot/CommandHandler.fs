@@ -68,14 +68,15 @@ let rec private handleCommand (userId: string) (username: string) (source: Messa
                                     GlobalEmotes = emoteService.GlobalEmotes
                                     ChannelEmotes =
                                         channel
-                                        |> Option.bind (fun c -> emoteService.ChannelEmotes |> ConcurrentDictionary.tryGetValue c.RoomId)
+                                        |> Option.bind (fun c -> emoteService.ChannelEmotes |> Dictionary.tryGetValue c.RoomId)
                                         |?? []
                                     MessageEmotes = messageEmotes
                                 }
 
                             match! executeCommand command args context with
                             | Message message -> return Some <| (Message <| formatChatMessage message)
-                            | BotAction(action, message) -> return Some <| BotAction(action, formatChatMessage message)
+                            | BotAction(action, Some message) -> return Some <| BotAction(action, Some (formatChatMessage message))
+                            | BotAction(action, None) -> return Some <| BotAction(action, None)
                             | RunAlias(command, parameters) ->
                                 let formattedCommand = Text.formatString command parameters
 

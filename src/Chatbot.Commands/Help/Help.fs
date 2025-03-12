@@ -682,8 +682,52 @@ Supported transforms are:
         {
             Name = "Top Streams"
             Description = "Gets top 10 streams (by viewer count) on Twitch."
-            ExampleUsage = $"""{example "topstreams"}
-            """
+            ExampleUsage = $"""{example "topstreams"}"""
+        }
+
+    let Trivia =
+        {
+            Name = "Trivia"
+            Description = "Start a trivia."
+            ExampleUsage = $"""
+Start trivia (1 question by default).
+{example "trivia"}
+
+Stop an on-going trivia.
+{example "trivia stop"}
+
+Optional arguments:
+
+count:
+    - 1-10 (default 1)
+
+include:
+    - comma separated list of categories to limit trivia questions to
+    - see https://gazatu.xyz/trivia/categories for a list of categories
+
+exclude:
+    - comma separated list of categories to exclude from trivia questions
+    - see https://gazatu.xyz/trivia/categories for a list of categories
+
+useHints:
+    - true (default)
+    - false
+
+Start trivia with 5 questions.
+{exampleArgs "trivia" "count:5"}
+
+Start trivia with the specified categories.
+{exampleArgs "trivia" "include:Twitch,WorldOfWarcraft,Music"}
+
+Start trivia but exclude the specified categories from possibly appearing.
+{exampleArgs "trivia" "include:Anime"}
+
+Start trivia but exclude the specified categories from possibly appearing.
+{exampleArgs "trivia" "include:Anime"}
+
+Start trivia with hints disabled.
+{exampleArgs "trivia" "useHints:false"}
+"""
         }
 
     let UrbanDictionary =

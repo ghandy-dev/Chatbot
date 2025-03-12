@@ -20,17 +20,34 @@ type Context = {
         Emotes = emotes
     }
 
+type TriviaConfig = {
+    Questions: Question list
+    Categories: string list
+    UseHints: bool
+    Channel: string
+}
+
+and Question =  {
+    Question: string
+    Answer: string
+    Categories: string array
+    Hints: string list
+    Category: string
+}
+
 type BotCommand =
     | JoinChannel of channel: string * channelId: string
     | LeaveChannel of channel: string
     | RefreshChannelEmotes of channelId: string
     | RefreshGlobalEmotes of emoteProvider: Emotes.EmoteProvider
+    | StartTrivia of TriviaConfig
+    | StopTrivia of channel: string
 
 type CommandResult =
     | Message of string
     | RunAlias of command: string * args: string list
     | Pipe of string list
-    | BotAction of BotCommand * string
+    | BotAction of BotCommand * string option
 
 type Args = string list
 

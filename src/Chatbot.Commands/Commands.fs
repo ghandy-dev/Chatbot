@@ -60,6 +60,7 @@ module Commands =
             Command.createCommand ("texttoascii", [ "tta" ], HelpInfo.TextToAscii, SA textToAscii, 15000, false)
             Command.createCommand ("texttransform", [ "tt" ], HelpInfo.TextTransform, SA texttransform, 5000, false)
             Command.createCommand ("topstreams", [ "ts" ], HelpInfo.TopStreams, A topStreams, 20000, false)
+            Command.createCommand ("trivia", [ ], HelpInfo.Trivia, AAC trivia, 20000, false)
             Command.createCommand ("urban", [ "ud" ], HelpInfo.UrbanDictionary, AA urban, 20000, false)
             Command.createCommand ("userid", [ "uid" ], HelpInfo.UserId, AAC userId, 20000, false)
             Command.createCommand ("vod", [], HelpInfo.Vod, AA vod, 20000, false)

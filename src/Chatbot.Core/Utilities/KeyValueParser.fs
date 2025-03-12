@@ -24,16 +24,18 @@ let removeKeyValues (list: string seq) (keys: string seq)  =
     |> List.ofArray
 
 let parse (list: string seq) (keys: string seq) =
-    let pattern =
+    let s = list |> String.concat " "
+
+    let patterns =
         keys
         |> Seq.map patternTemplate
-        |> String.concat "|"
 
     let matches =
-        list
-        |> Seq.map (fun a -> Regex.Match(a, pattern))
-        |> Seq.filter (fun m -> m.Success)
-        |> Seq.map (fun m -> m.Value)
+        patterns
+        |> Seq.choose (fun p ->
+            let m = Regex.Match(s, p)
+            if m.Success then Some m.Value else None
+        )
 
     let keyValues = matches |> Seq.choose tryParseKeyValuePair |> Map.ofSeq
 

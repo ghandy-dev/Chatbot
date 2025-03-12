@@ -17,6 +17,6 @@ module LeaveChannel =
             | Error err -> return Message err
             | Ok channel ->
                 match! ChannelRepository.delete (channel.ChannelId |> int) with
-                | DatabaseResult.Success _ -> return BotAction (LeaveChannel channel.ChannelName, $"removed channel ({channel.ChannelId} {channel.ChannelName})")
+                | DatabaseResult.Success _ -> return BotAction (LeaveChannel channel.ChannelName, Some $"removed channel (%s{channel.ChannelId} %s{channel.ChannelName})")
                 | DatabaseResult.Failure -> return Message $"Failed to delete and leave channel"
         }
