@@ -18,7 +18,7 @@
         </a>
       </div>
       <h1>
-        Braille
+        Trivia
       </h1>
       <table>
         <colgroup>
@@ -30,7 +30,7 @@
             Description
           </td>
           <td>
-            Generate ASCII braille art of an image.
+            Start a trivia.
           </td>
         </tr>
         <tr>
@@ -38,7 +38,7 @@
             Command
           </td>
           <td>
-            braille
+            trivia
           </td>
         </tr>
         <tr>
@@ -46,7 +46,7 @@
             Aliases
           </td>
           <td>
-            ascii
+            
           </td>
         </tr>
         <tr>
@@ -75,31 +75,20 @@
                 
               </div>
               <div>
-                Specify an image URL
+                Start trivia (1 question by default).
               </div>
               <code>
-                &gt; braille &lt;url&gt;
-              </code>
-              <br/>
-              <code>
-                &gt; braille https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0
+                &gt; trivia
               </code>
               <br/>
             </div>
             <br/>
             <div>
               <div>
-                Specify an emote.
-              </div>
-              <div>
-                Can be a Twitch/BTTV/FFZ/7TV emote, but due to limitations; if a Twitch Emote is specified it must be one accessible to the bot (i.e. either it must be a global emote, or an emote from a channel the bot is subscribed to)
+                Stop an on-going trivia.
               </div>
               <code>
-                &gt; braille &lt;emote&gt;
-              </code>
-              <br/>
-              <code>
-                &gt; braille Kappa
+                &gt; trivia stop
               </code>
               <br/>
             </div>
@@ -112,76 +101,95 @@
             <br/>
             <div>
               <div>
-                greyscale:
+                count:
               </div>
               <div>
-                    - lightness (default)
-              </div>
-              <div>
-                    - luminance
-              </div>
-              <div>
-                    - average
-              </div>
-              <div>
-                    - max
+                    - 1-10 (default 1)
               </div>
             </div>
             <br/>
             <div>
               <div>
-                dithering (default no dithering):
+                include:
               </div>
               <div>
-                    - floydsteinberg / fs
+                    - comma separated list of categories to limit trivia questions to
               </div>
               <div>
-                    - bayer
+                    - see https://gazatu.xyz/trivia/categories for a list of categories
               </div>
             </div>
             <br/>
             <div>
               <div>
-                invert:
+                exclude:
               </div>
               <div>
-                    - false
+                    - comma separated list of categories to exclude from trivia questions
+              </div>
+              <div>
+                    - see https://gazatu.xyz/trivia/categories for a list of categories
+              </div>
+            </div>
+            <br/>
+            <div>
+              <div>
+                useHints:
               </div>
               <div>
                     - true (default)
               </div>
-            </div>
-            <br/>
-            <div>
               <div>
-                monospace:
-              </div>
-              <div>
-                    - false (default)
-              </div>
-              <div>
-                    - true
+                    - false
               </div>
             </div>
             <br/>
             <div>
+              <div>
+                Start trivia with 5 questions.
+              </div>
               <code>
-                &gt; braille &lt;optional args&gt; ... &lt;url&gt;
-              </code>
-              <br/>
-              <code>
-                &gt; braille greyscale:average dithering:fs invert:false monospace:true https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0
+                &gt; trivia count:5
               </code>
               <br/>
             </div>
             <br/>
             <div>
+              <div>
+                Start trivia with the specified categories.
+              </div>
               <code>
-                &gt; braille &lt;optional args&gt; ... &lt;emote&gt;
+                &gt; trivia include:Twitch,WorldOfWarcraft,Music
               </code>
               <br/>
+            </div>
+            <br/>
+            <div>
+              <div>
+                Start trivia but exclude the specified categories from possibly appearing.
+              </div>
               <code>
-                &gt; braille greyscale:average dithering:fs invert:false monospace:true Kappa
+                &gt; trivia include:Anime
+              </code>
+              <br/>
+            </div>
+            <br/>
+            <div>
+              <div>
+                Start trivia but exclude the specified categories from possibly appearing.
+              </div>
+              <code>
+                &gt; trivia include:Anime
+              </code>
+              <br/>
+            </div>
+            <br/>
+            <div>
+              <div>
+                Start trivia with hints disabled.
+              </div>
+              <code>
+                &gt; trivia useHints:false
               </code>
               <br/>
               <div>
