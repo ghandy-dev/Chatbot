@@ -55,5 +55,5 @@ module RandomClip =
                 | clips ->
                     let clip = clips |> List.randomChoice
 
-                    return Message $""""{clip.Title}" ({clip.ViewCount.ToString("N0")} views) {clip.Url}"""
+                    return Message $""""{clip.Title}" - clipped on {clip.CreatedAt.ToString(DateStringFormat)}, {clip.Duration} secs, {clip.ViewCount.ToString("N0")} views - {clip.Url}"""
         }
