@@ -1,4 +1,7 @@
-namespace Azure.Types
+module Weather
+
+open Configuration
+open Http
 
 open System
 
@@ -115,3 +118,29 @@ and WindDirection = {
     Degrees: float
     LocalizedDescription: string
 }
+
+let [<Literal>] BaseApiUrl = "https://atlas.microsoft.com"
+let apiKey = appConfig.Microsoft.Maps.ApiKey
+
+let private apiUrl = $"{BaseApiUrl}/weather"
+let private apiVersion = "api-version=1.1"
+
+let private currentWeather latitude longitude =
+    $"{apiUrl}/currentConditions/json?{apiVersion}&query={latitude},{longitude}&language=en-GB&subscription-key={apiKey}"
+
+let getCurrentWeather (latitude: double) (longitude: double) =
+    async {
+        let url = currentWeather latitude longitude
+
+        match! getFromJsonAsync<CurrentConditionsResult> url with
+        | Error(content, statusCode) ->
+            Logging.error
+                $"Weather API error: {content}"
+                (new Net.Http.HttpRequestException("Azure API error", null, statusCode = statusCode))
+
+            return Error "Weather API Error"
+        | Ok result ->
+            match result.Results with
+            | [] -> return Error "Location not found"
+            | weather :: _ -> return Ok weather
+    }

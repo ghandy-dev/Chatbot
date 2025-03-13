@@ -58,10 +58,9 @@ type TwitchChatClientConfig = {
 type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig) =
 
     let lastMessagesSent = new Collections.Concurrent.ConcurrentDictionary<string, int64>()
-
     let messageReceived = new Event<Messages.Types.IrcMessageType array>()
-
     let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
+    let twitchService = Services.services.TwitchService
 
     let whisperRateLimiter =
         RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
@@ -106,8 +105,8 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
 
     let sendWhisper toUserId message accessToken =
         async {
-            if (whisperRateLimiter.CanSend()) then
-                do! Twitch.Helix.Whispers.sendWhisper Config.UserId toUserId message accessToken |> Async.Ignore
+            if whisperRateLimiter.CanSend() then
+                do! twitchService.SendWhisper Config.UserId toUserId message accessToken |> Async.Ignore
         }
 
     let reader (cancellationToken) =

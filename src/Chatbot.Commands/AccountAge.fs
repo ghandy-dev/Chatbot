@@ -5,6 +5,8 @@ module AccountAge =
 
     open System
 
+    let twitchService = Services.services.TwitchService
+
     let accountAge args context =
         async {
             let username =
@@ -12,7 +14,7 @@ module AccountAge =
                 | [] -> context.Username
                 | username :: _ -> username
 
-            match! Twitch.Helix.Users.getUser username with
+            match! twitchService.GetUser username with
             | None -> return Message "User not found"
             | Some user ->
                 let age = formatTimeSpan (DateTimeOffset.UtcNow - user.CreatedAt)

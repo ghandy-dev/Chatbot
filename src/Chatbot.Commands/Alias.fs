@@ -6,6 +6,8 @@ module Alias =
     open Database
     open Database.Types.Aliases
 
+    let twitchService = Services.services.TwitchService
+
     let private validateCommand (command: string list) (commands: Map<string, _>) =
         let aliasCommands =
             command
@@ -57,7 +59,7 @@ module Alias =
 
     let private get (username: string) alias =
         async {
-            match! Twitch.Helix.Users.getUser username with
+            match! twitchService.GetUser username with
             | None -> return Message "User not found"
             | Some user ->
                 match! AliasRepository.get (user.Id |> int) alias with
@@ -78,7 +80,7 @@ module Alias =
 
     let private copy sourceUsername targetUserId alias =
         async {
-            match! Twitch.Helix.Users.getUser sourceUsername with
+            match! twitchService.GetUser sourceUsername with
             | None -> return Message "User not found"
             | Some user ->
 
@@ -99,7 +101,7 @@ module Alias =
 
     let private copyPlace sourceUsername targetUserId alias =
         async {
-            match! Twitch.Helix.Users.getUser sourceUsername with
+            match! twitchService.GetUser sourceUsername with
             | None -> return Message "User not found"
             | Some user ->
 

@@ -10,6 +10,7 @@ module Remind =
     open Database.Types.Reminders
 
     let private whenPattern username = sprintf @"(%s) (in|at|on|tomorrow|next\s*)" username
+    let twitchService = Services.services.TwitchService
 
     let private setTimedReminder (user: string) (content: string) (context: Context) =
         async {
@@ -26,7 +27,7 @@ module Remind =
                         let message = content[``end`` + 1..]
                         let timespan = datetime.AddSeconds(1) - now
 
-                        match! Twitch.Helix.Users.getUser user with
+                        match! twitchService.GetUser user with
                         | None -> return Message $"Couldn't find user %s{user}"
                         | Some targetUser ->
                             let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some datetime)
@@ -39,7 +40,7 @@ module Remind =
 
     let private setReminder (user: string) (message: string) (context: Context) =
         async {
-            match! Twitch.Helix.Users.getUser user with
+            match! twitchService.GetUser user with
             | None -> return Message $"Couldn't find user, %s{user}"
             | Some targetUser ->
                 let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName None message None

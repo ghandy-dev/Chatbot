@@ -3,7 +3,7 @@ namespace Commands
 [<AutoOpen>]
 module Channel =
 
-    open Twitch.Helix
+    let twitchService = Services.services.TwitchService
 
     let channel args =
         async {
@@ -11,8 +11,8 @@ module Channel =
             | [] -> return Message "No channel specified."
             | channel :: _ ->
                 match!
-                    Users.getUser channel |-> Result.fromOption "User not found"
-                    |> Result.bindAsync (fun user -> Channels.getChannel user.Id |-> Result.fromOption "Channel not found")
+                    twitchService.GetUser channel |-> Result.fromOption "User not found"
+                    |> Result.bindAsync (fun user -> twitchService.GetChannel user.Id |-> Result.fromOption "Channel not found")
                 with
                 | Error err -> return Message err
                 | Ok channel ->

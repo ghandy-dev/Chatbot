@@ -3,6 +3,10 @@ namespace Commands
 [<AutoOpen>]
 module Emote =
 
+    open Services
+
+    let emoteService = services.EmoteService
+
     let private parseEmoteProvider =
         function
         | "twitch" -> Some Emotes.EmoteProvider.Twitch

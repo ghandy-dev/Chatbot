@@ -4,13 +4,14 @@ namespace Commands
 module LeaveChannel =
 
     open Database
-    open Twitch.Helix
+
+    let twitchService = Services.services.TwitchService
 
     let leaveChannel (args: string list) =
         async {
             match!
                 args |> Async.create |-> List.tryHead |-> Result.fromOption "No channel specified"
-                |> Result.bindAsync (fun c -> Users.getUser c |-> Result.fromOption "User not found")
+                |> Result.bindAsync (fun c -> twitchService.GetUser c |-> Result.fromOption "User not found")
                 |> Result.bindAsync (fun u -> ChannelRepository.getById (u.Id |> int) |-> Result.fromOption $"Not in channel {u.DisplayName}")
                 |> Result.bindAsync (fun u ->  ChannelRepository.getById (u.ChannelId |> int) |-> Result.fromOption $"Not in channel {u.ChannelName}")
             with

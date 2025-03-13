@@ -7,6 +7,8 @@ module Time =
 
     let [<Literal>] private DateTimeFormat = "yyyy/MM/dd HH:mm:ss"
 
+    let geolocationService = Services.services.GeolocationService
+
     let time args =
         async {
             match args with
@@ -14,10 +16,10 @@ module Time =
             | address ->
                 let timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
 
-                match! Services.Geolocation.api.getSearchAddress (address |> String.concat " ") with
+                match! geolocationService.GetSearchAddress (address |> String.concat " ") with
                 | Error err -> return Message err
                 | Ok location ->
-                    match! Services.Geolocation.api.getTimezone location.Position.Lat location.Position.Lon timestamp with
+                    match! geolocationService.GetTimezone location.Position.Lat location.Position.Lon timestamp with
                     | Error err -> return Message err
                     | Ok timezone ->
                         let unixTime = timestamp + int64 timezone.DstOffset + int64 timezone.RawOffset

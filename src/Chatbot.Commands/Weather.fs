@@ -3,8 +3,8 @@ namespace Commands
 [<AutoOpen>]
 module Weather =
 
-    open Azure.Types
-    open Azure.Maps.Weather
+    open Weather
+    open Geolocation.Azure
 
     let private weatherCodeToEmoji iconCode =
         match iconCode with
@@ -49,6 +49,8 @@ module Weather =
         | IconCode.N_MostlyCloudyWithSnow -> "🌨️"
         | _ -> ""
 
+    let private geolocationService = Services.services.GeolocationService
+
     let private processWeatherResult (geocoding: SearchAddressResultItem) (weather: CurrentConditions) =
         let time = weather.DateTime.ToString("dd MMM HH:mm")
         let location = geocoding.Address.FreeformAddress
@@ -75,7 +77,7 @@ module Weather =
             match args with
             | [] -> return Message "No location provided"
             | address ->
-                match! Services.Geolocation.api.getSearchAddress (address |> String.concat " ") with
+                match! geolocationService.GetSearchAddress (address |> String.concat " ") with
                 | Error err -> return Message err
                 | Ok geocoding ->
                     let latitude = geocoding.Position.Lat

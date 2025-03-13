@@ -5,7 +5,7 @@ module RandomClip =
 
     open System
 
-    open Twitch.Helix
+    let twitchService = Services.services.TwitchService
 
     let private getChannel args (context: Context) =
         match context.Source with
@@ -45,8 +45,8 @@ module RandomClip =
             match!
                 getChannel args context
                 |> Async.create
-                |> Result.bindAsync (fun username -> Users.getUser username |-> Result.fromOption "User not found")
-                |> Result.bindAsync (fun user -> Clips.getClips user.Id dateFrom dateTo |> Result.fromOptionAsync "Twitch API error")
+                |> Result.bindAsync (fun username -> twitchService.GetUser username |-> Result.fromOption "User not found")
+                |> Result.bindAsync (fun user -> twitchService.GetClips user.Id dateFrom dateTo |> Result.fromOptionAsync "Twitch API error")
             with
             | Error err -> return Message err
             | Ok clips ->

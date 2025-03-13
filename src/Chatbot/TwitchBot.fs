@@ -15,6 +15,8 @@ open Twitch
 open System
 open System.Collections.Generic
 
+let services = Services.services
+
 let getAccessToken () =
     async {
         match! tokenStore.GetToken(TokenType.Twitch) with
@@ -97,7 +99,7 @@ let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
 
                             if message.Length > 500 then
                                 match! Pastebin.createPaste "" message with
-                                | Error err -> Logging.error err (new Exception())
+                                | Error (err, statusCode) -> Logging.error err (new Exception())
                                 | Ok url -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@%s{username}, reminders were too long to send, check %s{url} for your reminders"))
                             else
                                 do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@%s{username}, %s{message}"))
@@ -263,13 +265,13 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) (
                         | BotCommand command ->
                             match command with
                             | JoinChannel (channel, channelId) ->
-                                do! emoteService.RefreshChannelEmotes channelId
+                                do! services.EmoteService.RefreshChannelEmotes channelId
                                 do! twitchChatClient.SendAsync(IRC.Command.Join channel)
                             | LeaveChannel channel -> do! twitchChatClient.SendAsync(IRC.Command.Part channel)
                             | RefreshGlobalEmotes provider ->
                                 let! accessToken = getAccessToken ()
-                                do! emoteService.RefreshGlobalEmotes(user.Id, accessToken)
-                            | RefreshChannelEmotes channelId -> do! emoteService.RefreshChannelEmotes(channelId)
+                                do! services.EmoteService.RefreshGlobalEmotes(user.Id, accessToken)
+                            | RefreshChannelEmotes channelId -> do! services.EmoteService.RefreshChannelEmotes(channelId)
                             | BotCommand.StartTrivia trivia -> triviaAgent.Post (TriviaRequest.StartTrivia trivia)
                             | BotCommand.StopTrivia channel -> triviaAgent.Post (TriviaRequest.StopTrivia channel)
                         | Reconnect ->
@@ -340,8 +342,8 @@ let run (cancellationToken: Threading.CancellationToken) =
 
         let! channels = getChannelJoinList ()
         do! twitchChatClient.SendAsync(IRC.JoinM (channels |> Seq.map snd))
-        do! emoteService.RefreshGlobalEmotes(user.Id, accessToken)
-        let refreshChannelEmotes = channels |> Seq.map fst |> Seq.map (fun c -> emoteService.RefreshChannelEmotes c)
+        do! services.EmoteService.RefreshGlobalEmotes(user.Id, accessToken)
+        let refreshChannelEmotes = channels |> Seq.map fst |> Seq.map (fun c -> services.EmoteService.RefreshChannelEmotes c)
         do! refreshChannelEmotes |> Async.Parallel |> Async.Ignore
 
         chatAgent.Start()

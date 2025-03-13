@@ -3,11 +3,11 @@ namespace Commands
 [<AutoOpen>]
 module TopStreams =
 
-    open Twitch
+    let twitchService = Services.services.TwitchService
 
     let topStreams () =
         async {
-            match! Helix.Streams.getStreams 10 with
+            match! twitchService.GetStreams 10 with
             | None -> return Message "Twitch API error"
             | Some streams ->
                 match streams |> List.ofSeq with

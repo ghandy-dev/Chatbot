@@ -5,7 +5,7 @@ module Stream =
 
     open System
 
-    open Twitch.Helix
+    let twitchService = Services.services.TwitchService
 
     let stream args =
         async {
@@ -13,9 +13,9 @@ module Stream =
             | [] -> return Message "No channel specified."
             | channel :: _ ->
                 match!
-                    Users.getUser channel
+                    twitchService.GetUser channel
                     |-> Result.fromOption "User not found"
-                    |> Result.bindAsync (fun user -> Streams.getStream user.Id |-> Result.fromOption "Stream not live")
+                    |> Result.bindAsync (fun user -> twitchService.GetStream user.Id |-> Result.fromOption "Stream not live")
                 with
                 | Error err -> return Message err
                 | Ok stream ->

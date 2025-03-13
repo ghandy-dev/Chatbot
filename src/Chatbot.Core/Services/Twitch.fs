@@ -19,12 +19,10 @@ let private logError r =
 
 module Helix =
 
-    open Configuration
-
     open Microsoft.Extensions.Options
 
     let private selectHelix = fun response -> response |> Result.bind (fun r -> Ok (r :> HelixResponse<_>).Data)
-    let private tryGetData (response: IApiResponse<'a>) = toResult response |> selectHelix |> logError |> Result.toOption
+    let private tryGetData (response: IApiResponse<'a>) = toResult response |> selectHelix  |> logError |> Result.toOption
     let private tryHead response = tryGetData response |> Option.bind Seq.tryHead
 
     let private options =

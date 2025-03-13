@@ -27,16 +27,14 @@
     <Compile Include="Utilities/KeyValueParser.fs" />
     <Compile Include="Serialization/UnixEpochDateTimeConverter.fs" />
     <Compile Include="Http.fs" />
-    <Compile Include="Pastebin.fs" />
     <Compile Include="Ivr.fs" />
-    <Compile Include="Azure/Geolocation.fs" />
-    <Compile Include="Azure/Weather.fs" />
-    <Compile Include="Azure/Api.fs" />
-    <Compile Include="Google/Types.fs" />
-    <Compile Include="Google/Api.fs" />
-    <Compile Include="Twitch.fs" />
+    <Compile Include="Services/Pastebin.fs" />
+    <Compile Include="Services/Twitch.fs" />
+    <Compile Include="Services/Emotes.fs" />
+    <Compile Include="Services/Weather.fs" />
+    <Compile Include="Services/Geolocation.fs" />
+    <Compile Include="Services/Services.fs" />
     <Compile Include="TokenStore.fs" />
-    <Compile Include="Emotes.fs" />
     <Compile Include="IO.fs" />
     <Compile Include="IRC.fs" />
     <Compile Include="IrcMessageParser.fs" />
@@ -44,7 +42,6 @@
     <Compile Include="IrcClient.fs" />
     <Compile Include="WebSocketClient.fs" />
     <Compile Include="TwitchChatClient.fs" />
-    <Compile Include="Services.fs" />
   </ItemGroup>
 
   <ItemGroup>

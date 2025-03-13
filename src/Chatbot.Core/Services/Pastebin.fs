@@ -1,12 +1,9 @@
 module Pastebin
 
 open Configuration
+open Http
 
-open FsHttp
-open FsHttp.Request
-open FsHttp.Response
-
-type private PasteExpireDate =
+type PasteExpireDate =
     | Never
     | TenMinutes
     | Hour
@@ -30,7 +27,7 @@ type private PasteExpireDate =
             | SixMonths -> "6M"
             | Year -> "1Y"
 
-type private PasteVisibility =
+type PasteVisibility =
     | Public
     | Unlisted
     | Private
@@ -49,23 +46,6 @@ let private createPasteUrl = $"{apiUrl}/api_post.php"
 
 let private apiKey = appConfig.Pastebin.ApiKey
 
-let private post<'T> url bodyContent =
-    async {
-        use! response =
-            http {
-                POST url
-                body
-                formUrlEncoded bodyContent
-            }
-            |> sendAsync
-
-        match response |> toResult with
-        | Error err -> return Error $"Pastebin API HTTP error {err.statusCode |> int} {err.statusCode}"
-        | Ok res ->
-            let! r = res.content.ReadAsStringAsync() |> Async.AwaitTask
-            return Ok r
-    }
-
 let createPaste (pasteName: string) (pasteCode: string) =
     async {
         let apiOption = "paste"
@@ -81,5 +61,5 @@ let createPaste (pasteName: string) (pasteCode: string) =
             "api_paste_expire_date", pasteExpireDate.ToString()
         ]
 
-        return! post createPasteUrl parameters
+        return! postAsync (createPasteUrl, parameters)
     }

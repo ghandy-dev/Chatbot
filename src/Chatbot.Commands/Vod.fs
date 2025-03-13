@@ -3,7 +3,7 @@ namespace Commands
 [<AutoOpen>]
 module Vod =
 
-    open Twitch.Helix
+    let twitchService = Services.services.TwitchService
 
     let vod args =
         async {
@@ -11,9 +11,9 @@ module Vod =
             | [] -> return Message "No channel specified"
             | channel :: _ ->
                 match!
-                    Users.getUser channel
+                    twitchService.GetUser channel
                     |> Result.fromOptionAsync "User not found"
-                    |> Result.bindAsync (fun user -> Videos.getLatestVod user.Id |-> Result.fromOption "No VOD found")
+                    |> Result.bindAsync (fun user -> twitchService.GetLatestVod user.Id |-> Result.fromOption "No VOD found")
                 with
                 | Error err -> return Message err
                 | Ok video -> return Message $""""{video.Title}" {video.CreatedAt.ToString(Utils.DateStringFormat)} {video.Url} [{video.Duration}]"""

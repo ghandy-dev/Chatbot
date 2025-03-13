@@ -3,7 +3,7 @@ namespace Commands
 [<AutoOpen>]
 module NameColor =
 
-    open Twitch.Helix
+    let twitchService = Services.services.TwitchService
 
     let namecolor (args: string list) (context: Context) =
         async {
@@ -11,9 +11,9 @@ module NameColor =
                 args |> List.tryHead |> Option.bind Some |?? context.Username
 
             match!
-                Users.getUser username
+                twitchService.GetUser username
                 |-> Result.fromOption "User not found"
-                |> Result.bindAsync (fun user -> Chat.getUserChatColor user.Id |-> Result.fromOption "User not found")
+                |> Result.bindAsync (fun user -> twitchService.GetUserChatColor user.Id |-> Result.fromOption "User not found")
             with
             | Error err -> return Message err
             | Ok response -> return Message $"{response.UserName} {response.Color}"
