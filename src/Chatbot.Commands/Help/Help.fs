@@ -720,10 +720,7 @@ Start trivia with the specified categories.
 {exampleArgs "trivia" "include:Twitch,WorldOfWarcraft,Music"}
 
 Start trivia but exclude the specified categories from possibly appearing.
-{exampleArgs "trivia" "include:Anime"}
-
-Start trivia but exclude the specified categories from possibly appearing.
-{exampleArgs "trivia" "include:Anime"}
+{exampleArgs "trivia" "exclude:Anime"}
 
 Start trivia with hints disabled.
 {exampleArgs "trivia" "useHints:false"}
