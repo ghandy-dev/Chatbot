@@ -24,6 +24,7 @@ module Trivia =
                 async {
                     match! Api.getQuestions count excludeCategories includeCategories with
                     | None -> return Message "Failed to start trivia, check logs"
+                    | Some [] -> return Message $"No questions found for selected categories"
                     | Some questions ->
                         let triviaConfig = {
                             Questions = (questions |> List.map (fun q -> {
