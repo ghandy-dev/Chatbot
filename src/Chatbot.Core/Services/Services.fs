@@ -45,9 +45,16 @@ type ITwitchService =
     abstract member GetLatestVod: userId: string -> Async<TTVSharp.Helix.Video option>
     abstract member SendWhisper: fromUserId: string -> toUserId: string -> message: string -> accessToken: string -> Async<int>
 
+type IIvrService =
+    abstract member GetEmoteByName: emote: string -> Async<Result<IVR.Emote, string>>
+    abstract member GetSubAge: user: string -> channel: string -> Async<Result<IVR.SubAge, string>>
+    abstract member GetChannelRandomLine: channel: string -> Async<Result<string, string>>
+    abstract member GetUserRandomLine: channel: string -> user: string -> Async<Result<string, string>>
+
 type Services = {
     EmoteService: IEmoteService
     GeolocationService: IGeolocationService
+    IvrService: IIvrService
     PastebinService: IPastebinService
     TwitchService: ITwitchService
     WeatherService: IWeatherService
@@ -120,27 +127,36 @@ let private emoteService =
 
 let private twitchService =
     { new ITwitchService with
-        member _.GetAccessTokenUser(accessToken: string): Async<TTVSharp.Helix.User option> = Twitch.Helix.Users.getAccessTokenUser accessToken
-        member _.GetChannel(userId: string): Async<TTVSharp.Helix.Channel option> = Twitch.Helix.Channels.getChannel userId
-        member _.GetChannelEmotes(channelId: string): Async<IReadOnlyList<TTVSharp.Helix.ChannelEmote> option> = Twitch.Helix.Emotes.getChannelEmotes channelId
-        member _.GetClips(userId: string) (dateFrom: System.DateTime) (dateTo: System.DateTime): Async<IReadOnlyList<TTVSharp.Helix.Clip> option> = Twitch.Helix.Clips.getClips userId dateFrom dateTo
-        member _.GetEmoteSet(emoteSetId: string): Async<IReadOnlyList<TTVSharp.Helix.EmoteSet> option> = Twitch.Helix.Emotes.getEmoteSet emoteSetId
-        member _.GetEmoteSets(emoteSetIds: string seq): Async<IReadOnlyList<TTVSharp.Helix.EmoteSet> option> = Twitch.Helix.Emotes.getEmoteSets emoteSetIds
-        member _.GetGlobalEmotes(): Async<IReadOnlyList<TTVSharp.Helix.GlobalEmote> option> = Twitch.Helix.Emotes.getGlobalEmotes ()
-        member _.GetLatestVod(userId: string): Async<TTVSharp.Helix.Video option> = Twitch.Helix.Videos.getLatestVod userId
-        member _.GetStream(userId: string): Async<TTVSharp.Helix.Stream option> = Twitch.Helix.Streams.getStream userId
-        member _.GetStreams(first: int): Async<IReadOnlyList<TTVSharp.Helix.Stream> option> = Twitch.Helix.Streams.getStreams first
-        member _.GetUser(username: string): Async<TTVSharp.Helix.User option> = Twitch.Helix.Users.getUser username
-        member _.GetUserChatColor(userId: string): Async<TTVSharp.Helix.UserChatColor option> = Twitch.Helix.Chat.getUserChatColor userId
-        member _.GetUserEmotes(userId: string) (accessToken: string): Async<IReadOnlyList<TTVSharp.Helix.UserEmote> option> = Twitch.Helix.Emotes.getUserEmotes userId accessToken
-        member _.GetUsersById(userIds: string seq): Async<IReadOnlyList<TTVSharp.Helix.User> option> = Twitch.Helix.Users.getUsersById userIds
-        member _.GetUsersByUsername(usernames: string seq): Async<IReadOnlyList<TTVSharp.Helix.User> option> = Twitch.Helix.Users.getUsersByUsername usernames
-        member _.SendWhisper(fromUserId: string) (toUserId: string) (message: string) (accessToken: string): Async<int> = Twitch.Helix.Whispers.sendWhisper fromUserId toUserId message accessToken
+        member _.GetAccessTokenUser accessToken = Twitch.Helix.Users.getAccessTokenUser accessToken
+        member _.GetChannel userId = Twitch.Helix.Channels.getChannel userId
+        member _.GetChannelEmotes channelId = Twitch.Helix.Emotes.getChannelEmotes channelId
+        member _.GetClips userId dateFrom dateTo = Twitch.Helix.Clips.getClips userId dateFrom dateTo
+        member _.GetEmoteSet emoteSetId = Twitch.Helix.Emotes.getEmoteSet emoteSetId
+        member _.GetEmoteSets emoteSetIds = Twitch.Helix.Emotes.getEmoteSets emoteSetIds
+        member _.GetGlobalEmotes() = Twitch.Helix.Emotes.getGlobalEmotes ()
+        member _.GetLatestVod userId = Twitch.Helix.Videos.getLatestVod userId
+        member _.GetStream (userId: string) = Twitch.Helix.Streams.getStream userId
+        member _.GetStreams first = Twitch.Helix.Streams.getStreams first
+        member _.GetUser username = Twitch.Helix.Users.getUser username
+        member _.GetUserChatColor userId = Twitch.Helix.Chat.getUserChatColor userId
+        member _.GetUserEmotes userId (accessToken: string) = Twitch.Helix.Emotes.getUserEmotes userId accessToken
+        member _.GetUsersById userIds = Twitch.Helix.Users.getUsersById userIds
+        member _.GetUsersByUsername usernames = Twitch.Helix.Users.getUsersByUsername usernames
+        member _.SendWhisper fromUserId toUserId message accessToken = Twitch.Helix.Whispers.sendWhisper fromUserId toUserId message accessToken
+    }
+
+let ivrService =
+    { new IIvrService with
+        member _.GetChannelRandomLine channel = IVR.getChannelRandomLine channel
+        member _.GetEmoteByName emote = IVR.getEmoteByName emote
+        member _.GetSubAge user channel = IVR.getSubAge user channel
+        member _.GetUserRandomLine channel user = IVR.getUserRandomLine channel user
     }
 
 let services = {
     EmoteService = emoteService
     GeolocationService = geolocationService
+    IvrService = ivrService
     PastebinService = pastebinService
     TwitchService = twitchService
     WeatherService = weatherService

@@ -45,6 +45,22 @@ let postAsJsonAsync<'T> (url: string, value: 'T) =
         | Error err -> return Error(content, err.statusCode)
     }
 
+let getAsync (url: string) =
+    async {
+        use! response =
+            http {
+                GET url
+                UserAgent userAgent
+            }
+            |> sendAsync
+
+        let! content = response.content.ReadAsStringAsync() |> Async.AwaitTask
+
+        match toResult response with
+        | Ok _ -> return Ok content
+        | Error err -> return Error(content, err.statusCode)
+    }
+
 let postAsync (url: string, data: (string * string) list) =
     async {
         use! response =

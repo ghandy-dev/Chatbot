@@ -27,7 +27,7 @@
     <Compile Include="Utilities/KeyValueParser.fs" />
     <Compile Include="Serialization/UnixEpochDateTimeConverter.fs" />
     <Compile Include="Http.fs" />
-    <Compile Include="Ivr.fs" />
+    <Compile Include="Services/Ivr.fs" />
     <Compile Include="Services/Pastebin.fs" />
     <Compile Include="Services/Twitch.fs" />
     <Compile Include="Services/Emotes.fs" />

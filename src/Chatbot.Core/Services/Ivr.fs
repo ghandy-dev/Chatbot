@@ -2,10 +2,6 @@ module IVR
 
 open System
 
-open FsHttp
-open FsHttp.Request
-open FsHttp.Response
-
 type Emote = {
     ChannelName: string option
     ChannelLogin: string option
@@ -84,22 +80,6 @@ let private subAgeUrl (user: string) (channel: string) = $"{ApiUrl}/twitch/subag
 let private randomChannelLineUrl (channel: string) = $"{LogsApiUrl}/channel/{channel}/random"
 let private randomUserLineUrl (channel: string) (user: string) = $"{LogsApiUrl}/channel/{channel}/user/{user}/random"
 
-let private sendRequest (url: string) =
-    async {
-        use! response =
-            http {
-                GET url
-                Accept MimeTypes.textPlain
-            }
-            |> sendAsync
-
-        let! content = response.content.ReadAsStringAsync() |> Async.AwaitTask
-
-        match toResult response with
-        | Ok _ -> return Ok content
-        | Error err -> return Error(content, err.statusCode)
-    }
-
 let getEmoteByName (emote: string) =
     async {
         let url = getEmoteDataUrl emote false
@@ -107,7 +87,7 @@ let getEmoteByName (emote: string) =
         match! Http.getFromJsonAsync<Emote> url with
         | Error (content, statusCode) ->
             Logging.error
-                $"Weather API error: {content}"
+                $"IVR API error: {content}"
                 (new System.Net.Http.HttpRequestException("IVR API error", null, statusCode = statusCode))
 
             return Error "IVR API error"
@@ -121,7 +101,7 @@ let getSubAge (user: string) (channel: string) =
         match! Http.getFromJsonAsync<SubAge> url with
         | Error (content, statusCode) ->
             Logging.error
-                $"Weather API error: {content}"
+                $"IVR API error: {content}"
                 (new System.Net.Http.HttpRequestException("IVR API error", null, statusCode = statusCode))
 
             return Error "IVR API error"
@@ -132,10 +112,10 @@ let getChannelRandomLine (channel: string) =
     async {
         let url = randomChannelLineUrl channel
 
-        match! sendRequest url with
+        match! Http.getAsync url with
         | Error (content, statusCode) ->
             Logging.error
-                $"Weather API error: {content}"
+                $"IVR API error: {content}"
                 (new System.Net.Http.HttpRequestException("IVR API error", null, statusCode = statusCode))
 
             return Error "IVR API error"
@@ -146,10 +126,10 @@ let getUserRandomLine (channel: string) (user: string) =
     async {
         let url = randomUserLineUrl channel user
 
-        match! sendRequest url with
+        match! Http.getAsync url with
         | Error (content, statusCode) ->
             Logging.error
-                $"Weather API error: {content}"
+                $"IVR API error: {content}"
                 (new System.Net.Http.HttpRequestException("IVR API error", null, statusCode = statusCode))
 
             return Error "IVR API error"
