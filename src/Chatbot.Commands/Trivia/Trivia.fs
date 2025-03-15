@@ -5,6 +5,8 @@ module Trivia =
 
     open Trivia
 
+    open System
+
     let keys = [ "count" ; "exclude" ; "include" ; "hints" ]
 
     let trivia args context =
@@ -16,7 +18,7 @@ module Trivia =
             | _ ->
                 let options = KeyValueParser.parse args keys
 
-                let count = options |> Map.tryFind "count" |> Option.bind (fun s -> Int32.tryParse s) |> Option.map (fun c -> max c 10) |?? 1
+                let count = options |> Map.tryFind "count" |> Option.bind (fun s -> Int32.tryParse s) |> Option.map (fun c -> Math.Clamp(c, 1, 10)) |?? 1
                 let excludeCategories = options |> Map.tryFind "exclude" |> Option.map _.Split(",", System.StringSplitOptions.TrimEntries)
                 let includeCategories = options |> Map.tryFind "include" |> Option.map _.Split(",", System.StringSplitOptions.TrimEntries)
                 let hints = options |> Map.tryFind "hints" |> Option.bind (fun s -> Boolean.tryParse s) |?? true
