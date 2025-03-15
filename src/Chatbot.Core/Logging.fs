@@ -15,8 +15,8 @@ type LogLevel =
     | Error
     | Critical
 
-    member x.toInt () =
-        x
+    member this.toInt () =
+        this
         |> function
             | Trace -> 1
             | Debug -> 2
@@ -25,8 +25,8 @@ type LogLevel =
             | Error -> 5
             | Critical -> 6
 
-    override x.ToString () =
-        x
+    override this.ToString () =
+        this
         |> function
             | Trace -> "Trace"
             | Debug -> "Debug"
