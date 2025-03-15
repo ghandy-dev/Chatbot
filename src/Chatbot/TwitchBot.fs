@@ -129,6 +129,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
             let active = new Dictionary<string, bool> ()
             let timestamps = new Dictionary<string, DateTime> ()
             let sentHints = new Dictionary<string, Set<int>>()
+            let answerSent = new Dictionary<string, bool> ()
 
             let rec loop () =
                 async {
@@ -139,8 +140,6 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                         | Some false ->
                             active[trivia.Channel] <- true
                             channels[trivia.Channel] <- trivia
-                            timestamps[trivia.Channel] <- utcNow()
-                            sentHints[trivia.Channel] <- Set.empty
                             mb.Post (SendQuestion trivia)
                         | Some true -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, "Trivia already started"))
                     | StopTrivia channel ->
@@ -159,12 +158,13 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                             let elapsedSeconds = int timespan.TotalSeconds
                             let hintTimes = [ 15 ; 30 ]
                             let answerTime = 60
-                            let sent = sentHints[trivia.Channel]
+                            let hints = sentHints[trivia.Channel]
 
-                            if elapsedSeconds >= answerTime then
+                            if elapsedSeconds = answerTime && not <| answerSent[trivia.Channel] then
+                                answerSent[trivia.Channel] <- true
                                 mb.Post (SendAnswer trivia)
-                            else if hintTimes |> List.contains elapsedSeconds && not <| sent.Contains elapsedSeconds then
-                                sentHints[trivia.Channel] <- sent |> Set.add elapsedSeconds
+                            else if hintTimes |> List.contains elapsedSeconds && not <| hints.Contains elapsedSeconds then
+                                sentHints[trivia.Channel] <- hints |> Set.add elapsedSeconds
                                 mb.Post(SendHint trivia)
                         )
 
@@ -176,6 +176,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                             do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"[Trivia - %s{q.Category}] Question: %s{q.Question}"))
                             timestamps[trivia.Channel] <- utcNow()
                             sentHints[trivia.Channel] <- Set.empty
+                            answerSent[trivia.Channel] <- false
                         | _ -> ()
                     | SendHint trivia ->
                         match trivia.Questions with
