@@ -55,54 +55,62 @@ type ReminderMessage =
 let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
     new MailboxProcessor<ReminderMessage>(
         (fun mb ->
+            let checkReminders () =
+                async {
+                    let! reminders = ReminderRepository.getTimedReminders ()
+
+                    for reminder in reminders do
+                        let ts = DateTime.UtcNow - reminder.Timestamp
+                        let sender = if reminder.FromUsername = reminder.TargetUsername then "yourself" else $"@%s{reminder.FromUsername}"
+                        let message = $"@%s{reminder.TargetUsername}, reminder from %s{sender} (%s{formatTimeSpan ts} ago): %s{reminder.Message}" |> formatChatMessage
+                        do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(reminder.Channel, message))
+
+                    do! Async.Sleep(250)
+                    mb.Post CheckReminders
+                }
+
+            let userMessaged channel userId username =
+                async {
+                    match! ReminderRepository.getPendingReminderCount userId with
+                    | DatabaseResult.Failure -> ()
+                    | DatabaseResult.Success c when c = 0 -> ()
+                    | DatabaseResult.Success _ ->
+                        let! reminders = ReminderRepository.getReminders userId
+
+                        let message =
+                            reminders
+                            |> Seq.groupBy (fun r -> r.FromUsername)
+                            |> Seq.map (fun (_, rs) ->
+                                let sender = rs |> Seq.head |> fun r -> if r.FromUsername = r.TargetUsername then "yourself" else $"@%s{r.FromUsername}"
+
+                                let message =
+                                    rs
+                                    |> Seq.map (fun r ->
+                                        let ts = DateTime.UtcNow - r.Timestamp
+                                        $"(%s{formatTimeSpan ts} ago): %s{r.Message}"
+                                    )
+                                    |> String.concat ", "
+
+                                if rs |> Seq.length = 1 then
+                                    $"reminder from %s{sender} %s{message}"
+                                else
+                                    $"reminders from %s{sender} %s{message}"
+                            )
+                            |> String.concat ", "
+
+                        if message.Length > 500 then
+                            match! Pastebin.createPaste "" message with
+                            | Error (err, statusCode) -> Logging.error err (new Exception())
+                            | Ok url -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@%s{username}, reminders were too long to send, check %s{url} for your reminders"))
+                        else
+                            do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@%s{username}, %s{message}"))
+                }
+
             let rec loop () =
                 async {
                     match! mb.Receive() with
-                    | CheckReminders ->
-                        let! reminders = ReminderRepository.getTimedReminders ()
-
-                        for reminder in reminders do
-                            let ts = DateTime.UtcNow - reminder.Timestamp
-                            let sender = if reminder.FromUsername = reminder.TargetUsername then "yourself" else $"@%s{reminder.FromUsername}"
-                            let message = $"@%s{reminder.TargetUsername}, reminder from %s{sender} (%s{formatTimeSpan ts} ago): %s{reminder.Message}" |> formatChatMessage
-                            do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(reminder.Channel, message))
-
-                        do! Async.Sleep(250)
-                        mb.Post CheckReminders
-                    | UserMessaged(channel, userId, username) ->
-                        match! ReminderRepository.getPendingReminderCount userId with
-                        | DatabaseResult.Failure -> ()
-                        | DatabaseResult.Success c when c = 0 -> ()
-                        | DatabaseResult.Success _ ->
-                            let! reminders = ReminderRepository.getReminders userId
-
-                            let message =
-                                reminders
-                                |> Seq.groupBy (fun r -> r.FromUsername)
-                                |> Seq.map (fun (_, rs) ->
-                                    let sender = rs |> Seq.head |> fun r -> if r.FromUsername = r.TargetUsername then "yourself" else $"@%s{r.FromUsername}"
-
-                                    let message =
-                                        rs
-                                        |> Seq.map (fun r ->
-                                            let ts = DateTime.UtcNow - r.Timestamp
-                                            $"(%s{formatTimeSpan ts} ago): %s{r.Message}"
-                                        )
-                                        |> String.concat ", "
-
-                                    if rs |> Seq.length = 1 then
-                                        $"reminder from %s{sender} %s{message}"
-                                    else
-                                        $"reminders from %s{sender} %s{message}"
-                                )
-                                |> String.concat ", "
-
-                            if message.Length > 500 then
-                                match! Pastebin.createPaste "" message with
-                                | Error (err, statusCode) -> Logging.error err (new Exception())
-                                | Ok url -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@%s{username}, reminders were too long to send, check %s{url} for your reminders"))
-                            else
-                                do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@%s{username}, %s{message}"))
+                    | CheckReminders -> do! checkReminders ()
+                    | UserMessaged(channel, userId, username) -> do! userMessaged channel userId username
 
                     return! loop ()
                 }
@@ -131,90 +139,118 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
             let sentHints = new Dictionary<string, Set<int>>()
             let answerSent = new Dictionary<string, bool> ()
 
+            let startTrivia (trivia: TriviaConfig) =
+                async {
+                    match active |> Dictionary.tryGetValue trivia.Channel with
+                    | None
+                    | Some false ->
+                        active[trivia.Channel] <- true
+                        channels[trivia.Channel] <- trivia
+                        mb.Post (SendQuestion trivia)
+                    | Some true -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, "Trivia already started"))
+                }
+
+            let stopTrivia channel =
+                async {
+                    match active |> Dictionary.tryGetValue channel with
+                    | None
+                    | Some false -> ()
+                    | Some true ->
+                        active[channel] <-  false
+                        do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, "Trivia stopped"))
+                }
+
+            let update () =
+                async {
+                    Seq.zip3 active timestamps channels
+                    |> Seq.choose (fun (KeyValue(channel, active), (KeyValue(channel, timestamp)), (KeyValue(channel, trivia))) ->
+                        if active then Some (channel, utcNow() - timestamp, trivia) else None
+                    )
+                    |> Seq.iter (fun (channel, timespan, trivia) ->
+                        let elapsedSeconds = int timespan.TotalSeconds
+                        let hintTimes = [ 15 ; 30 ]
+                        let answerTime = 60
+                        let hints = sentHints[trivia.Channel]
+
+                        if elapsedSeconds = answerTime && not <| answerSent[trivia.Channel] then
+                            answerSent[trivia.Channel] <- true
+                            mb.Post (SendAnswer trivia)
+                        else if hintTimes |> List.contains elapsedSeconds && not <| hints.Contains elapsedSeconds then
+                            sentHints[trivia.Channel] <- hints |> Set.add elapsedSeconds
+                            mb.Post(SendHint trivia)
+                    )
+
+                    do! Async.Sleep(250)
+                    mb.Post Update
+                }
+
+            let sendQuestion trivia =
+                async {
+                    match trivia.Questions with
+                    | q :: _ ->
+                        do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"[Trivia - %s{q.Category}] Question: %s{q.Question}"))
+                        timestamps[trivia.Channel] <- utcNow()
+                        sentHints[trivia.Channel] <- Set.empty
+                        answerSent[trivia.Channel] <- false
+                    | _ -> ()
+                }
+
+            let sendHint trivia =
+                async {
+                    match trivia.Questions with
+                    | q :: qs ->
+                        match q.Hints with
+                        | h :: hs ->
+                            do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"[Trivia] Hint: %s{h}"))
+                            channels[trivia.Channel] <- { trivia with Questions = { q with Hints = hs } :: qs }
+                        | _ -> ()
+                    | _ -> ()
+                }
+
+            let sendAnswer trivia =
+                async {
+                    match trivia.Questions with
+                    | [ q ] ->
+                        do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"[Trivia] No one got it. The answer was: %s{q.Answer}"))
+                        active[trivia.Channel] <- false
+                    | q :: qs ->
+                        do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"[Trivia] No one got it. The answer was: %s{q.Answer}"))
+                        let trivia = { trivia with Questions = qs }
+                        channels[trivia.Channel] <- trivia
+                        mb.Post (SendQuestion trivia)
+                    | _ -> ()
+                }
+
+            let userMessaged channel userId username message =
+                async {
+                    match active |> Dictionary.tryGetValue channel with
+                    | Some true ->
+                        let trivia = channels[channel]
+                        match trivia.Questions with
+                        | [ q ] ->
+                            if String.Compare(q.Answer, message, ignoreCase = true) = 0 then
+                                do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"""[Trivia] @%s{username}, got it! The answer was %s{q.Answer}"""))
+                                active[trivia.Channel] <- false
+                        | q :: qs ->
+                            if String.Compare(q.Answer, message, ignoreCase = true) = 0 then
+                                do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"""[Trivia] @%s{username}, got it! The answer was %s{q.Answer}"""))
+                                let trivia = { trivia with Questions = qs }
+                                channels[trivia.Channel] <- trivia
+                                mb.Post (SendQuestion trivia)
+                        | _ -> ()
+                    | _ -> ()
+                }
+
             let rec loop () =
                 async {
                     match! mb.Receive() with
-                    | StartTrivia trivia ->
-                        match active |> Dictionary.tryGetValue trivia.Channel with
-                        | None
-                        | Some false ->
-                            active[trivia.Channel] <- true
-                            channels[trivia.Channel] <- trivia
-                            mb.Post (SendQuestion trivia)
-                        | Some true -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, "Trivia already started"))
-                    | StopTrivia channel ->
-                        match active |> Dictionary.tryGetValue channel with
-                        | None
-                        | Some false -> ()
-                        | Some true ->
-                            active[channel] <-  false
-                            do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, "Trivia stopped"))
-                    | Update ->
-                        Seq.zip3 active timestamps channels
-                        |> Seq.choose (fun (KeyValue(channel, active), (KeyValue(channel, timestamp)), (KeyValue(channel, trivia))) ->
-                            if active then Some (channel, utcNow() - timestamp, trivia) else None
-                        )
-                        |> Seq.iter (fun (channel, timespan, trivia) ->
-                            let elapsedSeconds = int timespan.TotalSeconds
-                            let hintTimes = [ 15 ; 30 ]
-                            let answerTime = 60
-                            let hints = sentHints[trivia.Channel]
-
-                            if elapsedSeconds = answerTime && not <| answerSent[trivia.Channel] then
-                                answerSent[trivia.Channel] <- true
-                                mb.Post (SendAnswer trivia)
-                            else if hintTimes |> List.contains elapsedSeconds && not <| hints.Contains elapsedSeconds then
-                                sentHints[trivia.Channel] <- hints |> Set.add elapsedSeconds
-                                mb.Post(SendHint trivia)
-                        )
-
-                        do! Async.Sleep(250)
-                        mb.Post Update
-                    | SendQuestion trivia ->
-                        match trivia.Questions with
-                        | q :: _ ->
-                            do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"[Trivia - %s{q.Category}] Question: %s{q.Question}"))
-                            timestamps[trivia.Channel] <- utcNow()
-                            sentHints[trivia.Channel] <- Set.empty
-                            answerSent[trivia.Channel] <- false
-                        | _ -> ()
-                    | SendHint trivia ->
-                        match trivia.Questions with
-                        | q :: qs ->
-                            match q.Hints with
-                            | h :: hs ->
-                                do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"[Trivia] Hint: %s{h}"))
-                                channels[trivia.Channel] <- { trivia with Questions = { q with Hints = hs } :: qs }
-                            | _ -> ()
-                        | _ -> ()
-                    | SendAnswer trivia ->
-                        match trivia.Questions with
-                        | [ q ] ->
-                            do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"[Trivia] No one got it. The answer was: %s{q.Answer}"))
-                            active[trivia.Channel] <- false
-                        | q :: qs ->
-                            do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"[Trivia] No one got it. The answer was: %s{q.Answer}"))
-                            let trivia = { trivia with Questions = qs }
-                            channels[trivia.Channel] <- trivia
-                            mb.Post (SendQuestion trivia)
-                        | _ -> ()
-                    | UserMessaged (channel, userId, username, message) ->
-                        match active |> Dictionary.tryGetValue channel with
-                        | Some true ->
-                            let trivia = channels[channel]
-                            match trivia.Questions with
-                            | [ q ] ->
-                                if String.Compare(q.Answer, message, ignoreCase = true) = 0 then
-                                    do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"""[Trivia] @%s{username}, got it! The answer was %s{q.Answer}"""))
-                                    active[trivia.Channel] <- false
-                            | q :: qs ->
-                                if String.Compare(q.Answer, message, ignoreCase = true) = 0 then
-                                    do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"""[Trivia] @%s{username}, got it! The answer was %s{q.Answer}"""))
-                                    let trivia = { trivia with Questions = qs }
-                                    channels[trivia.Channel] <- trivia
-                                    mb.Post (SendQuestion trivia)
-                            | _ -> ()
-                        | _ -> ()
+                    | StartTrivia trivia -> do! startTrivia trivia
+                    | StopTrivia channel -> do! stopTrivia channel
+                    | Update -> do! update ()
+                    | SendQuestion trivia -> do! sendQuestion trivia
+                    | SendHint trivia -> do! sendHint trivia
+                    | SendAnswer trivia -> do! sendAnswer trivia
+                    | UserMessaged (channel, userId, username, message) -> do! userMessaged channel userId username message
 
                     return! loop ()
                 }
@@ -234,6 +270,7 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) (
 
                 let reconnect () =
                     async {
+                        Logging.info "Reconnecting..."
                         do! twitchChatClient.ReconnectAsync(cancellationToken)
                         let! channels = getChannelJoinList ()
                         do! twitchChatClient.SendAsync(IRC.JoinM (channels |> Seq.map snd))
@@ -249,35 +286,51 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) (
                             do! reconnectHelper ()
                     }
 
+                let sendPong pong =
+                    async {
+                        Logging.info $"PONG :{pong}"
+                        lastPingTime <- DateTime.UtcNow
+                        do! twitchChatClient.SendAsync(IRC.Command.Pong pong)
+                    }
+
+                let sendPrivateMessage channel message = twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, message))
+
+                let sendReplyMessage messageId channel message = twitchChatClient.SendAsync(IRC.Command.ReplyMsg(messageId, channel, message))
+
+                let sendRawIrcMessage message = twitchChatClient.SendAsync(IRC.Command.Raw message)
+
+                let sendWhisper userId message =
+                    async {
+                        match! tokenStore.GetToken TokenType.Twitch with
+                        | None -> Logging.info "Unable to send whisper. Couldn't retrieve access token for Twitch API."
+                        | Some token -> do! twitchChatClient.WhisperAsync(userId, message, token)
+                    }
+
+                let handleBotCommand command =
+                    async {
+                        match command with
+                        | JoinChannel (channel, channelId) ->
+                            do! services.EmoteService.RefreshChannelEmotes channelId
+                            do! twitchChatClient.SendAsync(IRC.Command.Join channel)
+                        | LeaveChannel channel -> do! twitchChatClient.SendAsync(IRC.Command.Part channel)
+                        | RefreshGlobalEmotes provider ->
+                            let! accessToken = getAccessToken ()
+                            do! services.EmoteService.RefreshGlobalEmotes(user.Id, accessToken)
+                        | RefreshChannelEmotes channelId -> do! services.EmoteService.RefreshChannelEmotes(channelId)
+                        | BotCommand.StartTrivia trivia -> triviaAgent.Post (TriviaRequest.StartTrivia trivia)
+                        | BotCommand.StopTrivia channel -> triviaAgent.Post (TriviaRequest.StopTrivia channel)
+                    }
+
                 let rec loop () =
                     async {
                         match! mb.Receive() with
-                        | SendPongMessage pong ->
-                            Logging.info $"PONG :{pong}"
-                            lastPingTime <- DateTime.UtcNow
-                            do! twitchChatClient.SendAsync(IRC.Command.Pong pong)
-                        | SendPrivateMessage(channel, message) -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, message))
-                        | SendWhisperMessage(userId, username, message) ->
-                            match! tokenStore.GetToken TokenType.Twitch with
-                            | None -> Logging.info "Unable to send whisper. Couldn't retrieve access token for Twitch API."
-                            | Some token -> do! twitchChatClient.WhisperAsync(userId, message, token)
-                        | SendReplyMessage(messageId, channel, message) -> do! twitchChatClient.SendAsync(IRC.Command.ReplyMsg(messageId, channel, message))
-                        | SendRawIrcMessage msg -> do! twitchChatClient.SendAsync(IRC.Command.Raw msg)
-                        | BotCommand command ->
-                            match command with
-                            | JoinChannel (channel, channelId) ->
-                                do! services.EmoteService.RefreshChannelEmotes channelId
-                                do! twitchChatClient.SendAsync(IRC.Command.Join channel)
-                            | LeaveChannel channel -> do! twitchChatClient.SendAsync(IRC.Command.Part channel)
-                            | RefreshGlobalEmotes provider ->
-                                let! accessToken = getAccessToken ()
-                                do! services.EmoteService.RefreshGlobalEmotes(user.Id, accessToken)
-                            | RefreshChannelEmotes channelId -> do! services.EmoteService.RefreshChannelEmotes(channelId)
-                            | BotCommand.StartTrivia trivia -> triviaAgent.Post (TriviaRequest.StartTrivia trivia)
-                            | BotCommand.StopTrivia channel -> triviaAgent.Post (TriviaRequest.StopTrivia channel)
-                        | Reconnect ->
-                            Logging.info "Reconnecting..."
-                            do! reconnect()
+                        | SendPongMessage pong -> do! sendPong pong
+                        | SendPrivateMessage(channel, message) -> do! sendPrivateMessage channel message
+                        | SendWhisperMessage(userId, _, message) -> do! sendWhisper userId message
+                        | SendReplyMessage(messageId, channel, message) -> do! sendReplyMessage messageId channel message
+                        | SendRawIrcMessage message -> do! sendRawIrcMessage message
+                        | BotCommand command -> do! handleBotCommand command
+                        | Reconnect -> do! reconnect()
 
                         return! loop ()
                     }
