@@ -3,6 +3,7 @@ namespace Clients
 open IRC
 
 open System
+open System.Threading
 
 module Rates =
 
@@ -17,6 +18,7 @@ type RateLimiter(messagesPerInterval, interval: int16) =
     let interval = interval |> int
     let mutable messageCount = 0
     let mutable lastMessageTimestamp = DateTime.UtcNow
+    let rlLock = obj()
 
     member private _.TimeSinceLastReset =
         (DateTime.UtcNow - lastMessageTimestamp).TotalSeconds |> int
@@ -29,17 +31,20 @@ type RateLimiter(messagesPerInterval, interval: int16) =
         with get () = lastMessageTimestamp
         and set (value) = lastMessageTimestamp <- value
 
-
     member this.TimeUntilReset = this.TimeSinceLastReset - interval
 
     member this.CanSend () =
         if this.TimeSinceLastReset > interval then
-            messageCount <- 1
-            lastMessageTimestamp <- DateTime.Now
+            lock rlLock (fun () ->
+                messageCount <- 1
+                lastMessageTimestamp <- DateTime.Now
+            )
             true
         elif this.MessageCount < messagesPerInterval then
-            messageCount <- messageCount + 1
-            lastMessageTimestamp <- DateTime.Now
+            lock rlLock (fun () ->
+                messageCount <- messageCount + 1
+                lastMessageTimestamp <- DateTime.Now
+            )
             true
         else
             false
@@ -56,11 +61,11 @@ type TwitchChatClientConfig = {
 }
 
 type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig) =
-
     let lastMessagesSent = new Collections.Concurrent.ConcurrentDictionary<string, int64>()
     let messageReceived = new Event<Messages.Types.IrcMessageType array>()
     let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
     let twitchService = Services.services.TwitchService
+    let sendLock = obj()
 
     let whisperRateLimiter =
         RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
