@@ -139,25 +139,25 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
             let sentHints = new Dictionary<string, Set<int>>()
             let answerSent = new Dictionary<string, bool> ()
 
+            let sendMessage channel message = twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, message))
+
             let startTrivia (trivia: TriviaConfig) =
                 async {
                     match active |> Dictionary.tryGetValue trivia.Channel with
-                    | None
-                    | Some false ->
+                    | Some true -> do! sendMessage trivia.Channel "Trivia already started"
+                    | _ ->
                         active[trivia.Channel] <- true
                         channels[trivia.Channel] <- trivia
                         mb.Post (SendQuestion trivia)
-                    | Some true -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, "Trivia already started"))
                 }
 
             let stopTrivia channel =
                 async {
                     match active |> Dictionary.tryGetValue channel with
-                    | None
-                    | Some false -> ()
                     | Some true ->
                         active[channel] <-  false
-                        do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, "Trivia stopped"))
+                        do! sendMessage channel "Trivia stopped"
+                    | _ -> ()
                 }
 
             let update () =
@@ -188,7 +188,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                 async {
                     match trivia.Questions with
                     | q :: _ ->
-                        do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"[Trivia - %s{q.Category}] Question: %s{q.Question}"))
+                        do! sendMessage trivia.Channel $"[Trivia - %s{q.Category}] Question: %s{q.Question}"
                         timestamps[trivia.Channel] <- utcNow()
                         sentHints[trivia.Channel] <- Set.empty
                         answerSent[trivia.Channel] <- false
@@ -201,7 +201,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                     | q :: qs ->
                         match q.Hints with
                         | h :: hs ->
-                            do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"[Trivia] Hint: %s{h}"))
+                            do! sendMessage trivia.Channel $"[Trivia] Hint: %s{h}"
                             channels[trivia.Channel] <- { trivia with Questions = { q with Hints = hs } :: qs }
                         | _ -> ()
                     | _ -> ()
@@ -211,10 +211,10 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                 async {
                     match trivia.Questions with
                     | [ q ] ->
-                        do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"[Trivia] No one got it. The answer was: %s{q.Answer}"))
+                        do! sendMessage trivia.Channel $"[Trivia] No one got it. The answer was: %s{q.Answer}"
                         active[trivia.Channel] <- false
                     | q :: qs ->
-                        do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"[Trivia] No one got it. The answer was: %s{q.Answer}"))
+                        do! sendMessage trivia.Channel $"[Trivia] No one got it. The answer was: %s{q.Answer}"
                         let trivia = { trivia with Questions = qs }
                         channels[trivia.Channel] <- trivia
                         mb.Post (SendQuestion trivia)
@@ -227,13 +227,12 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                     | Some true ->
                         let trivia = channels[channel]
                         match trivia.Questions with
-                        | [ q ] ->
-                            if String.Compare(q.Answer, message, ignoreCase = true) = 0 then
-                                do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"""[Trivia] @%s{username}, got it! The answer was %s{q.Answer}"""))
+                        | q :: qs when String.Compare(q.Answer, message, ignoreCase = true) = 0  ->
+                            do! sendMessage trivia.Channel $"""[Trivia] @%s{username}, got it! The answer was %s{q.Answer}"""
+
+                            if qs.IsEmpty then
                                 active[trivia.Channel] <- false
-                        | q :: qs ->
-                            if String.Compare(q.Answer, message, ignoreCase = true) = 0 then
-                                do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(trivia.Channel, $"""[Trivia] @%s{username}, got it! The answer was %s{q.Answer}"""))
+                            else
                                 let trivia = { trivia with Questions = qs }
                                 channels[trivia.Channel] <- trivia
                                 mb.Post (SendQuestion trivia)
