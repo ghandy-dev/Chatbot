@@ -1,0 +1,47 @@
+module RateLimiter
+
+open System
+
+module Rates =
+
+    let [<Literal>] MessageLimit_Chat = 20 // per 30 seconds
+    let [<Literal>] Interval_Chat = 30s
+
+    let [<Literal>] MessageLimit_Whispers = 100
+    let [<Literal>] Interval_Whispers = 60s
+
+type RateLimiter(messagesPerInterval, interval: int16) =
+
+    let interval = interval |> int
+    let mutable messageCount = 0
+    let mutable lastMessageTimestamp = DateTime.UtcNow
+    let rlLock = obj()
+
+    member private _.TimeSinceLastReset =
+        (DateTime.UtcNow - lastMessageTimestamp).TotalSeconds |> int
+
+    member _.MessageCount
+        with get () = messageCount
+        and set (value) = messageCount <- value
+
+    member _.LastReset
+        with get () = lastMessageTimestamp
+        and set (value) = lastMessageTimestamp <- value
+
+    member this.TimeUntilReset = this.TimeSinceLastReset - interval
+
+    member this.CanSend () =
+        if this.TimeSinceLastReset > interval then
+            lock rlLock (fun () ->
+                messageCount <- 1
+                lastMessageTimestamp <- DateTime.Now
+            )
+            true
+        elif this.MessageCount < messagesPerInterval then
+            lock rlLock (fun () ->
+                messageCount <- messageCount + 1
+                lastMessageTimestamp <- DateTime.Now
+            )
+            true
+        else
+            false
