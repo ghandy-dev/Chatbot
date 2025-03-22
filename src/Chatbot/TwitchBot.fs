@@ -280,9 +280,9 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) (
                         if (DateTime.UtcNow - lastPingTime).Seconds > 360 then
                             lastPingTime <- DateTime.UtcNow
                             mb.Post Reconnect
-                        else
-                            do! Async.Sleep(1000)
-                            do! reconnectHelper ()
+
+                        do! Async.Sleep(1000)
+                        do! reconnectHelper ()
                     }
 
                 let sendPong pong =
