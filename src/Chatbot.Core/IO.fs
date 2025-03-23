@@ -12,14 +12,11 @@ let createStreamWriter (stream: Stream) bufferSize =
 let createStreamReader (stream: Stream) =
     new StreamReader(stream) |> TextReader.Synchronized
 
-let writeAsync (writer: TextWriter) (message: string) =
-    async { do! writer.WriteAsync(message) |> Async.AwaitTask }
+let writeAsync (writer: TextWriter) (message: string) = writer.WriteAsync(message) |> Async.AwaitTask
 
-let flushAsync (writer: TextWriter) =
-    async { do! writer.FlushAsync() |> Async.AwaitTask }
+let flushAsync (writer: TextWriter) = writer.FlushAsync() |> Async.AwaitTask
 
-let writeLineAsync (writer: TextWriter) (message: string) =
-    async { do! writer.WriteLineAsync(message) |> Async.AwaitTask }
+let writeLineAsync (writer: TextWriter) (message: string) = writer.WriteLineAsync(message) |> Async.AwaitTask
 
 let readAsync (reader: TextReader) bufferSize cancellationToken =
     async {
