@@ -21,7 +21,6 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
     let messageReceived = new Event<Messages.Types.IrcMessageType array>()
     let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
     let twitchService = Services.services.TwitchService
-    let sendLock = obj()
 
     let whisperRateLimiter =
         RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
