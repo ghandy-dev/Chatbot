@@ -14,6 +14,7 @@ open Twitch
 
 open System
 open System.Collections.Generic
+open System.Collections.Concurrent
 
 let services = Services.services
 
@@ -133,11 +134,11 @@ type TriviaRequest =
 let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
     new MailboxProcessor<_>(
         (fun mb ->
-            let channels = new Dictionary<string, TriviaConfig> ()
-            let active = new Dictionary<string, bool> ()
-            let timestamps = new Dictionary<string, DateTime> ()
-            let sentHints = new Dictionary<string, Set<int>>()
-            let answerSent = new Dictionary<string, bool> ()
+            let channels = new ConcurrentDictionary<string, TriviaConfig> ()
+            let active = new ConcurrentDictionary<string, bool> ()
+            let timestamps = new ConcurrentDictionary<string, DateTime> ()
+            let sentHints = new ConcurrentDictionary<string, Set<int>>()
+            let answerSent = new ConcurrentDictionary<string, bool> ()
 
             let sendMessage channel message = twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, message))
 
