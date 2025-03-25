@@ -33,6 +33,7 @@ module Commands =
             Command.createCommand ("echo", [], HelpInfo.Echo, SA echo, 5000, true)
             Command.createCommand ("encode", [], HelpInfo.Encode, SA encode, 5000, false)
             Command.createCommand ("faceit", [], HelpInfo.FaceIt, AA faceit, 20000, false)
+            Command.createCommand ("fill", [], HelpInfo.Fill, SA fill, 10000, false)
             Command.createCommand ("followage", [ "fa" ], HelpInfo.FollowAge, AAC followAge, 20000, false)
             Command.createCommand ("gpt", [], HelpInfo.Gpt, AAC gpt, 15000, false)
             Command.createCommand ("help", [],  HelpInfo.Help, S help, 10000, false)

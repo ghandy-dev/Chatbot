@@ -270,6 +270,26 @@ Get a players recent win/loss history:
 """
         }
 
+    let Fill =
+        {
+            Name = "Fill"
+            Description = "Fill a message to max length with the provided word(s)."
+            ExampleUsage = $"""
+Optional arguments:
+
+repeat:
+    - whether to repeat the words in order or randomise the words repeated
+    - true (default) / false
+
+{exampleArgs "fill" "<words>"}
+{exampleArgs "fill" "Kappa"}
+
+Randomise the words:
+{exampleArgs "fill" "repeat:false <words>"}
+{exampleArgs "fill" "Kappa Keepo PogChamp"}
+"""
+        }
+
     let FollowAge =
         {
             Name = "Follow Age"
