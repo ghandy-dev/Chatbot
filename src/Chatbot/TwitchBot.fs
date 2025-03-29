@@ -8,7 +8,7 @@ open Database
 open IRC
 open IRC.Messages.Types
 open MessageHandlers
-open State
+open Shared
 open Types
 open Twitch
 
@@ -48,10 +48,6 @@ let getChannelJoinList () =
         | Some channels ->
             return channels |> Seq.map (fun u -> u.Id, u.Login)
     }
-
-type ReminderMessage =
-    | CheckReminders
-    | UserMessaged of channel: string * userId: int * username: string
 
 let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
     new MailboxProcessor<ReminderMessage>(
@@ -110,8 +106,8 @@ let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
             let rec loop () =
                 async {
                     match! mb.Receive() with
-                    | CheckReminders -> do! checkReminders ()
-                    | UserMessaged(channel, userId, username) -> do! userMessaged channel userId username
+                    | ReminderMessage.CheckReminders -> do! checkReminders ()
+                    | ReminderMessage.UserMessaged(channel, userId, username) -> do! userMessaged channel userId username
 
                     return! loop ()
                 }
@@ -121,15 +117,6 @@ let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
             loop ()
         ), cancellationToken
     )
-
-type TriviaRequest =
-    | StartTrivia of Commands.TriviaConfig
-    | StopTrivia of channel: string
-    | SendQuestion of trivia: Commands.TriviaConfig
-    | SendHint of trivia: Commands.TriviaConfig
-    | SendAnswer of trivia: Commands.TriviaConfig
-    | Update
-    | UserMessaged of channel: string * userId: int * username: string * message: string
 
 let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
     new MailboxProcessor<_>(
@@ -244,13 +231,13 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
             let rec loop () =
                 async {
                     match! mb.Receive() with
-                    | StartTrivia trivia -> do! startTrivia trivia
-                    | StopTrivia channel -> do! stopTrivia channel
-                    | Update -> do! update ()
-                    | SendQuestion trivia -> do! sendQuestion trivia
-                    | SendHint trivia -> do! sendHint trivia
-                    | SendAnswer trivia -> do! sendAnswer trivia
-                    | UserMessaged (channel, userId, username, message) -> do! userMessaged channel userId username message
+                    | TriviaRequest.StartTrivia trivia -> do! startTrivia trivia
+                    | TriviaRequest.StopTrivia channel -> do! stopTrivia channel
+                    | TriviaRequest.Update -> do! update ()
+                    | TriviaRequest.SendQuestion trivia -> do! sendQuestion trivia
+                    | TriviaRequest.SendHint trivia -> do! sendHint trivia
+                    | TriviaRequest.SendAnswer trivia -> do! sendAnswer trivia
+                    | TriviaRequest.UserMessaged (channel, userId, username, message) -> do! userMessaged channel userId username message
 
                     return! loop ()
                 }
@@ -324,13 +311,13 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) (
                 let rec loop () =
                     async {
                         match! mb.Receive() with
-                        | SendPongMessage pong -> do! sendPong pong
-                        | SendPrivateMessage(channel, message) -> do! sendPrivateMessage channel message
-                        | SendWhisperMessage(userId, _, message) -> do! sendWhisper userId message
-                        | SendReplyMessage(messageId, channel, message) -> do! sendReplyMessage messageId channel message
-                        | SendRawIrcMessage message -> do! sendRawIrcMessage message
-                        | BotCommand command -> do! handleBotCommand command
-                        | Reconnect -> do! reconnect()
+                        | ClientRequest.SendPongMessage pong -> do! sendPong pong
+                        | ClientRequest.SendPrivateMessage(channel, message) -> do! sendPrivateMessage channel message
+                        | ClientRequest.SendWhisperMessage(userId, _, message) -> do! sendWhisper userId message
+                        | ClientRequest.SendReplyMessage(messageId, channel, message) -> do! sendReplyMessage messageId channel message
+                        | ClientRequest.SendRawIrcMessage message -> do! sendRawIrcMessage message
+                        | ClientRequest.BotCommand command -> do! handleBotCommand command
+                        | ClientRequest.Reconnect -> do! reconnect()
 
                         return! loop ()
                     }

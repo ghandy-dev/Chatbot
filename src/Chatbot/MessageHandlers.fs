@@ -4,7 +4,7 @@ open Commands
 open Commands.Handler
 open Configuration
 open IRC.Messages
-open State
+open Shared
 open Types
 
 open System.Text.RegularExpressions

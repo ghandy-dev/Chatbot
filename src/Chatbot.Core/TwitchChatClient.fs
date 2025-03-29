@@ -20,10 +20,8 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
     let lastMessagesSent = new Collections.Concurrent.ConcurrentDictionary<string, int64>()
     let messageReceived = new Event<Messages.Types.IrcMessageType array>()
     let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
+    let whisperRateLimiter = RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
     let twitchService = Services.services.TwitchService
-
-    let whisperRateLimiter =
-        RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
 
     let createClient () : ITwitchConnection =
         match Connection with

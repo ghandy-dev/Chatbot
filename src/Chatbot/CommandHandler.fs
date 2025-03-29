@@ -3,7 +3,7 @@ module Commands.Handler
 open Commands
 open Database
 open Database.Types.Users
-open State
+open Shared
 
 open System
 

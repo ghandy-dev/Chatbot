@@ -10,3 +10,16 @@ type ClientRequest =
     | SendPongMessage of string
     | BotCommand of BotCommand
     | Reconnect
+
+type ReminderMessage =
+    | CheckReminders
+    | UserMessaged of channel: string * userId: int * username: string
+
+type TriviaRequest =
+    | StartTrivia of Commands.TriviaConfig
+    | StopTrivia of channel: string
+    | SendQuestion of trivia: Commands.TriviaConfig
+    | SendHint of trivia: Commands.TriviaConfig
+    | SendAnswer of trivia: Commands.TriviaConfig
+    | Update
+    | UserMessaged of channel: string * userId: int * username: string * message: string

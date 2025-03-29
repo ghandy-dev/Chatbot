@@ -2,6 +2,7 @@
 module Utils
 
 open System
+open System.Text
 
 let [<Literal>] DateStringFormat = "dd/MM/yyyy"
 let [<Literal>] TimeStringFormat = "HH:mm:ss"
@@ -9,12 +10,6 @@ let [<Literal>] DateTimeStringFormat = $"dd/MM/yyyy HH:mm:ss"
 
 let utcNow() = DateTime.UtcNow
 let now() = DateTime.Now
-
-let formatChatMessage (response: string) =
-    if response.Length > 500 then
-        response[..496] + "..."
-    else
-        response
 
 let formatTimeSpan (ts: TimeSpan) =
     let formatComponent value =
