@@ -4,7 +4,6 @@ module Logging
 open Configuration
 
 open System
-open System.Collections.Generic
 
 [<RequireQualifiedAccess>]
 type LogLevel =
@@ -14,16 +13,6 @@ type LogLevel =
     | Warning
     | Error
     | Critical
-
-    member this.toInt () =
-        this
-        |> function
-            | Trace -> 1
-            | Debug -> 2
-            | Info -> 3
-            | Warning -> 4
-            | Error -> 5
-            | Critical -> 6
 
     override this.ToString () =
         this
@@ -35,13 +24,6 @@ type LogLevel =
             | Error -> "Error"
             | Critical -> "Critical"
 
-type LogEntry = {
-    Timestamp: DateTime
-    Level: LogLevel
-    Message: string
-    Exception: Exception option
-}
-
 let private parseLogLevel logLevel =
     match logLevel with
     | "Trace" -> LogLevel.Trace
@@ -51,8 +33,6 @@ let private parseLogLevel logLevel =
     | "Error" -> LogLevel.Error
     | "Critical" -> LogLevel.Critical
     | _ -> failwithf "Unknown Log Level: %s" logLevel
-
-let private defaultLogLevel = LogLevel.Info
 
 let currentLogLevel = parseLogLevel appConfig.Logging.LogLevel.Default
 
@@ -74,33 +54,28 @@ let private shouldLog (logLevel: LogLevel) =
     | LogLevel.Error -> logLevel >= LogLevel.Error
     | LogLevel.Critical -> logLevel >= LogLevel.Critical
 
-let private logEntry entry =
-    let foregroundColor, backgroundColor = toColor entry.Level
-
-    printf "[%s] " (entry.Timestamp.ToString("yyyy/MM/dd HH:mm:ss"))
-    Console.ForegroundColor <- foregroundColor
-    match backgroundColor with
-    | None -> ()
-    | Some color -> Console.BackgroundColor <- color
-    printf "[%A]: " entry.Level
-    Console.ResetColor()
-    printfn "%s" entry.Message
-
-    match entry.Exception with
-    | None -> ()
-    | Some ex -> printfn "%s" (ex.ToString())
-
 let private log logLevel message ex =
-    let entry = {
-        Timestamp = DateTime.UtcNow
-        Level = logLevel
-        Message = message
-        Exception = ex
-    }
+    let log' logLevel message ex  =
+        let timestamp = DateTime.UtcNow
+        let foregroundColor, backgroundColor = toColor logLevel
 
-    match shouldLog logLevel with
-    | true -> logEntry entry
-    | false -> ()
+        printf "[%s] " (timestamp.ToString("yyyy/MM/dd HH:mm:ss"))
+        Console.ForegroundColor <- foregroundColor
+
+        match backgroundColor with
+        | None -> ()
+        | Some color -> Console.BackgroundColor <- color
+
+        printf "[%A]: " logLevel
+        Console.ResetColor()
+        printfn "%s" message
+
+        match ex with
+        | None -> ()
+        | Some ex -> printfn "%s" (ex.ToString())
+
+    if shouldLog logLevel then
+        log' logLevel message ex
 
 let trace msg = log LogLevel.Trace msg None
 let debug msg = log LogLevel.Debug msg None
