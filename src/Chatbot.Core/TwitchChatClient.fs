@@ -37,7 +37,16 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
             | Some token -> do! client.AuthenticateAsync(user, token, Config.Capabilities)
         }
 
+    let [<Literal>] GlobalSlow = 1200
+
     let send (command: IRC.Command) =
+        let sendPrivMsg (message: string) (channel: string) =
+            async {
+                Logging.info $"Sending: %s{message}"
+                lastMessagesSent[channel] <- DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                do! client.SendAsync message
+            }
+
         async {
             let ircMessage = command.ToString()
 
@@ -46,19 +55,14 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
                 let now = DateTimeOffset.Now.ToUnixTimeMilliseconds()
                 if chatRateLimiter.CanSend() then
                     match lastMessagesSent |> Dictionary.tryGetValue channel with
-                    | None ->
-                        lastMessagesSent[channel] <- now
-                        do! client.SendAsync ircMessage
+                    | None -> do! sendPrivMsg ircMessage channel
                     | Some timestamp ->
                         let elapsedMs = now - timestamp |> int
-                        if elapsedMs > 1000 then
-                            Logging.info $"Sending: %s{ircMessage}"
-                            lastMessagesSent[channel] <- now
-                            do! client.SendAsync ircMessage
+                        if elapsedMs > GlobalSlow then
+                            do! sendPrivMsg ircMessage channel
                         else
-                            do! Async.Sleep(1000 - elapsedMs)
-                            lastMessagesSent[channel] <- now
-                            do! client.SendAsync ircMessage
+                            do! Async.Sleep(GlobalSlow - elapsedMs)
+                            do! sendPrivMsg ircMessage channel
             | _ ->
                 Logging.info $"Sending: %s{ircMessage}"
                 do! client.SendAsync ircMessage
