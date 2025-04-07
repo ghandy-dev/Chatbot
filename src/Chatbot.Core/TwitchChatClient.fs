@@ -52,13 +52,16 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
                     | Some timestamp ->
                         let elapsedMs = now - timestamp |> int
                         if elapsedMs > 1000 then
+                            Logging.info $"Sending: %s{ircMessage}"
                             lastMessagesSent[channel] <- now
                             do! client.SendAsync ircMessage
                         else
                             do! Async.Sleep(1000 - elapsedMs)
                             lastMessagesSent[channel] <- now
                             do! client.SendAsync ircMessage
-            | _ -> do! client.SendAsync ircMessage
+            | _ ->
+                Logging.info $"Sending: %s{ircMessage}"
+                do! client.SendAsync ircMessage
         }
 
     let sendWhisper toUserId message accessToken =
@@ -68,23 +71,25 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
         }
 
     let reader (cancellationToken) =
-        async {
-            let rec reader' () =
-                async {
-                    match client.Connected with
-                    | true ->
-                        match! client.ReadAsync cancellationToken with
-                        | Some message ->
-                            message |> fun m -> m.Split([| '\r' ; '\n' |], StringSplitOptions.RemoveEmptyEntries) |> Array.iter Logging.info
-                            let parsedMessage = message |> Parsing.Parser.parseIrcMessage |> Array.map Messages.MessageMapping.mapIrcMessage |> Array.choose id
-                            messageReceived.Trigger parsedMessage
-                            do! reader' ()
-                        | None -> () // if this happens then the client isn't connected
-                    | false -> Logging.warning "IRC client disconnected."
-                }
+        let splitMessages (message: string) = message.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)
+        let logMessages = Array.iter Logging.info
+        let parseMessages = Parsing.Parser.parseIrcMessages >> Array.map Messages.MessageMapping.mapIrcMessage >> Array.choose id
 
-            do! reader' ()
-        }
+        let rec reader' () =
+            async {
+                match client.Connected with
+                | true ->
+                    match! client.ReadAsync cancellationToken with
+                    | Some message ->
+                        let messages = splitMessages message
+                        logMessages messages
+                        messageReceived.Trigger (parseMessages messages)
+                        do! reader' ()
+                    | None -> () // if this happens then the client isn't connected
+                | false -> Logging.warning "IRC client disconnected."
+            }
+
+        reader' ()
 
     let start (cancellationToken) =
         async {

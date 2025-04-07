@@ -155,5 +155,4 @@ module Parsing =
 
             parseComponents parts ParseTags IrcMessage.newMessage
 
-        let parseIrcMessage (message: string) =
-            message.Split("\r\n") |> Array.filter String.notEmpty |> Array.map parseMessageComponents
+        let parseIrcMessages (messages: string array) = messages |> Array.map parseMessageComponents
