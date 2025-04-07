@@ -14,7 +14,6 @@
     <Compile Include="DotEnv.fs" />
     <Compile Include="Configuration.fs" />
     <Compile Include="Logging.fs" />
-    <Compile Include="RateLimiter.fs" />
     <Compile Include="Utilities/Utils.fs" />
     <Compile Include="Utilities/Seq.fs" />
     <Compile Include="Utilities/List.fs" />
@@ -25,6 +24,7 @@
     <Compile Include="Utilities/Int32.fs" />
     <Compile Include="Utilities/Array.fs" />
     <Compile Include="Utilities/Text.fs" />
+    <Compile Include="RateLimiter.fs" />
     <Compile Include="Utilities/KeyValueParser.fs" />
     <Compile Include="Serialization/UnixEpochDateTimeConverter.fs" />
     <Compile Include="Http.fs" />
