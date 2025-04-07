@@ -14,11 +14,11 @@ type RateLimiter(messagesPerInterval, interval: int16) =
 
     let interval = interval |> int
     let mutable messageCount = 0
-    let mutable lastMessageTimestamp = DateTime.UtcNow
+    let mutable lastMessageTimestamp = utcNow()
     let rlLock = obj()
 
     member private _.TimeSinceLastReset =
-        (DateTime.UtcNow - lastMessageTimestamp).TotalSeconds |> int
+        (utcNow() - lastMessageTimestamp).TotalSeconds |> int
 
     member _.MessageCount
         with get () = messageCount
@@ -34,13 +34,13 @@ type RateLimiter(messagesPerInterval, interval: int16) =
         if this.TimeSinceLastReset > interval then
             lock rlLock (fun () ->
                 messageCount <- 1
-                lastMessageTimestamp <- DateTime.Now
+                lastMessageTimestamp <- utcNow()
             )
             true
         elif this.MessageCount < messagesPerInterval then
             lock rlLock (fun () ->
                 messageCount <- messageCount + 1
-                lastMessageTimestamp <- DateTime.Now
+                lastMessageTimestamp <- utcNow()
             )
             true
         else

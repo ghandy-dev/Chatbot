@@ -43,8 +43,8 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
         let sendPrivMsg (message: string) (channel: string) =
             async {
                 Logging.info $"Sending: %s{message}"
-                lastMessagesSent[channel] <- DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
                 do! client.SendAsync message
+                lastMessagesSent[channel] <- DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
             }
 
         async {

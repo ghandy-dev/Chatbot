@@ -20,17 +20,18 @@ module Remind =
                 match DateTime.tryParseNaturalLanguageDateTime content with
                 | None -> return Message "Couldn't parse reminder time"
                 | Some (datetime, start, ``end``) ->
-                    let now = now()
-                    if (datetime - now).Days / 365 > 5 then
+                    let now = utcNow()
+                    let reminderTimestamp = datetime.ToUniversalTime()
+                    if (reminderTimestamp - now).Days / 365 > 5 then
                         return Message "Max reminder time span is now + 5 years"
                     else
                         let message = content[``end`` + 1..]
-                        let timespan = datetime.AddSeconds(1) - now
+                        let timespan = reminderTimestamp.AddSeconds(1) - now
 
                         match! twitchService.GetUser user with
                         | None -> return Message $"Couldn't find user %s{user}"
                         | Some targetUser ->
-                            let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some datetime)
+                            let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some reminderTimestamp)
                             let targetUsername = if targetUser.Id = context.UserId then "you" else $"@%s{targetUser.DisplayName}"
 
                             match! ReminderRepository.add reminder with

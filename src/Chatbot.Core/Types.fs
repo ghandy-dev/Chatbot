@@ -20,7 +20,7 @@ type RoomState = {
         RoomId = roomId
         Slow = slow |?? 0
         SubsOnly = subsOnly |?? false
-        LastMessageSent = System.DateTime.Now
+        LastMessageSent = System.DateTime.UtcNow
     }
 
 type UserState = {

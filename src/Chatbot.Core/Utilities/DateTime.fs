@@ -30,12 +30,12 @@ let tryParseNaturalLanguageDateTime (query: string) =
                     match obj.TryGetValue("value"), obj.TryGetValue("type"), obj.TryGetValue("timex") with
                     | (true, _), (true, "date"), (true, d) ->
                         let date = DateTime.Parse(d)
-                        let difference = date - DateTime.Now.Date
-                        let datetime = DateTime.Now.AddDays(difference.Days)
+                        let difference = date - now()
+                        let datetime = now().AddDays(difference.Days)
                         Some (datetime, result.Start, result.End)
                     | (true, t), (true, "time"), (true, _) ->
                         let time = TimeOnly.Parse(t)
-                        let datetime = DateTime.Now.Date.AddSeconds(time.ToTimeSpan().TotalSeconds)
+                        let datetime = now().Date.AddSeconds(time.ToTimeSpan().TotalSeconds)
                         Some (datetime, result.Start, result.End)
                     | (true, _), (true, "datetime"), (true, dt) ->
                         tryParse dt |> Option.bind (fun dt -> Some (dt, result.Start, result.End))

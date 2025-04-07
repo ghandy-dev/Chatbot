@@ -8,8 +8,8 @@ let [<Literal>] DateStringFormat = "dd/MM/yyyy"
 let [<Literal>] TimeStringFormat = "HH:mm:ss"
 let [<Literal>] DateTimeStringFormat = $"dd/MM/yyyy HH:mm:ss"
 
-let utcNow() = DateTime.UtcNow
-let now() = DateTime.Now
+let utcNow () = DateTime.UtcNow
+let now () = DateTime.Now
 
 let formatTimeSpan (ts: TimeSpan) =
     let formatComponent value =
