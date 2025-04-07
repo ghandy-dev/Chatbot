@@ -157,7 +157,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                     |> Seq.iter (fun (channel, timespan, trivia) ->
                         let elapsedSeconds = int timespan.TotalSeconds
                         let hintTimes = [ 15 ; 30 ]
-                        let answerTime = 60
+                        let answerTime = 55
                         let hints = sentHints[trivia.Channel]
 
                         if elapsedSeconds = answerTime && not <| answerSent[trivia.Channel] then
