@@ -121,7 +121,7 @@ let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
 let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
     new MailboxProcessor<_>(
         (fun mb ->
-            let channels = new ConcurrentDictionary<string, TriviaConfig> ()
+            let trivias = new ConcurrentDictionary<string, TriviaConfig> ()
             let active = new ConcurrentDictionary<string, bool> ()
             let timestamps = new ConcurrentDictionary<string, DateTime> ()
             let sentHints = new ConcurrentDictionary<string, Set<int>>()
@@ -135,7 +135,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                     | Some true -> do! sendMessage trivia.Channel "Trivia already started"
                     | _ ->
                         active[trivia.Channel] <- true
-                        channels[trivia.Channel] <- trivia
+                        trivias[trivia.Channel] <- trivia
                         mb.Post (SendQuestion trivia)
                 }
 
@@ -150,7 +150,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
 
             let update () =
                 async {
-                    Seq.zip3 active timestamps channels
+                    Seq.zip3 active timestamps trivias
                     |> Seq.choose (fun (KeyValue(channel, active), (KeyValue(channel, timestamp)), (KeyValue(channel, trivia))) ->
                         if active then Some (channel, utcNow() - timestamp, trivia) else None
                     )
@@ -190,7 +190,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                         match q.Hints with
                         | h :: hs ->
                             do! sendMessage trivia.Channel $"[Trivia] Hint: %s{h}"
-                            channels[trivia.Channel] <- { trivia with Questions = { q with Hints = hs } :: qs }
+                            trivias[trivia.Channel] <- { trivia with Questions = { q with Hints = hs } :: qs }
                         | _ -> ()
                     | _ -> ()
                 }
@@ -204,7 +204,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                     | q :: qs ->
                         do! sendMessage trivia.Channel $"[Trivia] No one got it. The answer was: %s{q.Answer}"
                         let trivia = { trivia with Questions = qs }
-                        channels[trivia.Channel] <- trivia
+                        trivias[trivia.Channel] <- trivia
                         mb.Post (SendQuestion trivia)
                     | _ -> ()
                 }
@@ -213,7 +213,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                 async {
                     match active |> Dictionary.tryGetValue channel with
                     | Some true ->
-                        let trivia = channels[channel]
+                        let trivia = trivias[channel]
                         match trivia.Questions with
                         | q :: qs when String.Compare(q.Answer, message, ignoreCase = true) = 0  ->
                             do! sendMessage trivia.Channel $"""[Trivia] @%s{username}, got it! The answer was %s{q.Answer}"""
@@ -222,7 +222,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                                 active[trivia.Channel] <- false
                             else
                                 let trivia = { trivia with Questions = qs }
-                                channels[trivia.Channel] <- trivia
+                                trivias[trivia.Channel] <- trivia
                                 mb.Post (SendQuestion trivia)
                         | _ -> ()
                     | _ -> ()
