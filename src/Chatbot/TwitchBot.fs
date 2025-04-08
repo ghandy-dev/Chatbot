@@ -119,7 +119,7 @@ let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
     )
 
 let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
-    new MailboxProcessor<_>(
+    new MailboxProcessor<TriviaRequest>(
         (fun mb ->
             let trivias = new ConcurrentDictionary<string, TriviaConfig> ()
             let active = new ConcurrentDictionary<string, bool> ()
