@@ -60,7 +60,7 @@ let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                         let ts = DateTime.UtcNow - reminder.Timestamp
                         let sender = if reminder.FromUsername = reminder.TargetUsername then "yourself" else $"@%s{reminder.FromUsername}"
                         let message = $"@%s{reminder.TargetUsername}, reminder from %s{sender} (%s{formatTimeSpan ts} ago): %s{reminder.Message}" |> formatChatMessage
-                        do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(reminder.Channel, message))
+                        do! twitchChatClient.SendAsync(Commands.PrivMsg(reminder.Channel, message))
 
                     do! Async.Sleep(250)
                     mb.Post CheckReminders
@@ -98,9 +98,9 @@ let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                         if message.Length > 500 then
                             match! Pastebin.createPaste "" message with
                             | Error (err, statusCode) -> Logging.error err (new Exception())
-                            | Ok url -> do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@%s{username}, reminders were too long to send, check %s{url} for your reminders"))
+                            | Ok url -> do! twitchChatClient.SendAsync(Commands.PrivMsg(channel, $"@%s{username}, reminders were too long to send, check %s{url} for your reminders"))
                         else
-                            do! twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, $"@%s{username}, %s{message}"))
+                            do! twitchChatClient.SendAsync(Commands.PrivMsg(channel, $"@%s{username}, %s{message}"))
                 }
 
             let rec loop () =
@@ -127,7 +127,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
             let sentHints = new ConcurrentDictionary<string, Set<int>>()
             let answerSent = new ConcurrentDictionary<string, bool> ()
 
-            let sendMessage channel message = twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, message))
+            let sendMessage channel message = twitchChatClient.SendAsync(Commands.PrivMsg(channel, message))
 
             let startTrivia (trivia: TriviaConfig) =
                 async {
@@ -260,7 +260,7 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) (
                         Logging.info "Reconnecting..."
                         do! twitchChatClient.ReconnectAsync(cancellationToken)
                         let! channels = getChannelJoinList ()
-                        do! twitchChatClient.SendAsync(IRC.JoinM (channels |> Seq.map snd))
+                        do! twitchChatClient.SendAsync(Commands.JoinM (channels |> Seq.map snd))
                     }
 
                 let rec reconnectHelper () =
@@ -277,14 +277,14 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) (
                     async {
                         Logging.info $"PONG :{pong}"
                         lastPingTime <- DateTime.UtcNow
-                        do! twitchChatClient.SendAsync(IRC.Command.Pong pong)
+                        do! twitchChatClient.SendAsync(Commands.Pong pong)
                     }
 
-                let sendPrivateMessage channel message = twitchChatClient.SendAsync(IRC.Command.PrivMsg(channel, message))
+                let sendPrivateMessage channel message = twitchChatClient.SendAsync(Commands.PrivMsg(channel, message))
 
-                let sendReplyMessage messageId channel message = twitchChatClient.SendAsync(IRC.Command.ReplyMsg(messageId, channel, message))
+                let sendReplyMessage messageId channel message = twitchChatClient.SendAsync(Commands.ReplyMsg(messageId, channel, message))
 
-                let sendRawIrcMessage message = twitchChatClient.SendAsync(IRC.Command.Raw message)
+                let sendRawIrcMessage message = twitchChatClient.SendAsync(Commands.Raw message)
 
                 let sendWhisper userId message =
                     async {
@@ -298,8 +298,8 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) (
                         match command with
                         | JoinChannel (channel, channelId) ->
                             do! services.EmoteService.RefreshChannelEmotes channelId
-                            do! twitchChatClient.SendAsync(IRC.Command.Join channel)
-                        | LeaveChannel channel -> do! twitchChatClient.SendAsync(IRC.Command.Part channel)
+                            do! twitchChatClient.SendAsync(Commands.Join channel)
+                        | LeaveChannel channel -> do! twitchChatClient.SendAsync(Commands.Part channel)
                         | RefreshGlobalEmotes provider ->
                             let! accessToken = getAccessToken ()
                             do! services.EmoteService.RefreshGlobalEmotes(user.Id, accessToken)
@@ -382,7 +382,7 @@ let run (cancellationToken: Threading.CancellationToken) =
         do! twitchChatClient.StartAsync(cancellationToken)
 
         let! channels = getChannelJoinList ()
-        do! twitchChatClient.SendAsync(IRC.JoinM (channels |> Seq.map snd))
+        do! twitchChatClient.SendAsync(Commands.JoinM (channels |> Seq.map snd))
         do! services.EmoteService.RefreshGlobalEmotes(user.Id, accessToken)
         let refreshChannelEmotes = channels |> Seq.map fst |> Seq.map (fun c -> services.EmoteService.RefreshChannelEmotes c)
         do! refreshChannelEmotes |> Async.Parallel |> Async.Ignore
