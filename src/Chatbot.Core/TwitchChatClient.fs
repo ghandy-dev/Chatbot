@@ -1,6 +1,7 @@
 namespace Clients
 
 open IRC
+open IRC.Commands
 open RateLimiter
 
 open System
@@ -39,7 +40,7 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
 
     let [<Literal>] GlobalSlow = 1200
 
-    let send (command: IRC.Command) =
+    let send (command: Command) =
         let sendPrivMsg (message: string) (channel: string) =
             async {
                 Logging.info $"Sending: %s{message}"
@@ -51,7 +52,7 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
             let ircMessage = command.ToString()
 
             match command with
-            | IRC.PrivMsg (channel, _) ->
+            | PrivMsg (channel, _) ->
                 let now = DateTimeOffset.Now.ToUnixTimeMilliseconds()
                 if chatRateLimiter.CanSend() then
                     match lastMessagesSent |> Dictionary.tryGetValue channel with
@@ -119,7 +120,7 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
 
     member _.StartAsync (cancellationToken: Threading.CancellationToken) = start (cancellationToken)
 
-    member _.SendAsync (message: IRC.Command) = send message
+    member _.SendAsync (message: Command) = send message
 
     member _.WhisperAsync (toUserId, message, accessToken) = sendWhisper toUserId message accessToken
 
