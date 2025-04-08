@@ -37,7 +37,7 @@
     <Compile Include="Services/Services.fs" />
     <Compile Include="TokenStore.fs" />
     <Compile Include="IO.fs" />
-    <Compile Include="IRC.fs" />
+    <Compile Include="IrcCommands.fs" />
     <Compile Include="IrcMessageParser.fs" />
     <Compile Include="IrcMessages.fs" />
     <Compile Include="IrcClient.fs" />
