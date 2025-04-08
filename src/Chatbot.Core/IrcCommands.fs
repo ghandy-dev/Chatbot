@@ -1,7 +1,6 @@
 namespace IRC
 
-[<RequireQualifiedAccess>]
-module IRC =
+module Commands =
 
     type Command =
         | CapReq of capabilities: string list
