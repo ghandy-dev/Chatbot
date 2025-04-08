@@ -72,7 +72,7 @@ module Parsing =
             Parameters: string
         } with
 
-            static member newMessage = {
+            static member empty = {
                 Tags = Map.empty
                 Source = None
                 Command = Unknown
@@ -153,6 +153,6 @@ module Parsing =
                 else
                     message.Split(" ", 3)
 
-            parseComponents parts ParseTags IrcMessage.newMessage
+            parseComponents parts ParseTags IrcMessage.empty
 
         let parseIrcMessages (messages: string array) = messages |> Array.map parseMessageComponents
