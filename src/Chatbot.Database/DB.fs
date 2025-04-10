@@ -1,6 +1,6 @@
 ﻿namespace Database
 
-module DB =
+module internal DB =
 
     open Configuration
     open Database
@@ -12,12 +12,12 @@ module DB =
     open Dapper.FSharp.SQLite
 
 
-    let private connectionString = appConfig.ConnectionStrings.Database
+    let connectionString = appConfig.ConnectionStrings.Database
 
     OptionTypes.register ()
     DefaultTypeMap.MatchNamesWithUnderscores <- true
 
-    let internal connection: IDbConnection =
+    let connection: IDbConnection =
         try
             let conn = new SqliteConnection(connectionString)
             conn.Open()
@@ -26,8 +26,8 @@ module DB =
             Logging.error ex.Message ex
             failwith (ex.Message)
 
-    let internal users = table'<Entities.User> "users"
-    let internal rpsStats = table'<Entities.RpsStats> "rps_stats"
-    let internal channels = table'<Entities.Channel> "channels"
-    let internal aliases = table'<Entities.Alias> "aliases"
-    let internal reminders = table'<Entities.Reminder> "reminders"
+    let users = table'<Entities.User> "users"
+    let rpsStats = table'<Entities.RpsStats> "rps_stats"
+    let channels = table'<Entities.Channel> "channels"
+    let aliases = table'<Entities.Alias> "aliases"
+    let reminders = table'<Entities.Reminder> "reminders"
