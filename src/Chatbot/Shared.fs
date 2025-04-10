@@ -1,13 +1,13 @@
 module Shared
 
-open Database.Types.Users
+open Database
 
 open System
 open System.Collections.Concurrent
 open System.Text
 
 
-let userCommandCooldowns = new ConcurrentDictionary<(User * string), DateTime>()
+let userCommandCooldowns = new ConcurrentDictionary<(Models.User * string), DateTime>()
 let userStates = new ConcurrentDictionary<string, UserState>()
 let channelStates = new ConcurrentDictionary<string, RoomState>()
 

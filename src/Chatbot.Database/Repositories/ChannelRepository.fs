@@ -3,47 +3,30 @@
 module ChannelRepository =
 
     open DB
-    open Types.Channels
+    open Database.Models
+    open Database.Entities
 
     open Dapper.FSharp.SQLite
 
-    let private mapEntity (entity: Entities.Channel) : Channel = {
-        ChannelId = entity.channel_id.ToString()
-        ChannelName = entity.channel_name
-    }
-
-    let private mapRecord (record: Channel) : Entities.Channel = {
-        channel_id = record.ChannelId |> int
-        channel_name = record.ChannelName
+    let mapToModel (channel: Entities.Channel) : Models.Channel = {
+        ChannelId = string channel.channel_id
+        ChannelName = channel.channel_name
     }
 
     let getAll () =
         async {
             let! channel =
                 select {
-                    for row in channels do
+                    for row: Channel in channels do
                         selectAll
                 }
                 |> connection.SelectAsync<Entities.Channel>
                 |> Async.AwaitTask
 
-            return channel |> Seq.map mapEntity
+            return channel |> Seq.map mapToModel
         }
 
-    let getAllActive () =
-        async {
-            let! channel =
-                select {
-                    for row in channels do
-                        selectAll
-                }
-                |> connection.SelectAsync<Entities.Channel>
-                |> Async.AwaitTask
-
-            return channel |> Seq.map mapEntity
-        }
-
-    let getById (channelId: int) =
+    let get (channelId: int) =
         async {
             let! channel =
                 select {
@@ -53,12 +36,15 @@ module ChannelRepository =
                 |> connection.SelectAsync<Entities.Channel>
                 |> Async.AwaitTask
 
-            return channel |> Seq.map mapEntity |> Seq.tryExactlyOne
+            return channel |> Seq.map mapToModel |> Seq.tryExactlyOne
         }
 
-    let add (channel: Channel) =
+    let add (channel: NewChannel) =
         async {
-            let newChannel = mapRecord channel
+            let newChannel = {
+                channel_id = int channel.ChannelId
+                channel_name = channel.ChannelName
+            }
 
             try
                 let! rowsAffected =

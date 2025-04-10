@@ -7,7 +7,6 @@ module Remind =
     open System.Text.RegularExpressions
 
     open Database
-    open Database.Types.Reminders
 
     let private whenPattern username = sprintf @"(%s) (in|at|on|tomorrow|next\s*)" username
     let twitchService = Services.services.TwitchService
@@ -31,7 +30,7 @@ module Remind =
                         match! twitchService.GetUser user with
                         | None -> return Message $"Couldn't find user %s{user}"
                         | Some targetUser ->
-                            let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some reminderTimestamp)
+                            let reminder = Models.NewReminder.create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName (Some channel.Channel) message (Some reminderTimestamp)
                             let targetUsername = if targetUser.Id = context.UserId then "you" else $"@%s{targetUser.DisplayName}"
 
                             match! ReminderRepository.add reminder with
@@ -44,7 +43,7 @@ module Remind =
             match! twitchService.GetUser user with
             | None -> return Message $"Couldn't find user, %s{user}"
             | Some targetUser ->
-                let reminder = CreateReminder.Create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName None message None
+                let reminder = Models.NewReminder.create (context.UserId |> int) context.Username (targetUser.Id |> int) targetUser.DisplayName None message None
 
                 match! ReminderRepository.add reminder with
                 | DatabaseResult.Success id -> return Message $"(ID: %d{id}) I will remind {targetUser.DisplayName} when they next type in chat"

@@ -2,40 +2,41 @@
 
 module AliasRepository =
 
+    open Database.Models
+    open Database.Entities
     open DB
-    open Types.Aliases
 
     open Dapper.FSharp.SQLite
 
-    let private mapEntity (entity: Entities.Alias) : Alias = {
-        UserId = entity.user_id
-        Name = entity.name
-        Command = entity.command
-    }
+    type AliasQuery =
+        | ByUserIdAliasName of userId: int * alias: string
 
-    let private mapRecord (record: Alias) : Entities.Alias = {
-        alias_id = 0
-        user_id = record.UserId
-        name = record.Name
-        command = record.Command
-    }
-
-    let get (userId: int) (alias: string) =
+    let get (query) =
         async {
             let! results =
-                select {
-                    for row in aliases do
-                        where (row.user_id = userId && row.name = alias)
-                }
+                match query with
+                | ByUserIdAliasName (userId, alias) ->
+                    select {
+                        for row in aliases do
+                            where (row.user_id = userId && row.name = alias)
+                    }
                 |> connection.SelectAsync<Entities.Alias>
                 |> Async.AwaitTask
 
-            return results |> Seq.map mapEntity |> Seq.tryExactlyOne
+            return
+                results
+                |> Seq.map (fun r -> { Command = r.command ; Name = r.name })
+                |> Seq.tryExactlyOne
         }
 
-    let add (alias: Alias) =
+    let add (alias: NewAlias) =
         async {
-            let newAlias = mapRecord alias
+            let newAlias = {
+                alias_id = 0
+                user_id = alias.UserId
+                name = alias.Name
+                command = alias.Command
+            }
 
             try
                 let! rowsAffected =
@@ -53,9 +54,14 @@ module AliasRepository =
                 return DatabaseResult.Failure
         }
 
-    let update (alias: Alias) =
+    let update (alias: UpdateAlias) =
         async {
-            let updatedAlias = mapRecord alias
+            let updatedAlias = {
+                alias_id = 0
+                user_id = alias.UserId
+                name = alias.Name
+                command = alias.Command
+            }
 
             try
                 let! rowsAffected =
@@ -74,13 +80,13 @@ module AliasRepository =
                 return DatabaseResult.Failure
         }
 
-    let delete (userId: int) (alias: string) =
+    let delete (alias: DeleteAlias) =
         async {
             try
                 let! rowsAffected =
                     delete {
                         for row in aliases do
-                            where (row.user_id = userId && row.name = alias)
+                            where (row.user_id = alias.UserId && row.name = alias.Name)
                     }
                     |> connection.DeleteAsync
                     |> Async.AwaitTask

@@ -12,8 +12,8 @@ module LeaveChannel =
             match!
                 args |> Async.create |-> List.tryHead |-> Result.fromOption "No channel specified"
                 |> Result.bindAsync (fun c -> twitchService.GetUser c |-> Result.fromOption "User not found")
-                |> Result.bindAsync (fun u -> ChannelRepository.getById (u.Id |> int) |-> Result.fromOption $"Not in channel {u.DisplayName}")
-                |> Result.bindAsync (fun u ->  ChannelRepository.getById (u.ChannelId |> int) |-> Result.fromOption $"Not in channel {u.ChannelName}")
+                |> Result.bindAsync (fun u -> ChannelRepository.get (int u.Id) |-> Result.fromOption $"Not in channel {u.DisplayName}")
+                |> Result.bindAsync (fun u ->  ChannelRepository.get (int u.ChannelId) |-> Result.fromOption $"Not in channel {u.ChannelName}")
             with
             | Error err -> return Message err
             | Ok channel ->

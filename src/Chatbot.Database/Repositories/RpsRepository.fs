@@ -3,28 +3,12 @@
 module RpsRepository =
 
     open DB
-    open Types.RockPaperScissors
+    open Database.Models
+    open Database.Entities
 
     open Dapper.FSharp.SQLite
 
-    let private mapEntity (entity: Entities.RpsStats) : RpsStats = {
-        UserId = entity.user_id
-        Score = entity.score
-        TotalMoves = entity.total_moves
-        Wins = entity.wins
-        Losses = entity.losses
-    }
-
-    let private mapRecord (record: RpsStats) : Entities.RpsStats = {
-        rps_stats_id = 0
-        user_id = record.UserId
-        score = record.Score
-        total_moves = record.TotalMoves
-        wins = record.Wins
-        losses = record.Losses
-    }
-
-    let getById (userId: int) =
+    let get (userId: int) =
         async {
             let! stats =
                 select {
@@ -34,12 +18,28 @@ module RpsRepository =
                 |> connection.SelectAsync<Entities.RpsStats>
                 |> Async.AwaitTask
 
-            return stats |> Seq.map mapEntity |> Seq.tryExactlyOne
+            return
+                stats
+                |> Seq.map (fun r -> {
+                    UserId = r.user_id
+                    Score = r.score
+                    TotalMoves = r.total_moves
+                    Wins = r.wins
+                    Losses = r.losses
+                })
+                |> Seq.tryExactlyOne
         }
 
-    let add (stats: RpsStats) =
+    let add (stats: Models.RpsStats) =
         async {
-            let newStats = mapRecord stats
+            let newStats = {
+                rps_stats_id = 0
+                user_id = stats.UserId
+                score = stats.Score
+                total_moves = stats.TotalMoves
+                wins = stats.Wins
+                losses = stats.Losses
+            }
 
             try
                 let! rowsAffected =
@@ -57,9 +57,16 @@ module RpsRepository =
                 return DatabaseResult.Failure
         }
 
-    let update (stats: RpsStats) =
+    let update (stats: Models.RpsStats) =
         async {
-            let updatedStats = mapRecord stats
+            let updatedStats = {
+                rps_stats_id = 0
+                user_id = stats.UserId
+                score = stats.Score
+                total_moves = stats.TotalMoves
+                wins = stats.Wins
+                losses = stats.Losses
+            }
 
             try
                 let! rowsAffected =

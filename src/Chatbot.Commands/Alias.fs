@@ -4,7 +4,7 @@ namespace Commands
 module Alias =
 
     open Database
-    open Database.Types.Aliases
+    open Database.AliasRepository
 
     let twitchService = Services.services.TwitchService
 
@@ -29,10 +29,10 @@ module Alias =
             match validateCommand command commands with
             | false -> return Message "Invalid command definition"
             | true ->
-                match! AliasRepository.get (userId |> int) alias with
+                match! AliasRepository.get (ByUserIdAliasName (int userId, alias)) with
                 | Some _ -> return Message $"Alias {alias} already exists"
                 | None ->
-                    match! AliasRepository.add (Alias.create (userId |> int) alias (String.concat " " command)) with
+                    match! AliasRepository.add (Models.NewAlias.create (userId |> int) alias (String.concat " " command)) with
                     | DatabaseResult.Failure -> return Message "Error occured trying to add alias"
                     | DatabaseResult.Success 0 -> return Message $"You already have alias \"{alias}\""
                     | DatabaseResult.Success _ -> return Message $"Alias \"{alias}\" successfully added"
@@ -43,7 +43,7 @@ module Alias =
             match validateCommand command commands with
             | false -> return Message "Invalid command definition"
             | true ->
-                match! AliasRepository.update (Alias.create (userId |> int) alias (String.concat " " command)) with
+                match! AliasRepository.update (Models.UpdateAlias.create (userId |> int) alias (String.concat " " command)) with
                 | DatabaseResult.Failure -> return Message "Error occurred trying to update alias"
                 | DatabaseResult.Success 0 -> return Message $"You don't have the alias \"{alias}\""
                 | DatabaseResult.Success _ -> return Message $"Alias \"{alias}\" successfully updated"
@@ -51,7 +51,7 @@ module Alias =
 
     let private delete userId alias =
         async {
-            match! AliasRepository.delete (userId |> int) alias with
+            match! AliasRepository.delete (Models.DeleteAlias.create (userId |> int) alias) with
             | DatabaseResult.Failure -> return Message "Error occurred trying to delete alias"
             | DatabaseResult.Success 0 -> return Message $"You don't have the alias \"{alias}\""
             | DatabaseResult.Success _ -> return Message $"Alias \"{alias}\" successfully removed"
@@ -62,7 +62,7 @@ module Alias =
             match! twitchService.GetUser username with
             | None -> return Message "User not found"
             | Some user ->
-                match! AliasRepository.get (user.Id |> int) alias with
+                match! AliasRepository.get (ByUserIdAliasName (int user.Id, alias)) with
                 | None ->
                     if System.String.Compare(username, user.Login, true) = 0 then
                         return Message $"You don't have the alias \"{alias}\""
@@ -73,7 +73,7 @@ module Alias =
 
     let private run userId alias parameters =
         async {
-            match! AliasRepository.get (userId |> int) alias with
+            match! AliasRepository.get (ByUserIdAliasName (int userId, alias)) with
             | None -> return Message $"You don't have the alias \"{alias}\""
             | Some alias -> return RunAlias (alias.Command, parameters)
         }
@@ -84,16 +84,15 @@ module Alias =
             | None -> return Message "User not found"
             | Some user ->
 
-                let! sourceAlias = AliasRepository.get (user.Id |> int) alias
-                let! targetAlias = AliasRepository.get (targetUserId |> int) alias
+                let! sourceAlias = AliasRepository.get (ByUserIdAliasName (int user.Id, alias))
+                let! targetAlias = AliasRepository.get (ByUserIdAliasName (int targetUserId, alias))
 
                 match sourceAlias, targetAlias with
                 | None, _ -> return Message $"{sourceUsername} doesn't have the alias \"{alias}\""
                 | Some sa, Some _ ->
                     return Message $"You already have the alias \"{sa.Name}\", use \"copyplace\" to replace an existing alias"
                 | Some sa, None ->
-                    let copiedTa = { sa with UserId = targetUserId |> int}
-                    match! AliasRepository.add copiedTa with
+                    match! AliasRepository.add (Models.NewAlias.create (targetUserId |> int) sa.Name sa.Command) with
                     | DatabaseResult.Failure
                     | DatabaseResult.Success 0 -> return Message "Error occured trying to add copied alias"
                     | DatabaseResult.Success _ -> return Message $"Alias \"{sa.Name}\" successfully copied"
@@ -105,20 +104,18 @@ module Alias =
             | None -> return Message "User not found"
             | Some user ->
 
-                let! sourceAlias = AliasRepository.get (user.Id |> int) alias
-                let! targetAlias = AliasRepository.get (targetUserId |> int) alias
+                let! sourceAlias = AliasRepository.get (ByUserIdAliasName (int user.Id, alias))
+                let! targetAlias = AliasRepository.get (ByUserIdAliasName (int targetUserId, alias))
 
                 match sourceAlias, targetAlias with
                 | None, _ -> return Message $"{sourceUsername} doesn't have the alias \"{alias}\""
                 | Some sa, Some _ ->
-                    let copiedTa = { sa with UserId = targetUserId |> int}
-                    match! AliasRepository.update copiedTa with
+                    match! AliasRepository.update (Models.UpdateAlias.create (targetUserId |> int) sa.Name sa.Command) with
                     | DatabaseResult.Failure
                     | DatabaseResult.Success 0 -> return Message "Error occured trying to overwrite existing alias"
                     | DatabaseResult.Success _ -> return Message $"Alias \"{sa.Name}\" successfully copied"
                 | Some sa, None ->
-                    let copiedTa = { sa with UserId = targetUserId |> int}
-                    match! AliasRepository.add copiedTa with
+                    match! AliasRepository.add (Models.NewAlias.create (targetUserId |> int) sa.Name sa.Command) with
                     | DatabaseResult.Failure
                     | DatabaseResult.Success 0 -> return Message "Error occured trying to add copied alias"
                     | DatabaseResult.Success _ -> return Message $"Alias \"{sa.Name}\" successfully copied"

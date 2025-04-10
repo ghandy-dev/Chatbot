@@ -3,23 +3,12 @@
 module UserRepository =
 
     open DB
-    open Types.Users
+    open Database.Entities
+    open Database.Models
 
     open Dapper.FSharp.SQLite
 
-    let private mapEntity (entity: Entities.User) : User = {
-        UserId = entity.user_id
-        Username = entity.username
-        IsAdmin = entity.is_admin
-    }
-
-    let private mapRecord (record: User) : Entities.User = {
-        user_id = record.UserId
-        username = record.Username
-        is_admin = record.IsAdmin
-    }
-
-    let getByUserId (userId: int) =
+    let get (userId: int) =
         async {
             let! user =
                 select {
@@ -29,12 +18,23 @@ module UserRepository =
                 |> connection.SelectAsync<Entities.User>
                 |> Async.AwaitTask
 
-            return user |> Seq.map mapEntity |> Seq.tryHead
+            return
+                user
+                |> Seq.map (fun r -> {
+                    UserId = r.user_id
+                    Username = r.username
+                    IsAdmin = r.is_admin
+                } : Entities.User -> Models.User)
+                |> Seq.tryHead
         }
 
-    let add (user: User) =
+    let add (user: NewUser) =
         async {
-            let newUser = mapRecord user
+            let newUser = {
+                user_id = user.UserId
+                username = user.Username
+                is_admin = user.IsAdmin
+            }
 
             try
                 let! rowsAffected =
@@ -49,13 +49,4 @@ module UserRepository =
             with ex ->
                 Logging.error ex.Message ex
                 return DatabaseResult.Failure
-        }
-
-    let getOrAdd (user: User) =
-        async {
-            match! getByUserId user.UserId with
-            | None ->
-                match! add user with
-                | _ -> return user
-            | Some user -> return user
         }

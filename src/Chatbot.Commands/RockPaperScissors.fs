@@ -6,7 +6,6 @@ module RockPaperScissors =
     open System
 
     open Database
-    open Database.Types.RockPaperScissors
 
     let private shapes = [ "rock" ; "paper" ; "scissors" ]
 
@@ -30,12 +29,12 @@ module RockPaperScissors =
 
                 let! stats =
                     async {
-                        match! RpsRepository.getById (context.UserId |> int) with
+                        match! RpsRepository.get (context.UserId |> int) with
                         | None ->
-                            match! RpsRepository.add (RpsStats.newStats (context.UserId |> int)) with
+                            match! RpsRepository.add (Models.RpsStats.create (context.UserId |> int)) with
                             | DatabaseResult.Failure -> return Error "Error occurred creating stats"
                             | DatabaseResult.Success _ ->
-                                match! RpsRepository.getById (context.UserId |> int) with
+                                match! RpsRepository.get (context.UserId |> int) with
                                 | Some stats -> return Ok stats
                                 | None -> return Error "Couldn't retrieve stats"
                         | Some stats -> return Ok stats

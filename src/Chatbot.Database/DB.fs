@@ -30,5 +30,4 @@ module DB =
     let internal rpsStats = table'<Entities.RpsStats> "rps_stats"
     let internal channels = table'<Entities.Channel> "channels"
     let internal aliases = table'<Entities.Alias> "aliases"
-    let internal dungeon = table'<Entities.DungeonPlayer> "dungeon"
     let internal reminders = table'<Entities.Reminder> "reminders"

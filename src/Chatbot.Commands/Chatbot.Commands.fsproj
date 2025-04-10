@@ -25,14 +25,6 @@
     <Compile Include="News/Api.fs" />
     <Compile Include="News/News.fs" />
     <Compile Include="Weather.fs" />
-    <Compile Include="DungeonGame/Types.fs" />
-    <Compile Include="DungeonGame/Helpers.fs" />
-    <Compile Include="DungeonGame/Enemies.fs" />
-    <Compile Include="DungeonGame/Player.fs" />
-    <Compile Include="DungeonGame/Actions.fs" />
-    <Compile Include="DungeonGame/Shop.fs" />
-    <Compile Include="DungeonGame/Fight.fs" />
-    <Compile Include="DungeonGame/Dungeon.fs" />
     <Compile Include="FaceIt/Types.fs" />
     <Compile Include="FaceIt/Api.fs" />
     <Compile Include="FaceIt/FaceIt.fs" />

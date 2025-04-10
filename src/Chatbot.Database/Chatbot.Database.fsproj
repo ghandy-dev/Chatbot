@@ -5,17 +5,25 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Entities.fs" />
     <Compile Include="DatabaseResult.fs" />
-    <Compile Include="Types.fs" />
+    <Compile Include="Entities/Channel.fs" />
+    <Compile Include="Entities/Rps.fs" />
+    <Compile Include="Entities/User.fs" />
+    <Compile Include="Entities/NewsFeed.fs" />
+    <Compile Include="Entities/Alias.fs" />
+    <Compile Include="Entities/Reminder.fs" />
     <Compile Include="DB.fs" />
-    <Compile Include="ChannelRepository.fs" />
-    <Compile Include="RpsRepository.fs" />
-    <Compile Include="UserRepository.fs" />
-    <Compile Include="RssFeedRepository.fs" />
-    <Compile Include="AliasRepository.fs" />
-    <Compile Include="DungeonRepository.fs" />
-    <Compile Include="ReminderRepository.fs" />
+    <Compile Include="Models/Channel.fs" />
+    <Compile Include="Models/Rps.fs" />
+    <Compile Include="Models/User.fs" />
+    <Compile Include="Models/Alias.fs" />
+    <Compile Include="Models/Reminder.fs" />
+    <Compile Include="Repositories/ChannelRepository.fs" />
+    <Compile Include="Repositories/RpsRepository.fs" />
+    <Compile Include="Repositories/UserRepository.fs" />
+    <Compile Include="Repositories/NewsFeedRepository.fs" />
+    <Compile Include="Repositories/AliasRepository.fs" />
+    <Compile Include="Repositories/ReminderRepository.fs" />
   </ItemGroup>
 
   <ItemGroup>

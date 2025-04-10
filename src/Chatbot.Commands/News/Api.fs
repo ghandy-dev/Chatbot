@@ -43,12 +43,11 @@ module Api =
                 | None -> "World"
                 | Some c -> c
 
-            match! RssFeedRepository.get category with
+            match! NewsFeedRepository.get category with
             | DatabaseResult.Failure -> return Error "Error occured trying to get RSS feeds"
-            | DatabaseResult.Success feeds ->
+            | DatabaseResult.Success urls ->
 
-                let feed = feeds |> List.randomChoice
-                let url = feed.Urls |> List.randomChoice
+                let url = urls |> List.randomChoice
 
                 match cache.TryGetValue url with
                 | true, (updated, feed) when DateTime.UtcNow - updated < (feed.TimeToLive |? TimeSpan.FromMinutes(10L)) ->

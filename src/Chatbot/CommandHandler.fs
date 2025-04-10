@@ -2,7 +2,6 @@ module Commands.Handler
 
 open Commands
 open Database
-open Database.Types.Users
 open Shared
 
 open System
@@ -13,7 +12,7 @@ let private parseCommandAndArgs (message: string) =
     | [ command ] -> Some (command, [])
     | command :: parameters -> Some (command, parameters)
 
-let private hasCooldownExpired (user: User) (command: Command) =
+let private hasCooldownExpired (user: Models.User) (command: Command) =
     let lastCommandTime = userCommandCooldowns.GetOrAdd((user, command.Name), (fun _ -> DateTime.MinValue.ToUniversalTime()))
     let timeSinceLastCommand = DateTime.UtcNow - lastCommandTime
     timeSinceLastCommand.TotalMilliseconds > command.Cooldown
@@ -34,6 +33,17 @@ let private executeCommand (command: Command) (args: Args) (context: Context) =
         return response
     }
 
+let private getOrAddUser userId username =
+    async {
+        match! UserRepository.get (int userId) with
+        | None ->
+            match! UserRepository.add (Models.NewUser.create (int userId) username) with
+            | DatabaseResult.Failure -> Logging.error "Error adding user" (new exn())
+            | _ -> ()
+            return Models.User.create (int userId) username
+        | Some user -> return user
+    }
+
 let rec private handleCommand (userId: string) (username: string) (source: MessageSource) (message: string) (parsedEmotes: Map<string, string>) =
     async {
         let maybeCommandAndArgs: (Command * string list) option =
@@ -44,7 +54,8 @@ let rec private handleCommand (userId: string) (username: string) (source: Messa
                 |> Option.bind (fun command' -> Some (command', args))
             )
 
-        let! user = UserRepository.getOrAdd (User.create (int userId) username)
+        let! user = getOrAddUser userId username
+
         let messageEmotes = parsedEmotes |> Map.map (fun _ v -> $"https://static-cdn.jtvnw.net/emoticons/v2/%s{v}/static/dark/3.0")
 
         let channel =

@@ -3,48 +3,17 @@
 module ReminderRepository =
 
     open DB
-    open Types.Reminders
+    open Database.Entities
+    open Database.Models
 
     open Dapper.FSharp.SQLite
     open Dapper
-
-    type private ReminderQuery = {
-        reminder_id: int
-        timestamp: string
-        from_username: string
-        target_username: string
-        message: string
-    }
-
-    type private TimedReminderQuery = {
-        reminder_id: int
-        timestamp: string
-        from_username: string
-        target_username: string
-        message: string
-        channel: string
-    }
-
-    let private mapReminderQuery (query: ReminderQuery) : Reminder = {
-        FromUsername = query.from_username
-        TargetUsername = query.target_username
-        Timestamp = System.DateTime.Parse query.timestamp
-        Message = query.message
-    }
-
-    let private mapTimedReminderQuery (query: TimedReminderQuery) : TimedReminder = {
-        FromUsername = query.from_username
-        TargetUsername = query.target_username
-        Timestamp = System.DateTime.Parse query.timestamp
-        Message = query.message
-        Channel = query.channel
-    }
 
     let getTimedReminders () =
         async {
             let query =
                 """
-                SELECT reminder_id, timestamp, from_username, target_username, message, channel
+                SELECT reminder_id, timestamp, from_user_id, from_username, target_user_id, target_username, message, channel, reminder_timestamp, reminded
                 FROM reminders
                 WHERE reminded = FALSE
                 AND reminder_timestamp < datetime('now')
@@ -58,9 +27,17 @@ module ReminderRepository =
                 """
 
             try
-                let! results = connection.QueryAsync<TimedReminderQuery>(query) |> Async.AwaitTask
+                let! results = connection.QueryAsync<Entities.TimedReminder>(query) |> Async.AwaitTask
                 connection.ExecuteAsync(update, results |> Seq.map (fun r -> {| reminderId = r.reminder_id |})) |> Async.AwaitTask |> ignore
-                return results |> Seq.map mapTimedReminderQuery
+                return
+                    results
+                    |> Seq.map (fun r -> {
+                        FromUsername = r.from_username
+                        TargetUsername = r.target_username
+                        Timestamp = System.DateTime.Parse r.timestamp
+                        Message = r.message
+                        Channel = r.channel
+                    })
             with ex ->
                 Logging.error "Error executing query" ex
                 return []
@@ -70,7 +47,7 @@ module ReminderRepository =
         async {
             let query =
                 """
-                SELECT reminder_id, timestamp, from_username, target_username, message
+                SELECT reminder_id, timestamp, from_user_id, from_username, target_user_id, target_username, message, reminded
                 FROM reminders
                 WHERE target_user_id = @userId
                 AND reminded = FALSE
@@ -85,9 +62,16 @@ module ReminderRepository =
                 """
 
             try
-                let! results = connection.QueryAsync<ReminderQuery>(query, {| userId = userId |}) |> Async.AwaitTask
+                let! results = connection.QueryAsync<Entities.Reminder>(query, {| userId = userId |}) |> Async.AwaitTask
                 connection.ExecuteAsync(update, results |> Seq.map (fun r -> {| reminderId = r.reminder_id |})) |> Async.AwaitTask |> ignore
-                return results |> Seq.map mapReminderQuery
+                return
+                    results
+                    |> Seq.map (fun r -> {
+                        FromUsername = r.from_username
+                        TargetUsername = r.target_username
+                        Timestamp = System.DateTime.Parse r.timestamp
+                        Message = r.message
+                    })
             with ex ->
                 Logging.error "Error retrieving reminders" ex
                 return []
@@ -131,7 +115,7 @@ module ReminderRepository =
                 return DatabaseResult.Failure
         }
 
-    let add (reminder: CreateReminder) =
+    let add (reminder: NewReminder) =
         async {
             let query =
                 """
@@ -170,7 +154,7 @@ module ReminderRepository =
                     update {
                         for row in reminders do
                             setColumn row.message reminder.Message
-                            where (row.reminded = 0 && row.user_id = reminder.UserId)
+                            where (row.reminded = 0 && row.from_user_id = reminder.UserId)
                     }
                     |> connection.UpdateAsync
                     |> Async.AwaitTask
