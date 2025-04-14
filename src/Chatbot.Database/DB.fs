@@ -24,7 +24,7 @@ module internal DB =
             conn
         with ex ->
             Logging.error ex.Message ex
-            failwith (ex.Message)
+            reraise()
 
     let users = table'<Entities.User> "users"
     let rpsStats = table'<Entities.RpsStats> "rps_stats"
