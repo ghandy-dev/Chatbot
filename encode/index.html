@@ -78,15 +78,43 @@
                 &gt; encode &lt;encoder&gt; &lt;input&gt;
               </code>
               <br/>
+            </div>
+            <br/>
+            <div>
+              <div>
+                Ciphers/Encoders:
+              </div>
+              <div>
+                - caesar
+              </div>
+              <div>
+                - rot13
+              </div>
+              <div>
+                - base64
+              </div>
+            </div>
+            <br/>
+            <div>
+              <div>
+                Encode text using the caesar cipher. Optionally specify a shift value.
+              </div>
               <code>
                 &gt; encode ceaser Kappa 123
+              </code>
+              <br/>
+              <div>
+                Encode text using the caesar cipher, and shift/rotate the letters by 5 places.
+              </div>
+              <code>
+                &gt; encode ceaser 5 This is a cool secret message B)
               </code>
               <br/>
             </div>
             <br/>
             <div>
               <div>
-                Encode using the caeser cipher with a 13 letter shift, re-applying this again to the encoded output decodes the text.
+                Encode text using the caeser cipher with a 13 letter shift, re-applying this again to the encoded text decodes it instead.
               </div>
               <code>
                 &gt; encode rot13 Hello World!
@@ -96,7 +124,7 @@
             <br/>
             <div>
               <div>
-                Encode input to base64.
+                Encode text to base64.
               </div>
               <code>
                 &gt; encode base64 forsen
