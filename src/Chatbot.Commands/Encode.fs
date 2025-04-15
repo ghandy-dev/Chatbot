@@ -1,11 +1,11 @@
 namespace Commands
 
 [<AutoOpen>]
-module Rot13 =
+module Encode =
 
     open System
 
-    let caesar (text: string) (shift: int) =
+    let private caesar (shift: int) (text: string) =
         let chars = text.ToCharArray()
 
         chars
@@ -19,24 +19,23 @@ module Rot13 =
         |> String
 
     // caesar cipher, but if you apply it again to the output then it decodes it
-    let rot13 text = caesar text 13
+    let private rot13 text = caesar 13 text
 
-    let base64 (text: string) =
+    let private base64 (text: string) =
         text |> System.Text.Encoding.UTF8.GetBytes |> System.Convert.ToBase64String
 
-    let encoders =
-        [
-            "base64", base64
-            "rot13", rot13
-            "caesar", (fun s -> caesar s (System.Random.Shared.Next(1, 27)))
-        ]
-        |> Map.ofList
-
     let encode args =
+        let runEncode f (s: string seq) = f (s |> String.concat " ") |> Message
+
         match args with
-        | [] -> Message "No encoder/text provided"
-        | [ _ ] -> Message "No encoder or text provided"
+        | [] | [ _ ] -> Message "No encoder and/or text provided"
         | encoder :: input ->
-            match encoders |> Map.tryFind encoder with
-            | None -> Message "Unknown encoder specified"
-            | Some e -> Message <| e (String.concat "" input)
+            match encoder with
+            | "base64" -> runEncode base64 input
+            | "rot13" -> runEncode rot13 input
+            | "caesar" ->
+                let mutable iShift = 0
+                match input with
+                | shift :: text when Int32.TryParse(shift, &iShift) -> runEncode (caesar iShift) text
+                | _ -> runEncode (caesar (System.Random.Shared.Next(1, 27))) input
+            | _ -> Message "Unknown encoder specified"
