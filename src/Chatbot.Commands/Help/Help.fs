@@ -241,12 +241,21 @@ Fight an opponent to earn gold:
             Description = "Encode text transforming it to a different a different format."
             ExampleUsage = $"""
 {exampleArgs "encode" "<encoder> <input>"}
-{exampleArgs "encode" "ceaser Kappa 123"}
 
-Encode using the caeser cipher with a 13 letter shift, re-applying this again to the encoded output decodes the text.
+Ciphers/Encoders:
+- caesar
+- rot13
+- base64
+
+Encode text using the caesar cipher. Optionally specify a shift value.
+{exampleArgs "encode" "ceaser Kappa 123"}
+Encode text using the caesar cipher, and shift/rotate the letters by 5 places.
+{exampleArgs "encode" "ceaser 5 This is a cool secret message B)"}
+
+Encode text using the caeser cipher with a 13 letter shift, re-applying this again to the encoded text decodes it instead.
 {exampleArgs "encode" "rot13 Hello World!"}
 
-Encode input to base64.
+Encode text to base64.
 {exampleArgs "encode" "base64 forsen"}
 """
         }
