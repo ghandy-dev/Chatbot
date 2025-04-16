@@ -28,7 +28,6 @@ module Commands =
             Command.createCommand ("chance", [ "%" ], HelpInfo.Chance, S chance, 10000, false)
             Command.createCommand ("channel", [], HelpInfo.Channel, AA channel, 20000, false)
             Command.createCommand ("coinflip", [ "cf" ], HelpInfo.CoinFlip, S coinFlip, 10000, false)
-            // Command.createCommand ("dungeon", [], HelpInfo.Dungeon, AAC dungeon, 10000, false)
             Command.createCommand ("eightball", ["8ball"], HelpInfo.Eightball, S eightball, 10000, false)
             Command.createCommand ("echo", [], HelpInfo.Echo, SA echo, 5000, true)
             Command.createCommand ("encode", [], HelpInfo.Encode, SA encode, 5000, false)
