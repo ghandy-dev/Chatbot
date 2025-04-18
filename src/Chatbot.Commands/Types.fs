@@ -69,7 +69,7 @@ and Command = {
     AdminOnly: bool
 } with
 
-    static member createCommand (name, alias, description, func, cooldown, adminOnly) = {
+    static member create (name, alias, description, func, cooldown, adminOnly) = {
         Name = name
         Aliases = alias
         Details = description
