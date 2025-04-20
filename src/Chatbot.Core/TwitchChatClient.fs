@@ -91,7 +91,7 @@ type TwitchChatClient(Connection: ConnectionType, Config: TwitchChatClientConfig
                         messageReceived.Trigger (parseMessages messages)
                         do! reader' ()
                     | None -> () // if this happens then the client isn't connected
-                | false -> Logging.warning "IRC client disconnected."
+                | false -> Logging.warning "Twitch chat client disconnected."
             }
 
         reader' ()
