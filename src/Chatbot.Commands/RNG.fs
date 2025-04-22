@@ -28,7 +28,7 @@ module RNG =
             | _ -> Message "Couldn't parse min/max value"
 
     [<AutoOpen>]
-    module Percentage =
+    module Chance =
 
         let chance () =
             let n = random.NextDouble() * 100.0
