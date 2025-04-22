@@ -66,6 +66,7 @@
     <Compile Include="SubAge.fs" />
     <Compile Include="FollowAge.fs" />
     <Compile Include="Fill.fs" />
+    <Compile Include="Slots.fs" />
     <Compile Include="Commands.fs" />
   </ItemGroup>
 

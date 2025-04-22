@@ -54,6 +54,7 @@ module Commands =
             Command.create ("remind", [ "notify" ], HelpInfo.Remind, AAC remind, 5000, false)
             Command.create ("rockpaperscissors", [ "rps" ], HelpInfo.RockPaperScissors, AAC rps, 10000, false)
             Command.create ("roll", [], HelpInfo.Roll, SA roll, 10000, false)
+            Command.create ("slots", [], HelpInfo.Slots, SAC slots, 10000, false)
             Command.create ("stream", [], HelpInfo.Stream, AA stream, 20000, false)
             Command.create ("subage", [ "sa" ], HelpInfo.SubAge, AAC subAge, 10000, false)
             Command.create ("time", [], HelpInfo.Time, AA time, 5000, false)

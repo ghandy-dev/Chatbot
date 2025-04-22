@@ -611,6 +611,32 @@ Roll a random number between a min and max value.
 """
         }
 
+    let Slots =
+        {
+            Name = "Slots"
+            Description = ""
+            ExampleUsage = $"""
+Optional arguments:
+
+set:
+    - fruit
+    - twitch (global emotes)
+    - bttv (channel emotes)
+    - ffz (channel emotes)
+    - 7tv (channel emotes)
+    - numbers (1-100)
+
+Play slots with fruit set.
+{example "slots"}
+
+Play slots with a specified set:
+{exampleArgs "slots" "set:<set name>"}
+
+{exampleArgs "slots" "set:twitch"}
+{exampleArgs "slots" "set:bttv"}
+"""
+        }
+
     let Stream =
         {
             Name = "Stream"
