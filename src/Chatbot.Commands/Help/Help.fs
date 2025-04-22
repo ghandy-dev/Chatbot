@@ -614,8 +614,10 @@ Roll a random number between a min and max value.
     let Slots =
         {
             Name = "Slots"
-            Description = ""
+            Description = "Spin slots and try get a line of matching symbols/words/emotes"
             ExampleUsage = $"""
+Provide a set of words/emotes to use and spin slots to try win.
+
 Optional arguments:
 
 set:
@@ -626,8 +628,9 @@ set:
     - 7tv (channel emotes)
     - numbers (1-100)
 
-Play slots with fruit set.
-{example "slots"}
+Play slots with a custom input set:
+{exampleArgs "slots" "Feels Dank Man"}
+{exampleArgs "slots" "Kappa PogChamp Jebaited"}
 
 Play slots with a specified set:
 {exampleArgs "slots" "set:<set name>"}
