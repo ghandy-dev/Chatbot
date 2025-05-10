@@ -32,7 +32,13 @@ type IrcClient(host: string, port: int) =
         }
 
     let read cancellationToken =
-        IO.readAsync reader ReaderBufferSize cancellationToken
+        async {
+            try
+                return! IO.readAsync reader ReaderBufferSize cancellationToken
+            with ex ->
+                Logging.error "error in readAsync" ex
+                return None
+        }
 
     let writeLine (message: string) =
         async {
