@@ -29,7 +29,9 @@ module Api =
             | Ok response ->
                 let! deserialized = response |> deserializeJsonAsync<'a>
                 return Ok deserialized
-            | Error err -> return Error $"Reddit API HTTP error {err.statusCode |> int} {err.statusCode}"
+            | Error err ->
+                let! content = response.content.ReadAsStringAsync() |> Async.AwaitTask
+                return Error(content, err.statusCode)
         }
 
     let getPosts (subreddit: string) (sorting: string) (accessToken: string) =
@@ -41,5 +43,9 @@ module Api =
                 | "best" -> $"{OAuthApiUrl}/r/{subreddit}/best.json"
                 | _ -> failwith "Unsupported post sorting."
 
-            return! getFromJsonAsync<Thing<Listing<T3>>> url accessToken
+            match! getFromJsonAsync<Thing<Listing<T3>>> url accessToken with
+            | Error (err, statusCode) ->
+                Logging.error $"Reddit API error: {statusCode}, {err}" (exn())
+                return Error (err, statusCode)
+            | Ok data -> return Ok data
         }
