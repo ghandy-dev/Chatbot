@@ -173,7 +173,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                     match state |> Map.tryFind channel with
                     | Some { Questions = q :: _ } ->
                         do! sendMessage channel $"[Trivia - %s{q.Category}] (Hints: {q.Hints.Length}) Question: %s{q.Question}"
-                        return state
+                        return state |> Map.add channel { state[channel] with HintsSent = [] }
                     | _ -> return state
                 }
 
