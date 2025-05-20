@@ -121,130 +121,125 @@ let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
 let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
     new MailboxProcessor<TriviaRequest>(
         (fun mb ->
-            let trivias = new ConcurrentDictionary<string, TriviaConfig> ()
-            let active = new ConcurrentDictionary<string, bool> ()
-            let timestamps = new ConcurrentDictionary<string, DateTime> ()
-            let sentHints = new ConcurrentDictionary<string, Set<int>>()
-            let answerSent = new ConcurrentDictionary<string, bool> ()
-
             let sendMessage channel message = twitchChatClient.SendAsync(Commands.PrivMsg(channel, message))
 
-            let startTrivia (trivia: TriviaConfig) =
+            let startTrivia (trivia: TriviaConfig) state =
                 async {
-                    match active |> Dictionary.tryGetValue trivia.Channel with
-                    | Some true -> do! sendMessage trivia.Channel "Trivia already started"
-                    | _ ->
-                        active[trivia.Channel] <- true
-                        trivias[trivia.Channel] <- trivia
-                        mb.Post (SendQuestion trivia)
+                    match state |> Map.containsKey trivia.Channel with
+                    | true ->
+                        do! sendMessage trivia.Channel "Trivia already started"
+                        return state
+                    | false ->
+                        let state = state |> Map.add trivia.Channel { trivia with Timestamp = utcNow() }
+                        mb.Post (SendQuestion trivia.Channel)
+                        mb.Post Update
+                        return state
                 }
 
-            let stopTrivia channel =
+            let stopTrivia channel state =
                 async {
-                    match active |> Dictionary.tryGetValue channel with
-                    | Some true ->
-                        active[channel] <-  false
+                    match state |> Map.containsKey channel with
+                    | true ->
                         do! sendMessage channel "Trivia stopped"
-                    | _ -> ()
+                        return state |> Map.remove channel
+                    | false -> return state
                 }
 
-            let update () =
-                async {
-                    Seq.zip3 active timestamps trivias
-                    |> Seq.choose (fun (KeyValue(channel, active), (KeyValue(channel, timestamp)), (KeyValue(channel, trivia))) ->
-                        if active then Some (channel, utcNow() - timestamp, trivia) else None
-                    )
-                    |> Seq.iter (fun (channel, timespan, trivia) ->
-                        let elapsedSeconds = int timespan.TotalSeconds
-                        let hintTimes = [ 15 ; 30 ]
-                        let answerTime = 55
-                        let hints = sentHints[trivia.Channel]
+            let update (state: Map<_, _>) =
+                if not <| state.IsEmpty then
+                    let map =
+                        (Map.empty, state)
+                        ||> Map.fold (fun map channel trivia ->
+                            let elapsedSeconds = utcNow() - trivia.Timestamp |> _.TotalSeconds |> int
+                            let hintTimes = [ 15 ; 30 ]
+                            let answerTime = 55
+                            let hints = trivia.HintsSent
 
-                        if elapsedSeconds = answerTime && not <| answerSent[trivia.Channel] then
-                            answerSent[trivia.Channel] <- true
-                            mb.Post (SendAnswer trivia)
-                        else if hintTimes |> List.contains elapsedSeconds && not <| hints.Contains elapsedSeconds then
-                            sentHints[trivia.Channel] <- hints |> Set.add elapsedSeconds
-                            mb.Post(SendHint trivia)
-                    )
+                            if elapsedSeconds = answerTime then
+                                mb.Post (SendAnswer trivia.Channel)
+                                map |> Map.add channel trivia
+                            else if hintTimes |> List.contains elapsedSeconds && not <| (hints |> List.contains elapsedSeconds) then
+                                mb.Post(SendHint trivia.Channel)
+                                map |> Map.add channel { trivia with HintsSent = elapsedSeconds :: trivia.HintsSent }
+                            else
+                                map |> Map.add channel trivia
+                        )
 
-                    do! Async.Sleep(250)
                     mb.Post Update
+                    map
+                else
+                    state
+
+            let sendQuestion channel state =
+                async {
+                    match state |> Map.tryFind channel with
+                    | Some { Questions = q :: _ } ->
+                        do! sendMessage channel $"[Trivia - %s{q.Category}] (Hints: {q.Hints.Length}) Question: %s{q.Question}"
+                        return state
+                    | _ -> return state
                 }
 
-            let sendQuestion trivia =
+            let sendHint channel state =
                 async {
-                    match trivia.Questions with
-                    | q :: _ ->
-                        do! sendMessage trivia.Channel $"[Trivia - %s{q.Category}] Question: %s{q.Question}"
-                        timestamps[trivia.Channel] <- utcNow()
-                        sentHints[trivia.Channel] <- Set.empty
-                        answerSent[trivia.Channel] <- false
-                    | _ -> ()
-                }
-
-            let sendHint trivia =
-                async {
-                    match trivia.Questions with
-                    | q :: qs ->
+                    match state |> Map.tryFind channel with
+                    | Some { Questions = q :: qs } ->
                         match q.Hints with
                         | h :: hs ->
-                            do! sendMessage trivia.Channel $"[Trivia] Hint: %s{h}"
-                            trivias[trivia.Channel] <- { trivia with Questions = { q with Hints = hs } :: qs }
-                        | _ -> ()
-                    | _ -> ()
+                            do! sendMessage channel $"[Trivia] Hint: %s{h}"
+                            let trivia = { state[channel] with Questions = { q with Hints = hs } :: qs }
+                            return state |> Map.add channel trivia
+                        | _ -> return state
+                    | _ -> return state
                 }
 
-            let sendAnswer trivia =
+            let sendAnswer channel state =
                 async {
-                    match trivia.Questions with
-                    | [ q ] ->
-                        do! sendMessage trivia.Channel $"[Trivia] No one got it. The answer was: %s{q.Answer}"
-                        active[trivia.Channel] <- false
-                    | q :: qs ->
-                        do! sendMessage trivia.Channel $"[Trivia] No one got it. The answer was: %s{q.Answer}"
-                        let trivia = { trivia with Questions = qs }
-                        trivias[trivia.Channel] <- trivia
-                        mb.Post (SendQuestion trivia)
-                    | _ -> ()
+                    match state |> Map.tryFind channel with
+                    | Some { Questions = [ q ] } ->
+                        do! sendMessage channel $"[Trivia] No one got it. The answer was: %s{q.Answer}"
+                        return state |> Map.remove channel
+                    | Some { Questions = q :: qs } ->
+                        do! sendMessage channel $"[Trivia] No one got it. The answer was: %s{q.Answer}"
+                        mb.Post (SendQuestion channel)
+                        return state |> Map.add channel { state[channel] with Questions = qs }
+                    | _ -> return state
                 }
 
-            let userMessaged channel userId username message =
+            let userMessaged channel username message state =
                 async {
-                    match active |> Dictionary.tryGetValue channel with
-                    | Some true ->
-                        let trivia = trivias[channel]
-                        match trivia.Questions with
-                        | q :: qs when String.Compare(q.Answer, message, ignoreCase = true) = 0  ->
-                            do! sendMessage trivia.Channel $"""[Trivia] @%s{username}, got it! The answer was %s{q.Answer}"""
+                    match state |> Map.tryFind channel with
+                    | Some { Questions = q :: qs } when String.Compare(q.Answer, message, ignoreCase = true) = 0 ->
+                        do! sendMessage channel $"""[Trivia] @%s{username}, got it! The answer was %s{q.Answer}"""
 
-                            if qs.IsEmpty then
-                                active[trivia.Channel] <- false
-                            else
-                                let trivia = { trivia with Questions = qs }
-                                trivias[trivia.Channel] <- trivia
-                                mb.Post (SendQuestion trivia)
-                        | _ -> ()
-                    | _ -> ()
+                        if qs.IsEmpty then
+                            return state |> Map.remove channel
+                        else
+                            mb.Post (SendQuestion channel)
+                            return state |> Map.add channel { state[channel] with Questions = qs }
+                        | _ -> return state
+                    | _ -> return state
                 }
 
-            let rec loop () =
+            let rec loop state =
                 async {
-                    match! mb.Receive() with
-                    | TriviaRequest.StartTrivia trivia -> do! startTrivia trivia
-                    | TriviaRequest.StopTrivia channel -> do! stopTrivia channel
-                    | TriviaRequest.Update -> do! update ()
-                    | TriviaRequest.SendQuestion trivia -> do! sendQuestion trivia
-                    | TriviaRequest.SendHint trivia -> do! sendHint trivia
-                    | TriviaRequest.SendAnswer trivia -> do! sendAnswer trivia
-                    | TriviaRequest.UserMessaged (channel, userId, username, message) -> do! userMessaged channel userId username message
+                    let! msg = mb.Receive()
 
-                    return! loop ()
+                    let! newState =
+                        match msg with
+                        | TriviaRequest.StartTrivia config -> startTrivia config state
+                        | TriviaRequest.StopTrivia channel -> stopTrivia channel state
+                        | TriviaRequest.SendQuestion channel -> sendQuestion channel state
+                        | TriviaRequest.Update -> update state |> Async.create
+                        | TriviaRequest.SendHint channel -> sendHint channel state
+                        | TriviaRequest.SendAnswer channel -> sendAnswer channel state
+                        | TriviaRequest.UserMessaged (channel, userId, username, message) -> userMessaged channel username message state
+
+                    do! Async.Sleep(50)
+                    return! loop newState
                 }
 
             Logging.trace "Trivia agent started."
-            mb.Post Update
-            loop ()
+            loop (Map.empty)
         ),
         cancellationToken
     )

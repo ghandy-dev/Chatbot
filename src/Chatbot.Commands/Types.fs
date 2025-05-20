@@ -12,7 +12,7 @@ type Context = {
     Emotes: Emotes.Emotes
 } with
 
-    static member createContext id username admin source emotes = {
+    static member create id username admin source emotes = {
         UserId = id
         Username = username
         IsAdmin = admin
@@ -23,6 +23,8 @@ type Context = {
 type TriviaConfig = {
     Questions: Question list
     Categories: string list
+    Timestamp: System.DateTime
+    HintsSent: int list
     UseHints: bool
     Channel: string
 }

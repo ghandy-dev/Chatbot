@@ -16,10 +16,10 @@ type ReminderMessage =
     | UserMessaged of channel: string * userId: int * username: string
 
 type TriviaRequest =
-    | StartTrivia of Commands.TriviaConfig
+    | StartTrivia of config: Commands.TriviaConfig
     | StopTrivia of channel: string
-    | SendQuestion of trivia: Commands.TriviaConfig
-    | SendHint of trivia: Commands.TriviaConfig
-    | SendAnswer of trivia: Commands.TriviaConfig
+    | SendQuestion of channel: string
+    | SendHint of channel: string
+    | SendAnswer of channel: string
     | Update
     | UserMessaged of channel: string * userId: int * username: string * message: string

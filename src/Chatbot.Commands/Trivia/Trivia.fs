@@ -39,6 +39,8 @@ module Trivia =
                             Categories = questions |> List.map (fun q -> q.Category)
                             Channel = channel.Channel
                             UseHints = hints
+                            Timestamp = DateTime.MaxValue
+                            HintsSent = []
                         }
 
                         return BotAction (StartTrivia triviaConfig, None)

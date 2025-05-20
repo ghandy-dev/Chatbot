@@ -75,7 +75,7 @@ let rec private handleCommand (userId: string) (username: string) (source: Messa
                     let! response =
                         async {
                             let context =
-                                Context.createContext userId username user.IsAdmin source {
+                                Context.create userId username user.IsAdmin source {
                                     GlobalEmotes = emoteService.GlobalEmotes
                                     ChannelEmotes =
                                         channel
