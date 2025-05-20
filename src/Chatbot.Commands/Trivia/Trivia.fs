@@ -36,6 +36,7 @@ module Trivia =
                                 Categories = q.Categories
                                 Category = q.Category
                             }))
+                            Count = questions.Length
                             Categories = questions |> List.map (fun q -> q.Category)
                             Channel = channel.Channel
                             UseHints = hints

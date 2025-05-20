@@ -22,6 +22,7 @@ type Context = {
 
 type TriviaConfig = {
     Questions: Question list
+    Count: int
     Categories: string list
     Timestamp: System.DateTime
     HintsSent: int list

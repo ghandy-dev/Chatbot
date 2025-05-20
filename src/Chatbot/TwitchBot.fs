@@ -128,10 +128,9 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                         do! sendMessage trivia.Channel "Trivia already started"
                         return state
                     | false ->
-                        let state = state |> Map.add trivia.Channel { trivia with Timestamp = utcNow() }
                         mb.Post (SendQuestion trivia.Channel)
                         mb.Post Update
-                        return state
+                        return state |> Map.add trivia.Channel trivia
                 }
 
             let stopTrivia channel state =
@@ -143,8 +142,8 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                     | false -> return state
                 }
 
-            let update (state: Map<_, _>) =
-                if not <| state.IsEmpty then
+            let update state =
+                if not <| (state |> Map.isEmpty) then
                     let map =
                         (Map.empty, state)
                         ||> Map.fold (fun map channel trivia ->
@@ -155,7 +154,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
 
                             if elapsedSeconds = answerTime then
                                 mb.Post (SendAnswer trivia.Channel)
-                                map |> Map.add channel trivia
+                                map |> Map.add channel { trivia with Timestamp = DateTime.MaxValue }
                             else if hintTimes |> List.contains elapsedSeconds && not <| (hints |> List.contains elapsedSeconds) then
                                 mb.Post(SendHint trivia.Channel)
                                 map |> Map.add channel { trivia with HintsSent = elapsedSeconds :: trivia.HintsSent }
@@ -170,11 +169,18 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
 
             let sendQuestion channel state =
                 async {
+                    let resetHints state = { state with HintsSent = [] }
+                    let setStartTimestamp state = { state with Timestamp = utcNow() }
+
                     match state |> Map.tryFind channel with
-                    | Some { Questions = q :: _ } ->
-                        do! sendMessage channel $"[Trivia - %s{q.Category}] (Hints: {q.Hints.Length}) Question: %s{q.Question}"
-                        return state |> Map.add channel { state[channel] with HintsSent = [] }
-                    | _ -> return state
+                    | Some config ->
+                        match config.Questions with
+                        | q :: _ ->
+                            do! sendMessage channel $"%d{config.Count+1 - config.Questions.Length}/%d{config.Count} [Trivia - %s{q.Category}] (Hints: {q.Hints.Length}) Question: %s{q.Question}"
+                            let state = state |> Map.add channel (config |> resetHints |> setStartTimestamp)
+                            return state
+                        | [] -> return state
+                    | None -> return state
                 }
 
             let sendHint channel state =
@@ -214,7 +220,6 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                         else
                             mb.Post (SendQuestion channel)
                             return state |> Map.add channel { state[channel] with Questions = qs }
-                        | _ -> return state
                     | _ -> return state
                 }
 
