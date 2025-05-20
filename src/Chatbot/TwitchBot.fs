@@ -13,8 +13,6 @@ open Types
 open Twitch
 
 open System
-open System.Collections.Generic
-open System.Collections.Concurrent
 
 let services = Services.services
 
