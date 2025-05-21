@@ -27,7 +27,7 @@ let private maybeHasExpired (dateTime: DateTimeOffset option) =
     | None -> false
     | Some dateTime -> hasExpired dateTime
 
-let private getTwitchTokenAsync (authClient: OAuthClient) =
+let private getTwitchToken (authClient: OAuthClient) =
     async {
         let refreshToken = appConfig.Twitch.RefreshToken
         let clientId = appConfig.Twitch.ClientId
@@ -42,7 +42,7 @@ let private getTwitchTokenAsync (authClient: OAuthClient) =
             return Ok response.Data
     }
 
-let private getRedditTokenAsync () =
+let private getRedditToken () =
     async {
         use! response =
             let clientId = appConfig.Reddit.ClientId
@@ -78,7 +78,7 @@ type TokenStore() =
             match tokenType, maybeToken with
             | Twitch, Some token when not <| maybeHasExpired token.ExpiresAt -> return Some token.AccessToken
             | Twitch, _ ->
-                match! getTwitchTokenAsync authClient with
+                match! getTwitchToken authClient with
                 | Error err ->
                     Logging.error "Failed to get reddit access token" err
                     return None
@@ -87,7 +87,7 @@ type TokenStore() =
                     return Some token.AccessToken
             | Reddit, Some token when not <| maybeHasExpired token.ExpiresAt -> return Some token.AccessToken
             | Reddit, _ ->
-                match! getRedditTokenAsync () with
+                match! getRedditToken () with
                 | Error err ->
                     Logging.error "Failed to get reddit access token" err
                     return None
