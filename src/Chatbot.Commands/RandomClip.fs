@@ -12,7 +12,7 @@ module RandomClip =
         | Whisper _ ->
             match args with
             | channel :: _ -> Ok channel
-            | _ -> Error "You must specify a channel if using this command in whispers"
+            | _ -> Error "You must specify a channel when using this command in whispers"
         | Channel channel ->
             match args with
             | [] -> Ok channel.Channel
