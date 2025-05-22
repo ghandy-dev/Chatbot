@@ -19,7 +19,7 @@ module News =
             | Ok newsItem ->
                 let title = newsItem.Title.Text
                 let date = newsItem.PublishDate.UtcDateTime.ToString("dd MMM yyyy, HH:mm")
-                let summary = newsItem.Summary.Text
+                let summary = if newsItem.Summary = null then "" else newsItem.Summary.Text
                 let link = newsItem.Links |> Seq.tryHead |> Option.bind (fun l -> Some l.Uri.AbsoluteUri) |?? ""
                 return Message $"{date} {title} {summary} {link}"
         }
