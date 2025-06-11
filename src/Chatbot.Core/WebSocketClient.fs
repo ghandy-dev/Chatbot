@@ -23,21 +23,10 @@ type WebSocketClient(host: string, port: int) =
     let read cancellationToken =
         async {
             let buffer = new ArraySegment<byte>(Buffers.ArrayPool<byte>.Shared.Rent(readerBufferSize))
-            let mutable count = 0
+            let! result = client.ReceiveAsync(buffer, cancellationToken) |> Async.AwaitTask
 
-            let rec read' () =
-                async {
-                    let! (result: WebSocketReceiveResult) = client.ReceiveAsync(buffer, cancellationToken) |> Async.AwaitTask
-                    if not <| result.EndOfMessage then
-                        do! read' ()
-
-                    count <- result.Count
-                }
-
-            do! read' ()
-
-            let message = System.Text.Encoding.UTF8.GetString(buffer.Array, 0, count)
-            if (String.notEmpty message) then
+            if result.Count > 0 then
+                let message = System.Text.Encoding.UTF8.GetString(buffer.Array, 0, result.Count)
                 return Some message
             else
                 return None
