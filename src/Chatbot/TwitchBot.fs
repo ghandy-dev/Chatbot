@@ -309,6 +309,7 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) (
                 let rec loop () =
                     async {
                         match! mb.Receive() with
+                        | ClientRequest.HandleIrcMessages messages -> do! handleMessages messages mb
                         | ClientRequest.SendPongMessage pong -> do! sendPong pong
                         | ClientRequest.SendPrivateMessage(channel, message) -> do! sendPrivateMessage channel message
                         | ClientRequest.SendWhisperMessage(userId, _, message) -> do! sendWhisper userId message
@@ -354,28 +355,18 @@ let run (cancellationToken: Threading.CancellationToken) =
         let chatAgent = chatAgent twitchChatClient user triviaAgent cancellationToken
         let reminderAgent = reminderAgent twitchChatClient cancellationToken
 
-        twitchChatClient.MessageReceived.Subscribe(fun messages -> handleMessages messages chatAgent |> Async.Start) |> ignore
-
-        twitchChatClient.MessageReceived
-        |> Event.filter (fun messages ->
-            messages
-            |> Array.exists (
-                function
-                | PrivateMessage _ -> true
-                | _ -> false
-            )
-        )
-        |> Event.add (fun messages ->
-            messages
-            |> Array.iter (
-                function
-                | PrivateMessage msg ->
-                    reminderAgent.Post(ReminderMessage.UserMessaged(msg.Channel, msg.UserId |> int, msg.Username))
-                    triviaAgent.Post(TriviaRequest.UserMessaged(msg.Channel, msg.UserId |> int, msg.Username, msg.Message))
-                | _ -> ()
-            )
-        )
-        |> ignore
+        twitchChatClient.MessageReceived.Subscribe(
+            fun messages ->
+                chatAgent.Post <| ClientRequest.HandleIrcMessages messages
+                messages
+                    |> Array.iter(
+                        function
+                        | PrivateMessage msg ->
+                            reminderAgent.Post(ReminderMessage.UserMessaged(msg.Channel, msg.UserId |> int, msg.Username))
+                            triviaAgent.Post(TriviaRequest.UserMessaged(msg.Channel, msg.UserId |> int, msg.Username, msg.Message))
+                        | _ -> ()
+                    )
+        ) |> ignore
 
         do! twitchChatClient.StartAsync(cancellationToken)
 
