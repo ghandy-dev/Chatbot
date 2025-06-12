@@ -92,49 +92,60 @@ module FaceIt =
             | Ok(player, lastMatch) ->
                 match lastMatch.Items with
                 | [] -> return Message "No matches played!"
-                | m :: _ ->
-                    let playerTeam, otherTeam =
-                        m.Teams
+                | { MatchId = matchId ; Teams = teams ; Results = { Winner = winner } } :: _ ->
+                    let team1, team2 =
+                        teams
                         |> Map.toList
-                        |> List.partition (fun (_, ps) -> ps.Players |> List.exists (fun p -> p.PlayerId = player.PlayerId))
+                        |> List.map snd
+                        |> List.partition (fun t -> t.Players |> List.exists (fun p -> p.PlayerId = player.PlayerId))
                         |> function
-                            | [ p ], [ o ] -> p, o
+                            | [ t1 ], [ t2 ] -> t1, t2
                             | _ -> failwith "Expected 2 lists with one item each"
 
-                    match! getMatch m.MatchId with
+                    match! getMatch matchId with
                     | Error error -> return Message error
                     | Ok matchData ->
                         let gameMap = matchData.Voting.Map.Pick |> List.head
 
                         let date =
                             DateTimeOffset
-                                .FromUnixTimeSeconds(m.FinishedAt)
+                                .FromUnixTimeSeconds(matchData.FinishedAt)
                                 .DateTime.ToString("dd MMM yyyy HH:mm")
 
-                        let duration = DateTimeOffset.FromUnixTimeSeconds(m.FinishedAt) - DateTimeOffset.FromUnixTimeSeconds(m.StartedAt)
-                        let durationFormatted = duration.ToString("hh\h\:mm\m\:ss\s")
+                        let duration = DateTimeOffset.FromUnixTimeSeconds(matchData.FinishedAt) - DateTimeOffset.FromUnixTimeSeconds(matchData.StartedAt)
 
-                        let winner =
-                            if m.Results.Winner = (fst playerTeam) then
-                                $"Winner: team_{player.Nickname}"
+                        let winningTeam =
+                            if winner = team1.Nickname then
+                                $"team_{player.Nickname}"
                             else
-                                $"Winner: {(snd otherTeam).Nickname}"
+                                $"{team2.Nickname}"
 
-                        let! teamElos =
-                            [ playerTeam ; otherTeam ]
-                            |> List.map (fun (_, team) -> team.Players |> List.map (fun p -> getPlayerById p.PlayerId) |> Async.Parallel)
-                            |> Async.Parallel
-                            |-> Array.map (Array.choose Result.toOption >> Array.averageBy (fun p -> p.Games["cs2"].FaceItElo |> float))
+                        let selectPlayerElo = fun (p: FaceIt.Types.Players.Player) -> p.Games["cs2"].FaceItElo |> float
+                        let selectPlayers = fun (t: FaceIt.Types.Players.Team) -> t.Players
+                        let lookUpPlayer = fun (p: FaceIt.Types.Players.TeamPlayer) -> getPlayerById p.PlayerId
+
+                        let calcTeamAverageElo =
+                            fun t ->
+                                t
+                                |> selectPlayers
+                                |> List.map lookUpPlayer
+                                |> Async.Parallel
+                                |-> Seq.choose Result.toOption
+                                |-> Seq.map selectPlayerElo
+                                |-> Seq.average
+
+                        let! team1Elo, team2Elo =
+                            ( team1 , team2 )
+                            |> map2Async calcTeamAverageElo
 
                         let message =
                             (new StringBuilder())
                                 .Append($"Map: {gameMap}, ")
-                                .Append($"Game Status: {m.Status}, ")
                                 .Append($"Date: {date}, ")
-                                .Append($"Game Length: {durationFormatted}, ")
-                                .Append($"{winner}, ")
-                                .Append($"Average Elo: team_{player.Nickname} {teamElos[0]}, ")
-                                .Append($"{(snd otherTeam).Nickname}: {teamElos[1]}")
+                                .Append($"""Game Length: {duration.ToString("hh\h\:mm\m\:ss\s")}, """)
+                                .Append($"Winner: {winningTeam}, ")
+                                .Append($"Average Elo: team_{player.Nickname} {team1Elo}, ")
+                                .Append($"{team2.Nickname}: {team2Elo}")
                                 .ToString()
 
                         return Message message
