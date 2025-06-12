@@ -52,25 +52,21 @@ module Weather =
     let private geolocationService = Services.services.GeolocationService
 
     let private processWeatherResult (geocoding: SearchAddressResultItem) (weather: CurrentConditions) =
-        let time = weather.DateTime.ToString("dd MMM HH:mm")
         let location = geocoding.Address.FreeformAddress
         let emoji = weatherCodeToEmoji weather.IconCode
         let summary = weather.Phrase
         let temperature = $"{weather.Temperature.Value}°{weather.Temperature.Unit}"
-
-        let perceivedTemperature =
-            $"{weather.ApparentTemperature.Value}°{weather.ApparentTemperature.Unit}"
+        let perceivedTemperature = $"{weather.ApparentTemperature.Value}°{weather.ApparentTemperature.Unit}"
 
         let wind =
             match weather.Wind.Direction with
             | Some dir -> $"Wind: {weather.Wind.Speed.Value} {weather.Wind.Speed.Unit} {dir.LocalizedDescription}"
             | None -> $"Wind: {weather.Wind.Speed.Value} {weather.Wind.Speed.Unit}"
 
-        let dayOrNight = if weather.IsDayTime then "🌅" else "🌛"
         let precipitation = $"Precipitation {weather.PrecipitationSummary.PastHour.Value} {weather.PrecipitationSummary.PastHour.Unit}"
         let uv = $"UV: {weather.UvIndexPhrase}"
 
-        Message $"{dayOrNight} {location} 🕒 Updated at: [{time}] {emoji} {summary} {temperature} - feels like {perceivedTemperature}, {wind}, {precipitation}, {uv}"
+        Message $"{location} {emoji} {summary} {temperature} - feels like {perceivedTemperature}, {wind}, {precipitation}, {uv}"
 
     let weather args =
         async {
