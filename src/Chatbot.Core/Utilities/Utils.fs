@@ -39,6 +39,24 @@ let formatTimeSpan (ts: TimeSpan) =
     | None, None, None, None, Some s -> sprintf "%ss" s
     | _ -> "0s"
 
+let map2 f (a, b) = f a, f b
+let map3 f (a, b, c) = f a, f b, f c
+
+let map2Async f (a, b) =
+    async {
+        let! a' = f a
+        let! b' = f b
+        return a', b'
+    }
+
+let map3Async f (a, b, c) =
+    async {
+        let! a' = f a
+        let! b' = f b
+        let! c' = f c
+        return a', b', c'
+    }
+
 module String =
 
     let notEmpty = not << String.IsNullOrWhiteSpace
