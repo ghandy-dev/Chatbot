@@ -2,10 +2,10 @@
 
 module NewsFeedRepository =
 
-    open DB
-    open Database.Entities
-
     open Dapper
+
+    open Database.Entities
+    open DB
 
     let get (category: string) =
         async {

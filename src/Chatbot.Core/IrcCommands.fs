@@ -3,7 +3,7 @@ namespace IRC
 module Commands =
 
     type Command =
-        | CapReq of capabilities: string list
+        | CapReq of capabilities: string seq
         | Pass of token: string
         | Nick of username: string
         | PrivMsg of channel: string * message: string

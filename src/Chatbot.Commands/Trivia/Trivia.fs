@@ -3,31 +3,36 @@ namespace Commands
 [<AutoOpen>]
 module Trivia =
 
-    open Trivia
-
     open System
+
+    open FsToolkit.ErrorHandling
+
+    open CommandError
+    open Parsing
+    open Trivia
 
     let keys = [ "count" ; "exclude" ; "include" ; "hints" ]
 
     let trivia args context =
-        match context.Source with
-        | Whisper _ -> async { return Message "Trivia can only be used in channels" }
-        | Channel channel ->
-            match args with
-            | "stop" :: _ -> async { return BotAction (StopTrivia channel.Channel, None) }
-            | _ ->
-                let options = KeyValueParser.parse args keys
+        asyncResult {
+            match context.Source with
+            | Whisper _ -> return! invalidUsage "Trivia can only be used in channels"
+            | Channel channel ->
+                match args with
+                | "stop" :: _ -> return BotAction (StopTrivia channel.Channel, None)
+                | _ ->
+                    let kvp = KeyValueParser.parse args keys
 
-                let count = options |> Map.tryFind "count" |> Option.bind (fun s -> Int32.tryParse s) |> Option.map (fun c -> Math.Clamp(c, 1, 10)) |?? 1
-                let excludeCategories = options |> Map.tryFind "exclude" |> Option.map _.Split(",", System.StringSplitOptions.TrimEntries)
-                let includeCategories = options |> Map.tryFind "include" |> Option.map _.Split(",", System.StringSplitOptions.TrimEntries)
-                let hints = options |> Map.tryFind "hints" |> Option.bind (fun s -> Boolean.tryParse s) |?? true
+                    let count = kvp.KeyValues.TryFind "count" |> Option.bind tryParseInt |> Option.map (fun c -> Math.Clamp(c, 1, 10)) |? 1
+                    let excludeCategories = kvp.KeyValues.TryFind "exclude" |> Option.map _.Split(",", System.StringSplitOptions.TrimEntries)
+                    let includeCategories = kvp.KeyValues.TryFind "include" |> Option.map _.Split(",", System.StringSplitOptions.TrimEntries)
+                    let hints = kvp.KeyValues.TryFind "hints" |> Option.bind tryParseBoolean |? true
 
-                async {
-                    match! Api.getQuestions count excludeCategories includeCategories with
-                    | None -> return Message "Failed to start trivia, check logs"
-                    | Some [] -> return Message $"No questions found for selected categories"
-                    | Some questions ->
+                    let! questions = Api.getQuestions count excludeCategories includeCategories |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Trivia")
+
+                    match questions with
+                    | [] -> return Message $"No questions found for selected categories"
+                    | questions ->
                         let triviaConfig = {
                             Questions = (questions |> List.map (fun q -> {
                                 Question = q.Question
@@ -45,4 +50,4 @@ module Trivia =
                         }
 
                         return BotAction (StartTrivia triviaConfig, None)
-                }
+        }

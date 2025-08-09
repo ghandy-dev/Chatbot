@@ -2,11 +2,11 @@
 
 module UserRepository =
 
-    open DB
+    open Dapper.FSharp.SQLite
+
     open Database.Entities
     open Database.Models
-
-    open Dapper.FSharp.SQLite
+    open DB
 
     let get (userId: int) =
         async {

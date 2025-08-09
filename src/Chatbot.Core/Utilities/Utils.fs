@@ -3,6 +3,7 @@ module Utils
 
 open System
 open System.Text
+open System.Text.RegularExpressions
 
 let [<Literal>] DateStringFormat = "dd/MM/yyyy"
 let [<Literal>] TimeStringFormat = "HH:mm:ss"
@@ -10,6 +11,7 @@ let [<Literal>] DateTimeStringFormat = $"dd/MM/yyyy HH:mm:ss"
 
 let utcNow () = DateTime.UtcNow
 let now () = DateTime.Now
+let base64 (s: string) = s |> System.Text.Encoding.UTF8.GetBytes |> System.Convert.ToBase64String
 
 let formatTimeSpan (ts: TimeSpan) =
     let formatComponent value =
@@ -39,33 +41,18 @@ let formatTimeSpan (ts: TimeSpan) =
     | None, None, None, None, Some s -> sprintf "%ss" s
     | _ -> "0s"
 
-let map2 f (a, b) = f a, f b
-let map3 f (a, b, c) = f a, f b, f c
 
-let map2Async f (a, b) =
-    async {
-        let! a' = f a
-        let! b' = f b
-        return a', b'
-    }
+let strFormat (s: string) (args: string list) =
+    let pattern = @"\{(\d+)\}"
+    Regex.Replace(s, pattern, fun m ->
+        let index = int m.Groups.[1].Value
+        args.[index])
 
-let map3Async f (a, b, c) =
-    async {
-        let! a' = f a
-        let! b' = f b
-        let! c' = f c
-        return a', b', c'
-    }
+let strCompare a b = String.Compare(a, b) = 0
+let strCompareIgnoreCase a b = String.Compare(a, b, ignoreCase = true) = 0
+let strEmpty = String.IsNullOrWhiteSpace
+let strNotEmpty = not << strEmpty
+let strConcat (values: string seq) = String.Concat(values)
+let strJoin (values: string seq) (separator: string) = String.Join(separator, values)
 
-module String =
-
-    let notEmpty = not << String.IsNullOrWhiteSpace
-
-module Dictionary =
-
-    open System.Collections.Generic
-
-    let tryGetValue key (dict: IDictionary<_,_>) =
-        match dict.TryGetValue key with
-        | false, _ -> None
-        | true, value -> Some value
+let htmlDecode = System.Web.HttpUtility.HtmlDecode

@@ -2,11 +2,11 @@
 
 module RpsRepository =
 
-    open DB
+    open Dapper.FSharp.SQLite
+
     open Database.Models
     open Database.Entities
-
-    open Dapper.FSharp.SQLite
+    open DB
 
     let get (userId: int) =
         async {

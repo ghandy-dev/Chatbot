@@ -3,21 +3,27 @@ namespace Commands
 [<AutoOpen>]
 module LeaveChannel =
 
+    open FsToolkit.ErrorHandling
+
+    open CommandError
     open Database
 
     let twitchService = Services.services.TwitchService
 
     let leaveChannel (args: string list) =
-        async {
-            match!
-                args |> Async.create |-> List.tryHead |-> Result.fromOption "No channel specified"
-                |> Result.bindAsync (fun c -> twitchService.GetUser c |-> Result.fromOption "User not found")
-                |> Result.bindAsync (fun u -> ChannelRepository.get (int u.Id) |-> Result.fromOption $"Not in channel {u.DisplayName}")
-                |> Result.bindAsync (fun u ->  ChannelRepository.get (int u.ChannelId) |-> Result.fromOption $"Not in channel {u.ChannelName}")
-            with
-            | Error err -> return Message err
-            | Ok channel ->
-                match! ChannelRepository.delete (channel.ChannelId |> int) with
-                | DatabaseResult.Success _ -> return BotAction (LeaveChannel channel.ChannelName, Some $"removed channel (%s{channel.ChannelId} %s{channel.ChannelName})")
-                | DatabaseResult.Failure -> return Message $"Failed to delete and leave channel"
+        asyncResult {
+            let! channelName = args |> List.tryHead |> Result.requireSome (InvalidArgs "No channel specified")
+
+            let! user =
+                twitchService.GetUser channelName
+                |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")
+                |> AsyncResult.bindRequireSome (InvalidArgs "User not found")
+
+            let! channel =
+                ChannelRepository.get (int user.Id)
+                |> AsyncResult.requireSome (InvalidArgs $"Not in channel %s{channelName}")
+
+            match! ChannelRepository.delete (channel.ChannelId |> int) with
+            | DatabaseResult.Failure -> return! internalError "Failed to remove and leave channel"
+            | DatabaseResult.Success _ -> return BotAction (LeaveChannel channel.ChannelName, Some $"removed channel (%s{channel.ChannelId} %s{channel.ChannelName})")
         }

@@ -2,11 +2,11 @@
 
 module ChannelRepository =
 
-    open DB
+    open Dapper.FSharp.SQLite
+
     open Database.Models
     open Database.Entities
-
-    open Dapper.FSharp.SQLite
+    open DB
 
     let mapToModel (channel: Entities.Channel) : Models.Channel = {
         ChannelId = string channel.channel_id

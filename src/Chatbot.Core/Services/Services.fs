@@ -1,55 +1,54 @@
 module Services
 
+open System.Collections.Generic
+
+open EmoteProviders
 open Geolocation.Azure
 open Geolocation.Google
-open Emotes
 open Pastebin
 open Weather
 
-open System.Collections.Concurrent
-open System.Collections.Generic
-
 type IWeatherService =
-    abstract member GetCurrentWeather: latitude: double -> longitude: double -> Async<Result<CurrentConditions, string>>
+    abstract member GetCurrentWeather: latitude: double -> longitude: double -> Async<Result<CurrentConditions list, int>>
 
 type IGeolocationService =
-    abstract member GetReverseAddress: latitude: double -> longitude: double -> Async<Result<ReverseSearchAddressResultItem, string>>
-    abstract member GetSearchAddress: address: string -> Async<Result<SearchAddressResultItem, string>>
-    abstract member GetTimezone: latitude: double -> longitude: double -> timestamp: int64 -> Async<Result<Timezone, string>>
+    abstract member GetReverseAddress: latitude: double -> longitude: double -> Async<Result<ReverseSearchAddressResultItem, int>>
+    abstract member GetSearchAddress: address: string -> Async<Result<SearchAddressResultItem, int>>
+    abstract member GetTimezone: latitude: double -> longitude: double -> timestamp: int64 -> Async<Result<Timezone, int>>
 
 type IEmoteService =
     abstract member GlobalEmotes: Emote list with get
-    abstract member ChannelEmotes: ConcurrentDictionary<string, Emote list> with get
+    abstract member ChannelEmotes: Dictionary<string, Emote list> with get
     abstract member RefreshGlobalEmotes: unit -> Async<unit>
     abstract member RefreshGlobalEmotes: userId: string * accessToken: string -> Async<unit>
     abstract member RefreshChannelEmotes: channelId: string -> Async<unit>
 
 type IPastebinService =
-    abstract member CreatePaste: pasteName: string -> pasteCode: string -> Async<Result<string, string * System.Net.HttpStatusCode>>
+    abstract member CreatePaste: pasteName: string -> pasteCode: string -> Async<Result<string, int>>
 
 type ITwitchService =
-    abstract member GetChannel: userId: string -> Async<TTVSharp.Helix.Channel option>
-    abstract member GetUserChatColor: userId: string -> Async<TTVSharp.Helix.UserChatColor option>
-    abstract member GetClips: userId: string -> dateFrom: System.DateTime -> dateTo: System.DateTime -> Async<IReadOnlyList<TTVSharp.Helix.Clip> option>
-    abstract member GetGlobalEmotes: unit -> Async<IReadOnlyList<TTVSharp.Helix.GlobalEmote> option>
-    abstract member GetChannelEmotes: channelId: string -> Async<IReadOnlyList<TTVSharp.Helix.ChannelEmote> option>
-    abstract member GetEmoteSet: emoteSetId: string -> Async<IReadOnlyList<TTVSharp.Helix.EmoteSet> option>
-    abstract member GetEmoteSets: emoteSetIds: string seq -> Async<IReadOnlyList<TTVSharp.Helix.EmoteSet> option>
-    abstract member GetUserEmotes: userId: string -> accessToken: string -> Async<IReadOnlyList<TTVSharp.Helix.UserEmote> option>
-    abstract member GetStreams: first: int -> Async<IReadOnlyList<TTVSharp.Helix.Stream> option>
-    abstract member GetStream: userId: string -> Async<TTVSharp.Helix.Stream option>
-    abstract member GetUser: username: string -> Async<TTVSharp.Helix.User option>
-    abstract member GetUsersByUsername: usernames: string seq -> Async<IReadOnlyList<TTVSharp.Helix.User> option>
-    abstract member GetUsersById: userIds: string seq -> Async<IReadOnlyList<TTVSharp.Helix.User> option>
-    abstract member GetAccessTokenUser: accessToken: string -> Async<TTVSharp.Helix.User option>
-    abstract member GetLatestVod: userId: string -> Async<TTVSharp.Helix.Video option>
+    abstract member GetChannel: userId: string -> Async<Result<TTVSharp.Helix.Channel option, int>>
+    abstract member GetUserChatColor: userId: string -> Async<Result<TTVSharp.Helix.UserChatColor option, int>>
+    abstract member GetClips: userId: string -> dateFrom: System.DateTime -> dateTo: System.DateTime -> Async<Result<TTVSharp.Helix.Clip list, int>>
+    abstract member GetGlobalEmotes: unit -> Async<Result<TTVSharp.Helix.GlobalEmote list, int>>
+    abstract member GetChannelEmotes: channelId: string -> Async<Result<TTVSharp.Helix.ChannelEmote list, int>>
+    abstract member GetEmoteSet: emoteSetId: string -> Async<Result<TTVSharp.Helix.EmoteSet list, int>>
+    abstract member GetEmoteSets: emoteSetIds: string seq -> Async<Result<TTVSharp.Helix.EmoteSet list, int>>
+    abstract member GetUserEmotes: userId: string -> accessToken: string -> Async<Result<TTVSharp.Helix.UserEmote list, int>>
+    abstract member GetStreams: first: int -> Async<Result<TTVSharp.Helix.Stream list, int>>
+    abstract member GetStream: userId: string -> Async<Result<TTVSharp.Helix.Stream option, int>>
+    abstract member GetUser: username: string -> Async<Result<TTVSharp.Helix.User option, int>>
+    abstract member GetUsersByUsername: usernames: string seq -> Async<Result<TTVSharp.Helix.User list, int>>
+    abstract member GetUsersById: userIds: string seq -> Async<Result<TTVSharp.Helix.User list, int>>
+    abstract member GetAccessTokenUser: accessToken: string -> Async<Result<TTVSharp.Helix.User option, int>>
+    abstract member GetLatestVod: userId: string -> Async<Result<TTVSharp.Helix.Video option, int>>
     abstract member SendWhisper: fromUserId: string -> toUserId: string -> message: string -> accessToken: string -> Async<int>
 
 type IIvrService =
-    abstract member GetEmoteByName: emote: string -> Async<Result<IVR.Emote, string>>
-    abstract member GetSubAge: user: string -> channel: string -> Async<Result<IVR.SubAge, string>>
-    abstract member GetChannelRandomLine: channel: string -> Async<Result<string, string>>
-    abstract member GetUserRandomLine: channel: string -> user: string -> Async<Result<string, string>>
+    abstract member GetEmoteByName: emote: string -> Async<Result<IVR.Emote, int>>
+    abstract member GetSubAge: user: string -> channel: string -> Async<Result<IVR.SubAge, int>>
+    abstract member GetChannelRandomLine: channel: string -> Async<Result<string, int>>
+    abstract member GetUserRandomLine: channel: string -> user: string -> Async<Result<string, int>>
 
 type Services = {
     EmoteService: IEmoteService
@@ -74,16 +73,15 @@ let private geolocationService =
 
 let private pastebinService =
     { new IPastebinService with
-        member _.CreatePaste (pasteName: string) (pasteCode: string): Async<Result<string,(string * System.Net.HttpStatusCode)>> = createPaste pasteName pasteCode
+        member _.CreatePaste (pasteName: string) (pasteCode: string) = createPaste pasteName pasteCode
     }
 
-
 let private emoteService =
-    let mutable channelEmotes = new ConcurrentDictionary<string, Emote list>()
+    let mutable channelEmotes = new Dictionary<string, Emote list>()
     let mutable globalEmotes = List.empty<Emote>
 
     { new IEmoteService with
-        member _.ChannelEmotes with get (): ConcurrentDictionary<string,Emote list> = channelEmotes
+        member _.ChannelEmotes with get (): Dictionary<string,Emote list> = channelEmotes
 
         member _.GlobalEmotes with get (): Emote list = globalEmotes
 

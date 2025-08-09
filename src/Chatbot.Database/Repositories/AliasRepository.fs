@@ -2,11 +2,11 @@
 
 module AliasRepository =
 
+    open Dapper.FSharp.SQLite
+
     open Database.Models
     open Database.Entities
     open DB
-
-    open Dapper.FSharp.SQLite
 
     type AliasQuery =
         | ByUserIdAliasName of userId: int * alias: string

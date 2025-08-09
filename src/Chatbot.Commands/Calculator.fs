@@ -48,5 +48,5 @@ module Calculator =
         let result = innerCalculate input
 
         match result with
-        | Success(r, _, _) -> CommandResult.Message $"{r}"
-        | Failure(msg, _, _) -> CommandResult.Message msg
+        | Success(r, _, _) -> Result.Ok <| CommandOk.Message $"{r}"
+        | Failure(msg, _, _) -> Result.Ok <| CommandOk.Message msg

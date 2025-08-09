@@ -3,18 +3,19 @@ namespace Commands
 [<AutoOpen>]
 module NameColor =
 
+    open FsToolkit.ErrorHandling
+
     let twitchService = Services.services.TwitchService
 
     let namecolor (args: string list) (context: Context) =
-        async {
-            let username =
-                args |> List.tryHead |> Option.bind Some |?? context.Username
-
-            match!
+        asyncResult {
+            let username = args |> List.tryHead |? context.Username
+            let! user =
                 twitchService.GetUser username
-                |-> Result.fromOption "User not found"
-                |> Result.bindAsync (fun user -> twitchService.GetUserChatColor user.Id |-> Result.fromOption "User not found")
-            with
-            | Error err -> return Message err
-            | Ok response -> return Message $"{response.UserName} {response.Color}"
+                |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")
+                |> AsyncResult.bindRequireSome (InvalidArgs "User not found")
+
+            match! twitchService.GetUserChatColor user.Id |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - UserChatColor") with
+            | None -> return Message "User not found"
+            | Some userColor -> return Message $"{userColor.UserName} {userColor.Color}"
         }

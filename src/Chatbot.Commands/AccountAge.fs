@@ -5,18 +5,23 @@ module AccountAge =
 
     open System
 
+    open FsToolkit.ErrorHandling
+
     let twitchService = Services.services.TwitchService
 
     let accountAge args context =
-        async {
+        asyncResult {
             let username =
                 match args with
                 | [] -> context.Username
                 | username :: _ -> username
 
-            match! twitchService.GetUser username with
-            | None -> return Message "User not found"
-            | Some user ->
-                let age = formatTimeSpan (DateTimeOffset.UtcNow - user.CreatedAt)
-                return Message $"""Account created %s{age} ago on %s{user.CreatedAt.ToString("dd MMM yyyy")}"""
+            let! user =
+                twitchService.GetUser username
+                |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")
+                |> AsyncResult.bindRequireSome (InvalidArgs "User not found")
+
+            let age = formatTimeSpan (DateTimeOffset.UtcNow - user.CreatedAt)
+            let creationDate = user.CreatedAt.ToString("dd MMM yyyy")
+            return Message $"""Account created %s{age} ago on %s{creationDate}"""
         }

@@ -3,8 +3,12 @@ namespace Commands
 [<AutoOpen>]
 module FollowAge =
 
+    open FsToolkit.ErrorHandling
+
+    let private ivrService = Services.ivrService
+
     let followAge args context =
-        async {
+        asyncResult {
             let maybeData =
                 match context.Source with
                 | Whisper _ ->
@@ -18,21 +22,19 @@ module FollowAge =
                     | user :: channel :: _ -> Some (user, channel)
                     | user :: _ -> Some (user, channel.Channel)
 
-            match maybeData with
-            | None -> return Message "You must specify a user and channel when using this command in whispers"
-            | Some (user, channel) ->
-                match! IVR.getSubAge user channel with
-                | Error err -> return Message err
-                | Ok subage ->
-                    let self = if System.String.Compare(user, context.Username, ignoreCase = true) = 0 then true else false
+            let! user, channel = maybeData |> Result.requireSome (InvalidArgs "You must specify a user and channel when using this command in whispers")
+            let! subage =  ivrService.GetSubAge user channel |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
+            let isSelf = strCompareIgnoreCase user context.Username
 
-                    match subage.FollowedAt, self with
-                    | None, false -> return Message $"%s{user} is not following %s{channel}"
-                    | None, true -> return Message $"You are not following %s{channel}"
-                    | Some followedAt, false ->
-                        let duration = System.DateTimeOffset.UtcNow - followedAt |> formatTimeSpan
-                        return Message $"%s{user} has been following %s{channel} for %s{duration}"
-                    | Some followedAt, true ->
-                        let duration = System.DateTimeOffset.UtcNow - followedAt |> formatTimeSpan
-                        return Message $"You have been following %s{channel} for %s{duration}"
+            return
+                match subage.FollowedAt, isSelf with
+                | None, false -> $"%s{user} is not following %s{channel}"
+                | None, true -> $"You are not following %s{channel}"
+                | Some followedAt, false ->
+                    let duration = System.DateTimeOffset.UtcNow - followedAt |> formatTimeSpan
+                    $"%s{user} has been following %s{channel} for %s{duration}"
+                | Some followedAt, true ->
+                    let duration = System.DateTimeOffset.UtcNow - followedAt |> formatTimeSpan
+                    $"You have been following %s{channel} for %s{duration}"
+                |> Message
         }

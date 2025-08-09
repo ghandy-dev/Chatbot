@@ -1,9 +1,11 @@
-namespace IRC
+namespace Clients
 
 open System
 open System.IO
 open System.Net.Sockets
 open System.Net.Security
+
+open IRC.Commands
 
 type IrcClient(host: string, port: int) =
 
@@ -23,12 +25,16 @@ type IrcClient(host: string, port: int) =
 
     let connect cancellationToken =
         async {
-            do! socket.ConnectAsync(host, port, cancellationToken).AsTask() |> Async.AwaitTask
-            let stream = new NetworkStream(socket)
-            let sslStream = new SslStream(stream)
-            sslStream.AuthenticateAsClient(host)
-            reader <- IO.createStreamReader sslStream
-            writer <- IO.createStreamWriter sslStream WriterBufferSize
+            try
+                do! socket.ConnectAsync(host, port, cancellationToken).AsTask() |> Async.AwaitTask
+                let stream = new NetworkStream(socket)
+                let sslStream = new SslStream(stream)
+                sslStream.AuthenticateAsClient(host)
+                reader <- IO.createStreamReader sslStream
+                writer <- IO.createStreamWriter sslStream WriterBufferSize
+            with ex ->
+                isConnected <- false
+                raise ex
         }
 
     let read cancellationToken =
@@ -36,34 +42,30 @@ type IrcClient(host: string, port: int) =
             try
                 return! IO.readAsync reader ReaderBufferSize cancellationToken
             with ex ->
-                Logging.error "error in readAsync" ex
+                Logging.error $"error in {nameof IO.readAsync}" ex
                 return None
         }
 
-    let writeLine (message: string) =
+    let writeLine message cancellationToken =
         async {
             try
-                do! IO.writeLineAsync writer message
-            with
-            | :? ObjectDisposedException as ex -> Logging.error "error in writeLineAsync" ex |> ignore
-            | :? InvalidOperationException as ex -> Logging.error "error in writeLineAsync" ex |> ignore
-            | ex -> Logging.error "error in writeLineAsync" ex |> ignore
+                do! IO.writeLineAsync writer message cancellationToken
+            with ex ->
+                Logging.error $"error in {IO.writeLineAsync}" ex
         }
 
-    let flush () =
+    let flush cancellationToken =
         async {
             try
-                do! IO.flushAsync writer
-            with
-            | :? ObjectDisposedException as ex -> Logging.error "error in flushAsync" ex |> ignore
-            | :? InvalidOperationException as ex -> Logging.error "error in flushAsync" ex |> ignore
-            | ex -> Logging.error "error in flushAsync" ex |> ignore
+                do! IO.flushAsync writer cancellationToken
+            with ex ->
+                Logging.error $"error in {IO.flushAsync}" ex
         }
 
-    let send (message: string) =
+    let send message cancellationToken =
         async {
-            do! writeLine (message)
-            do! flush ()
+            do! writeLine message cancellationToken
+            do! flush cancellationToken
         }
 
     interface Clients.ITwitchConnection with
@@ -73,16 +75,15 @@ type IrcClient(host: string, port: int) =
 
         member _.ReadAsync (cancellationToken) = read cancellationToken
 
-        member _.SendAsync (message) = send message
+        member _.SendAsync (message: string, cancellationToken) = send (message.AsMemory()) cancellationToken
 
-        member _.AuthenticateAsync (user: string, accessToken: string, capabilities: string array) =
+        member _.AuthenticateAsync (user, accessToken, capabilities, cancellationToken) =
             async {
-                if (capabilities.Length > 0) then
-                    do! writeLine ($"""CAP REQ :{String.concat " " capabilities}""")
+                if capabilities.Length > 0 then
+                    do! writeLine ((CapReq capabilities).ToString().AsMemory()) cancellationToken
 
-                do! writeLine ($"PASS oauth:{accessToken}")
-                do! writeLine ($"NICK {user}")
-                do! flush ()
+                do! writeLine ((Pass accessToken).ToString().AsMemory()) cancellationToken
+                do! writeLine ((Nick user).ToString().AsMemory()) cancellationToken
             }
 
     interface IDisposable with

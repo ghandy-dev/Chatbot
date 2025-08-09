@@ -17,5 +17,6 @@ module Ping =
         let timeOnline =
             $"{duration.TotalHours |> int} hours, {duration.Minutes} minutes, {duration.Seconds} seconds"
 
-        Message
-            $"Pong. Uptime: {timeOnline}. Running on platform: {platform} {platformVersion}, processors: {processors}, architecture: {architecture}, dotnet version: {version}."
+        $"Pong. Uptime: {timeOnline}. Running on platform: {platform} {platformVersion}, processors: {processors}, architecture: {architecture}, dotnet version: {version}."
+        |> Message
+        |> Ok

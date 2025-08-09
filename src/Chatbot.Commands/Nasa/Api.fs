@@ -2,10 +2,14 @@ namespace Nasa
 
 module Api =
 
+    open System
+    open System.Net.Http
+
+    open FsToolkit.ErrorHandling
+
     open Types
     open Configuration
-
-    open System
+    open Http
 
     let private apiKey = appConfig.Nasa.ApiKey
 
@@ -24,32 +28,35 @@ module Api =
     let getCurrentPictureOfTheDay () =
         async {
             let url = currentPictureOfTheDay
+            let request = Request.request url
+            let! response = request |> Http.send Http.client
 
-            match! Http.getFromJsonAsync<APOD> url with
-            | Error(err, statusCode) ->
-                Logging.error $"NASA API error: {err}" (new System.Net.Http.HttpRequestException("", null, statusCode))
-                return None
-            | Ok apod -> return Some apod
+            return
+                response
+                |> Response.toJsonResult<APOD>
+                |> Result.mapError _.StatusCode
         }
 
     let getPictureOfTheDay (date: DateOnly) =
         async {
             let url = pictureOfTheDay (date.ToString(dateFormat))
+            let request = Request.request url
+            let! response = request |> Http.send Http.client
 
-            match! Http.getFromJsonAsync<APOD> url with
-            | Error(err, statusCode) ->
-                Logging.error $"NASA API error: {err}" (new System.Net.Http.HttpRequestException("", null, statusCode))
-                return None
-            | Ok apod -> return Some apod
+            return
+                response
+                |> Response.toJsonResult<APOD>
+                |> Result.mapError _.StatusCode
         }
 
     let getMarsRoverPhoto (camera: RoverCamera) (date: DateOnly) =
         async {
             let url = marsRoverPhotos date camera
+            let request = Request.request url
+            let! response = request |> Http.send Http.client
 
-            match! Http.getFromJsonAsync<APOD> url with
-            | Error(err, statusCode) ->
-                Logging.error $"NASA API error: {err}" (new System.Net.Http.HttpRequestException("", null, statusCode))
-                return None
-            | Ok apod -> return Some apod
+            return
+                response
+                |> Response.toJsonResult<APOD>
+                |> Result.mapError _.StatusCode
         }

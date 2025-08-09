@@ -2,8 +2,12 @@ namespace Trivia
 
 module Api =
 
-    open Types
+    open System.Net.Http
+
+    open FsToolkit.ErrorHandling
+
     open Http
+    open Types
 
     let [<Literal>] private ApiUrl = "https://api.gazatu.xyz/trivia/questions"
 
@@ -29,10 +33,11 @@ module Api =
                     (maybeConcat excludeCategories)
                     (maybeConcat includeCategories)
 
-            match! getFromJsonAsync<Question list> url with
-            | Error (err, _) ->
-                Logging.error err (new exn(err))
-                return None
-            | Ok questions ->
-                return Some questions
+            let request = Request.request url
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<Question list>
+                |> Result.mapError _.StatusCode
         }

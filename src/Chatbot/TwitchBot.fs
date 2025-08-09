@@ -10,7 +10,8 @@ open IRC.Messages.Types
 open MessageHandlers
 open Shared
 open Types
-open Twitch
+
+open FSharpPlus
 
 open System
 
@@ -19,15 +20,16 @@ let services = Services.services
 let getAccessToken () =
     async {
         match! tokenStore.GetToken(TokenType.Twitch) with
-        | None -> return failwith "Failed to get access token"
-        | Some token -> return token
+        | Error _ -> return failwith "Failed to get access token"
+        | Ok token -> return token
     }
 
 let getAccessTokenUser token =
     async {
-        match! Helix.Users.getAccessTokenUser token with
-        | None -> return failwith "Failed to look up user associated with access token"
-        | Some user -> return user
+        match! services.TwitchService.GetAccessTokenUser token with
+        | Error _ -> return failwith "Failed to look up user associated with access token"
+        | Ok None -> return failwith "Failed to look up user associated with access token"
+        | Ok (Some user) -> return user
     }
 
 let getChannelJoinList () =
@@ -35,15 +37,13 @@ let getChannelJoinList () =
         let! channels = ChannelRepository.getAll ()
 
         match!
-            channels
-            |> Seq.map (fun c -> c.ChannelId)
-            |> Async.create
-            |> Async.bind Twitch.Helix.Users.getUsersById
+            channels |> Seq.map _.ChannelId |> async.Return
+            >>= Twitch.Helix.Users.getUsersById
         with
-        | None ->
+        | Error _ ->
             Logging.warning "Twitch API error, falling back on database channel names"
             return channels |> Seq.map (fun c -> c.ChannelId, c.ChannelName)
-        | Some channels ->
+        | Ok channels ->
             return channels |> Seq.map (fun u -> u.Id, u.Login)
     }
 
@@ -58,7 +58,7 @@ let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                         let ts = DateTime.UtcNow - reminder.Timestamp
                         let sender = if reminder.FromUsername = reminder.TargetUsername then "yourself" else $"@%s{reminder.FromUsername}"
                         let message = $"@%s{reminder.TargetUsername}, reminder from %s{sender} (%s{formatTimeSpan ts} ago): %s{reminder.Message}" |> formatChatMessage
-                        do! twitchChatClient.SendAsync(Commands.PrivMsg(reminder.Channel, message))
+                        do! twitchChatClient.SendAsync(Commands.PrivMsg(reminder.Channel, message), cancellationToken)
 
                     do! Async.Sleep(250)
                     mb.Post CheckReminders
@@ -67,9 +67,7 @@ let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
             let userMessaged channel userId username =
                 async {
                     match! ReminderRepository.getPendingReminderCount userId with
-                    | DatabaseResult.Failure -> ()
-                    | DatabaseResult.Success c when c = 0 -> ()
-                    | DatabaseResult.Success _ ->
+                    | DatabaseResult.Success c when c > 0 ->
                         let! reminders = ReminderRepository.getReminders userId
 
                         let message =
@@ -94,11 +92,12 @@ let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                             |> String.concat ", "
 
                         if message.Length > 500 then
-                            match! Pastebin.createPaste "" message with
-                            | Error (err, statusCode) -> Logging.error err (new Exception())
-                            | Ok url -> do! twitchChatClient.SendAsync(Commands.PrivMsg(channel, $"@%s{username}, reminders were too long to send, check %s{url} for your reminders"))
+                            match! services.PastebinService.CreatePaste "" message with
+                            | Error _ -> Logging.error "Failed to create paste" exn
+                            | Ok url -> do! twitchChatClient.SendAsync(Commands.PrivMsg(channel, $"@%s{username}, reminders were too long to send, check %s{url} for your reminders"), cancellationToken)
                         else
-                            do! twitchChatClient.SendAsync(Commands.PrivMsg(channel, $"@%s{username}, %s{message}"))
+                            do! twitchChatClient.SendAsync(Commands.PrivMsg(channel, $"@%s{username}, %s{message}"), cancellationToken)
+                    | _ -> ()
                 }
 
             let rec loop () =
@@ -119,7 +118,7 @@ let reminderAgent (twitchChatClient: TwitchChatClient) cancellationToken =
 let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
     new MailboxProcessor<TriviaRequest>(
         (fun mb ->
-            let sendMessage channel message = twitchChatClient.SendAsync(Commands.PrivMsg(channel, message))
+            let sendMessage channel message = twitchChatClient.SendAsync(Commands.PrivMsg(channel, message), cancellationToken)
 
             let startTrivia (trivia: TriviaConfig) state =
                 async {
@@ -232,7 +231,7 @@ let triviaAgent (twitchChatClient: TwitchChatClient) cancellationToken =
                         | TriviaRequest.StartTrivia config -> startTrivia config state
                         | TriviaRequest.StopTrivia channel -> stopTrivia channel state
                         | TriviaRequest.SendQuestion channel -> sendQuestion channel state
-                        | TriviaRequest.Update -> update state |> Async.create
+                        | TriviaRequest.Update -> update state |> async.Return
                         | TriviaRequest.SendHint channel -> sendHint channel state
                         | TriviaRequest.SendAnswer channel -> sendAnswer channel state
                         | TriviaRequest.UserMessaged (channel, userId, username, message) -> userMessaged channel username message state
@@ -256,9 +255,12 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) (
                 let reconnect () =
                     async {
                         Logging.info "Reconnecting..."
-                        do! twitchChatClient.ReconnectAsync(cancellationToken)
-                        let! channels = getChannelJoinList ()
-                        do! twitchChatClient.SendAsync(Commands.JoinM (channels |> Seq.map snd))
+                        try
+                            do! twitchChatClient.ReconnectAsync(cancellationToken)
+                            let! channels = getChannelJoinList ()
+                            do! twitchChatClient.SendAsync(Commands.JoinM (channels |> Seq.map snd), cancellationToken)
+                        with ex ->
+                            Logging.error "Error reconnecting" ex
                     }
 
                 let rec reconnectHelper () =
@@ -275,20 +277,20 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) (
                     async {
                         Logging.info $"PONG :{pong}"
                         lastPingTime <- DateTime.UtcNow
-                        do! twitchChatClient.SendAsync(Commands.Pong pong)
+                        do! twitchChatClient.SendAsync(Commands.Pong pong, cancellationToken)
                     }
 
-                let sendPrivateMessage channel message = twitchChatClient.SendAsync(Commands.PrivMsg(channel, message))
+                let sendPrivateMessage channel message = twitchChatClient.SendAsync(Commands.PrivMsg(channel, message), cancellationToken)
 
-                let sendReplyMessage messageId channel message = twitchChatClient.SendAsync(Commands.ReplyMsg(messageId, channel, message))
+                let sendReplyMessage messageId channel message = twitchChatClient.SendAsync(Commands.ReplyMsg(messageId, channel, message), cancellationToken)
 
-                let sendRawIrcMessage message = twitchChatClient.SendAsync(Commands.Raw message)
+                let sendRawIrcMessage message = twitchChatClient.SendAsync(Commands.Raw message, cancellationToken)
 
                 let sendWhisper userId message =
                     async {
                         match! tokenStore.GetToken TokenType.Twitch with
-                        | None -> Logging.info "Unable to send whisper. Couldn't retrieve access token for Twitch API."
-                        | Some token -> do! twitchChatClient.WhisperAsync(userId, message, token)
+                        | Error _ -> Logging.info "Unable to send whisper. Couldn't retrieve access token for Twitch API."
+                        | Ok token -> do! twitchChatClient.WhisperAsync(userId, message, token)
                     }
 
                 let handleBotCommand command =
@@ -296,8 +298,8 @@ let chatAgent (twitchChatClient: TwitchChatClient) (user: TTVSharp.Helix.User) (
                         match command with
                         | JoinChannel (channel, channelId) ->
                             do! services.EmoteService.RefreshChannelEmotes channelId
-                            do! twitchChatClient.SendAsync(Commands.Join channel)
-                        | LeaveChannel channel -> do! twitchChatClient.SendAsync(Commands.Part channel)
+                            do! twitchChatClient.SendAsync(Commands.Join channel, cancellationToken)
+                        | LeaveChannel channel -> do! twitchChatClient.SendAsync(Commands.Part channel, cancellationToken)
                         | RefreshGlobalEmotes provider ->
                             let! accessToken = getAccessToken ()
                             do! services.EmoteService.RefreshGlobalEmotes(user.Id, accessToken)
@@ -371,7 +373,7 @@ let run (cancellationToken: Threading.CancellationToken) =
         do! twitchChatClient.StartAsync(cancellationToken)
 
         let! channels = getChannelJoinList ()
-        do! twitchChatClient.SendAsync(Commands.JoinM (channels |> Seq.map snd))
+        do! twitchChatClient.SendAsync(Commands.JoinM (channels |> Seq.map snd), cancellationToken)
         do! services.EmoteService.RefreshGlobalEmotes(user.Id, accessToken)
         let refreshChannelEmotes = channels |> Seq.map fst |> Seq.map (fun c -> services.EmoteService.RefreshChannelEmotes c)
         do! refreshChannelEmotes |> Async.Parallel |> Async.Ignore

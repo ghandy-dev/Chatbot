@@ -1,29 +1,31 @@
 module Twitch
 
-open Configuration
-
+open FSharpPlus
+open FsToolkit.ErrorHandling
 open TTVSharp
 open TTVSharp.Helix
+
+open Configuration
 
 let toResult (response: IApiResponse<'a>) =
     match response.StatusCode with
     | code when code >= 200 && code < 300 -> Ok response.Body
-    | _ -> Error response.Error.Message
+    | _ -> Error response
 
-let private logError r =
-    match r with
-    | Error err -> Logging.error (sprintf "Twitch API error: %s" err) (new exn())
-    | Ok _ -> ()
-
-    r
+let private logError (error: IApiResponse<'a>) = Logging.error ($"Twitch API error: %d{error.StatusCode} %s{error.Error.Message}") exn
 
 module Helix =
 
     open Microsoft.Extensions.Options
 
-    let private selectHelix = fun response -> response |> Result.bind (fun r -> Ok (r :> HelixResponse<_>).Data)
-    let private tryGetData (response: IApiResponse<'a>) = toResult response |> selectHelix  |> logError |> Result.toOption
-    let private tryHead response = tryGetData response |> Option.bind Seq.tryHead
+    let private selectHelix response = (response :> HelixResponse<_>).Data |> List.ofSeq
+
+    let private handleResponse response =
+        response
+        |> toResult
+        |> Result.teeError logError
+        |> Result.mapError _.StatusCode
+        |> Result.map selectHelix
 
     let private options =
         Options.Create<HelixApiOptions>(new HelixApiOptions(ClientId = appConfig.Twitch.ClientId, ClientSecret = appConfig.Twitch.ClientSecret))
@@ -34,88 +36,99 @@ module Helix =
 
         let getChannel userId =
             helixApi.Channels.GetChannelAsync(new GetChannelRequest(BroadcasterId = userId)) |> Async.AwaitTask
-            |-> tryHead
+            |> Async.map handleResponse
+            |> AsyncResult.map List.tryHead
 
     module Chat =
 
         let getUserChatColor userId =
             helixApi.Chat.GetUserChatColorAsync(new GetUserChatColorRequest(UserIds = [ userId ])) |> Async.AwaitTask
-            |-> tryHead
+            |> Async.map handleResponse
+            |> AsyncResult.map List.tryHead
 
     module Clips =
 
         let getClips userId (dateFrom: System.DateTime) (dateTo: System.DateTime) =
             helixApi.Clips.GetClipsAsync(new GetClipsRequestByBroadcasterId(BroadcasterId = userId, StartedAt = dateFrom, EndedAt = dateTo, First = 50)) |> Async.AwaitTask
-            |-> tryGetData
+            |> Async.map handleResponse
 
     module Emotes =
 
         let getGlobalEmotes () =
             helixApi.Chat.GetGlobalEmotesAsync() |> Async.AwaitTask
-            |-> tryGetData
+            |> Async.map handleResponse
 
         let getChannelEmotes channelId =
             helixApi.Chat.GetChannelEmotesAsync(new GetChannelEmotesRequest(BroadcasterId = channelId)) |> Async.AwaitTask
-            |-> tryGetData
+            |> Async.map handleResponse
 
         let getEmoteSet emoteSetId =
             helixApi.Chat.GetEmoteSetsAsync(new GetEmoteSetsRequest(EmoteSetIds = [ emoteSetId ])) |> Async.AwaitTask
-            |-> tryGetData
+            |> Async.map handleResponse
 
         let getEmoteSets emoteSetIds =
             helixApi.Chat.GetEmoteSetsAsync(new GetEmoteSetsRequest(EmoteSetIds = emoteSetIds)) |> Async.AwaitTask
-            |-> tryGetData
+            |> Async.map handleResponse
 
         let getUserEmotes userId accessToken =
             async {
-                let rec pageRequest emotes cursor =
+                let rec pageRequest acc cursor =
                     async {
                         let! r = helixApi.Chat.GetUserEmotesAsync(new GetUserEmotesRequest(UserId = userId, After = cursor), accessToken) |> Async.AwaitTask
-                        let data = r |> tryGetData
 
-                        match data with
-                        | Some d ->
-                            if r.Body.Pagination.HasNextPage then return! pageRequest (d |> Seq.append emotes) r.Body.Pagination.Cursor
-                            else return d |> Seq.append emotes |> Seq.toList :> System.Collections.Generic.IReadOnlyList<UserEmote>
-                        | _ -> return emotes |> Seq.toList :> System.Collections.Generic.IReadOnlyList<UserEmote>
+                        match r |> handleResponse with
+                        | Ok emotes ->
+                            match emotes with
+                            | [] -> return Ok (acc |> List.ofSeq)
+                            | es ->
+                                if r.Body.Pagination.HasNextPage then
+                                    return! pageRequest (es |> Seq.append acc) r.Body.Pagination.Cursor
+                                else
+                                    return Ok (es|> Seq.append acc |> List.ofSeq)
+
+                        | Error err -> return Error err
                     }
 
-                return! pageRequest Seq.empty "" |-> Some
+                return! pageRequest Seq.empty ""
             }
 
     module Streams =
 
         let getStreams (first: int) =
             helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(First = first)) |> Async.AwaitTask
-            |-> tryGetData
+            |> Async.map handleResponse
 
         let getStream userId =
             helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(UserIds = [ userId ])) |> Async.AwaitTask
-            |-> tryHead
+            |> Async.map handleResponse
+            |> AsyncResult.map List.tryHead
 
     module Users =
 
         let getUser username =
             helixApi.Users.GetUsersAsync(new GetUsersRequest(Logins = [ username ])) |> Async.AwaitTask
-            |-> tryHead
+            |> Async.map handleResponse
+            |> AsyncResult.map List.tryHead
 
         let getUsersByUsername usernames =
             helixApi.Users.GetUsersAsync(new GetUsersRequest(Logins = usernames)) |> Async.AwaitTask
-            |-> tryGetData
+            |> Async.map handleResponse
 
         let getUsersById userIds =
             helixApi.Users.GetUsersAsync(new GetUsersRequest(Ids = userIds)) |> Async.AwaitTask
-            |-> tryGetData
+            |> Async.map handleResponse
 
         let getAccessTokenUser accessToken =
             helixApi.Users.GetUsersAsync(accessToken) |> Async.AwaitTask
-            |-> tryHead
+            |> Async.map handleResponse
+            |> AsyncResult.map List.tryHead
 
     module Videos =
 
         let getLatestVod userId =
             helixApi.Videos.GetVideosByUserIdAsync(new GetVideosByUserIdRequest(UserIds = [ userId ], First = 1)) |> Async.AwaitTask
-            |-> tryHead
+            |> Async.map handleResponse
+            |> AsyncResult.map List.tryHead
 
     module Whispers =
 

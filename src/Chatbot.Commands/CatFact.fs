@@ -1,28 +1,39 @@
 namespace Commands
 
-[<AutoOpen>]
-module CatFacts =
+
+module Api =
+
+    open Http
 
     type CatFact = {
         Fact: string
         Length: int
     }
 
-    let [<Literal>] private ApiUrl = "https://catfact.ninja"
-    let private factUrl = $"{ApiUrl}/fact"
+    [<Literal>]
+    let private ApiUrl = "https://catfact.ninja"
 
-    let private getCatFact () =
+    let private catFactUrl = $"{ApiUrl}/fact"
+
+    let getCatFact () =
         async {
-            match! Http.getFromJsonAsync<CatFact> factUrl with
-            | Error (msg, statusCode) ->
-                Logging.error $"Cat Fact API error: {msg}" (new System.Net.Http.HttpRequestException("", null, statusCode))
-                return None
-            | Ok catFact -> return Some catFact
+            let request = Request.request catFactUrl
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<CatFact>
+                |> Result.mapError _.StatusCode
         }
 
+[<AutoOpen>]
+module CatFacts =
+
+    open FsToolkit.ErrorHandling
+    open Api
+
     let catFact () =
-        async {
-            match! getCatFact() with
-            | None -> return Message "Error getting cat fact"
-            | Some fact -> return Message fact.Fact
+        asyncResult {
+            let! fact = getCatFact () |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Cat Fact")
+            return Message fact.Fact
         }

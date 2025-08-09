@@ -1,7 +1,5 @@
 ﻿namespace IRC
 
-open System
-
 module Parsing =
 
     module Types =

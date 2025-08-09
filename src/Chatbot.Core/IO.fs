@@ -3,6 +3,7 @@ module IO
 
 open System
 open System.IO
+open System.Threading
 
 let private sharedBuffer<'a> = Buffers.ArrayPool<'a>.Shared
 
@@ -12,13 +13,13 @@ let createStreamWriter (stream: Stream) bufferSize =
 let createStreamReader (stream: Stream) =
     new StreamReader(stream) |> TextReader.Synchronized
 
-let writeAsync (writer: TextWriter) (message: string) = writer.WriteAsync(message) |> Async.AwaitTask
+let writeAsync (writer: TextWriter) (message: ReadOnlyMemory<char>) (cancellationToken: CancellationToken) = writer.WriteAsync (message, cancellationToken) |> Async.AwaitTask
 
-let flushAsync (writer: TextWriter) = writer.FlushAsync() |> Async.AwaitTask
+let flushAsync (writer: TextWriter) (cancellationToken: CancellationToken) = writer.FlushAsync(cancellationToken) |> Async.AwaitTask
 
-let writeLineAsync (writer: TextWriter) (message: string) = writer.WriteLineAsync(message) |> Async.AwaitTask
+let writeLineAsync (writer: TextWriter) (message: ReadOnlyMemory<char>) (cancellationToken: CancellationToken) = writer.WriteLineAsync(message, cancellationToken) |> Async.AwaitTask
 
-let readAsync (reader: TextReader) bufferSize cancellationToken =
+let readAsync (reader: TextReader) (bufferSize: int) (cancellationToken: CancellationToken) =
     async {
         let buffer = sharedBuffer<char>.Rent(bufferSize)
         let memory = new Memory<char>(buffer)

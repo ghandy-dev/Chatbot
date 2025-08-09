@@ -21,21 +21,19 @@ module Fill =
             Some (word, (accLength + word.Length + 1, words))
 
     let fill args =
-        let options = KeyValueParser.parse args keys
-        let repeat = options |> Map.tryFind "repeat" |> Option.bind (fun v -> Boolean.tryParse v) |?? true
-        let args = KeyValueParser.removeKeyValues args keys
+        let kvp: KeyValueParser.KeyValueParserResult = KeyValueParser.parse args keys
+        let repeat = kvp.KeyValues.TryFind "repeat" |> Option.bind Parsing.tryParseBoolean |? true
 
-        match args with
-        | [] -> Message "No word(s) specified."
+        match kvp.Input with
+        | [] -> Error <| InvalidArgs "No word(s) specified."
         | words ->
             match repeat with
             | true ->
                 (0, 0, words)
                 |> Seq.unfold repeatFill
-                |> String.concat " "
-                |> Message
             | false ->
                 (0, words)
                 |> Seq.unfold randomFill
-                |> String.concat " "
-                |> Message
+            |> String.concat " "
+            |> Message
+            |> Ok

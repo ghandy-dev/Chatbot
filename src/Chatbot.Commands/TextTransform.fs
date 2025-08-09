@@ -8,10 +8,10 @@ module TextTransform =
     let private random = Random.Shared
 
     let private toUpper text =
-        text |> String.concat " " |> (fun t -> t.ToUpper())
+        text |> String.concat " " |> _.ToUpper()
 
     let private toLower text =
-        text |> String.concat " " |> (fun t -> t.ToLower())
+        text |> String.concat " " |> _.ToLower()
 
     let private reverse text =
         text |> String.concat " " |> Seq.rev |> Array.ofSeq |> fun s -> new string (s)
@@ -52,15 +52,13 @@ module TextTransform =
         ]
         |> Map.ofList
 
-    let private transform' transform words =
-        match transforms |> Map.tryFind transform with
-        | Some t ->
-            let text = t words
-            Message text
-        | None -> Message $"Unknown transform: \"{transform}\""
-
     let texttransform args =
         match args with
-        | [] -> Message "No transform/text provided"
-        | [ _ ] -> Message "No transform and/or text provided"
-        | transform :: words -> transform' transform words
+        | [] -> Error <| InvalidArgs "No transform/text provided"
+        | [ _ ] -> Error <| InvalidArgs "No transform and/or text provided"
+        | transform :: words ->
+            match transforms |> Map.tryFind transform with
+            | None -> Error <| InvalidArgs $"Unknown transform: \"{transform}\""
+            | Some f ->
+                let text = f words
+                Ok <| Message text

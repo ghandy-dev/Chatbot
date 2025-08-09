@@ -5,6 +5,8 @@ module RNG =
 
     open System
 
+    open Parsing
+
     let private random = Random.Shared
 
     [<AutoOpen>]
@@ -13,30 +15,31 @@ module RNG =
         let private defaultArgs = Some 1, Some 10
 
         let roll (args: string list) =
-
             let a, b =
                 match args with
                 | [] -> defaultArgs
-                | a :: b :: _ -> Int32.tryParse a, Int32.tryParse b
-                | n :: _ -> Int32.tryParse n, Int32.tryParse n
+                | a :: b :: _ -> tryParseInt a, tryParseInt b
+                | n :: _ -> tryParseInt n, tryParseInt n
 
             match a, b with
             | Some a, Some b ->
                 let min, max = if a > b then b, a else a, b
                 let roll = random.Next(min, max)
-                Message $"{roll}"
-            | _ -> Message "Couldn't parse min/max value"
+                $"{roll}"
+            | _ -> "Couldn't parse min/max value"
+            |> Message
+            |> Ok
 
     [<AutoOpen>]
     module Chance =
 
         let chance () =
             let n = random.NextDouble() * 100.0
-            Message $"""{n.ToString("n2")}%%"""
+            Ok <| Message $"""{n.ToString("n2")}%%"""
 
     [<AutoOpen>]
     module CoinFlip =
 
-        let private coinFlipSide = [ "Heads (yes)" ; "Tails (no)" ]
+        let private side = [ "Heads (yes)" ; "Tails (no)" ]
 
-        let coinFlip () = Message $"{coinFlipSide |> List.randomChoice}"
+        let coinFlip () = Ok <| Message $"{side |> List.randomChoice}"

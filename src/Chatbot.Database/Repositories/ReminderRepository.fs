@@ -2,12 +2,12 @@
 
 module ReminderRepository =
 
-    open DB
-    open Database.Entities
-    open Database.Models
-
     open Dapper.FSharp.SQLite
     open Dapper
+
+    open Database.Entities
+    open Database.Models
+    open DB
 
     let getTimedReminders () =
         async {

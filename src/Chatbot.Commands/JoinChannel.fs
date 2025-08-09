@@ -3,22 +3,25 @@ namespace Commands
 [<AutoOpen>]
 module JoinChannel =
 
+    open FsToolkit.ErrorHandling
+
+    open CommandError
     open Database
 
     let twitchService = Services.services.TwitchService
 
     let joinChannel (args: string list) =
-        async {
-            match!
-                args |> Async.create |-> List.tryHead |-> Result.fromOption "No channel specified"
-                |> Result.bindAsync (fun c -> twitchService.GetUser c |-> Result.fromOption "User not found")
-            with
-            | Error err -> return Message err
-            | Ok user ->
-                match! ChannelRepository.get (user.Id |> int) with
-                | Some _ -> return Message "Channel already added"
-                | None ->
-                    match! ChannelRepository.add (Models.NewChannel.create user.Id user.DisplayName) with
-                    | DatabaseResult.Success _ -> return BotAction(JoinChannel (user.DisplayName, user.Id), Some $"Channel added (%s{user.DisplayName})")
-                    | DatabaseResult.Failure -> return Message "Failed to add and join channel"
+        asyncResult {
+            let! channelName = args |> List.tryHead |> Result.requireSome (InvalidArgs "No channel specified")
+
+            let! user =
+                twitchService.GetUser channelName
+                |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")
+                |> AsyncResult.bindRequireSome (InvalidArgs "User not found")
+
+            let! _ = ChannelRepository.get (user.Id |> int) |> AsyncResult.requireNone (InvalidArgs "Channel already added")
+
+            match! ChannelRepository.add (Models.NewChannel.create user.Id user.DisplayName) with
+            | DatabaseResult.Failure -> return! internalError "Failed to add and join channel"
+            | DatabaseResult.Success _ -> return BotAction(JoinChannel (user.DisplayName, user.Id), Some $"Channel added (%s{user.DisplayName})")
         }

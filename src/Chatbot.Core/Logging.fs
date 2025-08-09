@@ -1,9 +1,9 @@
 [<RequireQualifiedAccess>]
 module Logging
 
-open Configuration
-
 open System
+
+open Configuration
 
 [<RequireQualifiedAccess>]
 type LogLevel =
@@ -55,7 +55,7 @@ let private shouldLog (logLevel: LogLevel) =
     | LogLevel.Critical -> logLevel >= LogLevel.Critical
 
 let private log logLevel message ex =
-    let log' logLevel message ex  =
+    let log' logLevel message ex =
         let timestamp = DateTime.UtcNow
         let foregroundColor, backgroundColor = toColor logLevel
 

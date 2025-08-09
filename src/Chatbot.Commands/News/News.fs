@@ -5,21 +5,20 @@ module News =
 
     open News.Api
 
-    let news args =
-        async {
-            let! result =
-                match args with
-                | [] -> getNews None
-                | _ ->
-                    let category = args |> String.concat " "
-                    getNews (Some category)
+    open FsToolkit.ErrorHandling
 
-            match result with
-            | Error err -> return Message err
-            | Ok newsItem ->
-                let title = newsItem.Title.Text
-                let date = newsItem.PublishDate.UtcDateTime.ToString("dd MMM yyyy, HH:mm")
-                let summary = if newsItem.Summary = null then "" else newsItem.Summary.Text
-                let link = newsItem.Links |> Seq.tryHead |> Option.bind (fun l -> Some l.Uri.AbsoluteUri) |?? ""
-                return Message $"{date} {title} {summary} {link}"
+    let news args =
+        asyncResult {
+            let maybeCategory =
+                if args |> List.isEmpty then
+                    None
+                else
+                    Some <| (args |> String.concat " ")
+
+            let! newsItem = getNews maybeCategory
+            let title = newsItem.Title.Text
+            let date = newsItem.PublishDate.UtcDateTime.ToString("dd MMM yyyy, HH:mm")
+            let summary = if newsItem.Summary = null then "" else newsItem.Summary.Text
+            let link = newsItem.Links |> Seq.tryHead |> Option.bind (fun l -> Some l.Uri.AbsoluteUri) |? ""
+            return Message $"{date} {title} {summary} {link}"
         }

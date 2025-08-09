@@ -3,19 +3,21 @@ namespace Commands
 [<AutoOpen>]
 module Wikipedia =
 
-    open Commands.Api.Wikipedia
+    open FsToolkit.ErrorHandling
+
+    open CommandError
+    open Wikipedia.Api
 
     let wiki args =
-        async {
+        asyncResult {
             match args with
-            | [] -> return Message "No input provided."
+            | [] -> return! invalidArgs "No input provided."
             | input ->
                 let query = String.concat " " input
+                let! pages = getWikiResults query |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Wikipedia")
 
-                match! getWikiPage query with
-                | Error err -> return Message err
-                | Ok pages ->
-                    match pages.Pages |> List.tryHead with
-                    | None -> return Message "No wikipedia results found."
-                    | Some page -> return Message $"https://en.wikipedia.org/wiki/{page.Key} {page.Description}"
+                match pages.Pages with
+                | [] -> return Message "No wikipedia page found!"
+                | page :: _ ->
+                    return Message $"https://en.wikipedia.org/wiki/{page.Key} {page.Description}"
         }

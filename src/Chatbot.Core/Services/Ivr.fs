@@ -2,6 +2,10 @@ module IVR
 
 open System
 
+open FsToolkit.ErrorHandling
+
+open Http
+
 type Emote = {
     ChannelName: string option
     ChannelLogin: string option
@@ -83,55 +87,51 @@ let private randomUserLineUrl (channel: string) (user: string) = $"{LogsApiUrl}/
 let getEmoteByName (emote: string) =
     async {
         let url = getEmoteDataUrl emote false
+        let request = Request.request url
+        let! response =  request |> Http.send Http.client
 
-        match! Http.getFromJsonAsync<Emote> url with
-        | Error (content, statusCode) ->
-            Logging.error
-                $"IVR API error: {content}"
-                (new System.Net.Http.HttpRequestException("IVR API error", null, statusCode = statusCode))
-
-            return Error "IVR API error"
-        | Ok emote -> return Ok emote
+        return
+            response
+            |> Response.toJsonResult<Emote>
+            |> Result.mapError _.StatusCode
     }
 
 let getSubAge (user: string) (channel: string) =
     async {
         let url = subAgeUrl user channel
+        let request = Request.request url
+        let! response =  request |> Http.send Http.client
 
-        match! Http.getFromJsonAsync<SubAge> url with
-        | Error (content, statusCode) ->
-            Logging.error
-                $"IVR API error: {content}"
-                (new System.Net.Http.HttpRequestException("IVR API error", null, statusCode = statusCode))
-
-            return Error "IVR API error"
-        | Ok emote -> return Ok emote
+        return
+            response
+            |> Response.toJsonResult<SubAge>
+            |> Result.mapError _.StatusCode
     }
 
 let getChannelRandomLine (channel: string) =
     async {
         let url = randomChannelLineUrl channel
+        let request = Request.request url
+        let! response =  request |> Http.send Http.client
 
-        match! Http.getAsync url with
-        | Error (content, statusCode) ->
-            Logging.error
-                $"IVR API error: {content}"
-                (new System.Net.Http.HttpRequestException("IVR API error", null, statusCode = statusCode))
-
-            return Error "IVR API error"
-        | Ok emote -> return Ok emote
+        return
+            response
+            |> Response.toResult
+            |> Result.eitherMap
+                (fun r -> r.Content.Trim([|'\r' ; '\n'|]))
+                (fun err -> err.StatusCode)
     }
 
 let getUserRandomLine (channel: string) (user: string) =
     async {
         let url = randomUserLineUrl channel user
+        let request = Request.request url
+        let! response =  request |> Http.send Http.client
 
-        match! Http.getAsync url with
-        | Error (content, statusCode) ->
-            Logging.error
-                $"IVR API error: {content}"
-                (new System.Net.Http.HttpRequestException("IVR API error", null, statusCode = statusCode))
-
-            return Error "IVR API error"
-        | Ok emote -> return Ok emote
+        return
+            response
+            |> Response.toResult
+            |> Result.eitherMap
+                (fun r -> r.Content.Trim([|'\r' ; '\n'|]))
+                (fun err -> err.StatusCode)
     }

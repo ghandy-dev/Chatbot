@@ -1,9 +1,12 @@
 module Weather
 
+open System
+open System.Net.Http
+
+open FsToolkit.ErrorHandling
+
 open Configuration
 open Http
-
-open System
 
 type WeatherUnit = {
     Unit: string
@@ -119,8 +122,10 @@ and WindDirection = {
     LocalizedDescription: string
 }
 
-let [<Literal>] BaseApiUrl = "https://atlas.microsoft.com"
-let apiKey = appConfig.Microsoft.Maps.ApiKey
+[<Literal>]
+let private BaseApiUrl = "https://atlas.microsoft.com"
+
+let private apiKey = appConfig.Microsoft.Maps.ApiKey
 
 let private apiUrl = $"{BaseApiUrl}/weather"
 let private apiVersion = "api-version=1.1"
@@ -132,15 +137,11 @@ let getCurrentWeather (latitude: double) (longitude: double) =
     async {
         let url = currentWeather latitude longitude
 
-        match! getFromJsonAsync<CurrentConditionsResult> url with
-        | Error(content, statusCode) ->
-            Logging.error
-                $"Weather API error: {content}"
-                (new Net.Http.HttpRequestException("Azure API error", null, statusCode = statusCode))
+        let request = Request.request url
+        let! response = request |> Http.send Http.client
 
-            return Error "Weather API Error"
-        | Ok result ->
-            match result.Results with
-            | [] -> return Error "Location not found"
-            | weather :: _ -> return Ok weather
+        return
+            response
+            |> Response.toJsonResult<CurrentConditionsResult>
+            |> Result.eitherMap _.Results _.StatusCode
     }

@@ -1,42 +1,22 @@
-namespace Commands.Api
+namespace Wikipedia
 
-module Wikipedia =
+module Api =
 
-    open Commands.Types.Wikipedia
-    open Configuration
-
-    open FsHttp
-    open FsHttp.Request
-    open FsHttp.Response
-
-    open System
+    open Http
+    open Types
 
     let [<Literal>] private ApiUrl = "https://api.wikimedia.org/core/v1/wikipedia"
 
-    let search query numberOfResults = $"{ApiUrl}/en/search/page?q={query}&limit={numberOfResults}"
+    let private search query numberOfResults = $"{ApiUrl}/en/search/page?q={query}&limit={numberOfResults}"
 
-    let userAgent = configuration.Item("UserAgent")
-
-    let private getFromJsonAsync<'a> url =
-        async {
-            use! response =
-                http {
-                    GET url
-                    Accept MimeTypes.applicationJson
-                    UserAgent userAgent
-                }
-                |> sendAsync
-
-            match toResult response with
-            | Ok response ->
-                let! deserialized = response |> deserializeJsonAsync<'a>
-                return Ok deserialized
-            | Error err -> return Error $"Wikipedia API HTTP error {err.statusCode |> int} {err.statusCode}"
-        }
-
-    let getWikiPage query =
+    let getWikiResults query =
         async {
             let url = search query 1
+            let request = Request.request url
+            let! response = request |> Http.send Http.client
 
-            return! getFromJsonAsync<Pages> url
+            return
+                response
+                |> Response.toJsonResult<Pages>
+                |> Result.mapError _.StatusCode
         }

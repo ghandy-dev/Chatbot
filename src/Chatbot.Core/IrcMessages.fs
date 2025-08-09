@@ -3,6 +3,7 @@ namespace IRC
 module Messages =
 
     open IRC.Parsing.Types
+    open Parsing
 
     [<AutoOpen>]
     module Types =
@@ -437,12 +438,16 @@ module Messages =
         type RoomStateMessage = {
             Channel: string
             EmoteOnly: bool option
-            FollowersOnly: bool option
+            FollowersOnly: FollowMode option
             R9K: bool option
             RoomId: string
             Slow: int option
             SubsOnly: bool option
         }
+
+        and FollowMode =
+            | On of duration: int
+            | Off
 
         type UserNoticeMessage = {
             Channel: string
@@ -563,7 +568,7 @@ module Messages =
                     Username = message.Tags["display-name"]
                     UserId = message.Tags["user-id"]
                     RoomId = message.Tags["room-id"]
-                    Mod = message.Tags["mod"] |> Boolean.parseBit
+                    Mod = message.Tags["mod"] |> parseBit
                     Emotes = parseEmotes msg message.Tags["emotes"]
                     ReplyParentMessageId = message.Tags.TryFind "reply-parent-msg-id"
                     ReplyParentUserId = message.Tags.TryFind "reply-parent-user-id"
@@ -689,16 +694,24 @@ module Messages =
             | _ -> None
 
         let (|RoomStateCommand|_|) (message: IrcMessage) : RoomStateMessage option =
+            let tryParseFollowMode =
+                tryParseInt
+                >> Option.bind (
+                function
+                | d when d >= 0 -> Some <| FollowMode.On d
+                | -1 -> Some FollowMode.Off
+                | _ -> None)
+
             match message.Command with
             | RoomState ->
                 Some {
                     Channel = message.Parameters.[1..]
-                    EmoteOnly = message.Tags.TryFind "emote-only" |> Option.bind Boolean.tryParseBit
-                    FollowersOnly = message.Tags.TryFind "followers-only" |> Option.bind Boolean.tryParseBit
-                    R9K = message.Tags.TryFind "r9k" |> Option.bind Boolean.tryParseBit
+                    EmoteOnly = message.Tags.TryFind "emote-only" |> Option.map parseBit
+                    FollowersOnly = message.Tags.TryFind "followers-only" |> Option.bind tryParseFollowMode
+                    R9K = message.Tags.TryFind "r9k" |> Option.map parseBit
                     RoomId = message.Tags["room-id"]
-                    Slow = message.Tags.TryFind "slow" |> Option.bind (fun s -> Int32.tryParse s)
-                    SubsOnly = message.Tags.TryFind "subs-only" |> Option.bind Boolean.tryParseBit
+                    Slow = message.Tags.TryFind "slow" |> Option.bind tryParseInt
+                    SubsOnly = message.Tags.TryFind "subs-only" |> Option.map parseBit
                 }
             | _ -> None
 
@@ -718,13 +731,13 @@ module Messages =
                     BadgeInfo = parseBadges message.Tags["badge-info"]
                     Badges = parseBadges message.Tags["badges"]
                     DisplayName = message.Tags["display-name"]
-                    Emotes = msg |> Option.bind (fun m -> Some (parseEmotes m message.Tags["emotes"])) |?? Map.empty
+                    Emotes = msg |> Option.bind (fun m -> Some (parseEmotes m message.Tags["emotes"])) |? Map.empty
                     Id = message.Tags["id"]
                     Login = message.Tags["login"]
-                    Moderator = message.Tags["mod"] |> Boolean.parseBit
+                    Moderator = message.Tags["mod"] |> parseBit
                     MsgId = message.Tags["msg-id"] |> UserNoticeEventType.parse
                     RoomId = message.Tags["room-id"]
-                    Subscriber = message.Tags["subscriber"] |> Boolean.parseBit
+                    Subscriber = message.Tags["subscriber"] |> parseBit
                     SystemMsg = message.Tags["system-msg"]
                     UserId = message.Tags["user-id"]
                     UserType = message.Tags["user-type"]
@@ -742,8 +755,8 @@ module Messages =
                     DisplayName = message.Tags["display-name"]
                     EmoteSets = parseEmoteSets message.Tags["emote-sets"]
                     Id = message.Tags.TryFind "id"
-                    Moderator = message.Tags["mod"] |> Boolean.parseBit
-                    Subscriber = message.Tags["subscriber"] |> Boolean.parseBit
+                    Moderator = message.Tags["mod"] |> parseBit
+                    Subscriber = message.Tags["subscriber"] |> parseBit
                     UserType = message.Tags["user-type"]
                 }
             | _ -> None

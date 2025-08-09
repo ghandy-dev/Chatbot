@@ -1,14 +1,15 @@
 namespace Clients
 
-open IRC
-
 open System
 open System.Net.WebSockets
 open System.Threading
 
+open IRC.Commands
+
 type WebSocketClient(host: string, port: int) =
 
-    let [<Literal>] readerBufferSize = 10240
+    [<Literal>]
+    let readerBufferSize = 10240
 
     let client = new ClientWebSocket()
 
@@ -32,18 +33,15 @@ type WebSocketClient(host: string, port: int) =
                 return None
         }
 
-    let writeLine (message: string) =
+    let writeLine (message: string) cancellationToken =
         async {
-            let cancellationToken = new CancellationToken()
             try
                 let bytes = message |> System.Text.Encoding.UTF8.GetBytes
                 let buffer = bytes.AsMemory()
 
                 do! client.SendAsync(buffer, WebSocketMessageType.Text, true, cancellationToken).AsTask() |> Async.AwaitTask
-            with
-            | :? ObjectDisposedException as ex -> Logging.error "error in writeLineAsync" ex |> ignore
-            | :? InvalidOperationException as ex -> Logging.error "error in writeLineAsync" ex |> ignore
-            | ex -> Logging.error "error in writeLineAsync" ex |> ignore
+            with ex ->
+                Logging.error $"error in writeLine" ex
         }
 
     interface ITwitchConnection with
@@ -53,15 +51,15 @@ type WebSocketClient(host: string, port: int) =
 
         member _.ReadAsync (cancellationToken) = read cancellationToken
 
-        member _.SendAsync (message: string) = writeLine message
+        member _.SendAsync (message, cancellationToken) = writeLine message cancellationToken
 
-        member _.AuthenticateAsync (user: string, accessToken: string, capabilities: string array) =
+        member _.AuthenticateAsync (user, accessToken, capabilities, cancellationToken) =
             async {
-                if (capabilities.Length > 0) then
-                    do! writeLine($"""CAP REQ :{String.concat " " capabilities}""")
+                if capabilities.Length > 0 then
+                    do! writeLine ((CapReq capabilities).ToString()) cancellationToken
 
-                do! writeLine($"PASS oauth:{accessToken}")
-                do! writeLine($"NICK {user}")
+                do! writeLine ((Pass accessToken).ToString()) cancellationToken
+                do! writeLine ((Nick user).ToString()) cancellationToken
             }
 
     interface IDisposable with

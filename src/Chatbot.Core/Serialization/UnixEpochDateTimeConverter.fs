@@ -8,7 +8,7 @@ open System.Text.Json.Serialization
 type UnixEpochDateTimeOffsetConverter() =
     inherit JsonConverter<DateTimeOffset>()
 
-    static let epoch = DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero)
+    let epoch = DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero)
 
     override _.Read(reader: byref<Utf8JsonReader>, _typeToConvert: Type, _options: JsonSerializerOptions) =
         match reader.TryGetInt64() with
@@ -23,7 +23,7 @@ type UnixEpochDateTimeOffsetConverter() =
 type UnixEpochDateTimeConverter() =
     inherit JsonConverter<DateTime>()
 
-    static let epoch = DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+    let epoch = DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
 
     override _.Read(reader: byref<Utf8JsonReader>, _typeToConvert: Type, _options: JsonSerializerOptions) =
         match reader.TryGetInt64() with

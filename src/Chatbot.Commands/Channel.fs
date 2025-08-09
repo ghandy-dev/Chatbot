@@ -3,22 +3,27 @@ namespace Commands
 [<AutoOpen>]
 module Channel =
 
+    open FsToolkit.ErrorHandling
+
     let twitchService = Services.services.TwitchService
 
     let channel args =
-        async {
-            match args with
-            | [] -> return Message "No channel specified."
-            | channel :: _ ->
-                match!
-                    twitchService.GetUser channel |-> Result.fromOption "User not found"
-                    |> Result.bindAsync (fun user -> twitchService.GetChannel user.Id |-> Result.fromOption "Channel not found")
-                with
-                | Error err -> return Message err
-                | Ok channel ->
-                    let broadcaster = channel.BroadcasterName
-                    let title = channel.Title
-                    let game = channel.GameName
+        asyncResult {
+            let! channelName = args |> List.tryHead |> Result.requireSome (InvalidArgs "No channel specified")
 
-                    return Message $"\"{title}\" Game: {game} https://twitch.tv/{broadcaster} "
+            let! user =
+                twitchService.GetUser channelName
+                |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")
+                |> AsyncResult.bindRequireSome (InvalidArgs "User not found")
+
+            let! channel =
+                twitchService.GetChannel user.Id
+                |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - Channel")
+                |> AsyncResult.bindRequireSome (InvalidArgs "Channel not found")
+
+            let url = $"https://twitch.tv/{channel.BroadcasterName}"
+            let title = channel.Title
+            let game = channel.GameName
+
+            return Message $"\"{title}\" Game: {game} {url}"
         }

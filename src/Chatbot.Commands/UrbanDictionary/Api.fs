@@ -2,6 +2,9 @@ namespace UrbanDictionary
 
 module Api =
 
+    open FsToolkit.ErrorHandling
+
+    open Http
     open Types
 
     let [<Literal>] private ApiUrl = "https://api.urbandictionary.com/v0"
@@ -11,18 +14,24 @@ module Api =
 
     let random () =
         async {
-            match! Http.getFromJsonAsync<Terms>randomUrl with
-            | Error (content, statusCode) ->
-                Logging.error $"Urban Dictionary API error: {content}" (new System.Net.Http.HttpRequestException("Urban Dictionary API error", null, statusCode))
-                return Error "Urban Dictionary API error"
-            | Ok definitions -> return Ok definitions.list
+            let request = Request.request randomUrl
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<Terms>
+                |> Result.eitherMap _.list _.StatusCode
         }
 
     let search term =
         async {
-            match! Http.getFromJsonAsync<Terms>(searchUrl term) with
-            | Error (content, statusCode) ->
-                Logging.error $"Urban Dictionary API error: {content}" (new System.Net.Http.HttpRequestException("Urban Dictionary API error", null, statusCode))
-                return Error "Urban Dictionary API error"
-            | Ok definitions -> return Ok definitions.list
+            let url = searchUrl term
+
+            let request = Request.request url
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<Terms>
+                |> Result.eitherMap _.list _.StatusCode
         }

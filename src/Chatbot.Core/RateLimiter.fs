@@ -1,7 +1,5 @@
 module RateLimiter
 
-open System
-
 module Rates =
 
     let [<Literal>] MessageLimit_Chat = 20 // per 30 seconds

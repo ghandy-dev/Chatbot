@@ -3,18 +3,23 @@ namespace Commands
 [<AutoOpen>]
 module Vod =
 
+    open FsToolkit.ErrorHandling
+
+    open CommandError
+
     let twitchService = Services.services.TwitchService
 
     let vod args =
-        async {
+        asyncResult {
             match args with
-            | [] -> return Message "No channel specified"
+            | [] -> return! invalidArgs "No channel specified"
             | channel :: _ ->
-                match!
+                let! user =
                     twitchService.GetUser channel
-                    |> Result.fromOptionAsync "User not found"
-                    |> Result.bindAsync (fun user -> twitchService.GetLatestVod user.Id |-> Result.fromOption "No VOD found")
-                with
-                | Error err -> return Message err
-                | Ok video -> return Message $""""{video.Title}" {video.CreatedAt.ToString(Utils.DateStringFormat)} {video.Url} [{video.Duration}]"""
+                    |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")
+                    |> AsyncResult.bindRequireSome (InvalidArgs "User not found")
+
+                match! twitchService.GetLatestVod user.Id |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - Video") with
+                | None -> return Message "No VODs found"
+                | Some vod -> return Message $""""{vod.Title}" {vod.CreatedAt.ToString(Utils.DateStringFormat)} {vod.Url} [{vod.Duration}]"""
         }

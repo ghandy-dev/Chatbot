@@ -5,41 +5,35 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="ITwitchConnection.fs" />
-    <Compile Include="Async.fs" />
     <Compile Include="Operators.fs" />
     <Compile Include="Types.fs" />
-    <Compile Include="Result.fs" />
-    <Compile Include="Option.fs" />
+    <Compile Include="Utilities/Utils.fs" />
+    <Compile Include="Utilities/DateTime.fs" />
+    <Compile Include="Utilities/Parsing.fs" />
+    <Compile Include="Utilities/KeyValueParser.fs" />
     <Compile Include="DotEnv.fs" />
     <Compile Include="Configuration.fs" />
     <Compile Include="Logging.fs" />
-    <Compile Include="Utilities/Utils.fs" />
-    <Compile Include="Utilities/Seq.fs" />
-    <Compile Include="Utilities/List.fs" />
-    <Compile Include="Utilities/Map.fs" />
-    <Compile Include="Utilities/DateTime.fs" />
-    <Compile Include="Utilities/DateOnly.fs" />
-    <Compile Include="Utilities/Boolean.fs" />
-    <Compile Include="Utilities/Int32.fs" />
-    <Compile Include="Utilities/Array.fs" />
-    <Compile Include="Utilities/Text.fs" />
-    <Compile Include="RateLimiter.fs" />
-    <Compile Include="Utilities/KeyValueParser.fs" />
-    <Compile Include="Serialization/UnixEpochDateTimeConverter.fs" />
+    <Compile Include="Json.fs" />
     <Compile Include="Http.fs" />
+    <Compile Include="IO.fs" />
+    <Compile Include="Extensions/Seq.fs" />
+    <Compile Include="Extensions/List.fs" />
+    <Compile Include="Extensions/Array.fs" />
+    <Compile Include="RateLimiter.fs" />
+    <Compile Include="Serialization/UnixEpochDateTimeConverter.fs" />
     <Compile Include="Services/Ivr.fs" />
     <Compile Include="Services/Pastebin.fs" />
     <Compile Include="Services/Twitch.fs" />
-    <Compile Include="Services/Emotes.fs" />
+    <Compile Include="Services/EmoteProviders.fs" />
     <Compile Include="Services/Weather.fs" />
     <Compile Include="Services/Geolocation.fs" />
     <Compile Include="Services/Services.fs" />
     <Compile Include="TokenStore.fs" />
-    <Compile Include="IO.fs" />
     <Compile Include="IrcCommands.fs" />
     <Compile Include="IrcMessageParser.fs" />
     <Compile Include="IrcMessages.fs" />
+    <Compile Include="ITwitchConnection.fs" />
     <Compile Include="IrcClient.fs" />
     <Compile Include="WebSocketClient.fs" />
     <Compile Include="TwitchChatClient.fs" />
@@ -53,6 +47,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FSharpPlus" Version="1.7.0" />
+    <PackageReference Include="FsToolkit.ErrorHandling" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="9.0.0" />
@@ -61,7 +57,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.0" />
     <PackageReference Include="Microsoft.Recognizers.Text.DateTime" Version="1.8.12" />
     <PackageReference Include="TTVSharp.Helix" Version="0.3.0" />
-    <PackageReference Include="FsHttp" Version="12.0.0" />
   </ItemGroup>
 
 </Project>

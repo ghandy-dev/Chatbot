@@ -3,12 +3,14 @@ namespace Commands
 [<AutoOpen>]
 module UrbanDictionary =
 
-    open System.Text.RegularExpressions
-
     open UrbanDictionary.Api
 
+    open System.Text.RegularExpressions
+
+    open FsToolkit.ErrorHandling
+
     let urban args =
-        async {
+        asyncResult {
             let getTerm =
                 match args with
                 | [] -> random ()
@@ -16,15 +18,14 @@ module UrbanDictionary =
                     let query = args |> String.concat " "
                     search query
 
-            match! getTerm with
-            | Error err -> return Message err
-            | Ok terms ->
-                match terms with
-                | [] -> return Message "No definition found"
-                | term :: _ ->
-                    let definition =
-                        [ @"[\[\]]", "" ; @"(\r\n|\n)", " " ]
-                        |> List.fold (fun acc (pattern, replacement) -> Regex.Replace(acc, pattern, replacement)) term.Definition
+            let! terms = getTerm |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "UrbanDictionary")
 
-                    return Message $"{term.Permalink} (+{term.ThumbsUp}/-{term.ThumbsDown}) {term.Word}: {definition}"
+            match terms with
+            | [] -> return Message "No definition found!"
+            | term :: _ ->
+                let definition =
+                    [ @"[\[\]]", "" ; @"(\r\n|\n)", " " ]
+                    |> List.fold (fun acc (pattern, replacement) -> Regex.Replace(acc, pattern, replacement)) term.Definition
+
+                return Message $"{term.Permalink} (+{term.ThumbsUp}/-{term.ThumbsDown}) {term.Word}: {definition}"
         }

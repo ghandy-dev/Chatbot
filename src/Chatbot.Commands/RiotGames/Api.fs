@@ -2,12 +2,13 @@ namespace RiotGames
 
 module Api =
 
-    open Types
-    open Configuration
+    open System.Net.Http
 
-    open FsHttp
-    open FsHttp.Request
-    open FsHttp.Response
+    open FsToolkit.ErrorHandling
+
+    open Configuration
+    open Http
+    open Types
 
     let private accountUrl (gameName: string) (tagLine: string) = $"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/%s{gameName}/%s{tagLine}"
     let private summonerUrl (region: string) (puuid: string) = $"https://%s{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/%s{puuid}"
@@ -15,52 +16,88 @@ module Api =
     let private matchIdsUrl (puuid: string) = $"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/%s{puuid}/ids"
     let private matchUrl (matchId: string) = $"https://europe.api.riotgames.com/lol/match/v5/matches/%s{matchId}"
 
-    let getFromJsonAsync<'T> (url: string) =
-        async {
-            use! response =
-                http {
-                    GET url
-                    Accept MimeTypes.applicationJson
-                    header "X-Riot-Token" appConfig.RiotGames.ApiKey
-                }
-                |> sendAsync
+    let apiKey = appConfig.RiotGames.ApiKey
 
-            match toResult response with
-            | Ok response ->
-                let! deserialized = response |> deserializeJsonAsync<'T>
-                return Ok deserialized
-            | Error err ->
-                let! content = response.content.ReadAsStringAsync() |> Async.AwaitTask
-                Logging.error $"Riot Games API error: {content}" (new System.Net.Http.HttpRequestException("Riot Games API error", null, statusCode = err.statusCode))
-                return Error ($"Riot Games API error {err.statusCode |> int} {err.statusCode}", err.statusCode)
-        }
+    let headers = [
+        "X-Riot-Token", apiKey
+    ]
 
     let getAccount (gameName: string) (tagLine: string) =
         async {
             let url = accountUrl gameName tagLine
-            return! getFromJsonAsync<Account> url
+
+            let request =
+                Request.request url
+                |> Request.withHeaders headers
+
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<Account>
+                |> Result.mapError _.StatusCode
         }
 
     let getSummoner (region: string) (puuid: string) =
         async {
             let url = summonerUrl region puuid
-            return! getFromJsonAsync<Summoner> url
+
+            let request =
+                Request.request url
+                |> Request.withHeaders headers
+
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<Summoner>
+                |> Result.mapError _.StatusCode
         }
 
     let getLeagueEntries (region: string) (summonerId: string) =
         async {
             let url = leagueEntryUrl region summonerId
-            return! getFromJsonAsync<LeagueEntry list> url
+
+            let request =
+                Request.request url
+                |> Request.withHeaders headers
+
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<LeagueEntry list>
+                |> Result.mapError _.StatusCode
         }
 
     let getMatchList (puuid: string) =
         async {
             let url = matchIdsUrl puuid
-            return! getFromJsonAsync<string list> url
+
+            let request =
+                Request.request url
+                |> Request.withHeaders headers
+
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<string list>
+                |> Result.mapError _.StatusCode
         }
 
     let getMatch (matchId: string) =
         async {
             let url = matchUrl matchId
-            return! getFromJsonAsync<Match> url
+
+            let request =
+                Request.request url
+                |> Request.withHeaders headers
+
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<Match>
+                |> Result.mapError _.StatusCode
         }

@@ -1,5 +1,7 @@
 module Pastebin
 
+open FsToolkit.ErrorHandling
+
 open Configuration
 open Http
 
@@ -15,7 +17,7 @@ type PasteExpireDate =
     | Year
     with
 
-        override this.ToString() =
+        override this.ToString () =
             match this with
             | Never -> "N"
             | TenMinutes -> "10M"
@@ -48,6 +50,7 @@ let private apiKey = appConfig.Pastebin.ApiKey
 
 let createPaste (pasteName: string) (pasteCode: string) =
     async {
+        let url = createPasteUrl
         let apiOption = "paste"
         let pastePrivate = Unlisted
         let pasteExpireDate = Week
@@ -61,5 +64,16 @@ let createPaste (pasteName: string) (pasteCode: string) =
             "api_paste_expire_date", pasteExpireDate.ToString()
         ]
 
-        return! postAsync (createPasteUrl, parameters)
+        let request =
+            Request.request url
+            |> Request.withMethod Method.Post
+            |> Request.withBody (Content.FormUrlEncoded parameters)
+            |> Request.withContentType ContentType.applicationFormUrlEncoded
+
+        let! response = request |> Http.send Http.client
+
+        return
+            response
+            |> Response.toResult
+            |> Result.eitherMap _.Content _.StatusCode
     }

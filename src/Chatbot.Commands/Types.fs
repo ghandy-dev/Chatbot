@@ -9,7 +9,7 @@ type Context = {
     Username: string
     IsAdmin: bool
     Source: MessageSource
-    Emotes: Emotes.Emotes
+    Emotes: EmoteProviders.Types.Emotes
 } with
 
     static member create id username admin source emotes = {
@@ -42,22 +42,39 @@ type BotCommand =
     | JoinChannel of channel: string * channelId: string
     | LeaveChannel of channel: string
     | RefreshChannelEmotes of channelId: string
-    | RefreshGlobalEmotes of emoteProvider: Emotes.EmoteProvider
+    | RefreshGlobalEmotes of emoteProvider: EmoteProviders.Types.EmoteProvider
     | StartTrivia of TriviaConfig
     | StopTrivia of channel: string
 
-type CommandResult =
+type CommandResult = Result<CommandOk, CommandError>
+
+and CommandOk =
     | Message of string
     | RunAlias of command: string * args: string list
-    | Pipe of string list
+    | Pipe of commands: string list
     | BotAction of BotCommand * string option
+
+and CommandError =
+    | InvalidArgs of reason: string
+    | InvalidUsage of reason: string
+    | InternalError of reason: string
+    | Unauthorised
+    | HttpError of service: string * error: CommandHttpError
+
+and CommandHttpError =
+    | BadRequest
+    | NotFound
+    | RateLimit
+    | Forbidden
+    | InternalServerError
 
 type Args = string list
 
 type CommandFunction =
-    | S of (unit -> CommandResult) // SyncFunction
-    | SA of (Args -> CommandResult) // SyncFunctionWithArgs
-    | SAC of (Args -> Context -> CommandResult) // SyncFunctionWithArgsAndContext
+    | S of (unit -> CommandResult) // AsyncFunction
+    | SA of (Args -> CommandResult) // AsyncFunctionWithArgs
+    | SAC of (Args -> Context -> CommandResult) // AsyncFunctionWithArgsAndContext
+    | SACM of (Args -> Context -> Map<string, Command> -> CommandResult) // AsyncFunctionWithArgsAndContextAndCommands
     | A of (unit -> Async<CommandResult>) // AsyncFunction
     | AA of (Args -> Async<CommandResult>) // AsyncFunctionWithArgs
     | AAC of (Args -> Context -> Async<CommandResult>) // AsyncFunctionWithArgsAndContext
@@ -86,3 +103,37 @@ and Details = {
     Description: string
     ExampleUsage: string
 }
+
+module CommandError =
+
+    let toMessage =
+        function
+        | InvalidArgs reason -> $"Invalid args: {reason}"
+        | InvalidUsage reason -> $"Invalid use: {reason}"
+        | Unauthorised -> $"You aren't authorised to execute this command"
+        | InternalError reason -> $"Internal error occured: {reason}"
+        | HttpError (service, BadRequest) -> $"{service} error. {nameof BadRequest}"
+        | HttpError (service, NotFound) -> $"{service} error. {nameof NotFound}"
+        | HttpError (service, RateLimit) -> $"{service} error. {nameof RateLimit}"
+        | HttpError (service, Forbidden) -> $"{service} error. {nameof Forbidden}"
+        | HttpError (service, InternalServerError) -> $"{service} error. {nameof InternalServerError}"
+
+    let invalidArgs reason = Error <| InvalidArgs reason
+    let invalidUsage reason = Error <| InvalidUsage reason
+    let internalError reason = Error <| InternalError reason
+    let unauthorised () = Error <| Unauthorised
+    let httpError service error = Error <| HttpError (service, error)
+
+module CommandHttpError =
+
+    let fromHttpStatusCode category statusCode =
+        let err =
+            match statusCode with
+            | 403 -> Forbidden
+            | 404 -> NotFound
+            | 429 -> RateLimit
+            | sc when sc >= 400 && sc < 500 -> BadRequest
+            | sc when sc >= 500 -> InternalServerError
+            | sc -> failwith $"Unexpected HTTP status code: {sc}"
+
+        HttpError (category, err)

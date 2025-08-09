@@ -11,5 +11,5 @@ module Pipe =
 
         match commands with
         | []
-        | [ _ ] -> Message "At least 2 commands must be piped together"
-        | cs -> Pipe cs
+        | [ _ ] -> Error <| InvalidArgs "At least 2 commands must be piped together"
+        | cs -> Ok <| Pipe cs

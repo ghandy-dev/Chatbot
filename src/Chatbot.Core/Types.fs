@@ -14,12 +14,12 @@ type RoomState = {
 
     static member create channel emoteOnly followersOnly r9k roomId slow subsOnly = {
         Channel = channel
-        EmoteOnly = emoteOnly |?? false
-        FollowersOnly = followersOnly |?? false
-        R9K = r9k |?? false
+        EmoteOnly = emoteOnly |? false
+        FollowersOnly = followersOnly |? false
+        R9K = r9k |? false
         RoomId = roomId
-        Slow = slow |?? 0
-        SubsOnly = subsOnly |?? false
+        Slow = slow |? 0
+        SubsOnly = subsOnly |? false
         LastMessageSent = System.DateTime.UtcNow
     }
 

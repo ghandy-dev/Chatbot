@@ -3,19 +3,20 @@ namespace Commands
 [<AutoOpen>]
 module TopStreams =
 
+    open FsToolkit.ErrorHandling
+
     let twitchService = Services.services.TwitchService
 
     let topStreams () =
-        async {
-            match! twitchService.GetStreams 10 with
-            | None -> return Message "Twitch API error"
-            | Some streams ->
-                match streams |> List.ofSeq with
-                | [] -> return Message "No one is streaming!"
+        asyncResult {
+            let! streams = twitchService.GetStreams 10 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - Streams")
+
+            return
+                match streams with
+                | [] -> Message "No one is streaming!"
                 | streams ->
-                    return
-                        streams
-                        |> List.map (fun s -> $"""{s.UserName} - {s.GameName} ({s.ViewerCount.ToString("N0")})""")
-                        |> String.concat ", "
-                        |> Message
+                    streams
+                    |> Seq.map (fun s -> $"""{s.UserName} - {s.GameName} ({s.ViewerCount.ToString("N0")})""")
+                    |> String.concat ", "
+                    |> Message
         }

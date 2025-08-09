@@ -2,9 +2,14 @@ module KeyValueParser
 
 open System.Text.RegularExpressions
 
+type KeyValueParserResult = {
+    KeyValues: Map<string, string>
+    Input: string list
+}
+
 let private patternTemplate = sprintf @"%s:(("".*?"")|(\S+))"
 
-let tryParseKeyValuePair (string: string) =
+let private tryParseKeyValuePair (string: string) =
     string.Split(":")
     |> function
         | [| key ; value |] ->
@@ -12,7 +17,7 @@ let tryParseKeyValuePair (string: string) =
             Some(key, value)
         | _ -> None
 
-let removeKeyValues (list: string seq) (keys: string seq)  =
+let private removeKeyValues (list: string seq) (keys: string seq)  =
     let string = list |> String.concat " "
 
     let pattern =
@@ -23,20 +28,25 @@ let removeKeyValues (list: string seq) (keys: string seq)  =
     Regex.Replace(string, pattern, "").Split(" ", System.StringSplitOptions.RemoveEmptyEntries)
     |> List.ofArray
 
-let parse (list: string seq) (keys: string seq) =
-    let s = list |> String.concat " "
+let parse (input: string seq) (keys: string seq) =
+    let s = input |> String.concat " "
 
     let patterns =
         keys
         |> Seq.map patternTemplate
 
-    let matches =
+    let keyValues =
         patterns
         |> Seq.choose (fun p ->
             let m = Regex.Match(s, p)
-            if m.Success then Some m.Value else None
+            if m.Success then
+                m.Value |> tryParseKeyValuePair
+            else
+                None
         )
+        |> Map.ofSeq
 
-    let keyValues = matches |> Seq.choose tryParseKeyValuePair |> Map.ofSeq
+    let input = removeKeyValues input keys
 
-    keyValues
+    { KeyValues = keyValues
+      Input = input }

@@ -3,33 +3,32 @@ namespace Commands
 [<AutoOpen>]
 module Logs =
 
+    open FsToolkit.ErrorHandling
+
     open Commands
+    open CommandError
+
+    let private ivrService = Services.ivrService
 
     let randomLine args context =
-        async {
+        asyncResult {
             match context.Source with
-            | Whisper _ -> return Message "This command is only avaiable in channels"
+            | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
             | Channel channel ->
                 match args with
                 | [] ->
-                    match! IVR.getChannelRandomLine channel.Channel with
-                    | Error err -> return Message err
-                    | Ok message -> return Message message
-                | [ user ]
+                    let! message =  ivrService.GetChannelRandomLine channel.Channel |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
+                    return Message message
                 | user :: _ ->
-                    match! IVR.getUserRandomLine channel.Channel user  with
-                    | Error err -> return Message err
-                    | Ok message -> return Message message
+                    let! message =  ivrService.GetUserRandomLine channel.Channel user |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
+                    return Message message
         }
 
     let randomQuote args context =
-        async {
+        asyncResult {
             match context.Source with
-            | Whisper _ -> return Message "This command is only avaiable in channels"
+            | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
             | Channel channel ->
-                match args with
-                | _ ->
-                    match! IVR.getUserRandomLine channel.Channel context.Username with
-                    | Error err -> return Message err
-                    | Ok message -> return Message message
+                let! message =  ivrService.GetUserRandomLine channel.Channel context.Username |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
+                return Message message
         }

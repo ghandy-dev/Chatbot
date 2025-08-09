@@ -2,16 +2,18 @@ namespace OpenAI
 
 module Api =
 
-    open Configuration
-    open Types.DallE
-    open Types.Gpt
-
-    open FsHttp
-    open FsHttp.Request
-    open FsHttp.Response
-
     open System
     open System.Collections.Concurrent
+    open System.Net.Http
+
+    open FSharpPlus
+    open FsToolkit.ErrorHandling
+
+    open Configuration
+    open Http
+    open Json
+    open Types.DallE
+    open Types.Gpt
 
     type UserChatHistory = {
         LastMessage: DateTime
@@ -25,39 +27,8 @@ module Api =
     let private imageGenerationUrl = $"{ApiUrl}/images/generation"
     let private chatCompletionUrl = $"{ApiUrl}/chat/completions"
 
-    // Untested - DallE API documentation lacks model definitions (particularly the response model)
-    let private postAsJson<'a, 'b> url (request: 'b) =
-        async {
-            use! response =
-                http {
-                    POST url
-                    Accept MimeTypes.applicationJson
-                    AuthorizationBearer appConfig.OpenAI.ApiKey
-                    body
-                    jsonSerialize request
-                }
-                |> sendAsync
-
-            match toResult response with
-            | Ok response ->
-                let! deserialized = response |> deserializeJsonAsync<'a>
-                return Ok deserialized
-            | Error err -> return Error $"OpenAI API HTTP error {err.statusCode |> int} {err.statusCode}"
-        }
-
-    let getImage size prompt =
-        async {
-            let request = {
-                Model = DallE3
-                Prompt = prompt
-                n = 1
-                Size = size
-            }
-
-            match! postAsJson<GenerateImageResponse, GenerateImage> imageGenerationUrl request with
-            | Error err -> return Error err
-            | Ok response -> return Ok response.Url
-        }
+    let private apiKey = appConfig.OpenAI.ApiKey
+    let private headers = [ Header.accept ContentType.applicationJson ; Header.authorization <| AuthenticationScheme.bearer apiKey ]
 
     let private systemMessages =
         [
@@ -85,10 +56,34 @@ module Api =
             }
         ] |> Map.ofList
 
+    let getImage size prompt =
+        async {
+            let json =
+                { Model = DallE3
+                  Prompt = prompt
+                  n = 1
+                  Size = size }
+                |> serializeJson
+
+            let request =
+                Request.request imageGenerationUrl
+                |> Request.withMethod Method.Post
+                |> Request.withHeaders headers
+                |> Request.withBody (Content.String json)
+                |> Request.withContentType ContentType.applicationJson
+
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<GenerateImageResponse>
+                |> Result.eitherMap _.Url _.StatusCode
+        }
+
     let sendGptMessage (message: string) (user: string) (channel: string) (modelKey: string) =
         async {
             let historyKey = $"{user}_{channel}_{modelKey}"
-            let systemMessage = systemMessages |> Map.tryFind modelKey |?? (systemMessages |> Map.find "default")
+            let systemMessage = systemMessages |> Map.tryFind modelKey |? (systemMessages |> Map.find "default")
 
             let message = [
                 {
@@ -104,9 +99,9 @@ module Api =
             ]
 
             let messages =
-                match userChatHistory.TryGetValue historyKey with
-                | false, _ -> systemMessage :: message
-                | true, messages when (DateTime.UtcNow - messages.LastMessage).TotalMinutes > 10 ->
+                match userChatHistory |> Dict.tryGetValue historyKey  with
+                | None -> systemMessage :: message
+                | Some messages when (DateTime.UtcNow - messages.LastMessage).TotalMinutes > 10 ->
                     let updatedMessages = systemMessage :: message
 
                     userChatHistory[historyKey] <- {
@@ -115,7 +110,7 @@ module Api =
                     }
 
                     updatedMessages
-                | true, messages ->
+                | Some messages ->
                     let updatedMessages = messages.Messages @ message
 
                     userChatHistory[historyKey] <- {
@@ -125,40 +120,53 @@ module Api =
 
                     updatedMessages
 
-            let request = {
-                Model = appConfig.OpenAI.DefaultModel
-                Messages = messages
-                MaxTokens = 150
-                n = 1
-                User = historyKey
-            }
+            let json =
+                { Model = appConfig.OpenAI.DefaultModel
+                  Messages = messages
+                  MaxCompletionTokens = 1000
+                  n = 1
+                  User = historyKey
+                  Verbosity = "low" }
+                |> serializeJson
 
-            match! postAsJson<TextGenerationMessageResponse, TextGeneration> chatCompletionUrl request with
-            | Error err -> return Error err
-            | Ok response ->
-                match response.Choices with
-                | [] -> return Error "No response message"
-                | choice :: _ ->
-                    let message = choice.Message
+            let request =
+                Request.request chatCompletionUrl
+                |> Request.withMethod Method.Post
+                |> Request.withHeaders headers
+                |> Request.withBody (Content.String json)
+                |> Request.withContentType ContentType.applicationJson
 
-                    let messages =
-                        List.append messages [
-                            {
-                                Role = message.Role
-                                Name = None
-                                Content = [
-                                    {
-                                        Type = "text"
-                                        Text = message.Content
-                                    }
-                                ]
-                            }
-                        ]
+            let! response = request |> Http.send Http.client
 
-                    userChatHistory[historyKey] <- {
-                        LastMessage = DateTime.UtcNow
-                        Messages = messages
-                    }
+            return
+                response
+                |> Response.toJsonResult<TextGenerationMessageResponse>
+                |> Result.mapError _.StatusCode
+                |> Result.map (fun response ->
+                    match response.Choices with
+                    | [] -> "No response message"
+                    | choice :: _ ->
+                        let message = choice.Message
 
-                    return Ok message.Content
+                        let messages =
+                            List.append messages [
+                                {
+                                    Role = message.Role
+                                    Name = None
+                                    Content = [
+                                        {
+                                            Type = "text"
+                                            Text = message.Content
+                                        }
+                                    ]
+                                }
+                            ]
+
+                        userChatHistory[historyKey] <- {
+                            LastMessage = DateTime.UtcNow
+                            Messages = messages
+                        }
+
+                        message.Content
+                )
         }

@@ -12,10 +12,11 @@ module Types =
         type TextGeneration = {
             Model: string
             Messages: TextGenerationMessage list
-            [<JsonPropertyName("max_tokens")>]
-            MaxTokens: int
+            [<JsonPropertyName("max_completion_tokens")>]
+            MaxCompletionTokens: int
             n: int
             User: string
+            Verbosity: string
         }
 
         and TextGenerationMessage = {

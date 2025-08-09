@@ -1,6 +1,6 @@
-namespace Commands.Types
+namespace Wikipedia
 
-module Wikipedia =
+module Types =
 
     open System.Text.Json.Serialization
 

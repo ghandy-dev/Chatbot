@@ -1,58 +1,13 @@
 namespace Commands
 
-module private Helper =
-
-    open System.Text.RegularExpressions
-
-    open FsHttp
-    open FsHttp.Request
-    open FsHttp.Response
-
-    let private png: byte[] = [| 0x89uy ; 0x50uy ; 0x4Euy ; 0x47uy |]
-    let private jpg: byte[] = [| 0xFFuy; 0xD8uy; 0xFFuy; 0xE0uy; 0x00uy; 0x10uy; 0x4Auy; 0x46uy; 0x49uy; 0x46uy |]
-    let private bmp: byte[] = [| 0x42uy ; 0x4Duy |]
-    let private webp: (byte[] * byte[]) = [| 0x52uy ; 0x49uy ; 0x46uy ; 0x46uy |], [| 0x57uy ; 0x45uy ; 0x42uy ; 0x50uy |]
-
-    let private isPng (bytes: byte[]) = bytes.Length > 3 && bytes[0..3] = png
-    let private isJpg (bytes: byte[]) = bytes.Length > 8 && bytes[0..8] = jpg
-    let private isBmp (bytes: byte[]) = bytes.Length > 1 && bytes[0..1] = bmp
-    let private isWebp (bytes: byte[]) = bytes.Length > 11 && (bytes[0..3], bytes[8..11]) = webp
-    let private isImage (bytes: byte[]) = isPng bytes || isJpg bytes || isBmp bytes || isWebp bytes
-
-    let getImage url =
-        async {
-            use! response =
-                http {
-                    GET url
-                    Accept "image/*"
-                }
-                |> sendAsync
-
-            let pattern = @"^image\/(jpeg|jpg|jfif|pjpeg|pjp|png|bmp|webp|avif|apng)$"
-
-            match toResult response with
-            | Error _ -> return None
-            | Ok response ->
-                let! bytes = response |> toBytesAsync
-
-                if
-                    response.originalHttpResponseMessage.Content.Headers.Contains("Content-Type")
-                    && Regex.IsMatch(response.originalHttpResponseMessage.Content.Headers.ContentType.MediaType, pattern)
-                    || isImage bytes
-                then
-                    return Some bytes
-                else
-                    return None
-        }
-
-    let getPixelLuminance (pixel: SkiaSharp.SKColor) =
-        0.2126 * float pixel.Red +
-        0.7152 * float pixel.Green +
-        0.0722 * float pixel.Blue |> int
-
 module private Dithering =
 
     open SkiaSharp
+
+    let private getPixelLuminance (pixel: SkiaSharp.SKColor) =
+        0.2126 * float pixel.Red +
+        0.7152 * float pixel.Green +
+        0.0722 * float pixel.Blue |> int
 
     let private clamp = fun v -> System.Math.Clamp(v, 0, 255)
 
@@ -62,7 +17,7 @@ module private Dithering =
         float a.Blue - float b.Blue
 
     let private findClosestPaletteColor (pixel: SKColor) (threshold: int)  =
-        let luminance = Helper.getPixelLuminance pixel
+        let luminance = getPixelLuminance pixel
 
         if luminance > threshold then
             new SKColor(255uy, 255uy, 255uy)
@@ -96,16 +51,16 @@ module private Dithering =
                 addError bitmap (x + 1) (y + 1) quantError (1.0 / 16.0)
 
     let bayer (bitmap: SKBitmap) =
-        let bayerMatrix = [|
-            [| 0  ; 32 ;  8 ; 40 ;  2  ; 34 ; 10 ; 42 |]
-            [| 48 ; 16 ; 56 ; 24 ; 50  ; 18 ; 58 ; 26 |]
-            [| 12 ; 44 ;  4 ; 36 ; 14  ; 46 ;  6 ; 38 |]
-            [| 60 ; 28 ; 52 ; 20 ; 62  ; 30 ; 54 ; 22 |]
-            [|  3 ; 35 ; 11 ; 43 ;  1  ; 33 ;  9 ; 41 |]
-            [| 51 ; 19 ; 59 ; 27 ; 49  ; 17 ; 57 ; 25 |]
-            [| 15 ; 47 ;  7 ; 39 ; 13  ; 45 ;  5 ; 37 |]
-            [| 63 ; 31 ; 55 ; 23 ; 61  ; 29 ; 53 ; 21 |]
-        |]
+        let bayerMatrix = [
+            [ 0  ; 32 ;  8 ; 40 ;  2  ; 34 ; 10 ; 42 ]
+            [ 48 ; 16 ; 56 ; 24 ; 50  ; 18 ; 58 ; 26 ]
+            [ 12 ; 44 ;  4 ; 36 ; 14  ; 46 ;  6 ; 38 ]
+            [ 60 ; 28 ; 52 ; 20 ; 62  ; 30 ; 54 ; 22 ]
+            [  3 ; 35 ; 11 ; 43 ;  1  ; 33 ;  9 ; 41 ]
+            [ 51 ; 19 ; 59 ; 27 ; 49  ; 17 ; 57 ; 25 ]
+            [ 15 ; 47 ;  7 ; 39 ; 13  ; 45 ;  5 ; 37 ]
+            [ 63 ; 31 ; 55 ; 23 ; 61  ; 29 ; 53 ; 21 ]
+        ]
 
         for y in 0 .. bitmap.Height - 1 do
             for x in 0 .. bitmap.Width - 1 do
@@ -119,7 +74,11 @@ module Braille =
 
     open System.Text
 
+    open FsToolkit.ErrorHandling
     open SkiaSharp
+
+    open CommandError
+    open Http
 
     let private offsets = [
         (0, 0, 1)
@@ -187,17 +146,35 @@ module Braille =
 
         croppedBitmap
 
-    let loadImage (bytes: byte array) width =
+    let private getImage url =
+        async {
+            let request =
+                Request.request url
+                |> Request.withHeaders [ Header.accept "image/*" ]
+
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toResult
+                |> Result.mapError _.StatusCode
+                |> Result.map (fun r -> Encoding.ASCII.GetBytes(r.Content.ToCharArray()))
+        }
+
+    let private tryLoadImage (bytes: byte array) width =
         use bitmap = SKBitmap.Decode(bytes)
-        use bitmap = if bitmap.Height > bitmap.Width then crop bitmap else bitmap
+        if bitmap = null then
+            None
+        else
+            use bitmap = if bitmap.Height > bitmap.Width then crop bitmap else bitmap
 
-        // 2 horizontal pixels per braille ascii symbol
-        let width = width * 2
-        let ratio = float bitmap.Width / float width
-        // 4 vertical pixels per braille ascii symbol, max 15 lines (15 * 4 = 60 vertical dots)
-        let height = min ((roundUpToMultiple (float bitmap.Height / ratio) 4.0) |> int) (15 * 4)
+            // 2 horizontal pixels per braille ascii symbol
+            let width = width * 2
+            let ratio = float bitmap.Width / float width
+            // 4 vertical pixels per braille ascii symbol, max 15 lines (15 * 4 = 60 vertical dots)
+            let height = min ((roundUpToMultiple (float bitmap.Height / ratio) 4.0) |> int) (15 * 4)
 
-        bitmap.Resize(new SKImageInfo(width, height), SKSamplingOptions.Default)
+            Some <| bitmap.Resize(new SKImageInfo(width, height), SKSamplingOptions.Default)
 
     let private drawText (text: string) =
         use font = new SKFont(SKTypeface.FromFamilyName("Segoe UI"))
@@ -251,12 +228,16 @@ module Braille =
         imageToBraille bitmap setting dithering invert monospace
 
     let private internalBraille (url: string) (setting: string) (dithering: (SKBitmap -> unit) option) (invert: bool) (monospace: bool) =
-        async {
-            match! Helper.getImage url with
-            | None -> return Message "Couldn't retrieve image, invalid url provided, or an unsupported image format is used"
-            | Some image ->
-                use bitmap = loadImage image 30
+        asyncResult {
+            let! image =
+                getImage url
+                |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Braille")
+
+            match tryLoadImage image 28 with
+            | None -> return! internalError "Error loading image"
+            | Some bitmap ->
                 let brailleAscii = imageToBraille bitmap setting dithering invert monospace
+                bitmap.Dispose()
                 return Message brailleAscii
         }
 
@@ -269,20 +250,20 @@ module Braille =
         | _ -> None
 
     let braille args context =
-        async {
-            let keyValues = KeyValueParser.parse args brailleKeys
-            let args = KeyValueParser.removeKeyValues args brailleKeys
+        asyncResult {
+            let kvp = KeyValueParser.parse args brailleKeys
 
-            let greyscaleMode = keyValues |> Map.tryFind "greyscale" |?? DefaultGreyscaleFunction
-            let dithering = keyValues |> Map.tryFind "dithering" |> Option.bind parseDitheringMethod
-            let invert = keyValues |> Map.tryFind "invert" |> Option.bind (fun i -> Boolean.tryParse i) |?? true
-            let monospace = keyValues |> Map.tryFind "monospace" |> Option.bind (fun i -> Boolean.tryParse i) |?? false
+            let greyscaleMode = kvp.KeyValues.TryFind "greyscale" |? DefaultGreyscaleFunction
+            let dithering = kvp.KeyValues.TryFind "dithering" |> Option.bind parseDitheringMethod
+            let invert = kvp.KeyValues.TryFind "invert" |> Option.bind Parsing.tryParseBoolean |? true
+            let monospace = kvp.KeyValues.TryFind "monospace" |> Option.bind Parsing.tryParseBoolean |? false
 
             let url =
                 match args with
                 | [] -> None
                 | value :: _ ->
-                    context.Emotes.MessageEmotes |> Map.tryFind value
+                    context.Emotes.MessageEmotes
+                    |> Map.tryFind value
                     |> Option.orElseWith (fun _ ->
                         match context.Emotes.TryFind value with
                         | Some emote -> Some emote.DirectUrl
@@ -290,22 +271,21 @@ module Braille =
                     )
 
             match url with
-            | None -> return Message "Bad url/emote specified"
+            | None -> return! Error <| InvalidArgs "No url/emote specified"
             | Some url -> return! internalBraille url greyscaleMode dithering invert monospace
         }
 
     let textToAscii args =
-        let keyValues = KeyValueParser.parse args brailleKeys
-        let args = KeyValueParser.removeKeyValues args brailleKeys
+        let kvp = KeyValueParser.parse args brailleKeys
 
-        let greyscaleMode = keyValues |> Map.tryFind "greyscale" |?? DefaultGreyscaleFunction
-        let dithering = keyValues |> Map.tryFind "dithering" |> Option.bind parseDitheringMethod
-        let invert = keyValues |> Map.tryFind "invert" |> Option.bind (fun i -> Boolean.tryParse i) |?? false
-        let monospace = keyValues |> Map.tryFind "monospace" |> Option.bind (fun i -> Boolean.tryParse i) |?? true
+        let greyscaleMode = kvp.KeyValues.TryFind "greyscale" |? DefaultGreyscaleFunction
+        let dithering = kvp.KeyValues.TryFind "dithering" |> Option.bind parseDitheringMethod
+        let invert = kvp.KeyValues.TryFind "invert" |> Option.bind Parsing.tryParseBoolean |? false
+        let monospace = kvp.KeyValues.TryFind "monospace" |> Option.bind Parsing.tryParseBoolean |? true
 
         match args with
-        | [] -> Message "No text specified"
+        | [] -> Error <| InvalidArgs "No text specified"
         | text ->
             let text = System.String.Join(" ", text)
             let ascii = textToBraille text greyscaleMode dithering invert monospace
-            Message ascii
+            Ok <| Message ascii

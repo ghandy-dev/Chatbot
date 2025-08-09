@@ -8,7 +8,7 @@ module Pick =
 
     let pick args =
         match args with
-        | [] -> Message "No items provided"
+        | [] -> Error <| InvalidArgs "No items provided"
         | head :: tail ->
             let delimiterPattern = @"^delimiter:(.+)$"
             let m = Regex.Match(head, delimiterPattern)
@@ -21,4 +21,4 @@ module Pick =
                     |> _.Split(m.Groups[1].Value, StringSplitOptions.TrimEntries)
                     |> List.ofArray
 
-            Message $"{items |> List.randomChoice}"
+            Ok <| Message $"{items |> List.randomChoice}"

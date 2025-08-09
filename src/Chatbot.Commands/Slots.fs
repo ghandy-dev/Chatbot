@@ -1,54 +1,55 @@
 namespace Commands
 
+open EmoteProviders.Types
+
 [<AutoOpen>]
 module Slots =
 
     type private SetSource =
         | Static of string list
-        | Emote of (Emotes.Emote list -> string list)
+        | Emote of (Emote list -> string list)
 
     let private sets =
         [
             "fruit",
-            Static [
-                "🍇"
-                "🍉"
-                "🍈"
-                "🍊"
-                "🍋"
-                "🍋‍🟩"
-                "🍌"
-                "🍍"
-                "🥭"
-                "🍎"
-                "🍏"
-                "🍐"
-                "🍑"
-                "🍒"
-                "🍓"
-                "🫐"
-                "🥝"
-                "🍅"
-                "🫒"
-                "🥥"
-            ]
+                Static [
+                    "🍇"
+                    "🍉"
+                    "🍈"
+                    "🍊"
+                    "🍋"
+                    "🍋‍🟩"
+                    "🍌"
+                    "🍍"
+                    "🥭"
+                    "🍎"
+                    "🍏"
+                    "🍐"
+                    "🍑"
+                    "🍒"
+                    "🍓"
+                    "🫐"
+                    "🥝"
+                    "🍅"
+                    "🫒"
+                    "🥥"
+                ]
             "numbers",
             Static [ for i in 1..100 -> $"%d{i}" ]
-            "twitch", Emote (fun emotes -> emotes |> List.filter (fun e -> e.Provider = Emotes.EmoteProvider.Twitch && e.Type = Emotes.EmoteType.Global) |> List.map (fun e -> e.Name))
-            "bttv", Emote (fun emotes -> emotes |> List.filter (fun e -> e.Provider = Emotes.EmoteProvider.Bttv && e.Type = Emotes.EmoteType.Channel) |> List.map (fun e -> e.Name))
-            "ffz", Emote (fun emotes -> emotes |> List.filter (fun e -> e.Provider = Emotes.EmoteProvider.Ffz && e.Type = Emotes.EmoteType.Channel) |> List.map (fun e -> e.Name))
-            "7tv", Emote (fun emotes -> emotes |> List.filter (fun e -> e.Provider = Emotes.EmoteProvider.SevenTv && e.Type = Emotes.EmoteType.Channel) |> List.map (fun e -> e.Name))
+            "twitch", Emote (fun emotes -> emotes |> List.filter (fun e -> e.Provider = EmoteProvider.Twitch && e.Type = EmoteType.Global) |> List.map (fun e -> e.Name))
+            "bttv", Emote (fun emotes -> emotes |> List.filter (fun e -> e.Provider = EmoteProvider.Bttv && e.Type = EmoteType.Channel) |> List.map (fun e -> e.Name))
+            "ffz", Emote (fun emotes -> emotes |> List.filter (fun e -> e.Provider = EmoteProvider.Ffz && e.Type = EmoteType.Channel) |> List.map (fun e -> e.Name))
+            "7tv", Emote (fun emotes -> emotes |> List.filter (fun e -> e.Provider = EmoteProvider.SevenTv && e.Type = EmoteType.Channel) |> List.map (fun e -> e.Name))
         ]
         |> Map.ofList
 
     let private keys = [ "set" ]
 
     let slots args context =
-        let keyValues = KeyValueParser.parse args keys
-        let args = KeyValueParser.removeKeyValues args keys
+        let kvp = KeyValueParser.parse args keys
 
         let maybeSet =
-            match keyValues |> Map.tryFind "set" with
+            match kvp.KeyValues.TryFind "set" with
             | Some set ->
                 match sets |> Map.tryFind set with
                 | Some (Static set) -> Some set
@@ -63,7 +64,7 @@ module Slots =
                 | _ -> Some args
 
         match maybeSet with
-        | None -> Message "Unknown or empty set"
+        | None -> Error <| InvalidArgs "Unknown or empty set"
         | Some set ->
             let spin = set |> List.randomChoices 3
 
@@ -71,6 +72,8 @@ module Slots =
                 let limit = 3
                 let totalOutcomes = pown set.Length limit
                 let probability = totalOutcomes / set.Length
-                Message $"""[ {spin |> String.concat " "} ] You won! (1 in %d{probability})"""
+                $"""[ {spin |> String.concat " "} ] You won! (1 in %d{probability})"""
             else
-                Message $"""[ {spin |> String.concat " "} ]"""
+                $"""[ {spin |> String.concat " "} ]"""
+            |> Message
+            |> Ok

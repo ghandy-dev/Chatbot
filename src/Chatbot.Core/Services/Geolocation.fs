@@ -1,9 +1,12 @@
 module Geolocation
 
+open System.Net.Http
+open System.Text.Json.Serialization
+
+open FsToolkit.ErrorHandling
+
 open Configuration
 open Http
-
-open System.Text.Json.Serialization
 
 module Azure =
 
@@ -190,36 +193,27 @@ module Azure =
         async {
             let url = reverseAddressUrl latitude longitude
 
-            match! getFromJsonAsync<ReverseSearchAddressResult> url with
-            | Error(content, statusCode) ->
-                Logging.error
-                    $"Geolocation API error: {content}"
-                    (new System.Net.Http.HttpRequestException("Geolocation API error", null, statusCode = statusCode))
+            let request = Request.request url
+            let! response = request |> Http.send Http.client
 
-                return Error "Geolocation API Error"
-            | Ok result ->
-                match result.Addresses with
-                | [] -> return Error "Address not found"
-                | address :: _ -> return Ok address
+            return
+                response
+                |> Response.toJsonResult<ReverseSearchAddressResult>
+                |> Result.eitherMap _.Addresses.Head _.StatusCode
         }
 
     let getSearchAddress (address: string) =
         async {
             let url = searchAddressUrl address
 
-            match! getFromJsonAsync<SearchAddressResult> url with
-            | Error(content, statusCode) ->
-                Logging.error
-                    $"Geolocation API error: {content}"
-                    (new System.Net.Http.HttpRequestException("Geolocation API error", null, statusCode = statusCode))
+            let request = Request.request url
+            let! response = request |> Http.send Http.client
 
-                return Error "Geolocation API Error"
-            | Ok result ->
-                match result.Results with
-                | [] -> return Error "Address not found"
-                | address :: _ -> return Ok address
+            return
+                response
+                |> Response.toJsonResult<SearchAddressResult>
+                |> Result.eitherMap _.Results.Head _.StatusCode
         }
-
 
 module Google =
 
@@ -293,7 +287,7 @@ module Google =
         | InvalidRequest
         | UnknownError
 
-        static member tryParse =
+        static member tryParseError =
             function
             | "OK" -> Some Ok
             | "ZERO_RESULTS" -> Some ZeroResults
@@ -304,28 +298,39 @@ module Google =
             | "UNKNOWN_ERROR" -> Some UnknownError
             | _ -> None
 
+        static member toHttpStatusCode =
+            function
+            | Ok -> System.Net.HttpStatusCode.OK
+            | ZeroResults -> System.Net.HttpStatusCode.NotFound
+            | OverDailyLimit -> System.Net.HttpStatusCode.TooManyRequests
+            | OverQueryLimit -> System.Net.HttpStatusCode.TooManyRequests
+            | RequestDenied -> System.Net.HttpStatusCode.Forbidden
+            | InvalidRequest -> System.Net.HttpStatusCode.BadRequest
+            | UnknownError -> System.Net.HttpStatusCode.InternalServerError
+            | _ -> System.Net.HttpStatusCode.InternalServerError
+
     let [<Literal>] BaseApiUrl = "https://maps.googleapis.com"
 
-    let private geocodeApiUrl = $"{BaseApiUrl}/maps/api/geocode/json?"
     let private geocodeApiKey = appConfig.Google.Geocoding.ApiKey
+    let private geocodeApiUrl = $"{BaseApiUrl}/maps/api/geocode/json?"
     let private geoCodeAddressUrl address = $"{geocodeApiUrl}address={address}&key={geocodeApiKey}"
-
 
     let private timezoneApiKey = appConfig.Google.Timezone.ApiKey
     let private TimezoneApiUrl = $"{BaseApiUrl}/maps/api/timezone/json?"
     let private timezoneUrl latitude longitude timestamp = $"{TimezoneApiUrl}location={latitude},{longitude}&timestamp={timestamp}&key={timezoneApiKey}"
 
-
     let getTimezone latitude longitude timestamp =
         async {
             let url = timezoneUrl latitude longitude timestamp
 
-            match! Http.getFromJsonAsync<Timezone> url with
-            | Error (content, statusCode) ->
-                Logging.error $"Timezone API error: {content}" (new System.Net.Http.HttpRequestException("Timezone API error", null, statusCode = statusCode))
-                return Error "Timezone API Error"
+            let request = Request.request url
+            let! response = request |> Http.send Http.client
+
+            match response |> Response.toJsonResult<Timezone> with
+            | Error err -> return Error err.StatusCode
             | Ok response ->
-                match Status.tryParse response.Status with
+                match Status.tryParseError response.Status with
                 | Some Status.Ok -> return Ok response
-                | _ -> return Error $"Timezone API error: {response.Status}"
+                | Some status -> return Error (status |> Status.toHttpStatusCode |> int)
+                | None -> return Error (System.Net.HttpStatusCode.InternalServerError |> int)
         }

@@ -6,6 +6,8 @@ open Shared
 
 open System
 
+open FSharpPlus
+
 let private parseCommandAndArgs (message: string) =
     match message.Split(" ", StringSplitOptions.RemoveEmptyEntries) |> List.ofArray with
     | [] -> None
@@ -22,6 +24,7 @@ let private applyFunction =
     | S f -> fun _ _ _ -> async { return f () }
     | SA f -> fun args _ _ -> async { return f args }
     | SAC f -> fun args ctx _ -> async { return f args ctx }
+    | SACM f -> fun args ctx cmd -> async { return f args ctx cmd }
     | A f -> fun _ _ _ -> f ()
     | AA f -> fun args _ _ -> f args
     | AAC f -> fun args ctx _ -> f args ctx
@@ -76,25 +79,25 @@ let rec private handleCommand (userId: string) (username: string) (source: Messa
                         async {
                             let context =
                                 Context.create userId username user.IsAdmin source {
-                                    GlobalEmotes = emoteService.GlobalEmotes
+                                    GlobalEmotes = Services.services.EmoteService.GlobalEmotes
                                     ChannelEmotes =
                                         channel
-                                        |> Option.bind (fun c -> emoteService.ChannelEmotes |> Dictionary.tryGetValue c.RoomId)
-                                        |?? []
+                                        |> Option.bind (fun c -> Services.services.EmoteService.ChannelEmotes |> Dictionary.tryGetValue c.RoomId)
+                                        |? []
                                     MessageEmotes = messageEmotes
                                 }
 
                             match! executeCommand command args context with
-                            | Message message -> return Some <| (Message <| formatChatMessage message)
-                            | BotAction(action, Some message) -> return Some <| BotAction(action, Some (formatChatMessage message))
-                            | BotAction(action, None) -> return Some <| BotAction(action, None)
-                            | RunAlias(command, parameters) ->
-                                let formattedCommand = Text.formatString command parameters
+                            | Ok (Message message) -> return Some <| (Message <| formatChatMessage message)
+                            | Ok (BotAction(action, Some message)) -> return Some <| BotAction(action, Some (formatChatMessage message))
+                            | Ok (BotAction(action, None)) -> return Some <| BotAction(action, None)
+                            | Ok (RunAlias(command, parameters)) ->
+                                let formattedCommand = Utils.strFormat command parameters
 
                                 match! handleCommand userId username source formattedCommand parsedEmotes with
                                 | None -> return None
                                 | Some response -> return Some response
-                            | Pipe commands ->
+                            | Ok (Pipe commands) ->
                                 let rec executePipe (acc: string) commands =
                                     match commands with
                                     | [] -> async { return Some <| Message acc }
@@ -110,6 +113,7 @@ let rec private handleCommand (userId: string) (username: string) (source: Messa
                                         }
 
                                 return! executePipe "" commands
+                            | Error error -> return Some (Message <| CommandError.toMessage error)
                         }
 
                     return response

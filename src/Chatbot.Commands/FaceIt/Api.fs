@@ -2,12 +2,13 @@ namespace FaceIt
 
 module Api =
 
-    open Types
-    open Configuration
+    open System.Net.Http
 
-    open FsHttp
-    open FsHttp.Request
-    open FsHttp.Response
+    open FsToolkit.ErrorHandling
+
+    open Configuration
+    open Http
+    open Types
 
     [<Literal>]
     let private ApiUrl = "https://open.faceit.com/data/v4"
@@ -19,55 +20,104 @@ module Api =
     let private ``match`` matchId = $"/matches/{matchId}"
     let private matchStats matchId = $"/matches/{matchId}/stats"
 
-    let private getFromJsonAsync<'a> url =
-        async {
-            use! response =
-                http {
-                    GET url
-                    Accept MimeTypes.applicationJson
-                    AuthorizationBearer appConfig.FaceIt.ApiKey
-                }
-                |> sendAsync
+    let apiKey = appConfig.FaceIt.ApiKey
 
-            match toResult response with
-            | Ok response ->
-                let! deserialized = response |> deserializeJsonAsync<'a>
-                return Ok deserialized
-            | Error err -> return Error $"FaceIt API HTTP error {err.statusCode |> int} {err.statusCode}"
-        }
+    let headers = [
+        Header.authorization <| AuthenticationScheme.bearer apiKey
+    ]
 
     let getPlayer player =
         async {
             let url = $"{ApiUrl}/{playerByName player}"
-            return! getFromJsonAsync<Players.Player> url
+
+            let request =
+                Request.request url
+                |> Request.withHeaders headers
+
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<Players.Player>
+                |> Result.mapError _.StatusCode
         }
 
     let getPlayerById playerId =
         async {
             let url = $"{ApiUrl}/{playerById playerId}"
-            return! getFromJsonAsync<Players.Player> url
+
+            let request =
+                Request.request url
+                |> Request.withHeaders headers
+
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<Players.Player>
+                |> Result.mapError _.StatusCode
         }
 
     let getPlayerStats playerId =
         async {
             let url = $"""{ApiUrl}/{playerStats playerId "cs2"}"""
-            return! getFromJsonAsync<Players.PlayerStats> url
+
+            let request =
+                Request.request url
+                |> Request.withHeaders headers
+
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<Players.PlayerStats>
+                |> Result.mapError _.StatusCode
         }
 
     let getPlayerMatchHistory playerId limit =
         async {
             let url = $"""{ApiUrl}/{playerHistory playerId "cs2" limit}"""
-            return! getFromJsonAsync<Players.MatchHistory> url
+
+            let request =
+                Request.request url
+                |> Request.withHeaders headers
+
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<Players.MatchHistory>
+                |> Result.mapError _.StatusCode
         }
 
     let getMatch matchId =
         async {
             let url = $"{ApiUrl}/{``match`` matchId}"
-            return! getFromJsonAsync<Matches.Match> url
+
+            let request =
+                Request.request url
+                |> Request.withHeaders headers
+
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<Matches.Match>
+                |> Result.mapError _.StatusCode
         }
 
     let getMatchStats matchId =
         async {
             let url = $"{ApiUrl}/{matchStats matchId}"
-            return! getFromJsonAsync<Matches.Stats.Match> url
+
+            let request =
+                Request.request url
+                |> Request.withHeaders headers
+
+            let! response = request |> Http.send Http.client
+
+            return
+                response
+                |> Response.toJsonResult<Matches.Stats.Match>
+                |> Result.mapError _.StatusCode
         }

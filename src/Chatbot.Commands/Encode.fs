@@ -25,17 +25,20 @@ module Encode =
         text |> System.Text.Encoding.UTF8.GetBytes |> System.Convert.ToBase64String
 
     let encode args =
-        let runEncode f (s: string seq) = f (s |> String.concat " ") |> Message
+        let runEncode f (s: string) = f s |> Message |> Ok
 
         match args with
-        | [] | [ _ ] -> Message "No encoder and/or text provided"
+        | [] | [ _ ] -> Error <| InvalidArgs "No encoder and/or text provided"
         | encoder :: input ->
+            let text = input |> String.concat " "
             match encoder with
-            | "base64" -> runEncode base64 input
-            | "rot13" -> runEncode rot13 input
+            | "base64" -> runEncode base64 text
+            | "rot13" -> runEncode rot13 text
             | "caesar" ->
-                let mutable iShift = 0
                 match input with
-                | shift :: text when Int32.TryParse(shift, &iShift) -> runEncode (caesar iShift) text
-                | _ -> runEncode (caesar (System.Random.Shared.Next(1, 27))) input
-            | _ -> Message "Unknown encoder specified"
+                | shift :: rest ->
+                    match Parsing.tryParseInt shift with
+                    | Some n -> runEncode (caesar n) (rest |> String.concat " ")
+                    | None -> runEncode (caesar (System.Random.Shared.Next(1, 27))) text
+                | _ -> runEncode (caesar (System.Random.Shared.Next(1, 27))) text
+            | _ -> Error <| InvalidArgs "Unknown encoder specified"

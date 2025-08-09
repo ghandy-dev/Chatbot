@@ -78,7 +78,7 @@ let private roomStateMessageHandler (msg: Types.RoomStateMessage) =
             RoomState.create
                 msg.Channel
                 msg.EmoteOnly
-                msg.FollowersOnly
+                (msg.FollowersOnly |> Option.map (fun fo -> fo.IsOn))
                 msg.R9K
                 msg.RoomId
                 msg.Slow
@@ -88,18 +88,18 @@ let private roomStateMessageHandler (msg: Types.RoomStateMessage) =
     | true, roomState ->
         let updatedRoomState = {
             roomState with
-                EmoteOnly = msg.EmoteOnly |?? roomState.EmoteOnly
-                FollowersOnly = msg.FollowersOnly |?? roomState.FollowersOnly
-                R9K = msg.R9K |?? roomState.R9K
-                Slow = msg.Slow |?? roomState.Slow
-                SubsOnly = msg.SubsOnly |?? roomState.SubsOnly
+                EmoteOnly = msg.EmoteOnly |? roomState.EmoteOnly
+                FollowersOnly = msg.FollowersOnly |> Option.map (fun fo -> fo.IsOn) |? roomState.FollowersOnly
+                R9K = msg.R9K |? roomState.R9K
+                Slow = msg.Slow |? roomState.Slow
+                SubsOnly = msg.SubsOnly |? roomState.SubsOnly
         }
 
         channelStates[msg.RoomId] <- updatedRoomState
 
 let private globalUserStateMessageHandler (msg: Types.GlobalUserStateMessage) =
     async {
-        do! emoteService.RefreshGlobalEmotes ()
+        do! Services.services.EmoteService.RefreshGlobalEmotes ()
     }
 
 let private userStateMessageHandler (msg: UserStateMessage) =

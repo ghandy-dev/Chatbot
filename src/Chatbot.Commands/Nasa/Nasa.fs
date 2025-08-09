@@ -3,37 +3,28 @@ namespace Commands
 [<AutoOpen>]
 module Nasa =
 
-    open System
+    open FSharpPlus
+    open FsToolkit.ErrorHandling
 
     open Nasa.Api
     open Nasa.Types
 
-    let private parseApodArgs (date: string) =
-        match DateOnly.TryParse(date) with
-        | false, _ -> None
-        | true, parsedDate -> Some parsedDate
-
-    let private formatApodMessage (apod: APOD) =
-        let url =
-            match apod.HdUrl with
-            | None -> apod.Url
-            | Some url -> url
-
-        $"%s{apod.Title} %s{url}"
-
     let apod args =
-        async {
-            match args with
-            | [] ->
-                match! getCurrentPictureOfTheDay () with
-                | None -> return Message "Couldn't get todays picture"
-                | Some apod -> return Message (formatApodMessage apod)
-            | args ->
-                let maybeDate = parseApodArgs (args |> String.concat " ")
-                match maybeDate with
-                | None -> return Message "Couldn't parse date"
-                | Some date ->
-                    match! getPictureOfTheDay date with
-                    | None -> return Message "Couldn't get todays picture"
-                    | Some apod -> return Message (formatApodMessage apod)
+        asyncResult {
+            let! apod =
+                match args with
+                | [] ->
+                    getCurrentPictureOfTheDay ()
+                    |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Nasa")
+                | args ->
+                    async.Return (
+                        Parsing.tryParseDateOnly (args |> String.concat " ") |> Option.toResultWith (InvalidArgs "Couldn't parse date")
+                    )
+                    |> AsyncResult.bind (
+                        getPictureOfTheDay >> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Nasa")
+                    )
+
+            let url = apod.HdUrl |> Option.defaultValue  apod.Url
+
+            return Message $"%s{apod.Title} %s{url}"
         }

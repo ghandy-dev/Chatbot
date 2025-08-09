@@ -2,36 +2,27 @@ namespace News
 
 module Api =
 
-    open Database
-
-    open FsHttp
-    open FsHttp.Request
-    open FsHttp.Response
-
     open System
+    open System.Net.Http
     open System.ServiceModel.Syndication
+
+    open FSharpPlus
+    open FsToolkit.ErrorHandling
+
+    open Commands
+    open Database
+    open Commands.CommandError
 
     let private cache =
         new System.Collections.Concurrent.ConcurrentDictionary<string, DateTime * SyndicationFeed>()
 
-    let private getFromXmlAsync<'a> url =
+    let private tryGetFeed (url: string) =
         async {
-            use! response =
-                http {
-                    GET url
-                    Accept "text/xml"
-                }
-                |> sendAsync
+            use reader = new Xml.XmlTextReader(url)
+            let formatter = Rss20FeedFormatter()
+            formatter.ReadFrom(reader)
 
-            match toResult response with
-            | Ok response ->
-                use! stream = response.content.ReadAsStreamAsync() |> Async.AwaitTask
-                let reader = new Xml.XmlTextReader(stream)
-                let formatter = Rss20FeedFormatter()
-                formatter.ReadFrom(reader)
-
-                return Ok formatter.Feed
-            | Error err -> return Error $"News RSS feed HTTP error {err.statusCode |> int} {err.statusCode}"
+            return formatter.Feed |> Option.ofNull
         }
 
     let private getRandomItem (feed: SyndicationFeed) = feed.Items |> Seq.randomChoice
@@ -44,18 +35,17 @@ module Api =
                 | Some c -> c
 
             match! NewsFeedRepository.get category with
-            | DatabaseResult.Failure -> return Error "Error occured trying to get RSS feeds"
+            | DatabaseResult.Failure -> return internalError "Error occured trying to get RSS feeds"
             | DatabaseResult.Success urls ->
-
                 let url = urls |> List.randomChoice
 
-                match cache.TryGetValue url with
-                | true, (updated, feed) when DateTime.UtcNow - updated < (feed.TimeToLive |? TimeSpan.FromMinutes(10L)) ->
+                match cache |> Dict.tryGetValue url with
+                | Some (updated, feed) when DateTime.UtcNow - updated < (Option.ofNullable feed.TimeToLive |> Option.defaultValue (TimeSpan.FromMinutes(10L))) ->
                     return Ok(getRandomItem feed)
-                | _, _ ->
-                    match! getFromXmlAsync url with
-                    | Error err -> return Error err
-                    | Ok feed ->
+                | _ ->
+                    match! tryGetFeed url with
+                    | None -> return internalError "Error reading RSS feed"
+                    | Some feed ->
                         cache[url] <- DateTime.UtcNow, feed
                         return Ok(getRandomItem feed)
         }
