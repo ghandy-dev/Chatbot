@@ -126,7 +126,8 @@ module Api =
                   MaxCompletionTokens = 30000
                   n = 1
                   User = historyKey
-                  Verbosity = "low" }
+                  Verbosity = "low"
+                  ReasoningEffort = "low" }
                 |> serializeJson
 
             let request =

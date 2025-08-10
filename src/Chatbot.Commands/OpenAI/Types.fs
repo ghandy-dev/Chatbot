@@ -17,6 +17,8 @@ module Types =
             n: int
             User: string
             Verbosity: string
+            [<JsonPropertyName("reasoning_effort")>]
+            ReasoningEffort: string
         }
 
         and TextGenerationMessage = {
