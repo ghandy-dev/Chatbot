@@ -168,6 +168,9 @@ module Api =
                             Messages = messages
                         }
 
-                        message.Content
+                        if message.Content |> strEmpty then
+                            $"Empty response..."
+                        else
+                            message.Content
                 )
         }
