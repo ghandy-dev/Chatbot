@@ -11,6 +11,7 @@ let [<Literal>] DateTimeStringFormat = $"dd/MM/yyyy HH:mm:ss"
 
 let utcNow () = DateTime.UtcNow
 let now () = DateTime.Now
+let today () = DateOnly.FromDateTime(utcNow())
 let base64 (s: string) = s |> System.Text.Encoding.UTF8.GetBytes |> System.Convert.ToBase64String
 
 let formatTimeSpan (ts: TimeSpan) =
@@ -53,6 +54,6 @@ let strCompareIgnoreCase a b = String.Compare(a, b, ignoreCase = true) = 0
 let strEmpty = String.IsNullOrWhiteSpace
 let strNotEmpty = not << strEmpty
 let strConcat (values: string seq) = String.Concat(values)
-let strJoin (values: string seq) (separator: string) = String.Join(separator, values)
+let strJoin (separator: string) (values: string seq) = String.Join(separator, values)
 
 let htmlDecode = System.Web.HttpUtility.HtmlDecode

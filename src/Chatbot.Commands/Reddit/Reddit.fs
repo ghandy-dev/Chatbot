@@ -36,7 +36,7 @@ module Reddit =
                     match kvp.KeyValues.TryFind "sort" with
                     | None -> Some defaultSorting
                     | Some s -> sortings |> List.tryFind ((=) s)
-                    |> Result.requireSome (InvalidArgs $"""Unknown sorting. Valid sortings: {(strJoin sortings, ", ")}""")
+                    |> Result.requireSome (InvalidArgs $"""Unknown sorting. Valid sortings: {sortings |> strJoin ", "}""")
 
                 let maybeFlair = kvp.KeyValues.TryFind "flair"
 
