@@ -868,8 +868,8 @@ Doesn't return anything if the user is currently banned.
 
     let WikiNews =
         {
-            Name = "Wiki News"
-            Description = "Get news stories from Wikipedia News Feed."
+            Name = "Wikipedia News"
+            Description = "Get news stories from Wikipedia's news feed."
             ExampleUsage = $"""{example "wikinews"}"""
         }
 
