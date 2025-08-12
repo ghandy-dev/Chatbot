@@ -191,6 +191,14 @@ Supported operators:
         }
 
 
+    let DidYouKnow =
+        {
+            Name = "Did You Know"
+            Description = """Get interesting facts as seen on Wikipedia's "Did you know" section"""
+            ExampleUsage = $"""{example "didyouknow"}"""
+        }
+
+
     let Dungeon =
         {
             Name = "Dungeon"
@@ -421,6 +429,13 @@ Get news based on category
 {exampleArgs "news" "<category>"}
 {exampleArgs "news" "science"}
 """
+        }
+
+    let OnThisDay =
+        {
+            Name = "On This Day"
+            Description = "Get events in history that occurred on this day."
+            ExampleUsage = $"""{example "onthisday"}"""
         }
 
     let Pick =
@@ -849,6 +864,13 @@ Doesn't return anything if the user is currently banned.
             Name = "Wikipedia"
             Description = "Gets the top result wikipedia page for the specified query, along with a short summary of the page."
             ExampleUsage = $"""{exampleArgs "wiki" "<query>"}"""
+        }
+
+    let WikiNews =
+        {
+            Name = "Wiki News"
+            Description = "Get news stories from Wikipedia News Feed."
+            ExampleUsage = $"""{example "wikinews"}"""
         }
 
     let xd =

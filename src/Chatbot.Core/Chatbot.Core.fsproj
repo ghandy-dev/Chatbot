@@ -22,6 +22,7 @@
     <Compile Include="Extensions/Array.fs" />
     <Compile Include="RateLimiter.fs" />
     <Compile Include="Serialization/UnixEpochDateTimeConverter.fs" />
+    <Compile Include="Serialization/NonCompliantDateTimeConverter.fs" />
     <Compile Include="Services/Ivr.fs" />
     <Compile Include="Services/Pastebin.fs" />
     <Compile Include="Services/Twitch.fs" />

@@ -21,3 +21,21 @@ module Wikipedia =
                 | page :: _ ->
                     return Message $"https://en.wikipedia.org/wiki/{page.Key} {page.Description}"
         }
+
+    let onThisDay args =
+        asyncResult {
+            let! otd = getOnThisDay () |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Wikipedia")
+            return Message otd
+        }
+
+    let wikiNews args =
+        asyncResult {
+            let! news = getNews () |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Wikipedia")
+            return Message news
+        }
+
+    let didYouKnow args =
+        asyncResult {
+            let! dyk = getDidYouKnow () |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Wikipedia")
+            return Message dyk
+        }

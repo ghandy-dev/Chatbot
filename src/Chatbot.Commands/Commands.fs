@@ -28,6 +28,7 @@ module Commands =
             Command.create ("chance", [ "%" ], HelpInfo.Chance, S chance, 10000, false)
             Command.create ("channel", [], HelpInfo.Channel, AA channel, 20000, false)
             Command.create ("coinflip", [ "cf" ], HelpInfo.CoinFlip, S coinFlip, 10000, false)
+            Command.create ("didyouknow", [ "dyk" ], HelpInfo.CoinFlip, AA didYouKnow, 10000, false)
             Command.create ("eightball", ["8ball"], HelpInfo.Eightball, S eightball, 10000, false)
             Command.create ("echo", [], HelpInfo.Echo, SA echo, 5000, true)
             Command.create ("encode", [], HelpInfo.Encode, SA encode, 5000, false)
@@ -41,6 +42,7 @@ module Commands =
             Command.create ("leagueoflegends", [ "lol" ; "league" ], HelpInfo.LeagueOfLegends, AA league, 15000, false)
             Command.create ("namecolor", [ "color" ], HelpInfo.NameColor, AAC namecolor, 20000, false)
             Command.create ("news", [], HelpInfo.News, AA news, 15000, false)
+            Command.create ("onthisday", [ "otd" ], HelpInfo.Pick, AA onThisDay, 10000, false)
             Command.create ("pick", [], HelpInfo.Pick, SA pick, 10000, false)
             Command.create ("pipe", [], HelpInfo.Pipe, SA pipe, 10000, false)
             Command.create ("ping", [], HelpInfo.Ping, S ping, 5000, false)
@@ -68,6 +70,7 @@ module Commands =
             Command.create ("whatemoteisit", [], HelpInfo.WhatEmoteIsIt, AAC whatemoteisit, 10000, false)
             Command.create ("weather", [], HelpInfo.Weather, AA weather, 20000, false)
             Command.create ("wiki", [], HelpInfo.Wiki, AA wiki, 20000, false)
+            Command.create ("wikinews", [], HelpInfo.WikiNews, AA wikiNews, 10000, false)
             Command.create ("xd", [], HelpInfo.xd, S xd, 60000, false)
         ]
 

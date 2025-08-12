@@ -1,4 +1,4 @@
-module System.Text.Json.Serialization
+namespace System.Text.Json.Serialization
 
 open System
 open System.Text.Json
