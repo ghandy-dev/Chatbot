@@ -123,11 +123,10 @@ module Api =
             let json =
                 { Model = appConfig.OpenAI.DefaultModel
                   Messages = messages
-                  MaxCompletionTokens = 30000
                   n = 1
                   User = historyKey
                   Verbosity = "low"
-                  ReasoningEffort = "low" }
+                  ReasoningEffort = "minimal" }
                 |> serializeJson
 
             let request =
