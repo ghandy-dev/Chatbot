@@ -51,50 +51,8 @@ module Api =
             | Some feed -> return Ok feed
         }
 
-    let getDidYouKnow () =
-        asyncResult {
-            let! feed = getTodaysFeed()
-            let wikiPagePattern = "https:\/\/en.wikipedia.org\/wiki\/\w+"
+    let getDidYouKnow () = getTodaysFeed() |> AsyncResult.map _.DidYouKnow
 
-            return
-                feed.DidYouKnow
-                |> Seq.randomChoice
-                |> fun dyk ->
-                    let text = dyk.Text
-                    let links =
-                        Regex.Matches(dyk.Html, wikiPagePattern)
-                        |> Seq.map _.Value
-                        |> strJoin ", "
+    let getOnThisDay () = getTodaysFeed() |> AsyncResult.map _.OnThisDay
 
-                    $"{text} ({links})"
-        }
-
-    let getOnThisDay () =
-        asyncResult {
-            let! feed = getTodaysFeed()
-
-            return
-                feed.OnThisDay
-                |> Seq.randomChoice
-                |> fun otd ->
-                    let year = otd.Year
-                    let text = otd.Text
-                    let links = otd.Pages |> Seq.map _.ContentUrls.Desktop.Page |> strJoin ", "
-
-                    $"{year} {text} ({links})"
-        }
-
-    let getNews () =
-        asyncResult {
-            let! feed = getTodaysFeed()
-            let pattern = "<.*?>"
-
-            return
-                feed.News
-                |> Seq.randomChoice
-                |> fun n ->
-                    let story = Regex.Replace(n.Story, pattern, "")
-                    let links = n.Links |> Seq.map  _.ContentUrls.Desktop.Page |> strJoin ", "
-
-                    $"{story} ({links})"
-        }
+    let getNews () = getTodaysFeed() |> AsyncResult.map _.News
