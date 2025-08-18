@@ -158,7 +158,7 @@ module Braille =
                 response
                 |> Response.toResult
                 |> Result.mapError _.StatusCode
-                |> Result.map (fun r -> Encoding.ASCII.GetBytes(r.Content.ToCharArray()))
+                |> Result.map _.Bytes
         }
 
     let private tryLoadImage (bytes: byte array) width =

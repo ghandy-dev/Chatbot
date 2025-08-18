@@ -45,6 +45,7 @@ module Types =
     type Response = {
         RequestUrl: string
         Content: string
+        Bytes: byte array
         Headers: Map<string, string seq>
         StatusCode: int
     }
@@ -138,9 +139,10 @@ module Request =
 
 module Response =
 
-    let create requestUrl content headers statusCode = {
+    let create requestUrl content bytes headers statusCode = {
         RequestUrl = requestUrl
         Content = content
+        Bytes = bytes
         Headers = headers
         StatusCode = statusCode
     }
@@ -185,7 +187,8 @@ let send (client: HttpClient) (request: Request) =
         use! httpResponse = client.SendAsync(httpRequest) |> Async.AwaitTask
 
         let requestUrl = httpRequest.RequestUri.ToString()
-        let! content = httpResponse.Content.ReadAsStringAsync () |> Async.AwaitTask
+        let! content = httpResponse.Content.ReadAsStringAsync() |> Async.AwaitTask
+        let! bytes = httpResponse.Content.ReadAsByteArrayAsync() |> Async.AwaitTask
 
         if not <| httpResponse.IsSuccessStatusCode then
             Logging.error $"Http Error: %d{int httpResponse.StatusCode} %A{httpRequest.Method} %s{requestUrl} %s{content}" (exn())
@@ -197,7 +200,7 @@ let send (client: HttpClient) (request: Request) =
 
         let statusCode = int httpResponse.StatusCode
 
-        let response = Response.create requestUrl content responseHeaders statusCode
+        let response = Response.create requestUrl content bytes responseHeaders statusCode
 
         return response
     }
