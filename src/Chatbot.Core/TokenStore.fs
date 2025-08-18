@@ -39,7 +39,7 @@ type TokenStore() =
             if response.Error <> null then
                 return Error response.Error.Status
             else
-                return Ok { AccessToken = response.Data.AccessToken ; ExpiresAt = DateTimeOffset.MaxValue }
+                return Ok { AccessToken = response.Data.AccessToken ; ExpiresAt = response.Data.ExpiresAt }
         }
 
     let getRedditToken () =
