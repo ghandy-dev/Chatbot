@@ -45,7 +45,7 @@ module Types =
     type Response = {
         RequestUrl: string
         Content: string
-        Headers: Map<string, string>
+        Headers: Map<string, string seq>
         StatusCode: int
     }
 
@@ -192,11 +192,7 @@ let send (client: HttpClient) (request: Request) =
 
         let responseHeaders =
             httpResponse.Headers
-            |> Seq.choose (fun kvp ->
-                kvp.Value
-                |> Seq.tryHead
-                |> Option.map (fun value -> kvp.Key, value)
-            )
+            |> Seq.map (function KeyValue (k, v) -> k, seq v)
             |> Map.ofSeq
 
         let statusCode = int httpResponse.StatusCode
