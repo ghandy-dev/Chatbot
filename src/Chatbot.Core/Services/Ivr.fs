@@ -83,6 +83,8 @@ let private getEmoteDataUrl (emote: string) (id: bool) = $"{ApiUrl}/twitch/emote
 let private subAgeUrl (user: string) (channel: string) = $"{ApiUrl}/twitch/subage/{user}/{channel}"
 let private randomChannelLineUrl (channel: string) = $"{LogsApiUrl}/channel/{channel}/random"
 let private randomUserLineUrl (channel: string) (user: string) = $"{LogsApiUrl}/channel/{channel}/user/{user}/random"
+let private searchUrl (channel: string) (user: string) (query: string) (limit: int) = $"{LogsApiUrl}/channel/{channel}/user/{user}/search?q={query}&limit={limit}"
+let private lastLineUrl (channel: string) (user: string) = $"{LogsApiUrl}/channel/{channel}/user/{user}/?limit=1"
 
 let getEmoteByName (emote: string) =
     async {
@@ -119,7 +121,7 @@ let getChannelRandomLine (channel: string) =
             |> Response.toResult
             |> Result.eitherMap
                 (fun r -> r.Content.Trim([|'\r' ; '\n'|]))
-                (fun err -> err.StatusCode)
+                _.StatusCode
     }
 
 let getUserRandomLine (channel: string) (user: string) =
@@ -133,5 +135,33 @@ let getUserRandomLine (channel: string) (user: string) =
             |> Response.toResult
             |> Result.eitherMap
                 (fun r -> r.Content.Trim([|'\r' ; '\n'|]))
-                (fun err -> err.StatusCode)
+                _.StatusCode
+    }
+
+let search (channel: string) (user: string) (query: string) =
+    async {
+        let url = searchUrl channel user query 1
+        let request = Request.request url
+        let! response = request |> Http.send Http.client
+
+        return
+            response
+            |> Response.toResult
+            |> Result.eitherMap
+                (fun r -> r.Content.Trim([|'\r' ; '\n'|]))
+                _.StatusCode
+    }
+
+let getLastLine (channel: string) (user: string) =
+    async {
+        let url = lastLineUrl channel user
+        let request = Request.request url
+        let! response = request |> Http.send Http.client
+
+        return
+            response
+            |> Response.toResult
+            |> Result.eitherMap
+                (fun r -> r.Content.Trim([|'\r' ; '\n'|]))
+                _.StatusCode
     }

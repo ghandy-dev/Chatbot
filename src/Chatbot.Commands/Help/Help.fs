@@ -361,6 +361,13 @@ Currently has:
 """
         }
 
+    let LastLine =
+        {
+            Name = "Last Line"
+            Description = "Get the last message a user sent in the current channel."
+            ExampleUsage = $"""{example "lastline"}"""
+        }
+
     let LeaveChannel =
         {
             Name = "Leave Channel"
@@ -624,6 +631,13 @@ Roll a random number between a min and max value.
 {exampleArgs "roll" "<min> <max>"}
 {exampleArgs "roll" "0 100"}
 """
+        }
+
+    let Search =
+        {
+            Name = "Search"
+            Description = "Search logs for the most recent chat message matching/containing the query text"
+            ExampleUsage = $"""{exampleArgs "search" "TriHard"}"""
         }
 
     let Slots =
