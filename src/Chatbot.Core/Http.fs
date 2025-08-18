@@ -129,6 +129,11 @@ module Request =
     }
 
     let request url = { empty with Url = url }
+    let get url = { empty with Url = url }
+    let post url = { empty with Url = url ; Method = Post }
+    let delete url = { empty with Url = url ; Method = Delete }
+    let put url = { empty with Url = url ; Method = Put }
+    let patch url = { empty with Url = url ; Method = Patch }
 
     let withUrl url (request: Request) = { request with Url = url }
     let withMethod method (request: Request) = { request with Method = method }
