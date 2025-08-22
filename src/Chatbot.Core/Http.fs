@@ -129,7 +129,7 @@ module Request =
     }
 
     let request url = { empty with Url = url }
-    let get url = { empty with Url = url }
+    let get url = { empty with Url = url ; Method = Get }
     let post url = { empty with Url = url ; Method = Post }
     let delete url = { empty with Url = url ; Method = Delete }
     let put url = { empty with Url = url ; Method = Put }
