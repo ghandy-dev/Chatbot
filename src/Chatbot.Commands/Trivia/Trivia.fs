@@ -19,7 +19,7 @@ module Trivia =
             | Whisper _ -> return! invalidUsage "Trivia can only be used in channels"
             | Channel channel ->
                 match args with
-                | "stop" :: _ -> return BotAction (StopTrivia channel.Channel, None)
+                | "stop" :: _ -> return BotCommand.stopTrivia channel.Channel
                 | _ ->
                     let kvp = KeyValueParser.parse args keys
 
@@ -49,5 +49,5 @@ module Trivia =
                             HintsSent = []
                         }
 
-                        return BotAction (StartTrivia triviaConfig, None)
+                        return BotCommand.startTrivia triviaConfig
         }

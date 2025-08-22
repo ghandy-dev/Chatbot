@@ -52,7 +52,7 @@ and CommandOk =
     | Message of string
     | RunAlias of command: string * args: string list
     | Pipe of commands: string list
-    | BotAction of BotCommand * string option
+    | BotAction of BotCommand * message: string option
 
 and CommandError =
     | InvalidArgs of reason: string
@@ -103,6 +103,15 @@ and Details = {
     Description: string
     ExampleUsage: string
 }
+
+module BotCommand =
+
+    let joinChannel channel channelId message = BotAction (JoinChannel (channel, channelId), Some message)
+    let leaveChannel channel message = BotAction (LeaveChannel channel, Some message)
+    let refreshChannelEmotes channelId message = BotAction (RefreshChannelEmotes channelId, Some message)
+    let refreshGlobalEmotes emoteProvider message = BotAction (RefreshGlobalEmotes emoteProvider, Some message)
+    let startTrivia config = BotAction (StartTrivia config, None)
+    let stopTrivia channel = BotAction (StopTrivia channel, None)
 
 module CommandError =
 

@@ -36,30 +36,28 @@ module Emote =
                     |> Message
         }
 
-    let private randomEmoteKeys = [
-        "provider"
-    ]
+    let private randomEmoteKeys = [ "provider" ]
 
     let randomEmote args context =
-        let kvp = KeyValueParser.parse args randomEmoteKeys
-        let maybeProvider = kvp.KeyValues.TryFind "provider" |> Option.bind parseEmoteProvider
+        result {
+            let kvp = KeyValueParser.parse args randomEmoteKeys
+            let maybeProvider = kvp.KeyValues.TryFind "provider" |> Option.bind parseEmoteProvider
 
-        let maybeEmote =
-            match maybeProvider with
-            | None -> context.Emotes.Random ()
-            | Some p -> context.Emotes.Random p
+            let emote =
+                maybeProvider
+                |> Option.bind (fun p -> context.Emotes.Random p)
+                |> Option.orElseWith (fun _ -> context.Emotes.Random ())
+                |> Option.map _.Name
+                |> Option.defaultValue "Kappa"
 
-        match maybeEmote with
-        | None -> "Kappa"
-        | Some emote -> $"%s{emote.Name}"
-        |> Message
-        |> Ok
+            return Message emote
+        }
 
     let refreshChannelEmotes args context =
         result {
             match context.Source with
             | Whisper _ -> return! invalidUsage "This command can only be used from a channel"
-            | Channel channelState -> return BotAction(RefreshChannelEmotes channelState.RoomId, Some "Refreshing channel emotes...")
+            | Channel channelState -> return BotCommand.refreshChannelEmotes channelState.RoomId "Refreshing channel emotes..."
         }
 
     let refreshGlobalEmotes args =
@@ -69,5 +67,5 @@ module Emote =
             | provider :: _ ->
                 match parseEmoteProvider provider with
                 | None -> return! invalidArgs "Unknown emote provider specified"
-                | Some p -> return BotAction(RefreshGlobalEmotes p, Some "Refreshing global emotes...")
+                | Some p -> return BotCommand.refreshGlobalEmotes p "Refreshing global emotes..."
         }
