@@ -17,7 +17,7 @@ module Api =
 
     let getCatFact () =
         async {
-            let request = Request.request catFactUrl
+            let request = Request.get catFactUrl
             let! response = request |> Http.send Http.client
 
             return

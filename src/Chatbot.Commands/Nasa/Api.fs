@@ -28,7 +28,7 @@ module Api =
     let getCurrentPictureOfTheDay () =
         async {
             let url = currentPictureOfTheDay
-            let request = Request.request url
+            let request = Request.get url
             let! response = request |> Http.send Http.client
 
             return
@@ -40,7 +40,7 @@ module Api =
     let getPictureOfTheDay (date: DateOnly) =
         async {
             let url = pictureOfTheDay (date.ToString(dateFormat))
-            let request = Request.request url
+            let request = Request.get url
             let! response = request |> Http.send Http.client
 
             return
@@ -52,7 +52,7 @@ module Api =
     let getMarsRoverPhoto (camera: RoverCamera) (date: DateOnly) =
         async {
             let url = marsRoverPhotos date camera
-            let request = Request.request url
+            let request = Request.get url
             let! response = request |> Http.send Http.client
 
             return

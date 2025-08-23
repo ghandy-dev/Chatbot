@@ -49,8 +49,7 @@ type TokenStore() =
             let clientSecret = appConfig.Reddit.ClientSecret
 
             let request =
-                Request.request url
-                |> Request.withMethod Method.Post
+                Request.post url
                 |> Request.withHeaders [ Header.accept ContentType.applicationJson ; Header.authorization <| AuthenticationScheme.basic (clientId, clientSecret) ]
                 |> Request.withBody (Content.FormUrlEncoded [ "grand_type", "client_credentials" ])
                 |> Request.withContentType ContentType.applicationFormUrlEncoded

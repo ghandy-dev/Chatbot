@@ -89,7 +89,7 @@ let private lastLineUrl (channel: string) (user: string) = $"{LogsApiUrl}/channe
 let getEmoteByName (emote: string) =
     async {
         let url = getEmoteDataUrl emote false
-        let request = Request.request url
+        let request = Request.get url
         let! response =  request |> Http.send Http.client
 
         return
@@ -101,7 +101,7 @@ let getEmoteByName (emote: string) =
 let getSubAge (user: string) (channel: string) =
     async {
         let url = subAgeUrl user channel
-        let request = Request.request url
+        let request = Request.get url
         let! response =  request |> Http.send Http.client
 
         return
@@ -113,7 +113,7 @@ let getSubAge (user: string) (channel: string) =
 let getChannelRandomLine (channel: string) =
     async {
         let url = randomChannelLineUrl channel
-        let request = Request.request url
+        let request = Request.get url
         let! response =  request |> Http.send Http.client
 
         return
@@ -127,7 +127,7 @@ let getChannelRandomLine (channel: string) =
 let getUserRandomLine (channel: string) (user: string) =
     async {
         let url = randomUserLineUrl channel user
-        let request = Request.request url
+        let request = Request.get url
         let! response =  request |> Http.send Http.client
 
         return
@@ -141,7 +141,7 @@ let getUserRandomLine (channel: string) (user: string) =
 let search (channel: string) (user: string) (query: string) =
     async {
         let url = searchUrl channel user query 1
-        let request = Request.request url
+        let request = Request.get url
         let! response = request |> Http.send Http.client
 
         return
@@ -155,7 +155,7 @@ let search (channel: string) (user: string) (query: string) =
 let getLastLine (channel: string) (user: string) =
     async {
         let url = lastLineUrl channel user
-        let request = Request.request url
+        let request = Request.get url
         let! response = request |> Http.send Http.client
 
         return

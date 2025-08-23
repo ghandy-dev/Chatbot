@@ -66,8 +66,7 @@ module Api =
                 |> serializeJson
 
             let request =
-                Request.request imageGenerationUrl
-                |> Request.withMethod Method.Post
+                Request.post imageGenerationUrl
                 |> Request.withHeaders headers
                 |> Request.withBody (Content.String json)
                 |> Request.withContentType ContentType.applicationJson
@@ -130,8 +129,7 @@ module Api =
                 |> serializeJson
 
             let request =
-                Request.request chatCompletionUrl
-                |> Request.withMethod Method.Post
+                Request.post chatCompletionUrl
                 |> Request.withHeaders headers
                 |> Request.withBody (Content.String json)
                 |> Request.withContentType ContentType.applicationJson

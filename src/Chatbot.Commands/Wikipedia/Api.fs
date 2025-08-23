@@ -22,7 +22,7 @@ module Api =
     let getWikiResults query =
         async {
             let url = searchUrl query 1
-            let request = Request.request url
+            let request = Request.get url
             let! response = request |> Http.send Http.client
 
             return
@@ -38,7 +38,7 @@ module Api =
             match cache |> Dict.tryGetValue date with
             | None ->
                 let url = feedUrl date
-                let request = Request.request url
+                let request = Request.get url
                 let! response = request |> Http.send Http.client
 
                 return

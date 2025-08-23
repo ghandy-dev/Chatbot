@@ -14,7 +14,7 @@ module Api =
 
     let random () =
         async {
-            let request = Request.request randomUrl
+            let request = Request.get randomUrl
             let! response = request |> Http.send Http.client
 
             return
@@ -27,7 +27,7 @@ module Api =
         async {
             let url = searchUrl term
 
-            let request = Request.request url
+            let request = Request.get url
             let! response = request |> Http.send Http.client
 
             return

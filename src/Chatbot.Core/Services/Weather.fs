@@ -137,7 +137,7 @@ let getCurrentWeather (latitude: double) (longitude: double) =
     async {
         let url = currentWeather latitude longitude
 
-        let request = Request.request url
+        let request = Request.get url
         let! response = request |> Http.send Http.client
 
         return

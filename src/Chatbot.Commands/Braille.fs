@@ -149,7 +149,7 @@ module Braille =
     let private getImage url =
         async {
             let request =
-                Request.request url
+                Request.get url
                 |> Request.withHeaders [ Header.accept "image/*" ]
 
             let! response = request |> Http.send Http.client

@@ -27,7 +27,7 @@ module Api =
             let url = accountUrl gameName tagLine
 
             let request =
-                Request.request url
+                Request.get url
                 |> Request.withHeaders headers
 
             let! response = request |> Http.send Http.client
@@ -43,7 +43,7 @@ module Api =
             let url = summonerUrl region puuid
 
             let request =
-                Request.request url
+                Request.get url
                 |> Request.withHeaders headers
 
             let! response = request |> Http.send Http.client
@@ -59,7 +59,7 @@ module Api =
             let url = leagueEntryUrl region summonerId
 
             let request =
-                Request.request url
+                Request.get url
                 |> Request.withHeaders headers
 
             let! response = request |> Http.send Http.client
@@ -75,7 +75,7 @@ module Api =
             let url = matchIdsUrl puuid
 
             let request =
-                Request.request url
+                Request.get url
                 |> Request.withHeaders headers
 
             let! response = request |> Http.send Http.client
@@ -91,7 +91,7 @@ module Api =
             let url = matchUrl matchId
 
             let request =
-                Request.request url
+                Request.get url
                 |> Request.withHeaders headers
 
             let! response = request |> Http.send Http.client

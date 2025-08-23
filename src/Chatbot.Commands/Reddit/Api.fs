@@ -26,7 +26,7 @@ module Api =
             let! token = tokenStore.GetToken TokenType.Reddit
 
             let request =
-                Request.request url
+                Request.get url
                 |> Request.withHeaders [
                     Header.accept ContentType.applicationJson
                     Header.authorization <| AuthenticationScheme.bearer token

@@ -65,8 +65,7 @@ let createPaste (pasteName: string) (pasteCode: string) =
         ]
 
         let request =
-            Request.request url
-            |> Request.withMethod Method.Post
+            Request.post url
             |> Request.withBody (Content.FormUrlEncoded parameters)
             |> Request.withContentType ContentType.applicationFormUrlEncoded
 

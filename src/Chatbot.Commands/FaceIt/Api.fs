@@ -31,7 +31,7 @@ module Api =
             let url = $"{ApiUrl}/{playerByName player}"
 
             let request =
-                Request.request url
+                Request.get url
                 |> Request.withHeaders headers
 
             let! response = request |> Http.send Http.client
@@ -47,7 +47,7 @@ module Api =
             let url = $"{ApiUrl}/{playerById playerId}"
 
             let request =
-                Request.request url
+                Request.get url
                 |> Request.withHeaders headers
 
             let! response = request |> Http.send Http.client
@@ -63,7 +63,7 @@ module Api =
             let url = $"""{ApiUrl}/{playerStats playerId "cs2"}"""
 
             let request =
-                Request.request url
+                Request.get url
                 |> Request.withHeaders headers
 
             let! response = request |> Http.send Http.client
@@ -79,7 +79,7 @@ module Api =
             let url = $"""{ApiUrl}/{playerHistory playerId "cs2" limit}"""
 
             let request =
-                Request.request url
+                Request.get url
                 |> Request.withHeaders headers
 
             let! response = request |> Http.send Http.client
@@ -95,7 +95,7 @@ module Api =
             let url = $"{ApiUrl}/{``match`` matchId}"
 
             let request =
-                Request.request url
+                Request.get url
                 |> Request.withHeaders headers
 
             let! response = request |> Http.send Http.client
@@ -111,7 +111,7 @@ module Api =
             let url = $"{ApiUrl}/{matchStats matchId}"
 
             let request =
-                Request.request url
+                Request.get url
                 |> Request.withHeaders headers
 
             let! response = request |> Http.send Http.client

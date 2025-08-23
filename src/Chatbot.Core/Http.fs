@@ -128,7 +128,6 @@ module Request =
         ContentType = None
     }
 
-    let request url = { empty with Url = url }
     let get url = { empty with Url = url ; Method = Get }
     let post url = { empty with Url = url ; Method = Post }
     let delete url = { empty with Url = url ; Method = Delete }
@@ -144,7 +143,7 @@ module Request =
 
 module Response =
 
-    let create requestUrl content bytes headers statusCode = {
+    let create requestUrl content bytes headers statusCode =  {
         RequestUrl = requestUrl
         Content = content
         Bytes = bytes
@@ -152,17 +151,15 @@ module Response =
         StatusCode = statusCode
     }
 
-    let deserializeJson<'T> (response: Response) = response.Content |> Json.deserializeJson<'T>
-
-    let toResult (response: Response) =
-        match int response.StatusCode with
+    let toResult response =
+        match response.StatusCode with
         | sc when sc >= 200 && sc < 300 -> Ok response
         | _ -> Error response
 
     let toJsonResult<'T> response =
         response
         |> toResult
-        |> Result.bind (fun r -> Ok <| deserializeJson<'T> r)
+        |> Result.bind (fun r -> Ok <| Json.deserializeJson<'T> r.Content)
 
 let applyHeaders (headers: (string * string) seq) (req: HttpRequestMessage) =
     headers
@@ -190,20 +187,18 @@ let send (client: HttpClient) (request: Request) =
         applyHeaders request.Headers httpRequest
 
         use! httpResponse = client.SendAsync(httpRequest) |> Async.AwaitTask
-
         let requestUrl = httpRequest.RequestUri.ToString()
+        let statusCode = int httpResponse.StatusCode
         let! content = httpResponse.Content.ReadAsStringAsync() |> Async.AwaitTask
         let! bytes = httpResponse.Content.ReadAsByteArrayAsync() |> Async.AwaitTask
-
-        if not <| httpResponse.IsSuccessStatusCode then
-            Logging.error $"Http Error: %d{int httpResponse.StatusCode} %A{httpRequest.Method} %s{requestUrl} %s{content}" (exn())
 
         let responseHeaders =
             httpResponse.Headers
             |> Seq.map (function KeyValue (k, v) -> k, seq v)
             |> Map.ofSeq
 
-        let statusCode = int httpResponse.StatusCode
+        if not <| httpResponse.IsSuccessStatusCode then
+            Logging.error $"Http Error: %d{statusCode} %A{httpRequest.Method} %s{requestUrl} %s{content}" (exn())
 
         let response = Response.create requestUrl content bytes responseHeaders statusCode
 

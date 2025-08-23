@@ -193,7 +193,7 @@ module Azure =
         async {
             let url = reverseAddressUrl latitude longitude
 
-            let request = Request.request url
+            let request = Request.get url
             let! response = request |> Http.send Http.client
 
             return
@@ -206,7 +206,7 @@ module Azure =
         async {
             let url = searchAddressUrl address
 
-            let request = Request.request url
+            let request = Request.get url
             let! response = request |> Http.send Http.client
 
             return
@@ -323,7 +323,7 @@ module Google =
         async {
             let url = timezoneUrl latitude longitude timestamp
 
-            let request = Request.request url
+            let request = Request.get url
             let! response = request |> Http.send Http.client
 
             match response |> Response.toJsonResult<Timezone> with

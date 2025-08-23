@@ -271,7 +271,7 @@ module Bttv =
 
     let globalEmotes () =
         async {
-            let request = Request.request globalEmotesUrl
+            let request = Request.get globalEmotesUrl
             let! response = request |> Http.send Http.client
 
             return
@@ -285,7 +285,7 @@ module Bttv =
         async {
             let url = channelEmotesUrl channelId
 
-            let request = Request.request url
+            let request = Request.get url
             let! response = request |> Http.send Http.client
 
             return
@@ -309,7 +309,7 @@ module Ffz =
 
     let globalEmotes () =
         async {
-            let request = Request.request globalEmotesUrl
+            let request = Request.get globalEmotesUrl
             let! response = request |> Http.send Http.client
 
             return
@@ -330,7 +330,7 @@ module Ffz =
         async {
             let url = channelEmotesUrl channelId
 
-            let request = Request.request url
+            let request = Request.get url
             let! response = request |> Http.send Http.client
 
             return
@@ -356,7 +356,7 @@ module SevenTv =
 
     let globalEmotes () =
         async {
-            let request = Request.request globalEmotesUrl
+            let request = Request.get globalEmotesUrl
             let! response = request |> Http.send Http.client
 
             return
@@ -372,7 +372,7 @@ module SevenTv =
         async {
             let url = channelEmotesUrl channelId
 
-            let request = Request.request url
+            let request = Request.get url
             let! response = request |> Http.send Http.client
 
             return
