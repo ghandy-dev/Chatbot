@@ -34,15 +34,20 @@ module Logs =
                 return Message message
         }
 
+    let searchKeys = [ "channel" ; "user" ]
+
     let search args context =
         asyncResult {
             match context.Source with
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
             | Channel channel ->
-                let query = args |> strJoin " "
+                let kvp = KeyValueParser.parse args searchKeys
+                let channel = kvp.KeyValues.TryFind "channel" |> Option.defaultValue channel.Channel
+                let user = kvp.KeyValues.TryFind "user" |> Option.defaultValue context.Username
+                let query = kvp.Input |> strJoin " "
 
                 let! message =
-                    ivrService.Search channel.Channel context.Username query
+                    ivrService.Search channel user query
                     |> AsyncResult.orElseWith (fun err ->
                         match err with
                         | 404 -> AsyncResult.ok "No message(s) found"

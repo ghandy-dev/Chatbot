@@ -637,7 +637,16 @@ Roll a random number between a min and max value.
         {
             Name = "Search"
             Description = "Search logs for the most recent chat message matching/containing the query text"
-            ExampleUsage = $"""{exampleArgs "search" "TriHard"}"""
+            ExampleUsage = $"""
+Search logs for the most recent line from yourself in the current channel.
+{exampleArgs "search" "TriHard"}
+
+Search logs for the most recent line from a user in the current channel.
+{exampleArgs "search" "user:forsen xd"}
+
+Search logs for the most recent line from a user in another channel.
+{exampleArgs "search" "user:nymn channel:forsen AYAYA"}
+"""
         }
 
     let Slots =
