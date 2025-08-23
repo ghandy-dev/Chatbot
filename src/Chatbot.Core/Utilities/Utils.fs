@@ -57,4 +57,5 @@ let strNotEmpty = not << strEmpty
 let strConcat (values: string seq) = String.Concat(values)
 let strJoin (separator: string) (values: string seq) = String.Join(separator, values)
 
+let htmlEncode = System.Web.HttpUtility.HtmlEncode
 let htmlDecode = System.Web.HttpUtility.HtmlDecode
