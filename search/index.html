@@ -30,7 +30,7 @@
             Description
           </td>
           <td>
-            Search logs for the most recent chat message matching/containing the query text
+            Search logs for chat messages matching/containing the query text
           </td>
         </tr>
         <tr>
@@ -75,8 +75,12 @@
                 
               </div>
               <div>
-                Search logs for the most recent line from yourself in the current channel.
+                Search logs for the first occurence of the query text from yourself in the current channel.
               </div>
+              <code>
+                &gt; search &lt;query&gt;
+              </code>
+              <br/>
               <code>
                 &gt; search TriHard
               </code>
@@ -85,20 +89,46 @@
             <br/>
             <div>
               <div>
-                Search logs for the most recent line from a user in the current channel.
+                Optional arguments:
               </div>
-              <code>
-                &gt; search user:forsen xd
-              </code>
-              <br/>
             </div>
             <br/>
             <div>
               <div>
-                Search logs for the most recent line from a user in another channel.
+                user
+              </div>
+              <div>
+                    - default: user executing command
+              </div>
+            </div>
+            <br/>
+            <div>
+              <div>
+                channel
+              </div>
+              <div>
+                    - default: current channel
+              </div>
+            </div>
+            <br/>
+            <div>
+              <div>
+                reverse
+              </div>
+              <div>
+                    - false (default)
+              </div>
+              <div>
+                    - true
+              </div>
+            </div>
+            <br/>
+            <div>
+              <div>
+                Get the most recent line containing the query from forsen&#39;s channel, and sort by most recent
               </div>
               <code>
-                &gt; search user:nymn channel:forsen AYAYA
+                &gt; search user:nymn channel:forsen reverse:true AYAYA
               </code>
               <br/>
               <div>
