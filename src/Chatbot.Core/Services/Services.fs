@@ -51,6 +51,7 @@ type IIvrService =
     abstract member GetUserRandomLine: channel: string -> user: string -> Async<Result<string, int>>
     abstract member Search: channel: string -> user: string -> query: string -> Async<Result<string, int>>
     abstract member GetLastLine: channel: string -> user: string -> Async<Result<string, int>>
+    abstract member GetLines: channel: string -> from: System.DateTime -> ``to``: System.DateTime -> limit: int -> Async<Result<string, int>>
 
 type Services = {
     EmoteService: IEmoteService
@@ -153,6 +154,7 @@ let ivrService =
         member _.GetUserRandomLine channel user = IVR.getUserRandomLine channel user
         member _.Search channel user query = IVR.search channel user query
         member _.GetLastLine channel user = IVR.getLastLine channel user
+        member _.GetLines channel from ``to`` limit = IVR.getLines channel from ``to`` limit
     }
 
 let services = {

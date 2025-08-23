@@ -85,6 +85,7 @@ let private randomChannelLineUrl (channel: string) = $"{LogsApiUrl}/channel/{cha
 let private randomUserLineUrl (channel: string) (user: string) = $"{LogsApiUrl}/channel/{channel}/user/{user}/random"
 let private searchUrl (channel: string) (user: string) (query: string) (limit: int) = $"{LogsApiUrl}/channel/{channel}/user/{user}/search?q={query}&limit={limit}"
 let private lastLineUrl (channel: string) (user: string) = $"{LogsApiUrl}/channel/{channel}/user/{user}/?limit=1"
+let private linesUrl (channel: string) (from: string) (``to``: string) (limit: int) = $"{LogsApiUrl}/channel/{channel}?from={from}&to={``to``}&limit={limit}"
 
 let getEmoteByName (emote: string) =
     async {
@@ -163,5 +164,22 @@ let getLastLine (channel: string) (user: string) =
             |> Response.toResult
             |> Result.eitherMap
                 (fun r -> r.Content.Trim([|'\r' ; '\n'|]))
+                _.StatusCode
+    }
+
+let getLines (channel: string) (from: DateTime) (``to``: DateTime) (limit: int) =
+    async {
+        let fromString = from.ToUniversalTime().ToString(UtcDateTimeStringFormat)
+        let toString = ``to``.ToUniversalTime().ToString(UtcDateTimeStringFormat)
+
+        let url = linesUrl channel fromString toString limit
+        let request = Request.get url
+        let! response = request |> Http.send Http.client
+
+        return
+            response
+            |> Response.toResult
+            |> Result.eitherMap
+                _.Content
                 _.StatusCode
     }

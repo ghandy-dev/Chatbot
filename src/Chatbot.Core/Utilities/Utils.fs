@@ -8,6 +8,7 @@ open System.Text.RegularExpressions
 let [<Literal>] DateStringFormat = "dd/MM/yyyy"
 let [<Literal>] TimeStringFormat = "HH:mm:ss"
 let [<Literal>] DateTimeStringFormat = $"dd/MM/yyyy HH:mm:ss"
+let [<Literal>] UtcDateTimeStringFormat = $"yyyy-MM-ddTHH:mm:ss.ffffZ"
 
 let utcNow () = DateTime.UtcNow
 let now () = DateTime.Now
