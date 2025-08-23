@@ -23,11 +23,6 @@ module Types =
         | Trace
         | Connect
 
-    type SimpleHttpError =
-        | BadRequest
-        | NotFound
-        | InternalServerError
-
     type Content =
         | Empty
         | String of string
@@ -65,22 +60,6 @@ module Method =
         | Connect -> "CONNECT"
 
     let toHttpMethod method = new System.Net.Http.HttpMethod(method |> toString)
-
-module SimpleHttpError =
-
-    let fromStatusCode (statusCode: HttpStatusCode) =
-        match int statusCode with
-        | sc when sc = 404 -> NotFound
-        | sc when sc >= 400 && sc < 500 -> BadRequest
-        | sc when sc > 500 -> InternalServerError
-        | sc -> failwith $"Unexpected status code: {sc}"
-
-    let fromValue statusCode =
-        match statusCode with
-        | sc when sc = 404 -> NotFound
-        | sc when sc >= 400 && sc < 500 -> BadRequest
-        | sc when sc > 500 -> InternalServerError
-        | sc -> failwith $"Unexpected status code: {sc}"
 
 module AuthenticationScheme =
 
