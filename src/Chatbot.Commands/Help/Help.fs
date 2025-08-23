@@ -636,16 +636,26 @@ Roll a random number between a min and max value.
     let Search =
         {
             Name = "Search"
-            Description = "Search logs for the most recent chat message matching/containing the query text"
+            Description = "Search logs for chat messages matching/containing the query text"
             ExampleUsage = $"""
-Search logs for the most recent line from yourself in the current channel.
+Search logs for the first occurence of the query text from yourself in the current channel.
+{exampleArgs "search" "<query>"}
 {exampleArgs "search" "TriHard"}
 
-Search logs for the most recent line from a user in the current channel.
-{exampleArgs "search" "user:forsen xd"}
+Optional arguments:
 
-Search logs for the most recent line from a user in another channel.
-{exampleArgs "search" "user:nymn channel:forsen AYAYA"}
+user
+    - default: user executing command
+
+channel
+    - default: current channel
+
+reverse
+    - false (default)
+    - true
+
+Get the most recent line containing the query from forsen's channel, and sort by most recent
+{exampleArgs "search" "user:nymn channel:forsen reverse:true AYAYA"}
 """
         }
 

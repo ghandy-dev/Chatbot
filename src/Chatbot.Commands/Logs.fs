@@ -8,6 +8,7 @@ module Logs =
 
     open Commands
     open CommandError
+    open Parsing
 
     let private ivrService = Services.ivrService
 
@@ -34,7 +35,7 @@ module Logs =
                 return Message message
         }
 
-    let searchKeys = [ "channel" ; "user" ]
+    let searchKeys = [ "channel" ; "user" ; "reverse" ]
 
     let search args context =
         asyncResult {
@@ -44,10 +45,11 @@ module Logs =
                 let kvp = KeyValueParser.parse args searchKeys
                 let channel = kvp.KeyValues.TryFind "channel" |> Option.defaultValue channel.Channel
                 let user = kvp.KeyValues.TryFind "user" |> Option.defaultValue context.Username
+                let reverse = kvp.KeyValues.TryFind "reverse" |> Option.bind tryParseBoolean |> Option.defaultValue false
                 let query = kvp.Input |> strJoin " "
 
                 let! message =
-                    ivrService.Search channel user query
+                    ivrService.Search channel user query reverse
                     |> AsyncResult.orElseWith (fun err ->
                         match err with
                         | 404 -> AsyncResult.ok "No message(s) found"
