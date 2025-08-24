@@ -172,6 +172,23 @@ Supported operators:
             ExampleUsage = $"""{example "percentage"}"""
         }
 
+    let ChatSummary =
+        {
+            Name = "Chat Summary"
+            Description = "Get a summary of the last 100 lines, or the 100 lines or fewer in the last 2 hours."
+            ExampleUsage = $"""
+Note:
+If used multiple times before 10 minutes has passed, a cached summary is returned until it expires.
+Only works in channels which have logs available.
+
+Get a summary of the current channels' chat.
+{example "chatsummary"}
+
+Get a summary of another channels' chats.
+{exampleArgs "chatsummary" "forsen"}
+"""
+        }
+
     let Channel =
         {
             Name = "Channel"
@@ -335,12 +352,16 @@ i.e. 10 mins after sending no messages through the gpt command will wipe your ch
 
 {exampleArgs "gpt" "<prompt>"}
 {exampleArgs "gpt" "What are the some of the rarest deep sea creatures?"}
+"""
+        }
 
-Use a specific persona that affect how GPT interprets the conversation, and its own role in the conversation.
-Currently has:
-    - default - Default model used. GPT is a helpful assistant.
-    - bully - GPT is mocking and belittling in hopefully a light-hearted manner.
-{exampleArgs "gpt" "<persona> <prompt>"}
+    let GptImage =
+        {
+            Name = "Gpt Image"
+            Description = "Generate an image by providing a prompt of what you want."
+            ExampleUsage = $"""
+{exampleArgs "gptimage" "<prompt>"}
+{exampleArgs "gptimage" "will smith eating spaghetti"}
 """
         }
 

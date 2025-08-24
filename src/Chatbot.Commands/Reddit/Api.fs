@@ -28,7 +28,7 @@ module Api =
             let request =
                 Request.get url
                 |> Request.withHeaders [
-                    Header.accept ContentType.applicationJson
+                    Header.accept ContentType.ApplicationJson
                     Header.authorization <| AuthenticationScheme.bearer token
                 ]
 

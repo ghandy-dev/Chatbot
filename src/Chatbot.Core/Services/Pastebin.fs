@@ -42,9 +42,9 @@ type PasteVisibility =
             | Private -> "2"
 
 
-let [<Literal>] private apiUrl = "https://pastebin.com/api"
+let [<Literal>] private ApiUrl = "https://pastebin.com/api"
 
-let private createPasteUrl = $"{apiUrl}/api_post.php"
+let private createPasteUrl = $"{ApiUrl}/api_post.php"
 
 let private apiKey = appConfig.Pastebin.ApiKey
 
@@ -67,7 +67,7 @@ let createPaste (pasteName: string) (pasteCode: string) =
         let request =
             Request.post url
             |> Request.withBody (Content.FormUrlEncoded parameters)
-            |> Request.withContentType ContentType.applicationFormUrlEncoded
+            |> Request.withContentType ContentType.ApplicationFormUrlEncoded
 
         let! response = request |> Http.send Http.client
 

@@ -29,6 +29,8 @@
     <Compile Include="Services/EmoteProviders.fs" />
     <Compile Include="Services/Weather.fs" />
     <Compile Include="Services/Geolocation.fs" />
+    <Compile Include="Services/OpenAI.fs" />
+    <Compile Include="Services/ImageUploader.fs" />
     <Compile Include="Services/Services.fs" />
     <Compile Include="TokenStore.fs" />
     <Compile Include="IrcCommands.fs" />

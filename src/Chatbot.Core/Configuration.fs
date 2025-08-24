@@ -65,7 +65,8 @@ type FaceItConfig = { ApiKey: string }
 [<CLIMutable>]
 type OpenAiConfig = {
     ApiKey: string
-    DefaultModel: string
+    DefaultChatModel: string
+    DefaultImageModel: string
 }
 
 [<CLIMutable>]

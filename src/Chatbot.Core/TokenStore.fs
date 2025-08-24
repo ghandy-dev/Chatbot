@@ -50,9 +50,9 @@ type TokenStore() =
 
             let request =
                 Request.post url
-                |> Request.withHeaders [ Header.accept ContentType.applicationJson ; Header.authorization <| AuthenticationScheme.basic (clientId, clientSecret) ]
+                |> Request.withHeaders [ Header.accept ContentType.ApplicationJson ; Header.authorization <| AuthenticationScheme.basic (clientId, clientSecret) ]
                 |> Request.withBody (Content.FormUrlEncoded [ "grand_type", "client_credentials" ])
-                |> Request.withContentType ContentType.applicationFormUrlEncoded
+                |> Request.withContentType ContentType.ApplicationFormUrlEncoded
 
             let! response = request |> Http.send Http.client
 

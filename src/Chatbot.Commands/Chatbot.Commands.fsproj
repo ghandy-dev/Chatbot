@@ -19,9 +19,6 @@
     <Compile Include="Wikipedia/Types.fs" />
     <Compile Include="Wikipedia/Api.fs" />
     <Compile Include="Wikipedia/Wikipedia.fs" />
-    <Compile Include="OpenAI/Types.fs" />
-    <Compile Include="OpenAI/Api.fs" />
-    <Compile Include="OpenAI/OpenAI.fs" />
     <Compile Include="News/Api.fs" />
     <Compile Include="News/News.fs" />
     <Compile Include="Weather.fs" />
@@ -67,6 +64,9 @@
     <Compile Include="FollowAge.fs" />
     <Compile Include="Fill.fs" />
     <Compile Include="Slots.fs" />
+    <Compile Include="Gpt.fs" />
+    <Compile Include="GptImage.fs" />
+    <Compile Include="ChatSummary.fs" />
     <Compile Include="Commands.fs" />
   </ItemGroup>
 

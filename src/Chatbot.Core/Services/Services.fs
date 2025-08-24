@@ -53,10 +53,19 @@ type IIvrService =
     abstract member GetLastLine: channel: string -> user: string -> Async<Result<string, int>>
     abstract member GetLines: channel: string -> from: System.DateTime -> ``to``: System.DateTime -> limit: int -> Async<Result<string, int>>
 
+type IOpenAIService =
+    abstract member GetImage: prompt: string -> Async<Result<OpenAI.Image.GenerateImageResponse, int>>
+    abstract member SendGptMessage: message: OpenAI.Chat.TextGenerationMessage list -> Async<Result<OpenAI.Chat.TextGenerationMessageResponse, int>>
+
+type IImageUploadService =
+    abstract member Upload: bytes: byte array -> Async<Result<string, int>>
+
 type Services = {
     EmoteService: IEmoteService
     GeolocationService: IGeolocationService
+    ImageUploadService: IImageUploadService
     IvrService: IIvrService
+    OpenAiService: IOpenAIService
     PastebinService: IPastebinService
     TwitchService: ITwitchService
     WeatherService: IWeatherService
@@ -157,10 +166,23 @@ let ivrService =
         member _.GetLines channel from ``to`` limit = IVR.getLines channel from ``to`` limit
     }
 
+let openAiService =
+    { new IOpenAIService with
+        member _.GetImage(prompt: string) = OpenAI.getImage prompt
+        member _.SendGptMessage(messages: OpenAI.Chat.TextGenerationMessage list) = OpenAI.sendGptMessage messages
+    }
+
+let imageUploadService =
+    { new IImageUploadService with
+        member _.Upload(bytes: byte array) = ImageUploader.upload bytes
+    }
+
 let services = {
     EmoteService = emoteService
     GeolocationService = geolocationService
+    ImageUploadService = imageUploadService
     IvrService = ivrService
+    OpenAiService = openAiService
     PastebinService = pastebinService
     TwitchService = twitchService
     WeatherService = weatherService

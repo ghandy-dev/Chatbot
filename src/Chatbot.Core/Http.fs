@@ -28,6 +28,8 @@ module Types =
         | String of string
         | ByteArray of byte array
         | FormUrlEncoded of (string * string) seq
+        | File of string * string * byte array
+        | MultipartFormData of (string * Content) seq
 
     type Request = {
         Url: string
@@ -66,28 +68,62 @@ module AuthenticationScheme =
     let bearer token = $"Bearer {token}"
     let basic (username, password) = $"""Basic {base64 $"%s{username}:%s{password}"}"""
 
+module Content =
+
+    let string content =  String content
+    let byteArray content = ByteArray content
+    let formUrlEncoded content = FormUrlEncoded content
+    let file filename contentType content = File (filename, contentType, content)
+    let multipartFormData content = MultipartFormData content
+
+    let rec toHttpContent content : HttpContent =
+        match content with
+            | Empty -> null
+            | String s -> new StringContent(s)
+            | ByteArray bs -> new ByteArrayContent(bs)
+            | FormUrlEncoded m -> new FormUrlEncodedContent(m |> Map.ofSeq)
+            | File (_, contentType, bs) ->
+                let content = new ByteArrayContent(bs)
+                content.Headers.ContentType <- MediaTypeHeaderValue(contentType)
+                content
+            | MultipartFormData cs ->
+                let multipartContent = new MultipartFormDataContent()
+
+                cs
+                |> Seq.iter (fun (name, c) ->
+                    match c with
+                    | File (filename, contentType, bs) ->
+                        let content = new ByteArrayContent(bs)
+                        content.Headers.ContentType <- MediaTypeHeaderValue(contentType)
+                        multipartContent.Add(content, name, filename)
+                    | _ ->
+                        multipartContent.Add(toHttpContent c, name)
+                )
+
+                multipartContent
+
 module ContentType =
 
-    let applicationJson = "application/json"
-    let applicationXml = "application/xml"
-    let applicationPdf = "application/pdf"
-    let applicationOctetStream = "application/octet-stream"
-    let applicationFormUrlEncoded = "application/x-www-form-urlencoded"
-    let textHtml = "text/html"
-    let textPlain = "text/plain"
-    let textCss = "text/css"
-    let textJavascript = "text/javascript"
-    let imageJpeg = "image/jpeg"
-    let imagePng = "image/png"
-    let imageGif = "image/gif"
-    let imageWebp = "image/webp"
-    let imageSvgXml = "image/svg+xml"
-    let audioMpeg = "audio/mpeg"
-    let audioWav = "audio/wav"
-    let videoMp4 = "video/mp4"
-    let videoWebm = "video/webp"
-    let multipartFormData = "multipart/form-data"
-    let multipartMixed = "multipart/mixed"
+    let [<Literal>] ApplicationJson = "application/json"
+    let [<Literal>] ApplicationXml = "application/xml"
+    let [<Literal>] ApplicationPdf = "application/pdf"
+    let [<Literal>] ApplicationOctetStream = "application/octet-stream"
+    let [<Literal>] ApplicationFormUrlEncoded = "application/x-www-form-urlencoded"
+    let [<Literal>] TextHtml = "text/html"
+    let [<Literal>] TextPlain = "text/plain"
+    let [<Literal>] TextCss = "text/css"
+    let [<Literal>] TextJavascript = "text/javascript"
+    let [<Literal>] ImageJpeg = "image/jpeg"
+    let [<Literal>] ImagePng = "image/png"
+    let [<Literal>] ImageGif = "image/gif"
+    let [<Literal>] ImageWebp = "image/webp"
+    let [<Literal>] ImageSvgXml = "image/svg+xml"
+    let [<Literal>] AudioMpeg = "audio/mpeg"
+    let [<Literal>] AudioWav = "audio/wav"
+    let [<Literal>] VideoMp4 = "video/mp4"
+    let [<Literal>] VideoWebm = "video/webp"
+    let [<Literal>] MultipartFormData = "multipart/form-data"
+    let [<Literal>] MultipartMixed = "multipart/mixed"
 
     let toMediaHeaderValue contentType =  MediaTypeHeaderValue.Parse(contentType)
 
@@ -146,12 +182,7 @@ let applyHeaders (headers: (string * string) seq) (req: HttpRequestMessage) =
 
 let send (client: HttpClient) (request: Request) =
     async {
-        use content: HttpContent =
-            match request.Content with
-            | Empty -> null
-            | String s -> new StringContent(s)
-            | ByteArray bs -> new ByteArrayContent(bs)
-            | FormUrlEncoded m -> new FormUrlEncodedContent(m |> Map.ofSeq)
+        use content: HttpContent = request.Content |> Content.toHttpContent
 
         match request.ContentType with
         | None -> ()

@@ -132,4 +132,7 @@ let private handleIrcMessage msg (mb: MailboxProcessor<ClientRequest>) =
     }
 
 let handleMessages messages (mb: MailboxProcessor<ClientRequest>) =
-    messages |> Array.map (fun msg -> handleIrcMessage msg mb) |> Async.Parallel |> Async.Ignore
+    async {
+        for msg in messages do
+            do! handleIrcMessage msg mb
+}
