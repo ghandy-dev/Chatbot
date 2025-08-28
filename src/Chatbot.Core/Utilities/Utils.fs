@@ -13,7 +13,7 @@ let [<Literal>] UtcDateTimeStringFormat = $"yyyy-MM-ddTHH:mm:ss.ffffZ"
 let utcNow () = DateTime.UtcNow
 let now () = DateTime.Now
 let today () = DateOnly.FromDateTime(utcNow())
-let base64 (s: string) = s |> System.Text.Encoding.UTF8.GetBytes |> System.Convert.ToBase64String
+let base64: string -> string = System.Text.Encoding.UTF8.GetBytes >> System.Convert.ToBase64String
 
 let formatTimeSpan (ts: TimeSpan) =
     let formatComponent value =
