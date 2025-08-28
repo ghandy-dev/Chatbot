@@ -12,18 +12,25 @@ module Logs =
 
     let private ivrService = Services.ivrService
 
+    let private mapHttpError = fun err ->
+        match err with
+        | 403 -> AsyncResult.ok "User/channel has opted out"
+        | 404 -> AsyncResult.ok "No message(s) found"
+        | _ -> AsyncResult.error err
+
     let randomLine args context =
         asyncResult {
             match context.Source with
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
             | Channel channel ->
-                match args with
-                | [] ->
-                    let! message =  ivrService.GetChannelRandomLine channel.Channel |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
-                    return Message message
-                | user :: _ ->
-                    let! message =  ivrService.GetUserRandomLine channel.Channel user |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
-                    return Message message
+                let! message =
+                    match args with
+                    | [] -> ivrService.GetChannelRandomLine channel.Channel
+                    | user :: _ -> ivrService.GetUserRandomLine channel.Channel user
+                    |> AsyncResult.orElseWith mapHttpError
+                    |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
+
+                return Message message
         }
 
     let randomQuote args context =
@@ -31,7 +38,11 @@ module Logs =
             match context.Source with
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
             | Channel channel ->
-                let! message =  ivrService.GetUserRandomLine channel.Channel context.Username |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
+                let! message =
+                    ivrService.GetUserRandomLine channel.Channel context.Username
+                    |> AsyncResult.orElseWith mapHttpError
+                    |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
+
                 return Message message
         }
 
@@ -50,11 +61,7 @@ module Logs =
 
                 let! message =
                     ivrService.Search channel user query reverse
-                    |> AsyncResult.orElseWith (fun err ->
-                        match err with
-                        | 404 -> AsyncResult.ok "No message(s) found"
-                        | _ -> AsyncResult.error err
-                    )
+                    |> AsyncResult.orElseWith mapHttpError
                     |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
 
                 return Message message
@@ -66,6 +73,11 @@ module Logs =
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
             | Channel channel ->
                 let user = args |> List.tryHead |> Option.defaultValue context.Username
-                let! message = ivrService.GetLastLine channel.Channel user |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
+
+                let! message =
+                    ivrService.GetLastLine channel.Channel user
+                    |> AsyncResult.orElseWith mapHttpError
+                    |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
+
                 return Message message
         }
