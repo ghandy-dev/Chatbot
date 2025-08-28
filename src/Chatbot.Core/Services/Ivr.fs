@@ -83,7 +83,7 @@ let private getEmoteDataUrl (emote: string) (id: bool) = $"{ApiUrl}/twitch/emote
 let private subAgeUrl (user: string) (channel: string) = $"{ApiUrl}/twitch/subage/{user}/{channel}"
 let private randomChannelLineUrl (channel: string) = $"{LogsApiUrl}/channel/{channel}/random"
 let private randomUserLineUrl (channel: string) (user: string) = $"{LogsApiUrl}/channel/{channel}/user/{user}/random"
-let private searchUrl (channel: string) (user: string) (query: string) (limit: int) (reverse: string option) = $"""{LogsApiUrl}/channel/{channel}/user/{user}/search?q={query}&limit={limit}{if reverse.IsSome then "&reverse=true" else ""}"""
+let private searchUrl (channel: string) (user: string) (query: string) (limit: int) (reverse: string option) = $"""{LogsApiUrl}/channel/{channel}/user/{user}/search?q={query}&limit={limit}{match reverse with | Some "true" -> "&reverse=true" | _ -> ""}"""
 let private lastLineUrl (channel: string) (user: string) = $"{LogsApiUrl}/channel/{channel}/user/{user}/?limit=1&reverse=true"
 let private linesUrl (channel: string) (from: string) (``to``: string) (limit: int) = $"{LogsApiUrl}/channel/{channel}?from={from}&to={``to``}&limit={limit}&reverse=true"
 
