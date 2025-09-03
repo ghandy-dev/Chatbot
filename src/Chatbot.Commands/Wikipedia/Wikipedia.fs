@@ -39,11 +39,12 @@ module Wikipedia =
                     os
                     |> Seq.randomChoice
                     |> fun otd ->
+                        let today = utcNow()
                         let year = otd.Year
                         let text = otd.Text
                         let links = otd.Pages |> Seq.map _.ContentUrls.Desktop.Page |> strJoin ", "
 
-                        Message $"{year} {text} ({links})"
+                        Message $"""{today.ToString("dd MMM")} {year}, {text} ({links})"""
         }
 
     let wikiNews args =
