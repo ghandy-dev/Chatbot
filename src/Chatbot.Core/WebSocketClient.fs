@@ -2,9 +2,6 @@ namespace Clients
 
 open System
 open System.Net.WebSockets
-open System.Threading
-
-open IRC.Commands
 
 type WebSocketClient(host: string, port: int) =
 
@@ -41,10 +38,10 @@ type WebSocketClient(host: string, port: int) =
 
                 do! client.SendAsync(buffer, WebSocketMessageType.Text, true, cancellationToken).AsTask() |> Async.AwaitTask
             with ex ->
-                Logging.error $"error in writeLine" ex
+                Logging.errorEx $"error in writeLine" ex
         }
 
-    interface ITwitchConnection with
+    interface IConnection with
         member _.Connected = connected ()
 
         member _.ConnectAsync(cancellationToken) = connect cancellationToken
@@ -52,15 +49,6 @@ type WebSocketClient(host: string, port: int) =
         member _.ReadAsync (cancellationToken) = read cancellationToken
 
         member _.SendAsync (message, cancellationToken) = writeLine message cancellationToken
-
-        member _.AuthenticateAsync (user, accessToken, capabilities, cancellationToken) =
-            async {
-                if capabilities.Length > 0 then
-                    do! writeLine ((CapReq capabilities).ToString()) cancellationToken
-
-                do! writeLine ((Pass accessToken).ToString()) cancellationToken
-                do! writeLine ((Nick user).ToString()) cancellationToken
-            }
 
     interface IDisposable with
         member _.Dispose () =

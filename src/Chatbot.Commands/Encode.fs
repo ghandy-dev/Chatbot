@@ -24,10 +24,10 @@ module Encode =
     let private base64 (text: string) =
         text |> System.Text.Encoding.UTF8.GetBytes |> System.Convert.ToBase64String
 
-    let encode args =
+    let encode context =
         let runEncode f (s: string) = f s |> Message |> Ok
 
-        match args with
+        match context.Args with
         | [] | [ _ ] -> Error <| InvalidArgs "No encoder and/or text provided"
         | encoder :: input ->
             let text = input |> String.concat " "

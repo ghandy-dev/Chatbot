@@ -7,9 +7,9 @@ module UserId =
 
     let twitchService = Services.services.TwitchService
 
-    let userId (args: string list) (context: Context) =
+    let userId context =
         asyncResult {
-            match args with
+            match context.Args with
             | [] -> return Message context.UserId
             | username :: _ ->
                 match! twitchService.GetUser username |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch") with

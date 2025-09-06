@@ -9,9 +9,9 @@ module Stream =
 
     let twitchService = Services.services.TwitchService
 
-    let stream args =
+    let stream context =
         asyncResult {
-            let! channel = args |> List.tryHead |> Result.requireSome (InvalidArgs "No channel specified")
+            let! channel = context.Args |> List.tryHead |> Result.requireSome (InvalidArgs "No channel specified")
             let! user =
                 twitchService.GetUser channel
                 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")

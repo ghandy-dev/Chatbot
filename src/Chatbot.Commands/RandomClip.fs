@@ -11,14 +11,14 @@ module RandomClip =
 
     let twitchService = Services.services.TwitchService
 
-    let private getChannel args (context: Context) =
+    let private getChannel (context: Context) =
         match context.Source with
         | Whisper _ ->
-            match args with
+            match context.Args with
             | channel :: _ -> Ok channel
             | _ -> invalidArgs "You must specify a channel when using this command in whispers"
         | Channel channel ->
-            match args with
+            match context.Args with
             | [] -> Ok channel.Channel
             | channel :: _ -> Ok channel
 
@@ -38,13 +38,13 @@ module RandomClip =
 
     let private keys = [ "period" ]
 
-    let randomClip (args: string list) (context: Context) =
+    let randomClip context  =
         asyncResult {
-            let kvp = KeyValueParser.parse args keys
+            let kvp = KeyValueParser.parse context.Args keys
             let period = kvp.KeyValues.TryFind "period" |? "week"
             let dateFrom, dateTo = periodToDateRange period
 
-            let! channel = getChannel args context
+            let! channel = getChannel context
             let! user =
                 twitchService.GetUser channel
                 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")

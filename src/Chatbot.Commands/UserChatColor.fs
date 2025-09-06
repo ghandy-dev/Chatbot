@@ -7,9 +7,9 @@ module NameColor =
 
     let twitchService = Services.services.TwitchService
 
-    let namecolor (args: string list) (context: Context) =
+    let namecolor context =
         asyncResult {
-            let username = args |> List.tryHead |? context.Username
+            let username = context.Args |> List.tryHead |? context.Username
             let! user =
                 twitchService.GetUser username
                 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")

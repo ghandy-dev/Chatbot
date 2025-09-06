@@ -9,9 +9,9 @@ module Vod =
 
     let twitchService = Services.services.TwitchService
 
-    let vod args =
+    let vod context =
         asyncResult {
-            match args with
+            match context.Args with
             | [] -> return! invalidArgs "No channel specified"
             | channel :: _ ->
                 let! user =

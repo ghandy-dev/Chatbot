@@ -10,9 +10,9 @@ module JoinChannel =
 
     let twitchService = Services.services.TwitchService
 
-    let joinChannel (args: string list) =
+    let joinChannel context =
         asyncResult {
-            let! channelName = args |> List.tryHead |> Result.requireSome (InvalidArgs "No channel specified")
+            let! channelName = context.Args |> List.tryHead |> Result.requireSome (InvalidArgs "No channel specified")
 
             let! user =
                 twitchService.GetUser channelName

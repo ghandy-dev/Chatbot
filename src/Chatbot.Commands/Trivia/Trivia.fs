@@ -13,14 +13,14 @@ module Trivia =
 
     let keys = [ "count" ; "exclude" ; "include" ; "hints" ]
 
-    let trivia args context =
+    let trivia context =
         asyncResult {
             match context.Source with
             | Whisper _ -> return! invalidUsage "Trivia can only be used in channels"
             | Channel channel ->
-                match args with
+                match context.Args with
                 | "stop" :: _ -> return BotCommand.stopTrivia channel.Channel
-                | _ ->
+                | args ->
                     let kvp = KeyValueParser.parse args keys
 
                     let count = kvp.KeyValues.TryFind "count" |> Option.bind tryParseInt |> Option.map (fun c -> Math.Clamp(c, 1, 10)) |? 1

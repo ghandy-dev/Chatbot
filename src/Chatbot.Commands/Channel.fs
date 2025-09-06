@@ -7,9 +7,9 @@ module Channel =
 
     let twitchService = Services.services.TwitchService
 
-    let channel args =
+    let channel context =
         asyncResult {
-            let! channelName = args |> List.tryHead |> Result.requireSome (InvalidArgs "No channel specified")
+            let! channelName = context.Args |> List.tryHead |> Result.requireSome (InvalidArgs "No channel specified")
 
             let! user =
                 twitchService.GetUser channelName

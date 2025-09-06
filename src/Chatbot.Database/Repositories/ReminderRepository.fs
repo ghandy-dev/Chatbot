@@ -39,7 +39,7 @@ module ReminderRepository =
                         Channel = r.channel
                     })
             with ex ->
-                Logging.error "Error executing query" ex
+                Logging.errorEx "Error executing query" ex
                 return []
         }
 
@@ -73,7 +73,7 @@ module ReminderRepository =
                         Message = r.message
                     })
             with ex ->
-                Logging.error "Error retrieving reminders" ex
+                Logging.errorEx "Error retrieving reminders" ex
                 return []
         }
 
@@ -92,7 +92,7 @@ module ReminderRepository =
                 let! count = connection.ExecuteScalarAsync<int>(query, {| userId = userId |}) |> Async.AwaitTask
                 return DatabaseResult.Success count
             with ex ->
-                Logging.error "Error executing query" ex
+                Logging.errorEx "Error executing query" ex
                 return DatabaseResult.Failure
         }
 
@@ -111,7 +111,7 @@ module ReminderRepository =
                 let! count = connection.ExecuteScalarAsync<int>(query, {| userId = userId |}) |> Async.AwaitTask
                 return DatabaseResult.Success count
             with ex ->
-                Logging.error "Error executing query" ex
+                Logging.errorEx "Error executing query" ex
                 return DatabaseResult.Failure
         }
 
@@ -143,7 +143,7 @@ module ReminderRepository =
 
                 return DatabaseResult.Success id
             with ex ->
-                Logging.error ex.Message ex
+                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }
 
@@ -161,7 +161,7 @@ module ReminderRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.error ex.Message ex
+                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }
 
@@ -178,6 +178,6 @@ module ReminderRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.error ex.Message ex
+                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }

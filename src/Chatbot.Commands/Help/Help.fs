@@ -5,7 +5,7 @@ open Configuration
 [<AutoOpen>]
 module Help =
 
-    let help () = Ok <| Message $"See %s{appConfig.HelpUrl} for a list of commands"
+    let help _ = Ok <| Message $"See %s{appConfig.HelpUrl} for a list of commands"
 
 module HelpInfo =
 

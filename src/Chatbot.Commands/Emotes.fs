@@ -19,10 +19,9 @@ module Emote =
         | "7tv" -> Some EmoteProvider.SevenTv
         | _ -> None
 
-
-    let whatemoteisit args context =
+    let whatemoteisit context =
         asyncResult {
-            match args with
+            match context.Args with
             | [] -> return! Error <| InvalidArgs "No emote specified"
             | emote :: _ ->
                 let! emote = ivrService.GetEmoteByName emote |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
@@ -38,9 +37,9 @@ module Emote =
 
     let private randomEmoteKeys = [ "provider" ]
 
-    let randomEmote args context =
+    let randomEmote context =
         result {
-            let kvp = KeyValueParser.parse args randomEmoteKeys
+            let kvp = KeyValueParser.parse context.Args randomEmoteKeys
             let maybeProvider = kvp.KeyValues.TryFind "provider" |> Option.bind parseEmoteProvider
 
             let emote =
@@ -53,16 +52,16 @@ module Emote =
             return Message emote
         }
 
-    let refreshChannelEmotes args context =
+    let refreshChannelEmotes context =
         result {
             match context.Source with
             | Whisper _ -> return! invalidUsage "This command can only be used from a channel"
             | Channel channelState -> return BotCommand.refreshChannelEmotes channelState.RoomId "Refreshing channel emotes..."
         }
 
-    let refreshGlobalEmotes args =
+    let refreshGlobalEmotes context =
         result {
-            match args with
+            match context.Args with
             | [] -> return! invalidArgs "No emote provider specified"
             | provider :: _ ->
                 match parseEmoteProvider provider with

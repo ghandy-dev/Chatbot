@@ -126,9 +126,9 @@ module Alias =
                 | DatabaseResult.Success _ -> return Message $"Alias \"{sa.Name}\" successfully copied"
         }
 
-    let alias args (context: Context) (commands: Map<string, _>) =
+    let alias (context: Context) (commands: Map<string, _>) =
         asyncResult {
-            match args with
+            match context.Args with
             | "add" :: alias :: command -> return! add context.UserId alias command commands
             | "remove" :: alias :: _
             | "delete" :: alias :: _ -> return! delete context.UserId alias

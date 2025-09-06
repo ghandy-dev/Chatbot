@@ -249,9 +249,9 @@ module Braille =
         | "bayer" -> Some Dithering.bayer
         | _ -> None
 
-    let braille args context =
+    let braille context =
         asyncResult {
-            let kvp = KeyValueParser.parse args brailleKeys
+            let kvp = KeyValueParser.parse context.Args brailleKeys
 
             let greyscaleMode = kvp.KeyValues.TryFind "greyscale" |? DefaultGreyscaleFunction
             let dithering = kvp.KeyValues.TryFind "dithering" |> Option.bind parseDitheringMethod
@@ -259,7 +259,7 @@ module Braille =
             let monospace = kvp.KeyValues.TryFind "monospace" |> Option.bind Parsing.tryParseBoolean |? false
 
             let url =
-                match args with
+                match context.Args with
                 | [] -> None
                 | value :: _ ->
                     context.Emotes.MessageEmotes
@@ -275,15 +275,15 @@ module Braille =
             | Some url -> return! internalBraille url greyscaleMode dithering invert monospace
         }
 
-    let textToAscii args =
-        let kvp = KeyValueParser.parse args brailleKeys
+    let textToAscii context =
+        let kvp = KeyValueParser.parse context.Args brailleKeys
 
         let greyscaleMode = kvp.KeyValues.TryFind "greyscale" |? DefaultGreyscaleFunction
         let dithering = kvp.KeyValues.TryFind "dithering" |> Option.bind parseDitheringMethod
         let invert = kvp.KeyValues.TryFind "invert" |> Option.bind Parsing.tryParseBoolean |? false
         let monospace = kvp.KeyValues.TryFind "monospace" |> Option.bind Parsing.tryParseBoolean |? true
 
-        match args with
+        match context.Args with
         | [] -> Error <| InvalidArgs "No text specified"
         | text ->
             let text = System.String.Join(" ", text)

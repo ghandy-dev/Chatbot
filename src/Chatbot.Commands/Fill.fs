@@ -20,8 +20,8 @@ module Fill =
         else
             Some (word, (accLength + word.Length + 1, words))
 
-    let fill args =
-        let kvp: KeyValueParser.KeyValueParserResult = KeyValueParser.parse args keys
+    let fill context =
+        let kvp: KeyValueParser.KeyValueParserResult = KeyValueParser.parse context.Args keys
         let repeat = kvp.KeyValues.TryFind "repeat" |> Option.bind Parsing.tryParseBoolean |? true
 
         match kvp.Input with

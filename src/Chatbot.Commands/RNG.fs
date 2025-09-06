@@ -14,9 +14,9 @@ module RNG =
 
         let private defaultArgs = Some 1, Some 10
 
-        let roll (args: string list) =
+        let roll context =
             let a, b =
-                match args with
+                match context.Args with
                 | [] -> defaultArgs
                 | a :: b :: _ -> tryParseInt a, tryParseInt b
                 | n :: _ -> tryParseInt n, tryParseInt n
@@ -33,7 +33,7 @@ module RNG =
     [<AutoOpen>]
     module Chance =
 
-        let chance () =
+        let chance _ =
             let n = random.NextDouble() * 100.0
             Ok <| Message $"""{n.ToString("n2")}%%"""
 
@@ -42,4 +42,4 @@ module RNG =
 
         let private side = [ "Heads (yes)" ; "Tails (no)" ]
 
-        let coinFlip () = Ok <| Message $"{side |> List.randomChoice}"
+        let coinFlip _ = Ok <| Message $"{side |> List.randomChoice}"

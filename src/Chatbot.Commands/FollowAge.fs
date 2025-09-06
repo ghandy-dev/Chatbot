@@ -7,17 +7,17 @@ module FollowAge =
 
     let private ivrService = Services.ivrService
 
-    let followAge args context =
+    let followAge context =
         asyncResult {
             let maybeData =
                 match context.Source with
                 | Whisper _ ->
-                    match args with
+                    match context.Args with
                     | [] -> None
                     | user :: channel :: _ -> Some (user, channel)
                     | _ -> None
                 | Channel channel ->
-                    match args with
+                    match context.Args with
                     | [] -> Some (context.Username, channel.Channel)
                     | user :: channel :: _ -> Some (user, channel)
                     | user :: _ -> Some (user, channel.Channel)

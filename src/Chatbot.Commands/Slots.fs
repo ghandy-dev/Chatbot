@@ -45,8 +45,8 @@ module Slots =
 
     let private keys = [ "set" ]
 
-    let slots args context =
-        let kvp = KeyValueParser.parse args keys
+    let slots context =
+        let kvp = KeyValueParser.parse context.Args keys
 
         let maybeSet =
             match kvp.KeyValues.TryFind "set" with
@@ -59,9 +59,9 @@ module Slots =
                     | emotes -> Some emotes
                 | None -> None
             | None ->
-                match args with
+                match context.Args with
                 | [] -> None
-                | _ -> Some args
+                | _ -> Some context.Args
 
         match maybeSet with
         | None -> Error <| InvalidArgs "Unknown or empty set"

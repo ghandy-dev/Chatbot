@@ -21,7 +21,7 @@ let main args =
             do! Bot.run cancellationToken
             Async.AwaitWaitHandle cancellationToken.WaitHandle |> ignore
         with ex ->
-            Logging.error "Exception caught" ex
+            Logging.errorEx "Exception caught" ex
 
         cancellationTokenSource.Token.WaitHandle.WaitOne() |> ignore
 

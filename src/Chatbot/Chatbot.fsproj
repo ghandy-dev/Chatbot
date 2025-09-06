@@ -9,6 +9,7 @@
     <Compile Include="Shared.fs" />
     <Compile Include="CommandHandler.fs" />
     <Compile Include="MessageHandlers.fs" />
+    <Compile Include="Agents.fs" />
     <Compile Include="TwitchBot.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

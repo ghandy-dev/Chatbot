@@ -10,9 +10,9 @@ module Wikipedia =
     open CommandError
     open Wikipedia.Api
 
-    let wiki args =
+    let wiki context =
         asyncResult {
-            match args with
+            match context.Args with
             | [] -> return! invalidArgs "No input provided."
             | input ->
                 let query = String.concat " " input
@@ -28,7 +28,7 @@ module Wikipedia =
                         Message $"https://en.wikipedia.org/wiki/{key} {excerpt}"
         }
 
-    let onThisDay args =
+    let onThisDay _ =
         asyncResult {
             let! otds = getOnThisDay () |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Wikipedia")
 
@@ -47,7 +47,7 @@ module Wikipedia =
                         Message $"""{today.ToString("dd MMM")} {year}, {text} ({links})"""
         }
 
-    let wikiNews args =
+    let wikiNews _ =
         asyncResult {
             let! news = getNews () |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Wikipedia")
             let htmlTagPattern = "<.*?>"
@@ -65,7 +65,7 @@ module Wikipedia =
                         Message $"{story} ({links})"
         }
 
-    let didYouKnow args =
+    let didYouKnow _ =
         asyncResult {
             let! dyks = getDidYouKnow () |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Wikipedia")
             let wikiPagePattern = "https:\/\/en.wikipedia.org\/wiki\/\w+"

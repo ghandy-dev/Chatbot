@@ -5,8 +5,6 @@ open System.IO
 open System.Net.Sockets
 open System.Net.Security
 
-open IRC.Commands
-
 type IrcClient(host: string, port: int) =
 
     [<Literal>]
@@ -42,7 +40,7 @@ type IrcClient(host: string, port: int) =
             try
                 return! IO.readAsync reader ReaderBufferSize cancellationToken
             with ex ->
-                Logging.error $"error in {nameof IO.readAsync}" ex
+                Logging.errorEx $"error in {nameof IO.readAsync}" ex
                 return None
         }
 
@@ -51,7 +49,7 @@ type IrcClient(host: string, port: int) =
             try
                 do! IO.writeLineAsync writer message cancellationToken
             with ex ->
-                Logging.error $"error in {IO.writeLineAsync}" ex
+                Logging.errorEx $"error in {IO.writeLineAsync}" ex
         }
 
     let flush cancellationToken =
@@ -59,7 +57,7 @@ type IrcClient(host: string, port: int) =
             try
                 do! IO.flushAsync writer cancellationToken
             with ex ->
-                Logging.error $"error in {IO.flushAsync}" ex
+                Logging.errorEx $"error in {IO.flushAsync}" ex
         }
 
     let send message cancellationToken =
@@ -68,7 +66,7 @@ type IrcClient(host: string, port: int) =
             do! flush cancellationToken
         }
 
-    interface Clients.ITwitchConnection with
+    interface Clients.IConnection with
         member _.Connected = connected ()
 
         member _.ConnectAsync (cancellationToken) = connect cancellationToken
@@ -76,15 +74,6 @@ type IrcClient(host: string, port: int) =
         member _.ReadAsync (cancellationToken) = read cancellationToken
 
         member _.SendAsync (message: string, cancellationToken) = send (message.AsMemory()) cancellationToken
-
-        member _.AuthenticateAsync (user, accessToken, capabilities, cancellationToken) =
-            async {
-                if capabilities.Length > 0 then
-                    do! writeLine ((CapReq capabilities).ToString().AsMemory()) cancellationToken
-
-                do! writeLine ((Pass accessToken).ToString().AsMemory()) cancellationToken
-                do! writeLine ((Nick user).ToString().AsMemory()) cancellationToken
-            }
 
     interface IDisposable with
         member _.Dispose () =

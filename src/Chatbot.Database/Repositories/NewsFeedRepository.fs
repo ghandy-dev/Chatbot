@@ -30,6 +30,6 @@ module NewsFeedRepository =
 
                 return DatabaseResult.Success rssFeeds
             with ex ->
-                Logging.error ex.Message ex
+                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }

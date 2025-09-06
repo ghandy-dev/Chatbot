@@ -9,12 +9,12 @@ module UrbanDictionary =
 
     open FsToolkit.ErrorHandling
 
-    let urban args =
+    let urban context =
         asyncResult {
             let getTerm =
-                match args with
+                match context.Args with
                 | [] -> random ()
-                | _ ->
+                | args ->
                     let query = args |> String.concat " "
                     search query
 

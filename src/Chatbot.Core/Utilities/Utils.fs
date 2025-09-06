@@ -12,6 +12,7 @@ let [<Literal>] UtcDateTimeStringFormat = $"yyyy-MM-ddTHH:mm:ss.ffffZ"
 
 let utcNow () = DateTime.UtcNow
 let now () = DateTime.Now
+let epochTime () = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 let today () = DateOnly.FromDateTime(utcNow())
 let base64: string -> string = System.Text.Encoding.UTF8.GetBytes >> System.Convert.ToBase64String
 
@@ -78,6 +79,8 @@ let strEmpty = String.IsNullOrWhiteSpace
 let strNotEmpty = not << strEmpty
 let strConcat (values: string seq) = String.Concat(values)
 let strJoin (separator: string) (values: string seq) = String.Join(separator, values)
+let strStartsWith (value: string) (s: string) = s.StartsWith(value)
+let strReplace (oldValue: string) (newValue: string) (s: string) = s.Replace(oldValue, newValue)
 
 let htmlEncode = System.Web.HttpUtility.HtmlEncode
 let htmlDecode = System.Web.HttpUtility.HtmlDecode

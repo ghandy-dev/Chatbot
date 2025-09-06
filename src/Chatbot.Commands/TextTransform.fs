@@ -52,8 +52,8 @@ module TextTransform =
         ]
         |> Map.ofList
 
-    let texttransform args =
-        match args with
+    let texttransform context =
+        match context.Args with
         | [] -> Error <| InvalidArgs "No transform/text provided"
         | [ _ ] -> Error <| InvalidArgs "No transform and/or text provided"
         | transform :: words ->

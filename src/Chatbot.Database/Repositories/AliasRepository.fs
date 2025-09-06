@@ -50,7 +50,7 @@ module AliasRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.error ex.Message ex
+                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }
 
@@ -76,7 +76,7 @@ module AliasRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.error ex.Message ex
+                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }
 
@@ -93,6 +93,6 @@ module AliasRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.error ex.Message ex
+                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }

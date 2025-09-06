@@ -7,7 +7,7 @@ module TopStreams =
 
     let twitchService = Services.services.TwitchService
 
-    let topStreams () =
+    let topStreams _ =
         asyncResult {
             let! streams = twitchService.GetStreams 10 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - Streams")
 

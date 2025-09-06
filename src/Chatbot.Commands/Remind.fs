@@ -72,9 +72,9 @@ module Remind =
                 | DatabaseResult.Success _ -> return! setReminder user content context
         }
 
-    let remind args context =
+    let remind context =
         asyncResult {
-            match args with
+            match context.Args with
             | [] -> return! invalidArgs "No user/message provided"
             | [ _ ] -> return! invalidArgs "No message provided"
             | "me" :: rest ->

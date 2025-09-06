@@ -208,7 +208,7 @@ let send (client: HttpClient) (request: Request) =
             |> Map.ofSeq
 
         if not <| httpResponse.IsSuccessStatusCode then
-            Logging.error $"Http Error: %d{statusCode} %A{httpRequest.Method} %s{requestUrl} %s{content}" (exn())
+            Logging.errorEx $"Http Error: %d{statusCode} %A{httpRequest.Method} %s{requestUrl} %s{content}" (exn())
 
         let response = Response.create requestUrl content bytes responseHeaders statusCode
 

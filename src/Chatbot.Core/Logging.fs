@@ -81,5 +81,6 @@ let trace msg = log LogLevel.Trace msg None
 let debug msg = log LogLevel.Debug msg None
 let info msg = log LogLevel.Info msg None
 let warning msg = log LogLevel.Warning msg None
-let error msg ex = log LogLevel.Error msg (Some ex)
+let error msg = log LogLevel.Error msg None
+let errorEx msg ex = log LogLevel.Error msg (Some ex)
 let critical msg ex = log LogLevel.Critical msg (Some ex)

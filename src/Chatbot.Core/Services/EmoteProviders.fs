@@ -112,37 +112,43 @@ module Types =
         Type: EmoteType
     }
 
-    type Emotes = {
-        GlobalEmotes: Emote list
-        ChannelEmotes: Emote list
-        MessageEmotes: Map<string, string>
-    } with
+type Emotes = {
+    GlobalEmotes: Emote list
+    ChannelEmotes: Emote list
+    MessageEmotes: Map<string, string>
+} with
 
-        member this.TryFind (emote: string) =
-            this.GlobalEmotes |> List.tryFind (fun e -> e.Name = emote) |> Option.orElseWith (fun _ -> this.ChannelEmotes |> List.tryFind (fun e -> e.Name = emote))
+    static member create globalEmotes channelEmotes messageEmotes = {
+        GlobalEmotes = globalEmotes
+        ChannelEmotes = channelEmotes
+        MessageEmotes = messageEmotes
+    }
 
-        member this.Random () =
-            match this.GlobalEmotes, this.ChannelEmotes with
-            | [], [] -> None
-            | g, [] -> g |> List.tryRandomChoice
-            | [], c -> c |> List.tryRandomChoice
-            | g, c ->
-                [ g ; c ]
-                |> List.randomChoice
-                |> List.tryRandomChoice
+    member this.TryFind (emote: string) =
+        this.GlobalEmotes |> List.tryFind (fun e -> e.Name = emote) |> Option.orElseWith (fun _ -> this.ChannelEmotes |> List.tryFind (fun e -> e.Name = emote))
 
-        member this.Random provider =
-            match
-                this.GlobalEmotes |> List.filter (fun e -> e.Provider = provider),
-                this.ChannelEmotes |> List.filter (fun e -> e.Provider = provider)
-            with
-            | [], [] -> None
-            | g, [] -> g |> List.tryRandomChoice
-            | [], c -> c |> List.tryRandomChoice
-            | g, c ->
-                [ g ; c ]
-                |> List.randomChoice
-                |> List.tryRandomChoice
+    member this.Random () =
+        match this.GlobalEmotes, this.ChannelEmotes with
+        | [], [] -> None
+        | g, [] -> g |> List.tryRandomChoice
+        | [], c -> c |> List.tryRandomChoice
+        | g, c ->
+            [ g ; c ]
+            |> List.randomChoice
+            |> List.tryRandomChoice
+
+    member this.Random provider =
+        match
+            this.GlobalEmotes |> List.filter (fun e -> e.Provider = provider),
+            this.ChannelEmotes |> List.filter (fun e -> e.Provider = provider)
+        with
+        | [], [] -> None
+        | g, [] -> g |> List.tryRandomChoice
+        | [], c -> c |> List.tryRandomChoice
+        | g, c ->
+            [ g ; c ]
+            |> List.randomChoice
+            |> List.tryRandomChoice
 
 module Urls =
 

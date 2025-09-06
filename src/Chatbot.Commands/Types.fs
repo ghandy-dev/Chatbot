@@ -5,14 +5,16 @@ type MessageSource =
     | Channel of channel: RoomState
 
 type Context = {
+    Args: string list
     UserId: string
     Username: string
     IsAdmin: bool
     Source: MessageSource
-    Emotes: EmoteProviders.Types.Emotes
+    Emotes: EmoteProviders.Emotes
 } with
 
-    static member create id username admin source emotes = {
+    static member create args id username admin source emotes = {
+        Args = args
         UserId = id
         Username = username
         IsAdmin = admin
@@ -71,14 +73,9 @@ and CommandHttpError =
 type Args = string list
 
 type CommandFunction =
-    | S of (unit -> CommandResult) // AsyncFunction
-    | SA of (Args -> CommandResult) // AsyncFunctionWithArgs
-    | SAC of (Args -> Context -> CommandResult) // AsyncFunctionWithArgsAndContext
-    | SACM of (Args -> Context -> Map<string, Command> -> CommandResult) // AsyncFunctionWithArgsAndContextAndCommands
-    | A of (unit -> Async<CommandResult>) // AsyncFunction
-    | AA of (Args -> Async<CommandResult>) // AsyncFunctionWithArgs
-    | AAC of (Args -> Context -> Async<CommandResult>) // AsyncFunctionWithArgsAndContext
-    | AACM of (Args -> Context -> Map<string, Command> -> Async<CommandResult>) // AsyncFunctionWithArgsAndContextAndCommands
+    | Sync of (Context -> CommandResult)
+    | Async of (Context -> Async<CommandResult>)
+    | Alias of (Context -> Map<string, CommandFunction> -> Async<CommandResult>)
 
 and Command = {
     Name: string

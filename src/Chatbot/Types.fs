@@ -3,14 +3,12 @@ module Types
 open Commands
 
 type ClientRequest =
-    | HandleIrcMessages of IRC.Messages.Types.IrcMessageType array
+    | HandleIrcMessage of IRC.IrcMessage
     | SendRawIrcMessage of string
     | SendPrivateMessage of channel: string * message: string
     | SendWhisperMessage of userId: string * username: string * message: string
     | SendReplyMessage of messageId: string * channel: string * message: string
-    | SendPongMessage of string
     | BotCommand of BotCommand
-    | Reconnect
 
 type ReminderMessage =
     | CheckReminders

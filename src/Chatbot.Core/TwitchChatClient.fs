@@ -2,10 +2,7 @@ namespace Clients
 
 open System
 
-open FSharpPlus
-
 open IRC
-open IRC.Commands
 open RateLimiter
 
 [<RequireQualifiedAccess>]
@@ -16,114 +13,202 @@ type ConnectionType =
 type TwitchChatClientConfig = {
     UserId: string
     Username: string
-    Capabilities: string array
+    Capabilities: string seq
+    Channels: string seq
 }
 
-type TwitchChatClient(connection: ConnectionType, config: TwitchChatClientConfig) =
-    let lastMessagesSent = new Collections.Concurrent.ConcurrentDictionary<string, int64>()
-    let messageReceived = new Event<Messages.Types.IrcMessageType array>()
-    let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
-    let whisperRateLimiter = RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
-    let twitchService = Services.services.TwitchService
+type TwitchClient = {
+    Start: unit -> unit
+    Reconnect: unit -> unit
+    Send : IRC.Request -> unit
+    SendWhisper: string -> string -> string -> unit
+    MessageReceived: IEvent<IrcMessage>
+}
 
-    let mutable client: ITwitchConnection = null
+module Twitch =
 
-    let createClient () : ITwitchConnection =
+    let [<Literal>] GlobalSlow = 1200
+
+    type private Request =
+        | Start
+        | SendIrc of IRC.Request
+        | SendWhisper of userId: string * message: string * accessToken: string
+        | Reconnect of attempt: int
+
+    let private createConnection connection : IConnection =
         match connection with
         | ConnectionType.IRC(host, port) -> new IrcClient(host, port)
         | ConnectionType.Websocket(host, port) -> new WebSocketClient(host, port)
 
-    let authenticate user cancellationToken =
-        async {
-            match! Authorization.tokenStore.GetToken Authorization.TokenType.Twitch with
-            | Error _ -> failwithf "Couldn't retrieve access token for Twitch API"
-            | Ok token -> do! client.AuthenticateAsync(user, token, config.Capabilities, cancellationToken)
-        }
+    let createClient (connection: ConnectionType) (config: TwitchChatClientConfig) (cancellationToken: System.Threading.CancellationToken) =
+        let chatRateLimiter = RateLimiter(Rates.MessageLimit_Chat, Rates.Interval_Chat)
+        let whisperRateLimiter = RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
+        let twitchService = Services.services.TwitchService
+        let messageReceived = new Event<IrcMessage>()
 
-    let [<Literal>] GlobalSlow = 1200
+        let agent = MailboxProcessor<Request>.Start(fun mb ->
+            let authenticate (client: IConnection) =
+                async {
+                    match! Authorization.tokenStore.GetToken Authorization.TokenType.Twitch with
+                    | Error _ -> failwithf "Couldn't retrieve access token for Twitch API"
+                    | Ok token ->
+                        do! client.SendAsync (Request.capReq config.Capabilities |> Request.toString, cancellationToken)
+                        do! client.SendAsync (Request.pass token |> Request.toString, cancellationToken)
+                        do! client.SendAsync (Request.nick config.Username |> Request.toString, cancellationToken)
+                }
 
-    let send command cancellationToken =
-        let sendPrivMsg (message: string) (channel: string) =
-            async {
-                Logging.info $"Sending: %s{message}"
-                do! client.SendAsync(message, cancellationToken)
-                lastMessagesSent[channel] <- DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-            }
+            let backoff attempt =
+                match attempt with
+                | 0 -> 1.0
+                | 1 -> 4.0
+                | 2 -> 16.0
+                | 3 -> 64.0
+                | _ -> 256.0
+                |> TimeSpan.FromSeconds
 
-        async {
-            let ircMessage = command.ToString()
+            let createReader (client: IConnection) =
+                let rec loop () =
+                    async {
+                        let splitMessages (message: string) = message.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)
+                        let logMessages = Array.iter Logging.info
+                        let parseMessages = Array.map (IRC.Parsing.parse >> IRC.Messages.parseMessage) >> Array.choose id
 
-            match command with
-            | PrivMsg (channel, _) ->
-                let now = DateTimeOffset.Now.ToUnixTimeMilliseconds()
-                if chatRateLimiter.CanSend() then
-                    match lastMessagesSent |> Dict.tryGetValue channel with
-                    | None -> do! sendPrivMsg ircMessage channel
-                    | Some timestamp ->
-                        let elapsedMs = now - timestamp |> int
-                        if elapsedMs > GlobalSlow then
-                            do! sendPrivMsg ircMessage channel
+                        if client.Connected then
+                            match! client.ReadAsync cancellationToken with
+                            | Some message ->
+                                let messages =
+                                    splitMessages message
+                                    |> fun ms ->
+                                        do logMessages ms
+                                        parseMessages ms
+
+                                messages
+                                |> Seq.iter (fun msg ->
+                                    match msg with
+                                    | PingMessage msg -> do mb.Post (SendIrc <| Pong msg.Message)
+                                    | ReconnectMessage ->
+                                        Logging.info "Twitch servers requested we reconnect..."
+                                        do mb.Post (Reconnect 0)
+                                    | _ -> ()
+
+                                    messageReceived.Trigger msg
+                                )
+
+                                return! loop ()
+                            | None ->
+                                mb.Post (Reconnect 0)
+                                Logging.warning "Error reading message. Attempting to reconnect..."
+                                return ()
                         else
-                            do! Async.Sleep(GlobalSlow - elapsedMs)
-                            do! sendPrivMsg ircMessage channel
-            | _ ->
-                Logging.info $"Sending: %s{ircMessage}"
-                do! client.SendAsync (ircMessage, cancellationToken)
+                            Logging.warning "Twitch client disconnected."
+                    }
+
+                loop ()
+
+            let connect (client: IConnection) =
+                async {
+                    do! client.ConnectAsync(cancellationToken)
+                    do! client |> authenticate
+                    Async.Start (createReader client, cancellationToken)
+                    do! client.SendAsync (Request.joinM config.Channels |> Request.toString, cancellationToken)
+                    Logging.info "Twitch client connected."
+                }
+
+            let reconnect attempt (client: IConnection) =
+                async {
+                    Logging.info $"Attempting to reconnect, attempt: %d{attempt}."
+                    client.Dispose()
+                    let client = createConnection connection
+
+                    try
+                        do! client |> connect
+                        do Async.Start (createReader client, cancellationToken)
+                    with _ ->
+                        let delay = backoff attempt
+                        do! Async.Sleep delay
+                        mb.Post (Reconnect (attempt+1))
+
+                    return client
+                }
+
+            let sendWhisper userId message accessToken =
+                async {
+                    if whisperRateLimiter.CanSend() then
+                        Logging.info $"Sending whisper: %s{userId} %s{message}"
+                        do! twitchService.SendWhisper config.UserId userId message accessToken |> Async.Ignore
+                }
+
+            let sendMessage (message: IRC.Request) (client: IConnection) =
+                async {
+                    let raw = message |> Request.toString
+                    Logging.info $"Sending: %s{raw}"
+                    do! client.SendAsync(raw, cancellationToken)
+                }
+
+            let rec loop (client: IConnection) messageTimestamps =
+                async {
+                    let! request = mb.Receive()
+
+                    match request with
+                    | Start -> do! client |> connect
+                    | SendIrc r ->
+                        if client.Connected then
+                            let raw = r |> Request.toString
+
+                            match r with
+                            | PrivMsg (channel, _) ->
+                                if chatRateLimiter.CanSend() then
+                                    match messageTimestamps |> Map.tryFind channel with
+                                    | None ->
+                                        do! client |> sendMessage r
+                                        return! loop client (messageTimestamps |> Map.add channel (epochTime()))
+                                    | Some timestamp ->
+                                        let elapsed = epochTime() - timestamp
+
+                                        if elapsed > GlobalSlow then
+                                            do! client |> sendMessage r
+                                            return! loop client (messageTimestamps |> Map.add channel (epochTime()))
+                                        else
+                                            do! Async.Sleep 100
+                                            mb.Post request
+                            | _ ->
+                                do! client |> sendMessage r
+                        else
+                            do! Async.Sleep 100
+                            mb.Post request
+                    | SendWhisper (userId, message, accessToken) -> do! sendWhisper userId message accessToken
+                    | Reconnect attempt ->
+                        let! client = reconnect attempt client
+                        return! loop client messageTimestamps
+
+                    return! loop client messageTimestamps
+                }
+
+            let client = createConnection connection
+            loop client Map.empty
+        )
+
+        let start () = agent.Post Start
+        let reconnect () = agent.Post (Reconnect 0)
+        let sendIrc request = agent.Post (SendIrc request)
+        let sendWhisper (userId, message, accessToken) = agent.Post (SendWhisper (userId, message, accessToken))
+
+        {
+            Start = start
+            Reconnect = reconnect
+            Send = fun r -> sendIrc r
+            SendWhisper = fun userId message accessToken -> sendWhisper (userId,message,accessToken)
+            MessageReceived = messageReceived.Publish
         }
 
-    let sendWhisper toUserId message accessToken =
-        async {
-            if whisperRateLimiter.CanSend() then
-                do! twitchService.SendWhisper config.UserId toUserId message accessToken |> Async.Ignore
-        }
+module TwitchChatClientConfig =
 
-    let reader (cancellationToken: Threading.CancellationToken) =
-        let splitMessages (message: string) = message.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)
-        let logMessages = Array.iter Logging.info
-        let parseMessages = Parsing.Parser.parseIrcMessages >> Array.map Messages.MessageMapping.mapIrcMessage >> Array.choose id
-
-        let rec reader' () =
-            async {
-                match client.Connected with
-                | true ->
-                    match! client.ReadAsync cancellationToken with
-                    | Some message ->
-                        let messages = splitMessages message
-                        logMessages messages
-                        messageReceived.Trigger (parseMessages messages)
-                        do! reader' ()
-                    | None -> ()
-                | false -> Logging.warning "Twitch chat client disconnected."
-            }
-
-        reader' ()
-
-    let start (cancellationToken) =
-        async {
-            client <- createClient ()
-            do! client.ConnectAsync (cancellationToken)
-            do! authenticate config.Username cancellationToken
-
-            let! result = reader cancellationToken |> Async.StartChild |> Async.Catch
-
-            match result with
-            | Choice1Of2 _ -> Logging.trace "Reader started."
-            | Choice2Of2 ex -> Logging.error $"Exception occurred in {nameof reader}" ex
-        }
-
-    let reconnect (cancellationToken) =
-        async {
-            (client :> IDisposable).Dispose()
-            do! start cancellationToken
-        }
-
-    [<CLIEvent>]
-    member _.MessageReceived = messageReceived.Publish
-
-    member _.StartAsync (cancellationToken) = start cancellationToken
-
-    member _.SendAsync (message, cancellationToken) = send message cancellationToken
-
-    member _.WhisperAsync (toUserId, message, accessToken) = sendWhisper toUserId message accessToken
-
-    member _.ReconnectAsync (cancellationToken) = reconnect cancellationToken
+    let connectionConfig: string -> ConnectionType =
+        function
+        | s when s.StartsWith("irc://") ->
+            let uri = new Uri(s)
+            ConnectionType.IRC(uri.Host, uri.Port)
+        | s when s.StartsWith("wss://") ->
+            let uri = new Uri(s)
+            ConnectionType.Websocket(uri.Host, uri.Port)
+        | _ -> failwith "Unsupported connection protocol set"

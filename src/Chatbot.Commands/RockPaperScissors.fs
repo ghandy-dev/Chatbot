@@ -30,9 +30,9 @@ module RockPaperScissors =
         | Paper, Rock -> 6
         | _ -> 0
 
-    let rps args (context: Context) =
+    let rps context =
         asyncResult {
-            let! shape = args |> List.tryHead |> Option.bind Shapes.tryParse |> Result.requireSome (InvalidArgs """Invalid shape (valid choices are "rock" "paper" "scissors")""")
+            let! shape = context.Args |> List.tryHead |> Option.bind Shapes.tryParse |> Result.requireSome (InvalidArgs """Invalid shape (valid choices are "rock" "paper" "scissors")""")
             let cpuShape = shapes |> List.randomChoice
             let score = calculateScore shape cpuShape
 

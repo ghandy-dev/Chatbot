@@ -12,7 +12,7 @@ let toResult (response: IApiResponse<'a>) =
     | code when code >= 200 && code < 300 -> Ok response.Body
     | _ -> Error response
 
-let private logError (error: IApiResponse<'a>) = Logging.error ($"Twitch API error: %d{error.StatusCode} %s{error.Error.Message}") exn
+let private logError (error: IApiResponse<'a>) = Logging.errorEx ($"Twitch API error: %d{error.StatusCode} %s{error.Error.Message}") exn
 
 module Helix =
 

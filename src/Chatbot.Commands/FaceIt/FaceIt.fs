@@ -147,9 +147,9 @@ module FaceIt =
                 return Message message
         }
 
-    let faceit (args: string list) =
+    let faceit context =
         async {
-            match args with
+            match context.Args with
             | [] -> return Error <| InvalidArgs $"No subcommand/player specified"
             | command :: player :: _ ->
                 match command with

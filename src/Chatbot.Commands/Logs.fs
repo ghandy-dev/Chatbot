@@ -18,13 +18,13 @@ module Logs =
         | 404 -> AsyncResult.ok "No message(s) found"
         | _ -> AsyncResult.error err
 
-    let randomLine args context =
+    let randomLine context =
         asyncResult {
             match context.Source with
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
             | Channel channel ->
                 let! message =
-                    match args with
+                    match context.Args with
                     | [] -> ivrService.GetChannelRandomLine channel.Channel
                     | user :: _ -> ivrService.GetUserRandomLine channel.Channel user
                     |> AsyncResult.orElseWith mapHttpError
@@ -33,7 +33,7 @@ module Logs =
                 return Message message
         }
 
-    let randomQuote args context =
+    let randomQuote context =
         asyncResult {
             match context.Source with
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
@@ -48,12 +48,12 @@ module Logs =
 
     let searchKeys = [ "channel" ; "user" ; "reverse" ]
 
-    let search args context =
+    let search context =
         asyncResult {
             match context.Source with
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
             | Channel channel ->
-                let kvp = KeyValueParser.parse args searchKeys
+                let kvp = KeyValueParser.parse context.Args searchKeys
                 let channel = kvp.KeyValues.TryFind "channel" |> Option.defaultValue channel.Channel
                 let user = kvp.KeyValues.TryFind "user" |> Option.defaultValue context.Username
                 let reverse = kvp.KeyValues.TryFind "reverse" |> Option.bind tryParseBoolean |> Option.defaultValue false
@@ -67,12 +67,12 @@ module Logs =
                 return Message message
         }
 
-    let lastLine args context =
+    let lastLine context =
         asyncResult {
             match context.Source with
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
             | Channel channel ->
-                let user = args |> List.tryHead |> Option.defaultValue context.Username
+                let user = context.Args |> List.tryHead |> Option.defaultValue context.Username
 
                 let! message =
                     ivrService.GetLastLine channel.Channel user

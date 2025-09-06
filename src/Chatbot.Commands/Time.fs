@@ -11,9 +11,9 @@ module Time =
 
     let geolocationService = Services.services.GeolocationService
 
-    let time args =
+    let time context =
         asyncResult {
-            match args with
+            match context.Args with
             | [] -> return Message $"{DateTime.UtcNow.ToString(DateTimeFormat)} (UTC)"
             | address ->
                 let timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()

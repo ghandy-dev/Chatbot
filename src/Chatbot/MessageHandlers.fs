@@ -3,7 +3,7 @@ module MessageHandlers
 open Commands
 open Commands.Handler
 open Configuration
-open IRC.Messages
+open IRC
 open Shared
 open Types
 
@@ -11,7 +11,13 @@ open System.Text.RegularExpressions
 
 let commandPrefix = appConfig.Bot.CommandPrefix
 
-let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProcessor<ClientRequest>) =
+let (|Command|_|) message =
+    if message |> strStartsWith commandPrefix then
+        Some message[commandPrefix.Length..]
+    else
+        None
+
+let private privateMessageHandler (msg: PrivateMessage) (mb: MailboxProcessor<ClientRequest>) =
     async {
         let postMessage message =
             match msg.ReplyParentMessageId with
@@ -29,9 +35,9 @@ let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProces
                     sprintf "%s %s" (usernameRegex.Replace(msg.Message, "", 1)) parentMessage
             | _ -> msg.Message
 
-        match message.StartsWith(commandPrefix) with
-        | true ->
-            let! response = safeHandleCommand msg.UserId msg.Username (Channel channelStates[msg.Channel]) message[1..] msg.Emotes
+        match message with
+        | Command command ->
+            let! response = safeHandleCommand msg.UserId msg.Username (Channel channelStates[msg.Channel]) command msg.Emotes
 
             match response with
             | Some commandOutcome ->
@@ -46,13 +52,13 @@ let private privateMessageHandler (msg: Types.PrivateMessage) (mb: MailboxProces
                 | RunAlias _
                 | Pipe _ -> ()
             | None -> ()
-        | false -> ()
+        | _ -> ()
     }
 
-let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProcessor<ClientRequest>) =
+let private whisperMessageHandler (msg: WhisperMessage) (mb: MailboxProcessor<ClientRequest>) =
     async {
-        match msg.Message.StartsWith(commandPrefix) with
-        | true ->
+        match msg.Message with
+        | Command command ->
             let! response = safeHandleCommand msg.UserId msg.DisplayName (Whisper msg.UserId) msg.Message[1..] msg.Emotes
 
             match response with
@@ -68,10 +74,10 @@ let private whisperMessageHandler (msg: Types.WhisperMessage) (mb: MailboxProces
                 | RunAlias _
                 | Pipe _ -> ()
             | None -> ()
-        | false -> ()
+        | _ -> ()
     }
 
-let private roomStateMessageHandler (msg: Types.RoomStateMessage) =
+let private roomStateMessageHandler (msg: RoomStateMessage) =
     match channelStates.TryGetValue msg.RoomId with
     | false, _ ->
         let roomState =
@@ -97,7 +103,7 @@ let private roomStateMessageHandler (msg: Types.RoomStateMessage) =
 
         channelStates[msg.RoomId] <- updatedRoomState
 
-let private globalUserStateMessageHandler (msg: Types.GlobalUserStateMessage) =
+let private globalUserStateMessageHandler (_: GlobalUserStateMessage) =
     async {
         do! Services.services.EmoteService.RefreshGlobalEmotes ()
     }
@@ -117,22 +123,14 @@ let private userStateMessageHandler (msg: UserStateMessage) =
             userStates[msg.DisplayName] <- updatedUserState
     | Some _ -> ()
 
-let private handleIrcMessage msg (mb: MailboxProcessor<ClientRequest>) =
+let handleIrcMessage msg (mb: MailboxProcessor<ClientRequest>) =
     async {
         match msg with
-        | PingMessage msg -> do mb.Post(SendPongMessage msg.message)
         | PrivateMessage msg -> do! privateMessageHandler msg mb
         | WhisperMessage msg -> do! whisperMessageHandler msg mb
-        | ReconnectMessage -> mb.Post(Reconnect)
         | RoomStateMessage msg -> roomStateMessageHandler msg
         | UserNoticeMessage msg -> ()
         | GlobalUserStateMessage msg -> do! globalUserStateMessageHandler msg
         | UserStateMessage msg -> userStateMessageHandler msg
         | _ -> ()
     }
-
-let handleMessages messages (mb: MailboxProcessor<ClientRequest>) =
-    async {
-        for msg in messages do
-            do! handleIrcMessage msg mb
-}

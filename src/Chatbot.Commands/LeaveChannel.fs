@@ -10,9 +10,9 @@ module LeaveChannel =
 
     let twitchService = Services.services.TwitchService
 
-    let leaveChannel (args: string list) =
+    let leaveChannel context =
         asyncResult {
-            let! channelName = args |> List.tryHead |> Result.requireSome (InvalidArgs "No channel specified")
+            let! channelName = context.Args |> List.tryHead |> Result.requireSome (InvalidArgs "No channel specified")
 
             let! user =
                 twitchService.GetUser channelName

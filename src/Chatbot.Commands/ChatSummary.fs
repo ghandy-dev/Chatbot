@@ -36,12 +36,12 @@ module ChatSummary =
 
     let private chatSummaryHistory = new ConcurrentDictionary<string, SummaryCache>()
 
-    let chatSummary args context =
+    let chatSummary context =
         asyncResult {
             match context.Source with
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
             | Channel channel ->
-                let channel = args |> List.tryHead |> Option.defaultValue channel.Channel
+                let channel = context.Args |> List.tryHead |> Option.defaultValue channel.Channel
                 let historyKey = channel
                 let ``to`` = utcNow()
                 let from = ``to``.AddHours(-2)

@@ -36,9 +36,9 @@ module RiotGames =
         |> Map.tryFind (region.ToLower())
         |> Option.toResultWith (InvalidArgs "Invalid region specified")
 
-    let league (args: string list) =
+    let league context =
         asyncResult {
-            match args with
+            match context.Args with
             | [] -> return! invalidArgs "Arguments missing"
             | region :: riotId ->
                 let! region = parseRegion region

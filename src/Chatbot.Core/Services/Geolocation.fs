@@ -307,7 +307,6 @@ module Google =
             | RequestDenied -> System.Net.HttpStatusCode.Forbidden
             | InvalidRequest -> System.Net.HttpStatusCode.BadRequest
             | UnknownError -> System.Net.HttpStatusCode.InternalServerError
-            | _ -> System.Net.HttpStatusCode.InternalServerError
 
     let [<Literal>] BaseApiUrl = "https://maps.googleapis.com"
 

@@ -32,7 +32,7 @@ module CatFacts =
     open FsToolkit.ErrorHandling
     open Api
 
-    let catFact () =
+    let catFact _ =
         asyncResult {
             let! fact = getCatFact () |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Cat Fact")
             return Message fact.Fact

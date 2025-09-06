@@ -73,9 +73,9 @@ module Weather =
         Message $"{location} {emoji} {summary} {temperature} - feels like {perceivedTemperature}, {wind}, {precipitation}, {uv}"
 
 
-    let weather args =
+    let weather context =
         asyncResult {
-            match args with
+            match context.Args with
             | [] -> return! invalidArgs "No location provided"
             | address ->
                 let! geocoding = geolocationService.GetSearchAddress (address |> String.concat " ") |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Geolocation")

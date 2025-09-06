@@ -25,9 +25,9 @@ module Reddit =
     let private defaultSorting = "hot"
     let private sortings = [ "hot" ; "top" ; "best" ]
 
-    let reddit (args: string list) =
+    let reddit context =
         asyncResult {
-            match args with
+            match context.Args with
             | [] -> return! invalidArgs "No subreddit specified"
             | args ->
                 let kvp = KeyValueParser.parse args redditKeys

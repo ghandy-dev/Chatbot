@@ -7,13 +7,13 @@ module News =
 
     open FsToolkit.ErrorHandling
 
-    let news args =
+    let news context =
         asyncResult {
             let maybeCategory =
-                if args |> List.isEmpty then
+                if context.Args |> List.isEmpty then
                     None
                 else
-                    Some <| (args |> String.concat " ")
+                    Some <| (context.Args |> String.concat " ")
 
             let! newsItem = getNews maybeCategory
             let title = newsItem.Title.Text

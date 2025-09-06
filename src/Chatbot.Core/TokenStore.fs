@@ -23,65 +23,69 @@ type TokenType =
     | Twitch
     | Reddit
 
-type TokenStore() =
+type TokenStore = {
+    GetToken: TokenType -> Async<Result<string, int>>
+}
 
-    let authClient = new OAuthClient()
-    let tokenCache = ConcurrentDictionary<TokenType, AccessToken>()
+let private authClient = new OAuthClient()
+let private tokenCache = ConcurrentDictionary<TokenType, AccessToken>()
 
-    let getTwitchToken () =
-        async {
-            let refreshToken = appConfig.Twitch.RefreshToken
-            let clientId = appConfig.Twitch.ClientId
-            let clientSecret = appConfig.Twitch.ClientSecret
+let private getTwitchToken () =
+    async {
+        let refreshToken = appConfig.Twitch.RefreshToken
+        let clientId = appConfig.Twitch.ClientId
+        let clientSecret = appConfig.Twitch.ClientSecret
 
-            let! response = authClient.RefreshTokenAsync(clientId, clientSecret, refreshToken) |> Async.AwaitTask
+        let! response = authClient.RefreshTokenAsync(clientId, clientSecret, refreshToken) |> Async.AwaitTask
 
-            if response.Error <> null then
-                return Error response.Error.Status
-            else
-                return Ok { AccessToken = response.Data.AccessToken ; ExpiresAt = response.Data.ExpiresAt }
-        }
+        if response.Error <> null then
+            return Error response.Error.Status
+        else
+            return Ok { AccessToken = response.Data.AccessToken ; ExpiresAt = response.Data.ExpiresAt }
+    }
 
-    let getRedditToken () =
-        async {
-            let url = "https://www.reddit.com/api/v1/access_token"
-            let clientId = appConfig.Reddit.ClientId
-            let clientSecret = appConfig.Reddit.ClientSecret
+let private getRedditToken () =
+    async {
+        let url = "https://www.reddit.com/api/v1/access_token"
+        let clientId = appConfig.Reddit.ClientId
+        let clientSecret = appConfig.Reddit.ClientSecret
 
-            let request =
-                Request.post url
-                |> Request.withHeaders [ Header.accept ContentType.ApplicationJson ; Header.authorization <| AuthenticationScheme.basic (clientId, clientSecret) ]
-                |> Request.withBody (Content.FormUrlEncoded [ "grand_type", "client_credentials" ])
-                |> Request.withContentType ContentType.ApplicationFormUrlEncoded
+        let request =
+            Request.post url
+            |> Request.withHeaders [ Header.accept ContentType.ApplicationJson ; Header.authorization <| AuthenticationScheme.basic (clientId, clientSecret) ]
+            |> Request.withBody (Content.FormUrlEncoded [ "grand_type", "client_credentials" ])
+            |> Request.withContentType ContentType.ApplicationFormUrlEncoded
 
-            let! response = request |> Http.send Http.client
+        let! response = request |> Http.send Http.client
 
-            return
-                response
-                |> Response.toJsonResult
-                |> Result.mapError _.StatusCode
-                |> Result.map (fun token -> { AccessToken = token.AccessToken ; ExpiresAt = token.ExpiresAt })
-        }
+        return
+            response
+            |> Response.toJsonResult
+            |> Result.mapError _.StatusCode
+            |> Result.map (fun token -> { AccessToken = token.AccessToken ; ExpiresAt = token.ExpiresAt })
+    }
 
-    member _.GetToken (tokenType) =
-        async {
-            let logError err = Logging.error $"Http error: {err}. Failed to get {tokenType} access token" exn
-            let updateCache token = tokenCache[tokenType] <- token
-            let handleTokenResult = AsyncResult.teeError logError >> AsyncResult.tee updateCache >> AsyncResult.map _.AccessToken
+let private getToken (tokenType) =
+    async {
+        let logError err = Logging.errorEx $"Http error: {err}. Failed to get {tokenType} access token" exn
+        let updateCache token = tokenCache[tokenType] <- token
+        let handleTokenResult = AsyncResult.teeError logError >> AsyncResult.tee updateCache >> AsyncResult.map _.AccessToken
 
-            let maybeToken = tokenCache |> Dict.tryGetValue tokenType
+        let maybeToken = tokenCache |> Dict.tryGetValue tokenType
 
-            match tokenType, maybeToken with
-            | _, Some token when not <| token.hasExpired () ->
-                return Ok token.AccessToken
-            | Twitch, _ ->
-                return!
-                    getTwitchToken ()
-                    |> handleTokenResult
-            | Reddit, _ ->
-                return!
-                    getRedditToken ()
-                    |> handleTokenResult
-        }
+        match tokenType, maybeToken with
+        | _, Some token when not <| token.hasExpired () ->
+            return Ok token.AccessToken
+        | Twitch, _ ->
+            return!
+                getTwitchToken ()
+                |> handleTokenResult
+        | Reddit, _ ->
+            return!
+                getRedditToken ()
+                |> handleTokenResult
+    }
 
-let tokenStore = new TokenStore()
+let tokenStore = {
+    GetToken = fun tokenType -> getToken tokenType
+}

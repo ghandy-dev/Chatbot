@@ -9,10 +9,10 @@ module Nasa =
     open Nasa.Api
     open Nasa.Types
 
-    let apod args =
+    let apod context =
         asyncResult {
             let! apod =
-                match args with
+                match context.Args with
                 | [] ->
                     getCurrentPictureOfTheDay ()
                     |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Nasa")

@@ -10,12 +10,12 @@ module GptImage =
     let private openAiService = Services.services.OpenAiService
     let private imageUploadService = Services.services.ImageUploadService
 
-    let gptImage args =
+    let gptImage context =
         asyncResult {
-            match args with
+            match context.Args with
             | [] -> return! invalidArgs $"No prompt provided"
             | _ ->
-                let prompt = args |> String.concat " "
+                let prompt = context.Args |> String.concat " "
                 let! response = openAiService.GetImage prompt |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "OpenAI")
 
                 match response.Data with

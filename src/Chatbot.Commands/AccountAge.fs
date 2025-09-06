@@ -9,10 +9,10 @@ module AccountAge =
 
     let twitchService = Services.services.TwitchService
 
-    let accountAge args context =
+    let accountAge context =
         asyncResult {
             let username =
-                match args with
+                match context.Args with
                 | [] -> context.Username
                 | username :: _ -> username
 

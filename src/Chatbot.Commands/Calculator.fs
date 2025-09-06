@@ -43,8 +43,8 @@ module Calculator =
 
     let private innerCalculate s = run completeExpression s
 
-    let calculate (input: string list) =
-        let input = String.concat " " input
+    let calculate context =
+        let input = String.concat " " context.Args
         let result = innerCalculate input
 
         match result with

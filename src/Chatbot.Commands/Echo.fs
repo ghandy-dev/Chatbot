@@ -3,4 +3,4 @@ namespace Commands
 [<AutoOpen>]
 module Echo =
 
-    let echo args = Ok <| Message $"""{String.concat " " args}"""
+    let echo context = Ok <| Message $"""{String.concat " " context.Args}"""

@@ -35,15 +35,15 @@ module Gpt =
 
     let private userChatHistory = new ConcurrentDictionary<string, MessageHistory>()
 
-    let gpt args context =
+    let gpt context =
         asyncResult {
             match context.Source with
             | Whisper _ -> return! invalidArgs "Gpt currently cannot be used in whispers"
             | Channel channel ->
-                match args with
+                match context.Args with
                 | [] -> return! invalidArgs "No input provided"
                 | _ ->
-                    let message = args |> String.concat " "
+                    let message = context.Args |> String.concat " "
                     let historyKey = $"{context.Username}_{channel}"
 
                     let messages =

@@ -2,15 +2,14 @@
 
 module internal DB =
 
-    open Configuration
-    open Database
-
     open System.Data
-    open Microsoft.Data.Sqlite
 
     open Dapper
     open Dapper.FSharp.SQLite
+    open Microsoft.Data.Sqlite
 
+    open Configuration
+    open Database
 
     let connectionString = appConfig.ConnectionStrings.Database
 
@@ -23,7 +22,7 @@ module internal DB =
             conn.Open()
             conn
         with ex ->
-            Logging.error ex.Message ex
+            Logging.errorEx ex.Message ex
             reraise()
 
     let users = table'<Entities.User> "users"

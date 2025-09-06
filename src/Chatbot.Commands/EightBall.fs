@@ -26,4 +26,4 @@ module EightBall =
         "Very doubtful."
     ]
 
-    let eightball () = Ok <| Message (fortunes |> List.randomChoice)
+    let eightball _ = Ok <| Message (fortunes |> List.randomChoice)
