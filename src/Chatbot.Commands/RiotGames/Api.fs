@@ -12,7 +12,7 @@ module Api =
 
     let private accountUrl (gameName: string) (tagLine: string) = $"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/%s{gameName}/%s{tagLine}"
     let private summonerUrl (region: string) (puuid: string) = $"https://%s{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/%s{puuid}"
-    let private leagueEntryUrl (region: string) (summonerId: string) = $"https://%s{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/%s{summonerId}"
+    let private leagueEntryUrl (region: string) (puuid: string) = $"https://%s{region}.api.riotgames.com/lol/league/v4/entries/by-puuid/%s{puuid}"
     let private matchIdsUrl (puuid: string) = $"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/%s{puuid}/ids"
     let private matchUrl (matchId: string) = $"https://europe.api.riotgames.com/lol/match/v5/matches/%s{matchId}"
 
@@ -54,9 +54,9 @@ module Api =
                 |> Result.mapError _.StatusCode
         }
 
-    let getLeagueEntries (region: string) (summonerId: string) =
+    let getLeagueEntries (region: string) (puuid: string) =
         async {
-            let url = leagueEntryUrl region summonerId
+            let url = leagueEntryUrl region puuid
 
             let request =
                 Request.get url

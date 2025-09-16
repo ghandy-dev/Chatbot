@@ -45,7 +45,7 @@ module RiotGames =
                 let! gameName, tagLine = parseRiotId riotId
                 let! account = getAccount gameName tagLine |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "RiotGames - Account")
                 let! summoner = getSummoner region account.PUUID |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "RiotGames - Summoner")
-                let! leagueEntries = getLeagueEntries region summoner.Id |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "RiotGames - League Entries")
+                let! leagueEntries = getLeagueEntries region account.PUUID |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "RiotGames - League Entries")
                 let maybeLeagueEntry = leagueEntries |> List.tryFind (fun e -> e.QueueType = "RANKED_SOLO_5x5")
 
                 match maybeLeagueEntry with
@@ -58,5 +58,5 @@ module RiotGames =
                     let losses = leagueEntry.Losses
                     let winRate =  int <| float leagueEntry.Wins / (float leagueEntry.Wins + float leagueEntry.Losses) * 100.0
 
-                    return Message $"%s{account.GameName |? gameName}#%s{account.TagLine |? tagLine} (Summoners Rift 5v5 Ranked Solo), Rank: %s{tier} %s{rank} (%d{lp} LP). W/L: %d{wins}/%d{losses}, W/R: %d{winRate}%%"
+                    return Message $"%s{account.GameName |? gameName}#%s{account.TagLine |? tagLine}, Level {summoner.SummonerLevel}. (Summoners Rift 5v5 Ranked Solo), Rank: %s{tier} %s{rank} (%d{lp} LP). W/L: %d{wins}/%d{losses}, W/R: %d{winRate}%%"
         }
