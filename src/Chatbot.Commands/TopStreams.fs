@@ -16,7 +16,7 @@ module TopStreams =
                 | [] -> Message "No one is streaming!"
                 | streams ->
                     streams
-                    |> Seq.map (fun s -> $"""{s.UserName} - {s.GameName} ({s.ViewerCount.ToString("N0")})""")
+                    |> Seq.map (fun s -> $"""@{s.UserName} - {s.GameName} ({s.ViewerCount.ToString("N0")})""")
                     |> String.concat ", "
                     |> Message
         }
