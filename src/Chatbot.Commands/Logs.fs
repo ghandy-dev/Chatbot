@@ -46,7 +46,7 @@ module Logs =
                 return Message message
         }
 
-    let searchKeys = [ "channel" ; "user" ; "reverse" ]
+    let searchKeys = [ "channel" ; "user" ; "reverse" ; "offset" ]
 
     let search context =
         asyncResult {
@@ -57,10 +57,11 @@ module Logs =
                 let channel = kvp.KeyValues.TryFind "channel" |> Option.defaultValue channel.Channel
                 let user = kvp.KeyValues.TryFind "user" |> Option.defaultValue context.Username
                 let reverse = kvp.KeyValues.TryFind "reverse" |> Option.bind tryParseBoolean |> Option.defaultValue false
+                let offset = kvp.KeyValues.TryFind "date" |> Option.bind tryParseInt |> Option.defaultValue 0
                 let query = kvp.Input |> strJoin " "
 
                 let! message =
-                    ivrService.Search channel user query reverse
+                    ivrService.Search channel user query reverse offset
                     |> AsyncResult.orElseWith mapHttpError
                     |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
 

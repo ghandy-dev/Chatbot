@@ -49,7 +49,7 @@ type IIvrService =
     abstract member GetSubAge: user: string -> channel: string -> Async<Result<IVR.SubAge, int>>
     abstract member GetChannelRandomLine: channel: string -> Async<Result<string, int>>
     abstract member GetUserRandomLine: channel: string -> user: string -> Async<Result<string, int>>
-    abstract member Search: channel: string -> user: string -> query: string -> reverse: bool -> Async<Result<string, int>>
+    abstract member Search: channel: string -> user: string -> query: string -> reverse: bool -> offset: int -> Async<Result<string, int>>
     abstract member GetLastLine: channel: string -> user: string -> Async<Result<string, int>>
     abstract member GetLines: channel: string -> from: System.DateTime -> ``to``: System.DateTime -> limit: int -> Async<Result<string, int>>
 
@@ -161,7 +161,7 @@ let ivrService =
         member _.GetEmoteByName emote = IVR.getEmoteByName emote
         member _.GetSubAge user channel = IVR.getSubAge user channel
         member _.GetUserRandomLine channel user = IVR.getUserRandomLine channel user
-        member _.Search channel user query reverse = IVR.search channel user query reverse
+        member _.Search channel user query reverse offset = IVR.search channel user query reverse offset
         member _.GetLastLine channel user = IVR.getLastLine channel user
         member _.GetLines channel from ``to`` limit = IVR.getLines channel from ``to`` limit
     }
