@@ -59,7 +59,7 @@ let private whisperMessageHandler (msg: WhisperMessage) (mb: MailboxProcessor<Cl
     async {
         match msg.Message with
         | Command command ->
-            let! response = safeHandleCommand msg.UserId msg.DisplayName (Whisper msg.UserId) msg.Message[1..] msg.Emotes
+            let! response = safeHandleCommand msg.UserId msg.DisplayName (Whisper msg.UserId) command msg.Emotes
 
             match response with
             | Some commandOutcome ->
