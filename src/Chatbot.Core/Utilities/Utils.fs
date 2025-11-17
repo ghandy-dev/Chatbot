@@ -52,8 +52,8 @@ let stripMarkdownTags content =
         @"-{2,3}", "-"                          // Em/en dash
         @"_{2}([\S].*?)_{2}", "$1"              // Italics
         @"~{2}([\S].*?)~{2}", "$1"              // Strikethrough
-        @"#{1,6}\s(.*?)", "$1"                  // Headers
-        @"=|-{5,}.*\n", ""                      // Other Headers
+        @"^(?:#{1,6}\s(.*?))", "$1"             // Headers
+        @"^(?:={5,}|-{5,})\s*\n", ""            // Other Headers
         @"\[.*?\][\(](.*?)[\)]", "$1"           // Links
         @"\r\n{1,}", " "                        // CRLF
         @"\n{1,}", " "                          // LF
