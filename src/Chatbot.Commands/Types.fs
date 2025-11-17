@@ -75,7 +75,7 @@ type Args = string list
 type CommandFunction =
     | Sync of (Context -> CommandResult)
     | Async of (Context -> Async<CommandResult>)
-    | Alias of (Context -> Map<string, CommandFunction> -> Async<CommandResult>)
+    | Alias of (Context -> Map<string, Command> -> Async<CommandResult>)
 
 and Command = {
     Name: string

@@ -21,12 +21,13 @@ let private hasCooldownExpired (user: Models.User) (command: Command) =
 
 let private applyFunction =
     function
-    | Sync f -> fun context -> async { return f context }
-    | Async f -> fun context -> f context
+    | Sync f -> fun context _ -> async { return f context }
+    | Async f -> fun context _ -> f context
+    | Alias f -> fun context commands -> f context commands
 
 let private executeCommand (command: Command) (args: Args) (context: Context) =
     async {
-        let! response = applyFunction command.Execute context
+        let! response = applyFunction command.Execute context Commands.commands
         return response
     }
 
