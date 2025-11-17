@@ -93,4 +93,4 @@ module Parsing =
 
         parseComponents parts ParseTags MessageData.empty
 
-    let parse = parseMessageComponents
+    let parseRaw = parseMessageComponents
