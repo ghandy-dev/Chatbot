@@ -27,6 +27,9 @@ type TwitchClient = {
 
 module Twitch =
 
+    open System.Threading
+
+    // Actually 1000ms, but some extra time to allow for latency variation
     let [<Literal>] GlobalSlow = 1200
 
     type private Request =
@@ -45,6 +48,7 @@ module Twitch =
         let whisperRateLimiter = RateLimiter(Rates.MessageLimit_Whispers, Rates.Interval_Whispers)
         let twitchService = Services.services.TwitchService
         let messageReceived = new Event<IrcMessage>()
+        let mutable cancellationTokenSource: CancellationTokenSource option = None
 
         let agent = MailboxProcessor<Request>.Start(fun mb ->
             let authenticate (client: IConnection) =
@@ -66,12 +70,12 @@ module Twitch =
                 | _ -> 256.0
                 |> TimeSpan.FromSeconds
 
-            let createReader (client: IConnection) =
+            let createReader (client: IConnection) cancellationToken =
                 let rec loop () =
                     async {
                         let splitMessages (message: string) = message.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)
                         let logMessages = Array.iter Logging.info
-                        let parseMessages = Array.map (IRC.Parsing.parse >> IRC.Messages.parseMessage) >> Array.choose id
+                        let parseMessages = Array.map (IRC.Parsing.parseRaw >> IRC.Messages.parseMessage) >> Array.choose id
 
                         if client.Connected then
                             match! client.ReadAsync cancellationToken with
@@ -101,15 +105,22 @@ module Twitch =
                                 return ()
                         else
                             Logging.warning "Twitch client disconnected."
-                    }
+                }
 
                 loop ()
 
             let connect (client: IConnection) =
                 async {
+                    cancellationTokenSource |> Option.iter (fun cts -> cts.Cancel() ; cts.Dispose())
+
+                    let cts = new CancellationTokenSource()
+                    use linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, cancellationToken)
+                    cancellationTokenSource <- Some cts
+
                     do! client.ConnectAsync(cancellationToken)
                     do! client |> authenticate
-                    Async.Start (createReader client, cancellationToken)
+                    Async.Start (createReader client linkedCts.Token, linkedCts.Token)
+
                     do! client.SendAsync (Request.joinM config.Channels |> Request.toString, cancellationToken)
                     Logging.info "Twitch client connected."
                 }
@@ -117,12 +128,14 @@ module Twitch =
             let reconnect attempt (client: IConnection) =
                 async {
                     Logging.info $"Attempting to reconnect, attempt: %d{attempt}."
+
+                    cancellationTokenSource |> Option.iter (fun cts -> cts.Cancel())
                     client.Dispose()
+
                     let client = createConnection connection
 
                     try
                         do! client |> connect
-                        do Async.Start (createReader client, cancellationToken)
                     with _ ->
                         let delay = backoff attempt
                         do! Async.Sleep delay
@@ -153,24 +166,21 @@ module Twitch =
                     | Start -> do! client |> connect
                     | SendIrc r ->
                         if client.Connected then
-                            let raw = r |> Request.toString
-
                             match r with
-                            | PrivMsg (channel, _) ->
-                                if chatRateLimiter.CanSend() then
-                                    match messageTimestamps |> Map.tryFind channel with
-                                    | None ->
-                                        do! client |> sendMessage r
-                                        return! loop client (messageTimestamps |> Map.add channel (epochTime()))
-                                    | Some timestamp ->
-                                        let elapsed = epochTime() - timestamp
-
-                                        if elapsed > GlobalSlow then
-                                            do! client |> sendMessage r
-                                            return! loop client (messageTimestamps |> Map.add channel (epochTime()))
-                                        else
-                                            do! Async.Sleep 100
-                                            mb.Post request
+                            | PrivMsg (channel, _) when chatRateLimiter.CanSend() ->
+                                match messageTimestamps |> Map.tryFind channel with
+                                | None ->
+                                    do! client |> sendMessage r
+                                    return! loop client (messageTimestamps |> Map.add channel (epochTime()))
+                                | Some timestamp when epochTime() - timestamp > GlobalSlow ->
+                                    do! client |> sendMessage r
+                                    return! loop client (messageTimestamps |> Map.add channel (epochTime()))
+                                | _ ->
+                                    do! Async.Sleep 100
+                                    mb.Post request
+                            | PrivMsg _ ->
+                                do! Async.Sleep 100
+                                mb.Post request
                             | _ ->
                                 do! client |> sendMessage r
                         else
@@ -186,7 +196,7 @@ module Twitch =
 
             let client = createConnection connection
             loop client Map.empty
-        )
+        , cancellationToken)
 
         let start () = agent.Post Start
         let reconnect () = agent.Post (Reconnect 0)
@@ -203,12 +213,22 @@ module Twitch =
 
 module TwitchChatClientConfig =
 
-    let connectionConfig: string -> ConnectionType =
+    let (|IRC|_|) : string -> string option =
         function
-        | s when s.StartsWith("irc://") ->
-            let uri = new Uri(s)
+        | s when s.StartsWith("irc://") -> Some s
+        | _ -> None
+
+    let (|WebSocket|_|) : string -> string option =
+        function
+        | s when s.StartsWith("wss://") -> Some s
+        | _ -> None
+
+    let connectionConfig : string -> ConnectionType =
+        function
+        | IRC uri ->
+            let uri = new Uri(uri)
             ConnectionType.IRC(uri.Host, uri.Port)
-        | s when s.StartsWith("wss://") ->
-            let uri = new Uri(s)
+        | WebSocket uri ->
+            let uri = new Uri(uri)
             ConnectionType.Websocket(uri.Host, uri.Port)
         | _ -> failwith "Unsupported connection protocol set"
