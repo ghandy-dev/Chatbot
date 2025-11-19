@@ -687,7 +687,10 @@ offset
     - values:
         - positive number
 
-Get the most recent line containing the query from forsen's channel, and sort by most recent
+Search for the 2nd oldest message from nymn in forsen's channel that contains "AYAYA"
+{exampleArgs "search" "user:nymn channel:forsen offset:1 AYAYA"}
+
+Search for the most recent chat message from nymn in forsen's channel that contains "AYAYA"
 {exampleArgs "search" "user:nymn channel:forsen reverse:true AYAYA"}
 """
         }
