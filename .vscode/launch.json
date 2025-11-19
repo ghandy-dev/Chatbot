@@ -5,7 +5,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/Chatbot/bin/Debug/net9.0/Chatbot.dll",
+            "program": "${workspaceFolder}/src/Chatbot/bin/Debug/net10.0/Chatbot.dll",
             "cwd": "${workspaceFolder}",
             "args": [],
             "stopAtEntry": false,
