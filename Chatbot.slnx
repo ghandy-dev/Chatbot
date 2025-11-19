@@ -1,0 +1,13 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/Chatbot.Commands/Chatbot.Commands.fsproj" />
+    <Project Path="src/Chatbot.Core/Chatbot.Core.fsproj" />
+    <Project Path="src/Chatbot.Database/Chatbot.Database.fsproj" />
+    <Project Path="src/Chatbot/Chatbot.fsproj" />
+  </Folder>
+</Solution>
