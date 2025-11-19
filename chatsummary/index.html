@@ -18,7 +18,7 @@
         </a>
       </div>
       <h1>
-        Gpt
+        Chat Summary
       </h1>
       <table>
         <colgroup>
@@ -30,7 +30,7 @@
             Description
           </td>
           <td>
-            Chat with OpenAI's ChatGPT.
+            Get a summary of the last 100 lines, or the 100 lines or fewer in the last 2 hours.
           </td>
         </tr>
         <tr>
@@ -38,7 +38,7 @@
             Command
           </td>
           <td>
-            gpt
+            chatsummary
           </td>
         </tr>
         <tr>
@@ -54,7 +54,7 @@
             Cooldown
           </td>
           <td>
-            15 seconds
+            20 seconds
           </td>
         </tr>
         <tr>
@@ -75,20 +75,32 @@
                 
               </div>
               <div>
-                Conversations are based on the context of the channel, and Gpt maintains a history of messages sent by chatters for up to 10 minutes from the last message sent.
+                Note:
               </div>
               <div>
-                i.e. 10 mins after sending no messages through the gpt command will wipe your chatting history with it
+                If used multiple times before 10 minutes has passed, a cached summary is returned until it expires.
+              </div>
+              <div>
+                Only works in channels which have logs available.
               </div>
             </div>
             <br/>
             <div>
+              <div>
+                Get a summary of the current channels&#39; chat.
+              </div>
               <code>
-                &gt; gpt &lt;prompt&gt;
+                &gt; chatsummary
               </code>
               <br/>
+            </div>
+            <br/>
+            <div>
+              <div>
+                Get a summary of another channels&#39; chats.
+              </div>
               <code>
-                &gt; gpt What are the some of the rarest deep sea creatures?
+                &gt; chatsummary forsen
               </code>
               <br/>
               <div>

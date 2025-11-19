@@ -75,7 +75,7 @@
                 
               </div>
               <div>
-                Search logs for the first occurence of the query text from yourself in the current channel.
+                Search logs for a single matching line containing the query text.
               </div>
               <code>
                 &gt; search &lt;query&gt;
@@ -98,6 +98,9 @@
                 user
               </div>
               <div>
+                    - specify a user to search logs for
+              </div>
+              <div>
                     - default: user executing command
               </div>
             </div>
@@ -105,6 +108,9 @@
             <div>
               <div>
                 channel
+              </div>
+              <div>
+                    - specify the channel to search logs in
               </div>
               <div>
                     - default: current channel
@@ -116,10 +122,40 @@
                 reverse
               </div>
               <div>
-                    - false (default)
+                    - specify the sorting of messages
               </div>
               <div>
-                    - true
+                    - default: false
+              </div>
+              <div>
+                    - values:
+              </div>
+              <div>
+                        - false
+              </div>
+              <div>
+                            - sorts by oldest message
+              </div>
+              <div>
+                        - true
+              </div>
+              <div>
+                            - sorts by most recent message
+              </div>
+            </div>
+            <br/>
+            <div>
+              <div>
+                offset
+              </div>
+              <div>
+                    - default: 0
+              </div>
+              <div>
+                    - values:
+              </div>
+              <div>
+                        - positive number
               </div>
             </div>
             <br/>
