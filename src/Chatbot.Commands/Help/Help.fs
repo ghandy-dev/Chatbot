@@ -659,21 +659,33 @@ Roll a random number between a min and max value.
             Name = "Search"
             Description = "Search logs for chat messages matching/containing the query text"
             ExampleUsage = $"""
-Search logs for the first occurence of the query text from yourself in the current channel.
+Search logs for a single matching line containing the query text.
 {exampleArgs "search" "<query>"}
 {exampleArgs "search" "TriHard"}
 
 Optional arguments:
 
 user
+    - specify a user to search logs for
     - default: user executing command
 
 channel
+    - specify the channel to search logs in
     - default: current channel
 
 reverse
-    - false (default)
-    - true
+    - specify the sorting of messages
+    - default: false
+    - values:
+        - false
+            - sorts by oldest message
+        - true
+            - sorts by most recent message
+
+offset
+    - default: 0
+    - values:
+        - positive number
 
 Get the most recent line containing the query from forsen's channel, and sort by most recent
 {exampleArgs "search" "user:nymn channel:forsen reverse:true AYAYA"}
