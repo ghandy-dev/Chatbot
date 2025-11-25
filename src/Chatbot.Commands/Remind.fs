@@ -11,7 +11,7 @@ module Remind =
     open CommandError
     open Database
 
-    let private whenPattern username = sprintf @"(%s) (in|at|on|tomorrow|next\s*)" username
+    let private whenPattern username = sprintf @"^(%s) (in|at|on|tomorrow|next\s*)" username
     let twitchService = Services.services.TwitchService
 
     let private setTimedReminder (user: string) (content: string) (context: Context) =
