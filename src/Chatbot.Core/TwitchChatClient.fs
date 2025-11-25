@@ -100,11 +100,10 @@ module Twitch =
 
                                 return! loop ()
                             | None ->
-                                mb.Post (Reconnect 0)
-                                Logging.warning "Error reading message. Attempting to reconnect..."
+                                Logging.warning "No data read. Reader exiting."
                                 return ()
                         else
-                            Logging.warning "Twitch client disconnected."
+                            Logging.warning "Twitch client not connected."
                 }
 
                 loop ()
@@ -160,36 +159,38 @@ module Twitch =
 
             let rec loop (client: IConnection) messageTimestamps =
                 async {
-                    let! request = mb.Receive()
+                    let! message = mb.Receive()
 
-                    match request with
-                    | Start -> do! client |> connect
-                    | SendIrc r ->
+                    match message with
+                    | Start ->
+                        do! client |> connect
+                        return! loop client messageTimestamps
+                    | SendIrc request ->
                         if client.Connected then
-                            match r with
+                            match request with
                             | PrivMsg (channel, _) when chatRateLimiter.CanSend() ->
                                 match messageTimestamps |> Map.tryFind channel with
                                 | None ->
-                                    do! client |> sendMessage r
+                                    do! client |> sendMessage request
                                     return! loop client (messageTimestamps |> Map.add channel (epochTime()))
                                 | Some timestamp when epochTime() - timestamp > GlobalSlow ->
-                                    do! client |> sendMessage r
+                                    do! client |> sendMessage request
                                     return! loop client (messageTimestamps |> Map.add channel (epochTime()))
                                 | _ ->
                                     do! Async.Sleep 100
-                                    mb.Post request
+                                    mb.Post message
                             | PrivMsg _ ->
                                 do! Async.Sleep 100
-                                mb.Post request
+                                mb.Post message
                             | _ ->
-                                do! client |> sendMessage r
+                                do! client |> sendMessage request
                         else
                             do! Async.Sleep 100
-                            mb.Post request
+                            mb.Post message
                     | SendWhisper (userId, message, accessToken) -> do! sendWhisper userId message accessToken
                     | Reconnect attempt ->
-                        let! client = reconnect attempt client
-                        return! loop client messageTimestamps
+                            let! client = reconnect attempt client
+                            return! loop client messageTimestamps
 
                     return! loop client messageTimestamps
                 }
