@@ -7,19 +7,17 @@ open System.Threading
 
 let private sharedBuffer<'a> = Buffers.ArrayPool<'a>.Shared
 
-let createStreamWriter (stream: Stream) bufferSize =
-    new StreamWriter(stream, new Text.UTF8Encoding(false), bufferSize) |> TextWriter.Synchronized
+let createStreamWriter (stream: Stream) bufferSize = new StreamWriter(stream, new Text.UTF8Encoding(false), bufferSize)
 
-let createStreamReader (stream: Stream) =
-    new StreamReader(stream) |> TextReader.Synchronized
+let createStreamReader (stream: Stream) = new StreamReader(stream)
 
-let writeAsync (writer: TextWriter) (message: ReadOnlyMemory<char>) (cancellationToken: CancellationToken) = writer.WriteAsync (message, cancellationToken) |> Async.AwaitTask
+let writeAsync (writer: StreamWriter) (message: ReadOnlyMemory<char>) (cancellationToken: CancellationToken) = writer.WriteAsync (message, cancellationToken) |> Async.AwaitTask
 
-let flushAsync (writer: TextWriter) (cancellationToken: CancellationToken) = writer.FlushAsync(cancellationToken) |> Async.AwaitTask
+let flushAsync (writer: StreamWriter) (cancellationToken: CancellationToken) = writer.FlushAsync(cancellationToken) |> Async.AwaitTask
 
-let writeLineAsync (writer: TextWriter) (message: ReadOnlyMemory<char>) (cancellationToken: CancellationToken) = writer.WriteLineAsync(message, cancellationToken) |> Async.AwaitTask
+let writeLineAsync (writer: StreamWriter) (message: ReadOnlyMemory<char>) (cancellationToken: CancellationToken) = writer.WriteLineAsync(message, cancellationToken) |> Async.AwaitTask
 
-let readAsync (reader: TextReader) (bufferSize: int) (cancellationToken: CancellationToken) =
+let readAsync (reader: StreamReader) (bufferSize: int) (cancellationToken: CancellationToken) =
     async {
         let buffer = sharedBuffer<char>.Rent(bufferSize)
         let memory = new Memory<char>(buffer)

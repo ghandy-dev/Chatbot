@@ -14,8 +14,8 @@ type IrcClient(host: string, port: int) =
     let ReaderBufferSize = 10240
 
     let socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
-    let mutable reader: TextReader = null
-    let mutable writer: TextWriter = null
+    let mutable reader: StreamReader = null
+    let mutable writer: StreamWriter = null
 
     let mutable isConnected = true
 
