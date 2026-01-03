@@ -68,7 +68,7 @@ module Wikipedia =
     let didYouKnow _ =
         asyncResult {
             let! dyks = getDidYouKnow () |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Wikipedia")
-            let wikiPagePattern = "https:\/\/en.wikipedia.org\/wiki\/\w+"
+            let referenceLinkPattern = "(?:href\=\")(.*?)\""
 
             return
                 match dyks with
@@ -79,8 +79,8 @@ module Wikipedia =
                     |> fun dyk ->
                         let text = dyk.Text
                         let links =
-                            Regex.Matches(dyk.Html, wikiPagePattern)
-                            |> Seq.map _.Value
+                            Regex.Matches(dyk.Html, referenceLinkPattern)
+                            |> Seq.map _.Groups.[1].Value
                             |> strJoin ", "
 
                         Message $"{text} ({links})"
