@@ -120,7 +120,7 @@ module Twitch =
                     do! client |> authenticate
                     Async.Start (createReader client linkedCts.Token, linkedCts.Token)
 
-                    do! client.SendAsync (Request.joinM config.Channels |> Request.toString, cancellationToken)
+                    do! client.SendAsync (Request.joinMultiple config.Channels |> Request.toString, cancellationToken)
                     Logging.info "Twitch client connected."
                 }
 

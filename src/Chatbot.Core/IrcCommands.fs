@@ -9,12 +9,11 @@ type Request =
     | Pong of message: string
     | Part of channel: string
     | Join of channel: string
-    | JoinM of channels: string seq
     | Raw of string
 
 module Request =
 
-    let private formatPrivMsg (message: string) =
+    let private formatChatMessage (message: string) =
         if message.Length > 500 then
             message[0..496] + "..."
         else
@@ -25,14 +24,20 @@ module Request =
     let nick username = Nick username
 
     let privMsg channel message =
-        let message = message |> formatPrivMsg
+        let message = message |> formatChatMessage
         PrivMsg (channel, message)
 
-    let replyMsg messageId channel  message = ReplyMsg (messageId, channel, message)
+    let replyMsg messageId channel  message =
+        let message = message |> formatChatMessage
+        ReplyMsg (messageId, channel, message)
+
     let pong message  = Pong message
     let part channel  = Part channel
     let join channel  = Join channel
-    let joinM channels  = JoinM channels
+    let joinMultiple channels  =
+        let channels = channels |> Seq.map (sprintf "#%s") |> String.concat ","
+        Join channels
+
     let raw message = Raw message
 
     let toString command =
@@ -45,5 +50,4 @@ module Request =
         | Pong message -> $"PONG :%s{message}"
         | Part channel -> $"PART #%s{channel}"
         | Join channel -> $"JOIN #%s{channel}"
-        | JoinM channels -> channels |> Seq.map (sprintf "#%s") |> String.concat "," |> sprintf "JOIN %s"
         | Raw message -> message
