@@ -40,7 +40,7 @@ module Commands =
             // Command.create ("gptimage", [], HelpInfo.Gpt, ASync gptImage, 15000, false)
             Command.create ("help", [],  HelpInfo.Help, Sync help, 10000, false)
             Command.create ("joinchannel", [], HelpInfo.JoinChannel, Async joinChannel, 5000, true)
-            Command.create ("lastline", [ "ll" ], HelpInfo.LastLine, Async lastLine, 5000, true)
+            Command.create ("lastline", [ "ll" ], HelpInfo.LastLine, Async lastLine, 5000, false)
             Command.create ("leavechannel", [], HelpInfo.LeaveChannel, Async leaveChannel, 5000, true)
             Command.create ("leagueoflegends", [ "lol" ; "league" ], HelpInfo.LeagueOfLegends, Async league, 15000, false)
             Command.create ("namecolor", [ "color" ], HelpInfo.NameColor, Async namecolor, 20000, false)
