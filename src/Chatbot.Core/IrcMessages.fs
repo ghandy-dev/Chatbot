@@ -696,7 +696,7 @@ module Messages =
 
     let (|NoticeCommand|_|) (message: MessageData) : NoticeMessage option =
         match message.Command with
-        | Commands.UserNotice ->
+        | Commands.Notice ->
             let parts = message.Parameters.Split(" ", 2)
 
             Some {
