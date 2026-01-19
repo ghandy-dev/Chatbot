@@ -9,6 +9,7 @@ type Request =
     | Pong of message: string
     | Part of channel: string
     | Join of channel: string
+    | JoinM of channels: string seq
     | Raw of string
 
 module Request =
@@ -34,10 +35,7 @@ module Request =
     let pong message  = Pong message
     let part channel  = Part channel
     let join channel  = Join channel
-    let joinMultiple channels  =
-        let channels = channels |> Seq.map (sprintf "#%s") |> String.concat ","
-        Join channels
-
+    let joinMultiple channels  = JoinM channels
     let raw message = Raw message
 
     let toString command =
@@ -50,4 +48,5 @@ module Request =
         | Pong message -> $"PONG :%s{message}"
         | Part channel -> $"PART #%s{channel}"
         | Join channel -> $"JOIN #%s{channel}"
+        | JoinM channels -> $"""JOIN %s{channels |> Seq.map (sprintf "#%s") |> String.concat ","}"""
         | Raw message -> message
