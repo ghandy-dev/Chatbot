@@ -2,10 +2,6 @@ namespace Wikipedia
 
 module Api =
 
-    open System
-    open System.Text.RegularExpressions
-
-    open FSharpPlus
     open FsToolkit.ErrorHandling
 
     open Http
@@ -17,7 +13,7 @@ module Api =
     let private searchUrl query numberOfResults = $"{ApiUrl}/core/v1/wikipedia/en/search/page?q={query}&limit={numberOfResults}"
     let private feedUrl date = $"{ApiUrl}/feed/v1/wikipedia/en/featured/{date}"
 
-    let private cache = System.Collections.Concurrent.ConcurrentDictionary<string, Feed> ()
+    let mutable private feed: Option<string * Feed> = None
 
     let getWikiResults query =
         async {
@@ -35,7 +31,9 @@ module Api =
         async {
             let date = utcNow().ToString("yyyy/MM/dd")
 
-            match cache |> Dict.tryGetValue date with
+            match feed with
+            | Some (key, feed) when key = date -> return Ok feed
+            | Some _
             | None ->
                 let url = feedUrl date
                 let request = Request.get url
@@ -45,10 +43,9 @@ module Api =
                     response
                     |> Response.toJsonResult<Feed>
                     |> Result.mapError _.StatusCode
-                    |> Result.tee (fun feed ->
-                        cache[date] <- feed
+                    |> Result.tee (fun f ->
+                        lock feed (fun _ -> feed <- Some (date, f))
                     )
-            | Some feed -> return Ok feed
         }
 
     let getDidYouKnow () = getTodaysFeed() |> AsyncResult.map _.DidYouKnow
