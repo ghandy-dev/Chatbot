@@ -71,7 +71,7 @@ module Types =
         }
 
         type Feed = {
-            [<JsonPropertyName("fta")>]
+            [<JsonPropertyName("tfa")>]
             FeaturedArticle: Article
             MostRead: MostRead
             News: News list
