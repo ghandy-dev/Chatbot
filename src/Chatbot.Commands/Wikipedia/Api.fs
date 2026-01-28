@@ -44,7 +44,7 @@ module Api =
                     |> Response.toJsonResult<Feed>
                     |> Result.mapError _.StatusCode
                     |> Result.tee (fun f ->
-                        lock feed (fun _ -> feed <- Some (date, f))
+                        feed <- Some (date, f)
                     )
         }
 
