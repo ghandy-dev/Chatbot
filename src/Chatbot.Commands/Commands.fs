@@ -29,7 +29,7 @@ module Commands =
             Command.create ("chatsummary", [], HelpInfo.ChatSummary, Async chatSummary, 20000, false)
             Command.create ("channel", [], HelpInfo.Channel, Async channel, 20000, false)
             Command.create ("coinflip", [ "cf" ], HelpInfo.CoinFlip, Sync coinFlip, 10000, false)
-            Command.create ("didyouknow", [ "dyk" ], HelpInfo.CoinFlip, Async didYouKnow, 10000, false)
+            Command.create ("didyouknow", [ "dyk" ], HelpInfo.DidYouKnow, Async didYouKnow, 10000, false)
             Command.create ("eightball", ["8ball"], HelpInfo.Eightball, Sync eightball, 10000, false)
             Command.create ("echo", [], HelpInfo.Echo, Sync echo, 5000, true)
             Command.create ("encode", [], HelpInfo.Encode, Sync encode, 5000, false)
