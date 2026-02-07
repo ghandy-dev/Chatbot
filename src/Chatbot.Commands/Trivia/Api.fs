@@ -39,5 +39,6 @@ module Api =
             return
                 response
                 |> Response.toJsonResult<Question list>
+                |> Result.map(List.map (fun q -> { q with Answer = q.Answer.Trim() }))
                 |> Result.mapError _.StatusCode
         }
