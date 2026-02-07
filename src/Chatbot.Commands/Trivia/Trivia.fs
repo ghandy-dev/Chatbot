@@ -11,7 +11,7 @@ module Trivia =
     open Parsing
     open Trivia
 
-    let keys = [ "count" ; "exclude" ; "include" ; "hints" ]
+    let private keys = [ "count" ; "exclude" ; "include" ; "hints" ]
 
     let trivia context =
         asyncResult {
@@ -35,7 +35,7 @@ module Trivia =
                     | questions ->
                         let triviaConfig = {
                             Questions = (questions |> List.map (fun q -> {
-                                Question = q.Question
+                                Question = $"""{q.Question} (q.Answer.Trim().Replace)"""
                                 Answer = q.Answer.Trim()
                                 Hints = [ q.Hint1 ; q.Hint2 ] |> List.choose id
                                 Categories = q.Categories
