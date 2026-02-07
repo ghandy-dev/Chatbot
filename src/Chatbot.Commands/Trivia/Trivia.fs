@@ -4,6 +4,7 @@ namespace Commands
 module Trivia =
 
     open System
+    open System.Text.RegularExpressions
 
     open FsToolkit.ErrorHandling
 
@@ -12,6 +13,8 @@ module Trivia =
     open Trivia
 
     let private keys = [ "count" ; "exclude" ; "include" ; "hints" ]
+
+    let private replacePattern = "[A-Za-z0-9\(\)\[\]]"
 
     let trivia context =
         asyncResult {
@@ -33,14 +36,20 @@ module Trivia =
                     match questions with
                     | [] -> return Message $"No questions found for selected categories"
                     | questions ->
+                        let questions =
+                            questions |> List.map (fun q ->
+                                let clue = Regex.Replace(q.Answer, replacePattern, "_")
+
+                                {
+                                   Question = $"""{q.Question} ({clue})"""
+                                   Answer = q.Answer
+                                   Hints = [ q.Hint1 ; q.Hint2 ] |> List.choose id
+                                   Categories = q.Categories
+                                   Category = q.Category
+                                })
+
                         let triviaConfig = {
-                            Questions = (questions |> List.map (fun q -> {
-                                Question = $"""{q.Question} (q.Answer.Trim().Replace)"""
-                                Answer = q.Answer.Trim()
-                                Hints = [ q.Hint1 ; q.Hint2 ] |> List.choose id
-                                Categories = q.Categories
-                                Category = q.Category
-                            }))
+                            Questions = questions
                             Count = questions.Length
                             Categories = questions |> List.map (fun q -> q.Category)
                             Channel = channel.Channel
