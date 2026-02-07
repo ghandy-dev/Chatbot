@@ -13,16 +13,15 @@ module HelpInfo =
     let example = sprintf "%s %s" commandPrefix
     let exampleArgs = sprintf "%s %s %s" commandPrefix
 
-
     let AccountAge =
         {
             Name = "Account Age"
-            Description = "Look up a users' account age and creation date."
+            Description = "Look up a user's account age and creation date."
             ExampleUsage = $"""
 Look up your own account age
 {example "accountage"}
 
-Look up another users' account age
+Look up another user's account age
 {exampleArgs "accountage" "<username>"}
 {exampleArgs "accountage" "k4yfour"}
 """
@@ -181,10 +180,10 @@ Note:
 If used multiple times before 10 minutes has passed, a cached summary is returned until it expires.
 Only works in channels which have logs available.
 
-Get a summary of the current channels' chat.
+Get a summary of the current channel's chat.
 {example "chatsummary"}
 
-Get a summary of another channels' chats.
+Get a summary of another channel's chats.
 {exampleArgs "chatsummary" "forsen"}
 """
         }
@@ -402,7 +401,7 @@ i.e. 10 mins after sending no messages through the gpt command will wipe your ch
     let LeagueOfLegends =
         {
             Name = "League of Legends"
-            Description = "Look up a players' league of legends rank and stats."
+            Description = "Look up a player's league of legends rank and stats."
             ExampleUsage = $"""
 Available regions:
 EUW (Europe West)
