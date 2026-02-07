@@ -38,7 +38,7 @@ module Commands =
             Command.create ("followage", [ "fa" ], HelpInfo.FollowAge, Async followAge, 20000, false)
             Command.create ("gpt", [], HelpInfo.Gpt, Async gpt, 15000, false)
             // Command.create ("gptimage", [], HelpInfo.Gpt, ASync gptImage, 15000, false)
-            Command.create ("help", [],  HelpInfo.Help, Sync help, 10000, false)
+            Command.create ("help", [],  HelpInfo.Help, Help help, 10000, false)
             Command.create ("joinchannel", [], HelpInfo.JoinChannel, Async joinChannel, 5000, true)
             Command.create ("lastline", [ "ll" ], HelpInfo.LastLine, Async lastLine, 5000, false)
             Command.create ("leavechannel", [], HelpInfo.LeaveChannel, Async leaveChannel, 5000, true)

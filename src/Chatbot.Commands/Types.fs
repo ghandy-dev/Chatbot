@@ -76,6 +76,7 @@ type CommandFunction =
     | Sync of (Context -> CommandResult)
     | Async of (Context -> Async<CommandResult>)
     | Alias of (Context -> Map<string, Command> -> Async<CommandResult>)
+    | Help of (Context -> Map<string, Command> -> CommandResult)
 
 and Command = {
     Name: string

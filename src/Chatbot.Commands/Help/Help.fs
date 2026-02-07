@@ -1,11 +1,20 @@
 namespace Commands
 
+open CommandError
 open Configuration
 
 [<AutoOpen>]
 module Help =
 
-    let help _ = Ok <| Message $"See %s{appConfig.HelpUrl} for a list of commands"
+    let help context (commands: Map<string, Command>) =
+        match context.Args with
+        | [] -> Ok <| Message $"See %s{appConfig.HelpUrl} for a list of commands"
+        | command :: _ ->
+            match commands |> Map.tryFind command with
+            | None -> Ok <| Message $"see %s{appConfig.HelpUrl} for a list of commands"
+            | Some c ->
+                let aliases = if c.Aliases.Length > 0 then c.Aliases |> strJoin ", " |> fun a -> $"({a})" else ""
+                Ok <| Message $"""%s{c.Name} %s{aliases} | %s{c.Details.Description} %s{appConfig.HelpUrl}{c.Name}"""
 
 module HelpInfo =
 

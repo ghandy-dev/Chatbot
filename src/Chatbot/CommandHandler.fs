@@ -24,6 +24,7 @@ let private applyFunction =
     | Sync f -> fun context _ -> async { return f context }
     | Async f -> fun context _ -> f context
     | Alias f -> fun context commands -> f context commands
+    | Help f -> fun context commands -> async { return f context commands }
 
 let private executeCommand (command: Command) (args: Args) (context: Context) =
     async {
