@@ -377,7 +377,15 @@ i.e. 10 mins after sending no messages through the gpt command will wipe your ch
         {
             Name = "Help"
             Description = "Get help info about commands."
-            ExampleUsage = $"""{example "help"}"""
+            ExampleUsage = $"""
+Get a link to avaiable commands, how to use them, and example usage.
+{example "help"}
+
+Get a direct link to a command for usage, and examples.
+{exampleArgs "help" "<command>"}
+Get a direct link to help info for the "randomclip" command.
+{exampleArgs "help" "randomclip"}
+"""
         }
 
     let JoinChannel =
