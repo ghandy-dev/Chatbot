@@ -271,7 +271,7 @@ Fight an opponent to earn gold:
     let Encode =
         {
             Name = "Encode"
-            Description = "Encode text transforming it to a different a different format."
+            Description = "Encode text transforming it to a different format."
             ExampleUsage = $"""
 {exampleArgs "encode" "<encoder> <input>"}
 
