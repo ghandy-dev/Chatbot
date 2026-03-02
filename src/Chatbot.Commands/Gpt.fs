@@ -16,9 +16,6 @@ module Gpt =
         Messages: TextGenerationMessage list
     }
 
-    let [<Literal>] DefaultModelKey = "default"
-    let [<Literal>] ChatSummaryKey = "chatSummary"
-
     let private openAiService = Services.openAiService
 
     let private systemMessage =
