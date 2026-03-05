@@ -10,6 +10,7 @@
     <Compile Include="Utilities/Utils.fs" />
     <Compile Include="Utilities/DateTime.fs" />
     <Compile Include="Utilities/Parsing.fs" />
+    <Compile Include="Utilities/UrlBuilder.fs" />
     <Compile Include="Utilities/KeyValueParser.fs" />
     <Compile Include="DotEnv.fs" />
     <Compile Include="Configuration.fs" />
