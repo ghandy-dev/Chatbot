@@ -243,18 +243,18 @@ module Braille =
 
     let private brailleKeys = [ "greyscale" ; "dithering" ; "invert" ; "monospace" ]
 
-    let private parseDitheringMethod =
+    let private stringToDitheringFunction =
         function
-        | "floydsteinberg" | "fs" -> Some Dithering.floydSteinberg
-        | "bayer" -> Some Dithering.bayer
-        | _ -> None
+        | "floydsteinberg" | "fs" -> Dithering.floydSteinberg
+        | "bayer" -> Dithering.bayer
+        | _ -> fun _ -> ()
 
     let braille context =
         asyncResult {
             let kvp = KeyValueParser.parse context.Args brailleKeys
 
             let greyscaleMode = kvp.KeyValues.TryFind "greyscale" |? DefaultGreyscaleFunction
-            let dithering = kvp.KeyValues.TryFind "dithering" |> Option.bind parseDitheringMethod
+            let dithering = kvp.KeyValues.TryFind "dithering" |> Option.map stringToDitheringFunction
             let invert = kvp.KeyValues.TryFind "invert" |> Option.bind Parsing.tryParseBoolean |? true
             let monospace = kvp.KeyValues.TryFind "monospace" |> Option.bind Parsing.tryParseBoolean |? false
 
@@ -279,7 +279,7 @@ module Braille =
         let kvp = KeyValueParser.parse context.Args brailleKeys
 
         let greyscaleMode = kvp.KeyValues.TryFind "greyscale" |? DefaultGreyscaleFunction
-        let dithering = kvp.KeyValues.TryFind "dithering" |> Option.bind parseDitheringMethod
+        let dithering = kvp.KeyValues.TryFind "dithering" |> Option.map stringToDitheringFunction
         let invert = kvp.KeyValues.TryFind "invert" |> Option.bind Parsing.tryParseBoolean |? false
         let monospace = kvp.KeyValues.TryFind "monospace" |> Option.bind Parsing.tryParseBoolean |? true
 
