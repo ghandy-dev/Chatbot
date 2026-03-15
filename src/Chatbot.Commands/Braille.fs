@@ -283,8 +283,8 @@ module Braille =
         let invert = kvp.KeyValues.TryFind "invert" |> Option.bind Parsing.tryParseBoolean |? false
         let monospace = kvp.KeyValues.TryFind "monospace" |> Option.bind Parsing.tryParseBoolean |? true
 
-        match context.Args with
-        | [] -> Error <| InvalidArgs "No text specified"
+        match kvp.Input with
+        | [] -> invalidArgs "No text specified"
         | text ->
             let text = System.String.Join(" ", text)
             let ascii = textToBraille text greyscaleMode dithering invert monospace
