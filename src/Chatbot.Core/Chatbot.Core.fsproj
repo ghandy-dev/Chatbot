@@ -32,6 +32,14 @@
     <Compile Include="Services/Geolocation.fs" />
     <Compile Include="Services/OpenAI.fs" />
     <Compile Include="Services/ImageUploader.fs" />
+    <Compile Include="Services/FaceIt.fs" />
+    <Compile Include="Services/Nasa.fs" />
+    <Compile Include="Services/News.fs" />
+    <Compile Include="Services/Reddit.fs" />
+    <Compile Include="Services/RiotGames.fs" />
+    <Compile Include="Services/Trivia.fs" />
+    <Compile Include="Services/UrbanDictionary.fs" />
+    <Compile Include="Services/Wikipedia.fs" />
     <Compile Include="Services/Services.fs" />
     <Compile Include="TokenStore.fs" />
     <Compile Include="IrcCommands.fs" />
@@ -61,6 +69,10 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0" />
     <PackageReference Include="Microsoft.Recognizers.Text.DateTime" Version="1.8.13" />
     <PackageReference Include="TTVSharp.Helix" Version="0.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chatbot.Database\Chatbot.Database.fsproj" />
   </ItemGroup>
 
 </Project>
