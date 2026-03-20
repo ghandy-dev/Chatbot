@@ -1,6 +1,8 @@
 ﻿namespace Database
 
-module RpsRepository =
+module Rps =
+
+    open Microsoft.Data.Sqlite
 
     open Dapper.FSharp.SQLite
 
@@ -8,8 +10,11 @@ module RpsRepository =
     open Database.Entities
     open DB
 
-    let get (userId: int) =
+    let get (db: Database) (userId: int) =
         async {
+            use connection = new SqliteConnection(db.ConnectionString)
+            connection.Open()
+
             let! stats =
                 select {
                     for row in rpsStats do
@@ -30,8 +35,11 @@ module RpsRepository =
                 |> Seq.tryExactlyOne
         }
 
-    let add (stats: Models.RpsStats) =
+    let add (db: Database) (stats: Models.RpsStats) =
         async {
+            use connection = new SqliteConnection(db.ConnectionString)
+            connection.Open()
+
             let newStats = {
                 rps_stats_id = 0
                 user_id = stats.UserId
@@ -53,12 +61,14 @@ module RpsRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }
 
-    let update (stats: Models.RpsStats) =
+    let update (db: Database) (stats: Models.RpsStats) =
         async {
+            use connection = new SqliteConnection(db.ConnectionString)
+            connection.Open()
+
             let updatedStats = {
                 rps_stats_id = 0
                 user_id = stats.UserId
@@ -81,6 +91,5 @@ module RpsRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }

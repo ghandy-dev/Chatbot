@@ -1,13 +1,15 @@
 ﻿namespace Database
 
-module NewsFeedRepository =
+module NewsFeeds =
+
+    open Microsoft.Data.Sqlite
 
     open Dapper
 
     open Database.Entities
     open DB
 
-    let get (category: string) =
+    let get (db: Database) (category: string) =
         async {
             let pattern = "%" + category + "%"
 
@@ -18,6 +20,8 @@ module NewsFeedRepository =
                 WHERE c.category LIKE @pattern"""
 
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
 
                 let! results = connection.QueryAsync<Entities.NewsFeed>(query, {| pattern = pattern |}) |> Async.AwaitTask
 
@@ -30,6 +34,5 @@ module NewsFeedRepository =
 
                 return DatabaseResult.Success rssFeeds
             with ex ->
-                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }

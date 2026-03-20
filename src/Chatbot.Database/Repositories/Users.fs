@@ -1,6 +1,8 @@
 ﻿namespace Database
 
-module UserRepository =
+module Users =
+
+    open Microsoft.Data.Sqlite
 
     open Dapper.FSharp.SQLite
 
@@ -8,8 +10,11 @@ module UserRepository =
     open Database.Models
     open DB
 
-    let get (userId: int) =
+    let get (db: Database) (userId: int) =
         async {
+            use connection = new SqliteConnection(db.ConnectionString)
+            connection.Open()
+
             let! user =
                 select {
                     for row in users do
@@ -28,7 +33,7 @@ module UserRepository =
                 |> Seq.tryHead
         }
 
-    let add (user: NewUser) =
+    let add (db: Database) (user: NewUser) =
         async {
             let newUser = {
                 user_id = user.UserId
@@ -37,6 +42,9 @@ module UserRepository =
             }
 
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
+
                 let! rowsAffected =
                     insert {
                         into users
@@ -47,6 +55,5 @@ module UserRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }

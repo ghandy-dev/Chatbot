@@ -1,6 +1,8 @@
 ﻿namespace Database
 
-module AliasRepository =
+module Aliases =
+
+    open Microsoft.Data.Sqlite
 
     open Dapper.FSharp.SQLite
 
@@ -11,8 +13,11 @@ module AliasRepository =
     type AliasQuery =
         | ByUserIdAliasName of userId: int * alias: string
 
-    let get (query) =
+    let get (db: Database) (query: AliasQuery) =
         async {
+            use connection = new SqliteConnection(db.ConnectionString)
+            connection.Open()
+
             let! results =
                 match query with
                 | ByUserIdAliasName (userId, alias) ->
@@ -29,7 +34,7 @@ module AliasRepository =
                 |> Seq.tryExactlyOne
         }
 
-    let add (alias: NewAlias) =
+    let add (db: Database) (alias: NewAlias) =
         async {
             let newAlias = {
                 alias_id = 0
@@ -39,6 +44,9 @@ module AliasRepository =
             }
 
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
+
                 let! rowsAffected =
                     insert {
                         for row in aliases do
@@ -50,11 +58,10 @@ module AliasRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }
 
-    let update (alias: UpdateAlias) =
+    let update (db: Database) (alias: UpdateAlias) =
         async {
             let updatedAlias = {
                 alias_id = 0
@@ -64,6 +71,9 @@ module AliasRepository =
             }
 
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
+
                 let! rowsAffected =
                     update {
                         for row in aliases do
@@ -76,13 +86,15 @@ module AliasRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }
 
-    let delete (alias: DeleteAlias) =
+    let delete (db: Database) (alias: DeleteAlias) =
         async {
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
+
                 let! rowsAffected =
                     delete {
                         for row in aliases do
@@ -93,6 +105,5 @@ module AliasRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }

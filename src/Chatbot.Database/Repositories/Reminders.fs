@@ -1,6 +1,8 @@
 ﻿namespace Database
 
-module ReminderRepository =
+module Reminders =
+
+    open Microsoft.Data.Sqlite
 
     open Dapper.FSharp.SQLite
     open Dapper
@@ -9,7 +11,7 @@ module ReminderRepository =
     open Database.Models
     open DB
 
-    let getTimedReminders () =
+    let getTimedReminders (db: Database) =
         async {
             let query =
                 """
@@ -27,8 +29,12 @@ module ReminderRepository =
                 """
 
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
+
                 let! results = connection.QueryAsync<Entities.TimedReminder>(query) |> Async.AwaitTask
                 connection.ExecuteAsync(update, results |> Seq.map (fun r -> {| reminderId = r.reminder_id |})) |> Async.AwaitTask |> ignore
+
                 return
                     results
                     |> Seq.map (fun r -> {
@@ -39,11 +45,10 @@ module ReminderRepository =
                         Channel = r.channel
                     })
             with ex ->
-                Logging.errorEx "Error executing query" ex
                 return []
         }
 
-    let getReminders (userId: int) =
+    let getReminders (db: Database) (userId: int) =
         async {
             let query =
                 """
@@ -62,8 +67,12 @@ module ReminderRepository =
                 """
 
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
+
                 let! results = connection.QueryAsync<Entities.Reminder>(query, {| userId = userId |}) |> Async.AwaitTask
                 connection.ExecuteAsync(update, results |> Seq.map (fun r -> {| reminderId = r.reminder_id |})) |> Async.AwaitTask |> ignore
+
                 return
                     results
                     |> Seq.map (fun r -> {
@@ -73,11 +82,10 @@ module ReminderRepository =
                         Message = r.message
                     })
             with ex ->
-                Logging.errorEx "Error retrieving reminders" ex
                 return []
         }
 
-    let getPendingTimedReminderCount (userId: int) =
+    let getPendingTimedReminderCount (db: Database) (userId: int) =
         async {
             let query =
                 """
@@ -89,14 +97,17 @@ module ReminderRepository =
                 """
 
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
+
                 let! count = connection.ExecuteScalarAsync<int>(query, {| userId = userId |}) |> Async.AwaitTask
+
                 return DatabaseResult.Success count
             with ex ->
-                Logging.errorEx "Error executing query" ex
                 return DatabaseResult.Failure
         }
 
-    let getPendingReminderCount (userId: int) =
+    let getPendingReminderCount (db: Database) (userId: int) =
         async {
             let query =
                 """
@@ -108,14 +119,17 @@ module ReminderRepository =
                 """
 
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
+
                 let! count = connection.ExecuteScalarAsync<int>(query, {| userId = userId |}) |> Async.AwaitTask
+
                 return DatabaseResult.Success count
             with ex ->
-                Logging.errorEx "Error executing query" ex
                 return DatabaseResult.Failure
         }
 
-    let add (reminder: NewReminder) =
+    let add (db: Database) (reminder: NewReminder) =
         async {
             let query =
                 """
@@ -125,6 +139,9 @@ module ReminderRepository =
                 """
 
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
+
                 let! id =
                     connection.QuerySingleAsync<int>(
                         query,
@@ -143,13 +160,15 @@ module ReminderRepository =
 
                 return DatabaseResult.Success id
             with ex ->
-                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }
 
-    let update (reminder: UpdateReminder) =
+    let update (db: Database) (reminder: UpdateReminder) =
         async {
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
+
                 let! rowsAffected =
                     update {
                         for row in reminders do
@@ -161,13 +180,15 @@ module ReminderRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }
 
-    let delete (reminderId: int) =
+    let delete (db: Database) (reminderId: int) =
         async {
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
+
                 let! rowsAffected =
                     delete {
                         for row in reminders do
@@ -178,6 +199,5 @@ module ReminderRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }

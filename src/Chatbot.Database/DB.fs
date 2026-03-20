@@ -1,29 +1,22 @@
 ﻿namespace Database
 
-module internal DB =
-
-    open System.Data
+module DB =
 
     open Dapper
     open Dapper.FSharp.SQLite
-    open Microsoft.Data.Sqlite
 
-    open Configuration
     open Database
-
-    let connectionString = appConfig.ConnectionStrings.Database
 
     OptionTypes.register ()
     DefaultTypeMap.MatchNamesWithUnderscores <- true
 
-    let connection: IDbConnection =
-        try
-            let conn = new SqliteConnection(connectionString)
-            conn.Open()
-            conn
-        with ex ->
-            Logging.errorEx ex.Message ex
-            reraise()
+    type Database = {
+        ConnectionString: string
+    }
+
+    let create connectionString = {
+        ConnectionString = connectionString
+    }
 
     let users = table'<Entities.User> "users"
     let rpsStats = table'<Entities.RpsStats> "rps_stats"

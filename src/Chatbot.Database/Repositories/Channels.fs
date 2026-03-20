@@ -1,6 +1,8 @@
 ﻿namespace Database
 
-module ChannelRepository =
+module Channels =
+
+    open Microsoft.Data.Sqlite
 
     open Dapper.FSharp.SQLite
 
@@ -13,8 +15,11 @@ module ChannelRepository =
         ChannelName = channel.channel_name
     }
 
-    let getAll () =
+    let getAll (db: Database) =
         async {
+            use connection = new SqliteConnection(db.ConnectionString)
+            connection.Open()
+
             let! channel =
                 select {
                     for row: Channel in channels do
@@ -26,8 +31,11 @@ module ChannelRepository =
             return channel |> Seq.map mapToModel
         }
 
-    let get (channelId: int) =
+    let get (db: Database) (channelId: int) =
         async {
+            use connection = new SqliteConnection(db.ConnectionString)
+            connection.Open()
+
             let! channel =
                 select {
                     for row in channels do
@@ -39,7 +47,7 @@ module ChannelRepository =
             return channel |> Seq.map mapToModel |> Seq.tryExactlyOne
         }
 
-    let add (channel: NewChannel) =
+    let add (db: Database) (channel: NewChannel) =
         async {
             let newChannel = {
                 channel_id = int channel.ChannelId
@@ -47,6 +55,9 @@ module ChannelRepository =
             }
 
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
+
                 let! rowsAffected =
                     insert {
                         into channels
@@ -57,13 +68,15 @@ module ChannelRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }
 
-    let delete (channelId: int) =
+    let delete (db: Database) (channelId: int) =
         async {
             try
+                use connection = new SqliteConnection(db.ConnectionString)
+                connection.Open()
+
                 let! rowsAffected =
                     delete {
                         for row in channels do
@@ -74,6 +87,5 @@ module ChannelRepository =
 
                 return DatabaseResult.Success rowsAffected
             with ex ->
-                Logging.errorEx ex.Message ex
                 return DatabaseResult.Failure
         }
