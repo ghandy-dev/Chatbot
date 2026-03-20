@@ -18,21 +18,17 @@
     <Compile Include="Models/User.fs" />
     <Compile Include="Models/Alias.fs" />
     <Compile Include="Models/Reminder.fs" />
-    <Compile Include="Repositories/ChannelRepository.fs" />
-    <Compile Include="Repositories/RpsRepository.fs" />
-    <Compile Include="Repositories/UserRepository.fs" />
-    <Compile Include="Repositories/NewsFeedRepository.fs" />
-    <Compile Include="Repositories/AliasRepository.fs" />
-    <Compile Include="Repositories/ReminderRepository.fs" />
+    <Compile Include="Repositories/Channels.fs" />
+    <Compile Include="Repositories/Rps.fs" />
+    <Compile Include="Repositories/Users.fs" />
+    <Compile Include="Repositories/NewsFeeds.fs" />
+    <Compile Include="Repositories/Aliases.fs" />
+    <Compile Include="Repositories/Reminders.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Dapper.FSharp" Version="4.9.0" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Chatbot.Core\Chatbot.Core.fsproj" />
   </ItemGroup>
 
 </Project>
