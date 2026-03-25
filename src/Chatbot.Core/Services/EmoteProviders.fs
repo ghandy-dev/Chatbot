@@ -223,14 +223,14 @@ module Emote =
 
     let fromSevenTvGlobalEmote (emote: SevenTv.Emote) =
         { Name = emote.Name
-          Url = Urls.Ffz.emoteUrl emote.Id
+          Url = Urls.SevenTv.emoteUrl emote.Id
           DirectUrl = Urls.SevenTv.directUrl emote.Id
           Type = EmoteType.Global
           Provider = EmoteProvider.Ffz }
 
     let fromSevenTvChannelEmote (emote: SevenTv.Emote) =
         { Name = emote.Name
-          Url = Urls.Ffz.emoteUrl emote.Id
+          Url = Urls.SevenTv.emoteUrl emote.Id
           DirectUrl = Urls.SevenTv.directUrl emote.Id
           Type = EmoteType.Channel
           Provider = EmoteProvider.Ffz }
