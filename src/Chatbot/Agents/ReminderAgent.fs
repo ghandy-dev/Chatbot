@@ -1,0 +1,83 @@
+module Chatbot.Agents.Reminder
+
+open System
+
+open Chatbot.Database
+open Chatbot.Common
+open Chatbot.Core.Domain
+open Chatbot.Core.IRC
+open Chatbot.Core.Services.Pastebin
+
+type ReminderMessage =
+    | TwitchEvent of TwitchEvent
+    | CheckReminders
+
+let create db (textStorageService: ITextStorageService) (twitchChatClient: Chatbot.Twitch.TwitchClient) cancellationToken =
+    new MailboxProcessor<ReminderMessage>(
+        (fun mb ->
+            let checkReminders () =
+                async {
+                    let! reminders = Reminders.getTimedReminders db
+
+                    for reminder in reminders do
+                        let ts = DateTime.UtcNow - reminder.Timestamp
+                        let sender = if reminder.FromUsername = reminder.TargetUsername then "yourself" else $"@%s{reminder.FromUsername}"
+                        let message = $"@%s{reminder.TargetUsername}, reminder from %s{sender} (%s{formatTimeSpan ts} ago): %s{reminder.Message}"
+                        do twitchChatClient.Send(Request.privMsg reminder.Channel message)
+
+                    do! Async.Sleep(250)
+                    mb.Post CheckReminders
+                }
+
+            let userMessaged channel userId username =
+                async {
+                    match! Reminders.getPendingReminderCount db userId with
+                    | DatabaseResult.Success c when c > 0 ->
+                        let! reminders = Reminders.getReminders db userId
+
+                        let message =
+                            reminders
+                            |> Seq.groupBy (fun r -> r.FromUsername)
+                            |> Seq.map (fun (_, rs) ->
+                                let sender = rs |> Seq.head |> fun r -> if r.FromUsername = r.TargetUsername then "yourself" else $"@%s{r.FromUsername}"
+
+                                let message =
+                                    rs
+                                    |> Seq.map (fun r ->
+                                        let ts = DateTime.UtcNow - r.Timestamp
+                                        $"(%s{formatTimeSpan ts} ago): %s{r.Message}"
+                                    )
+                                    |> strJoin ", "
+
+                                if rs |> Seq.length = 1 then
+                                    $"reminder from %s{sender} %s{message}"
+                                else
+                                    $"reminders from %s{sender} %s{message}"
+                            )
+                            |> strJoin ", "
+
+                        if message.Length > 500 then
+                            match! textStorageService.CreatePost "" message with
+                            | Error _ -> Logging.errorEx "Failed to create paste" exn
+                            | Ok url -> do twitchChatClient.Send(Request.privMsg channel $"@%s{username}, reminders were too long to send, check %s{url} for your reminders")
+                        else
+                            do twitchChatClient.Send(Request.privMsg channel $"@%s{username}, %s{message}")
+                    | _ -> ()
+                }
+
+            let rec loop () =
+                async {
+                    match! mb.Receive() with
+                    | CheckReminders -> do! checkReminders ()
+                    | TwitchEvent (ChannelMessage message) -> do! userMessaged message.Channel (int message.UserId) message.Username
+                    | TwitchEvent (ChannelReplyMessage message) -> do! userMessaged message.Channel (int message.UserId) message.Username
+                    | _ -> ()
+
+                    return! loop ()
+                }
+
+            Logging.trace "Reminder agent started."
+            mb.Post CheckReminders
+            loop ()
+        ), cancellationToken
+    )

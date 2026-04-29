@@ -1,22 +1,25 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module TopStreams =
 
     open FsToolkit.ErrorHandling
 
-    let twitchService = Services.services.TwitchService
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Services.Twitch
 
-    let topStreams _ =
+    let topStreams (twitchService: TwitchService) context =
         asyncResult {
-            let! streams = twitchService.GetStreams 10 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - Streams")
+            let! streams = twitchService.Streams.GetStreams 10 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - Streams")
 
             return
                 match streams with
-                | [] -> Message "No one is streaming!"
+                | [] -> [ Message "No one is streaming!" ]
                 | streams ->
-                    streams
-                    |> Seq.map (fun s -> $"""@{s.UserName} - {s.GameName} ({s.ViewerCount.ToString("N0")})""")
-                    |> String.concat ", "
-                    |> Message
+                    let topStreams =
+                        streams
+                        |> Seq.map (fun s -> $"""@{s.UserName} - {s.GameName} ({s.ViewerCount.ToString("N0")})""")
+                        |> String.concat ", "
+
+                    [ Message topStreams ]
         }

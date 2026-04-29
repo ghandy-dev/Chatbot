@@ -1,6 +1,8 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module xd =
 
-    let xd _ = Ok <| Message "xd"
+    open Chatbot.Core.Domain.Commands
+
+    let xd _ = Ok [ Message "xd" ]

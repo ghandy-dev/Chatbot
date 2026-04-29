@@ -1,41 +1,25 @@
-module Bot
+module Chatbot.Bot
 
 open System
 
-open FSharpPlus
+open FsToolkit.ErrorHandling
 
-open Agents
-open Authorization
-open Configuration
-open Clients
-open Database
-open IRC
-open Types
-
-let services = Services.services
-
-let getAccessToken () =
-    async {
-        match! tokenStore.GetToken TokenType.Twitch with
-        | Ok token -> return token
-        | _ -> return failwith "Failed to get access token"
-    }
-
-let getAccessTokenUser token =
-    async {
-        match! services.TwitchService.GetAccessTokenUser token with
-        | Ok (Some user) -> return user
-        | _ -> return failwith "Failed to look up user associated with access token"
-    }
+open Chatbot.Agents
+open Chatbot.CompositionRoot
+open Chatbot.Configuration
+open Chatbot.Core
+open Chatbot.Core.Domain.Messages
+open Chatbot.Core.IRC
+open Chatbot.Core.Services
+open Chatbot.Core.Services.Twitch
+open Chatbot.Twitch
 
 let getChannels () =
     async {
-        let! channels = ChannelRepository.getAll ()
+        let! channels = Chatbot.Database.Channels.getAll db
+        let channelIds = channels |> Seq.map _.ChannelId
 
-        match!
-            channels |> Seq.map _.ChannelId |> async.Return
-            >>= Twitch.Helix.Users.getUsersById
-        with
+        match! twitchService.Users.GetUsersById channelIds with
         | Error _ ->
             Logging.warning "Twitch API error, falling back on database channel names"
             return channels |> Seq.map (fun c -> c.ChannelId, c.ChannelName)
@@ -43,44 +27,68 @@ let getChannels () =
             return channels |> Seq.map (fun u -> u.Id, u.Login)
     }
 
+let getAccessToken (twitchService: TwitchService) =
+        twitchService.Authentication.GetAccessToken ()
+        |> AsyncResult.map _.AccessToken
+        |> AsyncResult.mapError (fun statusCode ->
+            statusCode
+            |> Http.HttpStatusCode.fromInt
+            |> fun (err: Http.Types.HttpStatusCode) -> $"Failed to get access token: {err}")
+
+let getAccessTokenUser (twitchService: TwitchService) token =
+    twitchService.Users.GetAccessTokenUser token
+    |> AsyncResult.mapError (fun statusCode ->
+        statusCode
+        |> Http.HttpStatusCode.fromInt
+        |> fun err -> $"Failed to get access token user: {err}")
+        |> AsyncResult.map (fun user -> (user, token))
+
+let authenticate (twitchClient: TwitchClient) =
+    async {
+        match!
+            getAccessToken twitchService
+            |> AsyncResult.bind (getAccessTokenUser twitchService)
+        with
+        | Ok (user, token) ->
+            twitchClient.Send (Request.capReq configuration.TwitchChatConfig.Capabilities)
+            twitchClient.Send (Request.pass token)
+            twitchClient.Send (Request.nick user.Login)
+        | Error err ->
+            Logging.error err
+    }
+
+let joinChannels (twitchClient: TwitchClient) =
+    async {
+        let! channels = getChannels () |> Async.map (Seq.map snd)
+        let message = Request.joinMultiple channels
+        twitchClient.Send message
+    }
+
 let run (cancellationToken: Threading.CancellationToken) =
     async {
-        let! accessToken = getAccessToken ()
-        let! user = getAccessTokenUser accessToken
-        let connectionConfig = TwitchChatClientConfig.connectionConfig appConfig.ConnectionStrings.IrcServer
-        let! channels = getChannels ()
+        let uri = new Uri(configuration.ConnectionStrings.IrcServer)
+        let twitchClient = new TwitchClient(uri.Host, uri.Port)
 
-        let twitchChatConfig: Clients.TwitchChatClientConfig = {
-            UserId = user.Id
-            Username = user.DisplayName
-            Capabilities = appConfig.Bot.Capabilities
-            Channels = channels |> Seq.map snd
-        }
+        let reminderAgent = Reminder.create db pastebinService twitchClient cancellationToken
+        let triviaAgent = Trivia.create twitchClient cancellationToken
+        let botAgent = Bot.create botConfig emoteService db configuration.UserId twitchClient triviaAgent cancellationToken
 
-        let twitchChatClient =
-            Twitch.createClient
-                connectionConfig
-                twitchChatConfig
-                cancellationToken
+        twitchClient.MessageReceived.Subscribe(fun message ->
+            match message |> tryMapMessage with
+            | Some m ->
+                reminderAgent.Post (Reminder.TwitchEvent m)
+                triviaAgent.Post (Trivia.TwitchEvent m)
+                botAgent.Post (Bot.TwitchEvent m)
+            | None -> ()
+        ) |> ignore
 
-        let reminderAgent = ReminderAgent.create twitchChatClient cancellationToken
-        let triviaAgent = TriviaAgent.create twitchChatClient cancellationToken
-        let chatAgent = ChatAgent.create twitchChatClient user triviaAgent cancellationToken
-
-        twitchChatClient.MessageReceived
-        |> Event.choose (function | PrivateMessage msg -> Some msg | _ -> None)
-        |> Event.add (fun msg ->
-            triviaAgent.Post (TriviaRequest.UserMessaged (msg.Channel, int msg.UserId, msg.Username, msg.Message))
-            reminderAgent.Post (ReminderMessage.UserMessaged (msg.Channel, int msg.UserId, msg.Username))
-        )
-
-        twitchChatClient.MessageReceived
-        |> Event.add (fun msg ->
-            chatAgent.Post (ClientRequest.HandleIrcMessage msg)
-        )
-
-        twitchChatClient.Start ()
-        chatAgent.Start()
+        botAgent.Start()
         reminderAgent.Start()
         triviaAgent.Start()
+
+        twitchClient.Connect()
+        twitchClient.Start()
+
+        do! authenticate twitchClient
+        do! joinChannels twitchClient
     }

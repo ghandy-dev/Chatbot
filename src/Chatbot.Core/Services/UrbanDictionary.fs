@@ -1,57 +1,78 @@
-module UrbanDictionary
+namespace Chatbot.Core.Services
 
-open System
-open System.Text.Json.Serialization
+module UrbanDictionary =
 
-type Terms = { list: Term list }
+    open System
+    open System.Text.Json.Serialization
 
-and Term = {
-    Definition: string
-    Permalink: string
-    [<JsonPropertyName("thumbs_up")>]
-    ThumbsUp: int
-    Author: string
-    Word: string
-    DefId: int
-    [<JsonPropertyName("current_vote")>]
-    CurrentVote: string
-    [<JsonPropertyName("written_on")>]
-    WrittenOn: DateTime
-    Example: string
-    [<JsonPropertyName("thumbs_down")>]
-    ThumbsDown: int
-}
+    module Types =
 
+        type Terms = { list: Term list }
 
-open FsToolkit.ErrorHandling
+        and Term = {
+            Definition: string
+            Permalink: string
+            [<JsonPropertyName("thumbs_up")>]
+            ThumbsUp: int
+            Author: string
+            Word: string
+            DefId: int
+            [<JsonPropertyName("current_vote")>]
+            CurrentVote: string
+            [<JsonPropertyName("written_on")>]
+            WrittenOn: DateTime
+            Example: string
+            [<JsonPropertyName("thumbs_down")>]
+            ThumbsDown: int
+        }
 
-open Http
+    open FsToolkit.ErrorHandling
 
-let [<Literal>] private ApiUrl = "https://api.urbandictionary.com/v0"
+    open Chatbot.Core
+    open Chatbot.Core.Http
+    open Chatbot.Core.Types
+    open Types
 
-let private randomUrl = $"{ApiUrl}/random"
-let private searchUrl term = $"{ApiUrl}/define?term={term}"
+    type UrbanDictionaryService =
+        abstract member Random: unit -> Async<Result<Term list, int>>
+        abstract member Search: term: string -> Async<Result<Term list, int>>
 
-let random () =
-    async {
-        let request = Request.get randomUrl
-        let! response = request |> Http.send Http.client
+    module UrbanDictionaryService =
 
-        return
-            response
-            |> Response.toJsonResult<Terms>
-            |> Result.eitherMap _.list _.StatusCode
-    }
+        let create env =
 
-let search term =
-    async {
-        let url = searchUrl term
+            let apiUrl = "https://api.urbandictionary.com/v0"
+            let randomUrl = $"{apiUrl}/random"
+            let searchUrl term = $"{apiUrl}/define?term=%s{term}"
 
-        let request = Request.get url
-        let! response = request |> Http.send Http.client
+            let httpClient = env.HttpClient
 
-        return
-            response
-            |> Response.toJsonResult<Terms>
-            |> Result.eitherMap _.list _.StatusCode
-    }
+            let random () =
+                async {
+                    let request = Request.get randomUrl
+                    let! response = request |> Http.send httpClient
+
+                    return
+                        response
+                        |> Response.toJsonResult<Terms>
+                        |> Result.eitherMap _.list _.StatusCode
+                }
+
+            let search term =
+                async {
+                    let url = searchUrl term
+
+                    let request = Request.get url
+                    let! response = request |> Http.send httpClient
+
+                    return
+                        response
+                        |> Response.toJsonResult<Terms>
+                        |> Result.eitherMap _.list _.StatusCode
+                }
+
+            {
+                new UrbanDictionaryService with
+                    member _.Random () = random ()
+                    member _.Search term = search term
+            }

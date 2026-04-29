@@ -1,4 +1,4 @@
-namespace Database.Entities
+namespace Chatbot.Database.Entities
 
 type RpsStats = {
     rps_stats_id: int64

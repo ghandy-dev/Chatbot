@@ -1,19 +1,22 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module AddBetween =
 
     open FsToolkit.ErrorHandling
 
-    open CommandError
+    open Chatbot.Common
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain.Commands.CommandError
 
     let addBetween context =
         result {
-            match context.Args with
+            match context.MessageArgs with
             | [] -> return! invalidArgs "No input provided"
             | word :: text ->
-                return
+                let message =
                     seq { yield word ; for t in text -> $"{t} {word}" }
-                    |> String.concat " "
-                    |> Message
+                    |> strJoin " "
+
+                return [ Message message ]
         }

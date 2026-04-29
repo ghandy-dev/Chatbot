@@ -1,168 +1,195 @@
-module OpenAI
+namespace Chatbot.Core.Services
 
-open System
-open System.Collections.Concurrent
-open System.Net.Http
-open System.Text.Json.Serialization
+module OpenAI =
 
-open FSharpPlus
-open FsToolkit.ErrorHandling
+    open System.Text.Json.Serialization
 
-open Configuration
-open Http
-open Json
+    module Chat =
 
-module Chat =
+        module Types =
 
-    type TextGeneration = {
-        Model: string
-        Messages: TextGenerationMessage list
-        n: int
-        Verbosity: string
-        [<JsonPropertyName("reasoning_effort")>]
-        ReasoningEffort: string
+            type TextGeneration = {
+                Model: string
+                Messages: TextGenerationMessage list
+                n: int
+                Verbosity: string
+                [<JsonPropertyName("reasoning_effort")>]
+                ReasoningEffort: string
+            }
+
+            and TextGenerationMessage = {
+                Role: string
+                Name: string option
+                Content: MessageContent list
+            }
+
+            and MessageContent = {
+                Type: string
+                Text: string
+            }
+
+            type TextGenerationMessageResponse = {
+                Id: string
+                Choices: Choices list
+                Created: int
+                Model: string
+                [<JsonPropertyName("service_tier")>]
+                ServiceTier: string option
+                [<JsonPropertyName("system_fingerprint")>]
+                SystemFingerprint: string
+                Object: string
+                Usage: TokenUsage
+            }
+
+            and Choices = {
+                Index: int
+                Message: TextGenerationResponseMessage
+            }
+
+            and TextGenerationResponseMessage = {
+                Role: string
+                Content: string
+            }
+
+            and TokenUsage = {
+                [<JsonPropertyName("prompt_tokens")>]
+                PromptTokens: int
+                [<JsonPropertyName("completion_tokens")>]
+                CompletionTokens: int
+                [<JsonPropertyName("total_tokens")>]
+                TotalTokens: int
+            }
+
+    module Image =
+
+        module Types =
+
+            type GenerateImage = {
+                Model: string
+                Prompt: string
+                n: int
+                Size: string
+            }
+
+            type GenerateImageResponse = {
+                Background: string
+                Created: int
+                Data: ImageData list
+                [<JsonPropertyName("output_format")>]
+                OutputFormat: string
+                Quality: string
+                Size: string
+                Usage: TokenUsage
+            }
+
+            and ImageData = {
+                [<JsonPropertyName("b64_json")>]
+                B64Json: string
+            }
+
+            and TokenUsage = {
+                [<JsonPropertyName("input_tokens")>]
+                InputTokens: int
+                [<JsonPropertyName("input_token_details")>]
+                InputTokenDetails: InputTokenDetails
+                [<JsonPropertyName("output_tokens")>]
+                OutputTokens: int
+                [<JsonPropertyName("total_tokens")>]
+                TotalTokens: int
+            }
+
+            and InputTokenDetails = {
+                [<JsonPropertyName("text_tokens")>]
+                TextTokens: int
+                [<JsonPropertyName("image_tokens")>]
+                ImageTokens: int
+            }
+
+    open Chatbot.Core
+    open Chatbot.Core.Http
+    open Chatbot.Core.Types
+    open Chatbot.Core.Json
+    open Chat.Types
+    open Image.Types
+
+    type IGenAIService =
+        abstract member GetImage: prompt: string -> Async<Result<GenerateImageResponse, int>>
+        abstract member SendGptMessage: messages: TextGenerationMessage list -> Async<Result<TextGenerationMessageResponse, int>>
+
+    type OpenAIOptions = {
+        ApiKey: string
+        DefaultImageModel: string
+        DefaultChatModel: string
     }
 
-    and TextGenerationMessage = {
-        Role: string
-        Name: string option
-        Content: MessageContent list
-    }
+    module OpenAIService =
 
-    and MessageContent = {
-        Type: string
-        Text: string
-    }
+        let create env config =
 
-    type TextGenerationMessageResponse = {
-        Id: string
-        Choices: Choices list
-        Created: int
-        Model: string
-        [<JsonPropertyName("service_tier")>]
-        ServiceTier: string option
-        [<JsonPropertyName("system_fingerprint")>]
-        SystemFingerprint: string
-        Object: string
-        Usage: TokenUsage
-    }
+            let apiUrl = "https://api.openai.com/v1"
 
-    and Choices = {
-        Index: int
-        Message: TextGenerationResponseMessage
-    }
+            let imageGenerationUrl = $"{apiUrl}/images/generations"
+            let chatCompletionUrl = $"{apiUrl}/chat/completions"
 
-    and TextGenerationResponseMessage = {
-        Role: string
-        Content: string
-    }
+            let apiKey = config.ApiKey
+            let defaultImageModel = config.DefaultImageModel
+            let defaultChatModel = config.DefaultChatModel
 
-    and TokenUsage = {
-        [<JsonPropertyName("prompt_tokens")>]
-        PromptTokens: int
-        [<JsonPropertyName("completion_tokens")>]
-        CompletionTokens: int
-        [<JsonPropertyName("total_tokens")>]
-        TotalTokens: int
-    }
+            let httpClient = env.HttpClient
 
-module Image =
+            let getImage (prompt: string) =
+                async {
+                    let json =
+                        {
+                            Model = defaultImageModel
+                            Prompt = prompt
+                            n = 1
+                            Size = "1024x1024"
+                        }
+                        |> serializeJson
 
-    type GenerateImage = {
-        Model: string
-        Prompt: string
-        n: int
-        Size: string
-    }
+                    let request =
+                        Request.post imageGenerationUrl
+                        |> Request.withHeaders [ Header.accept ContentType.ApplicationJson ; Header.authorization <| AuthenticationScheme.bearer apiKey ]
+                        |> Request.withBody (Content.String json)
+                        |> Request.withContentType ContentType.ApplicationJson
 
-    type GenerateImageResponse = {
-        Background: string
-        Created: int
-        Data: ImageData list
-        [<JsonPropertyName("output_format")>]
-        OutputFormat: string
-        Quality: string
-        Size: string
-        Usage: TokenUsage
-    }
+                    let! response = request |> Http.send httpClient
 
-    and ImageData = {
-        [<JsonPropertyName("b64_json")>]
-        B64Json: string
-    }
+                    return
+                        response
+                        |> Response.toJsonResult<GenerateImageResponse>
+                        |> Result.mapError _.StatusCode
+                }
 
-    and TokenUsage = {
-        [<JsonPropertyName("input_tokens")>]
-        InputTokens: int
-        [<JsonPropertyName("input_token_details")>]
-        InputTokenDetails: InputTokenDetails
-        [<JsonPropertyName("output_tokens")>]
-        OutputTokens: int
-        [<JsonPropertyName("total_tokens")>]
-        TotalTokens: int
-    }
+            let sendGptMessage (messages: TextGenerationMessage list) =
+                async {
+                    let json =
+                        {
+                            Model = defaultChatModel
+                            Messages = messages
+                            n = 1
+                            Verbosity = "low"
+                            ReasoningEffort = "minimal"
+                        }
+                        |> serializeJson
 
-    and InputTokenDetails = {
-        [<JsonPropertyName("text_tokens")>]
-        TextTokens: int
-        [<JsonPropertyName("image_tokens")>]
-        ImageTokens: int
-    }
+                    let request =
+                        Request.post chatCompletionUrl
+                        |> Request.withHeaders [ Header.accept ContentType.ApplicationJson ; Header.authorization <| AuthenticationScheme.bearer apiKey ]
+                        |> Request.withBody (Content.String json)
+                        |> Request.withContentType ContentType.ApplicationJson
 
-open Chat
-open Image
+                    let! response = request |> Http.send httpClient
 
-let [<Literal>] private ApiUrl = "https://api.openai.com/v1"
+                    return
+                        response
+                        |> Response.toJsonResult<TextGenerationMessageResponse>
+                        |> Result.mapError _.StatusCode
+                }
 
-let private imageGenerationUrl = $"{ApiUrl}/images/generations"
-let private chatCompletionUrl = $"{ApiUrl}/chat/completions"
-
-let private apiKey = appConfig.OpenAI.ApiKey
-let private headers = [ Header.accept ContentType.ApplicationJson ; Header.authorization <| AuthenticationScheme.bearer apiKey ]
-
-let getImage (prompt: string) =
-    async {
-        let json =
-            { Model = appConfig.OpenAI.DefaultImageModel
-              Prompt = prompt
-              n = 1
-              Size = "1024x1024" }
-            |> serializeJson
-
-        let request =
-            Request.post imageGenerationUrl
-            |> Request.withHeaders headers
-            |> Request.withBody (Content.String json)
-            |> Request.withContentType ContentType.ApplicationJson
-
-        let! response = request |> Http.send Http.client
-
-        return
-            response
-            |> Response.toJsonResult<GenerateImageResponse>
-            |> Result.mapError _.StatusCode
-    }
-
-let sendGptMessage (messages: TextGenerationMessage list) =
-    async {
-        let json =
-            { Model = appConfig.OpenAI.DefaultChatModel
-              Messages = messages
-              n = 1
-              Verbosity = "low"
-              ReasoningEffort = "minimal" }
-            |> serializeJson
-
-        let request =
-            Request.post chatCompletionUrl
-            |> Request.withHeaders headers
-            |> Request.withBody (Content.String json)
-            |> Request.withContentType ContentType.ApplicationJson
-
-        let! response = request |> Http.send Http.client
-
-        return
-            response
-            |> Response.toJsonResult<TextGenerationMessageResponse>
-            |> Result.mapError _.StatusCode
-    }
+            {
+                new IGenAIService with
+                    member _.GetImage prompt = getImage prompt
+                    member _.SendGptMessage messages = sendGptMessage messages
+            }

@@ -1,4 +1,4 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module ChatSummary =
@@ -8,17 +8,18 @@ module ChatSummary =
     open FSharpPlus
     open FsToolkit.ErrorHandling
 
-    open Commands
-    open CommandError
-    open OpenAI.Chat
+    open Chatbot.Common
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain.Commands.CommandError
+    open Chatbot.Core.Domain
+    open Chatbot.Core.Services.OpenAI
+    open Chatbot.Core.Services.OpenAI.Chat.Types
+    open Chatbot.Core.Services.Ivr
 
     type SummaryCache = {
         LastMessage: System.DateTime
         Message: string
     }
-
-    let private ivrService = Services.ivrService
-    let private openAiService = Services.openAiService
 
     let [<Literal>] private MaxLines = 80
 
@@ -36,12 +37,12 @@ module ChatSummary =
 
     let private chatSummaryHistory = new ConcurrentDictionary<string, SummaryCache>()
 
-    let chatSummary context =
+    let chatSummary (ivrService: IvrService) (genAIService: IGenAIService) (context: Context) =
         asyncResult {
-            match context.Source with
+            match context.MessageSource with
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
-            | Channel channel ->
-                let channel = context.Args |> List.tryHead |> Option.defaultValue channel.Channel
+            | Channel (channel, _) ->
+                let channel = context.MessageArgs |> List.tryHead |> Option.defaultValue channel
                 let historyKey = channel
                 let ``to`` = utcNow()
                 let from = ``to``.AddHours(-2)
@@ -73,7 +74,7 @@ module ChatSummary =
                     | None ->
                         let textGenerationMessages = systemMessage :: message
 
-                        openAiService.SendGptMessage textGenerationMessages
+                        genAIService.SendGptMessage textGenerationMessages
                         |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "OpenAI")
                         |> AsyncResult.map (fun response ->
                             match response.Choices with
@@ -91,7 +92,7 @@ module ChatSummary =
                     | Some messages when (utcNow() - messages.LastMessage).TotalMinutes > 10 ->
                         let textGenerationMessages = systemMessage :: message
 
-                        openAiService.SendGptMessage textGenerationMessages
+                        genAIService.SendGptMessage textGenerationMessages
                         |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "OpenAI")
                         |> AsyncResult.map (fun response ->
                             match response.Choices with
@@ -106,10 +107,10 @@ module ChatSummary =
 
                                 message
                         )
-                    | Some messages -> async { return Ok messages.Message }
+                    | Some messages -> async { return Ok <| messages.Message }
 
                 if summary |> strEmpty then
-                    return Message "Empty response..."
+                    return [ Message "Empty response..." ]
                 else
-                    return Message summary
+                    return [ Message summary ]
         }

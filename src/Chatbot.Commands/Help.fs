@@ -1,26 +1,37 @@
-namespace Commands
+namespace Chatbot.Commands
 
-open CommandError
-open Configuration
+open Chatbot.Core.Domain.Commands
 
 [<AutoOpen>]
 module Help =
 
-    let help context (commands: Map<string, Command>) =
-        match context.Args with
-        | [] -> Ok <| Message $"See %s{appConfig.HelpUrl} for a list of commands"
-        | command :: _ ->
-            match commands |> Map.tryFind command with
-            | None -> Ok <| Message $"see %s{appConfig.HelpUrl} for a list of commands"
-            | Some c ->
-                let aliases = if c.Aliases.Length > 0 then c.Aliases |> strJoin ", " |> fun a -> $"({a})" else ""
-                Ok <| Message $"""%s{c.Name} %s{aliases} | %s{c.Details.Description} %s{appConfig.HelpUrl}{c.Name}"""
+    open FsToolkit.ErrorHandling
+
+    open Chatbot.Common
+
+    let help helpUrl context (commands: Map<string, Command>) =
+        result {
+            match context.MessageArgs with
+            | [] -> return [ Message $"See %s{helpUrl} for a list of commands" ]
+            | command :: _ ->
+                match commands |> Map.tryFind command with
+                | None -> return [ Message $"See %s{helpUrl} for a list of commands" ]
+                | Some c ->
+                    let aliases =
+                        if c.Aliases.Length > 0 then
+                            c.Aliases
+                            |> strJoin ", "
+                            |> sprintf "(%s)"
+                        else
+                            ""
+
+                    return [ Message $"""%s{c.Name} %s{aliases} | %s{c.Details.Description} %s{helpUrl}{c.Name}""" ]
+        }
 
 module HelpInfo =
 
-    let commandPrefix = appConfig.Bot.CommandPrefix
-    let example = sprintf "%s %s" commandPrefix
-    let exampleArgs = sprintf "%s %s %s" commandPrefix
+    let example = sprintf "%s"
+    let exampleArgs = sprintf "%s %s"
 
     let AccountAge =
         {
@@ -505,7 +516,7 @@ Custom delimiter:
             Name = "Pipe"
             Description = "Pipe together 2 or more commands, taking the result from the previous command, and sending it to the next."
             ExampleUsage = $"""
-Commands must be delimited by a "{pipeSeperator}" character
+Commands must be delimited by a "|" character
 
 {exampleArgs "pipe" "<command> | <command> | ..."}
 {exampleArgs "pipe" "pick one two three | texttransform uppercase"}

@@ -1,19 +1,16 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module Reddit =
 
-    open System
-    open System.Collections.Generic
-
     open FSharpPlus
     open FsToolkit.ErrorHandling
 
-    open Authorization
-    open CommandError
-    open Reddit.Api
-    open Reddit.Types
-
+    open Chatbot.Common
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain.Commands.CommandError
+    open Chatbot.Core.Services.Reddit
+    open Chatbot.Core.Services.Reddit.Types
 
     let private postFilter (p: Thing<T3>) =
         not <| p.Data.Over18 && not <| p.Data.IsSelf
@@ -25,9 +22,9 @@ module Reddit =
     let private defaultSorting = "hot"
     let private sortings = [ "hot" ; "top" ; "best" ]
 
-    let reddit context =
+    let reddit (redditService: RedditService) context =
         asyncResult {
-            match context.Args with
+            match context.MessageArgs with
             | [] -> return! invalidArgs "No subreddit specified"
             | args ->
                 let kvp = KeyValueParser.parse args redditKeys
@@ -42,7 +39,7 @@ module Reddit =
 
                 let! subreddit = kvp.Input |> Seq.tryHead |> Option.toResultWith (InvalidArgs "No subreddit specified")
 
-                let! response = getPosts subreddit sort |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Reddit")
+                let! response = redditService.GetPosts subreddit sort |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Reddit")
 
                 let posts =
                     response.Data.Children |> List.filter postFilter
@@ -52,7 +49,7 @@ module Reddit =
                         | Some flair -> ps |> List.filter (flairFilter flair)
 
                 match posts with
-                | [] -> return Message "No posts found!"
+                | [] -> return [ Message "No posts found!" ]
                 | filteredPosts ->
                     let post = filteredPosts |> List.randomChoice |> _.Data
 
@@ -64,5 +61,5 @@ module Reddit =
 
                     let title = (htmlDecode post.Title).Replace("\n", "")
 
-                    return Message $"{subreddit} \"{title}\" (+{post.Score}) {url}"
+                    return [ Message $"{subreddit} \"{title}\" (+{post.Score}) {url}" ]
         }

@@ -1,4 +1,4 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module Pick =
@@ -8,11 +8,12 @@ module Pick =
 
     open FsToolkit.ErrorHandling
 
-    open CommandError
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain.Commands.CommandError
 
     let pick context =
         result {
-            match context.Args with
+            match context.MessageArgs with
             | [] -> return! invalidArgs "No items provided"
             | head :: tail ->
                 let delimiterPattern = @"^delimiter:(.+)$"
@@ -20,11 +21,11 @@ module Pick =
 
                 let items =
                     match m.Success with
-                    | false -> context.Args
+                    | false -> context.MessageArgs
                     | true ->
                         String.concat " " tail
                         |> _.Split(m.Groups[1].Value, StringSplitOptions.TrimEntries)
                         |> List.ofArray
 
-                return Message $"{items |> List.randomChoice}"
+                return [ Message $"{items |> List.randomChoice}" ]
         }

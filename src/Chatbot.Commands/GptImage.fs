@@ -1,28 +1,29 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module GptImage =
 
     open FsToolkit.ErrorHandling
 
-    open CommandError
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain.Commands.CommandError
 
-    let private openAiService = Services.services.OpenAiService
-    let private imageUploadService = Services.services.ImageUploadService
+    open Chatbot.Core.Services.ImageUpload
+    open Chatbot.Core.Services.OpenAI
 
-    let gptImage context =
+    let gptImage (genAIService: IGenAIService) (imageUploadService: IImageUploadService) context =
         asyncResult {
-            match context.Args with
+            match context.MessageArgs with
             | [] -> return! invalidArgs $"No prompt provided"
             | _ ->
-                let prompt = context.Args |> String.concat " "
-                let! response = openAiService.GetImage prompt |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "OpenAI")
+                let prompt = context.MessageArgs |> String.concat " "
+                let! response = genAIService.GetImage prompt |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "OpenAI")
 
                 match response.Data with
-                | [] -> return Message "No image generated..."
+                | [] -> return [ Message "No image generated..." ]
                 | d :: _ ->
                     let bytes = System.Convert.FromBase64String(d.B64Json)
                     let! url = imageUploadService.Upload(bytes) |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "nuuls")
 
-                    return Message $"Generated image: {url}"
+                    return [ Message $"Generated image: {url}" ]
         }

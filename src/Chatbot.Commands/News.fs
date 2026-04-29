@@ -1,24 +1,29 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module News =
 
-    open News.Api
-
     open FsToolkit.ErrorHandling
 
-    let news context =
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Services.News
+
+    let news (newsService: INewsService) context =
         asyncResult {
             let maybeCategory =
-                if context.Args |> List.isEmpty then
+                if context.MessageArgs |> List.isEmpty then
                     None
                 else
-                    Some <| (context.Args |> String.concat " ")
+                    Some <| (context.MessageArgs |> String.concat " ")
 
-            let! newsItem = getNews maybeCategory
+            let! newsItem =
+                newsService.GetNews maybeCategory
+                |> AsyncResult.mapError InternalError
+
             let title = newsItem.Title.Text
             let date = newsItem.PublishDate.UtcDateTime.ToString("dd MMM yyyy, HH:mm")
             let summary = if newsItem.Summary = null then "" else newsItem.Summary.Text
             let link = newsItem.Links |> Seq.tryHead |> Option.bind (fun l -> Some l.Uri.AbsoluteUri) |? ""
-            return Message $"{date} {title} {summary} {link}"
+
+            return [ Message $"{date} {title} {summary} {link}" ]
         }

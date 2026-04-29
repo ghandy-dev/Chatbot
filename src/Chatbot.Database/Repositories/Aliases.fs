@@ -1,4 +1,4 @@
-﻿namespace Database
+﻿namespace Chatbot.Database
 
 module Aliases =
 
@@ -6,9 +6,9 @@ module Aliases =
 
     open Dapper.FSharp.SQLite
 
-    open Database.Models
-    open Database.Entities
-    open DB
+    open Chatbot.Database.Models
+    open Chatbot.Database.Entities
+    open Db
 
     type AliasQuery =
         | ByUserIdAliasName of userId: int * alias: string

@@ -1,6 +1,8 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module Echo =
 
-    let echo context = Ok <| Message $"""{String.concat " " context.Args}"""
+    open Chatbot.Core.Domain.Commands
+
+    let echo context = Ok [ Message $"""{String.concat " " context.MessageArgs}""" ]

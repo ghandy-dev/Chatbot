@@ -1,7 +1,9 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module EightBall =
+
+    open Chatbot.Core.Domain.Commands
 
     let private fortunes = [
         "It is certain."
@@ -26,4 +28,7 @@ module EightBall =
         "Very doubtful."
     ]
 
-    let eightball _ = Ok <| Message (fortunes |> List.randomChoice)
+    let eightball _ =
+        let fortune = fortunes |> List.randomChoice
+
+        Ok [ Message fortune ]

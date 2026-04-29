@@ -1,4 +1,4 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module Ping =
@@ -6,6 +6,8 @@ module Ping =
     open System
 
     open FsToolkit.ErrorHandling
+
+    open Chatbot.Core.Domain.Commands
 
     let private startTime = Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime()
     let private platform = Environment.OSVersion.Platform
@@ -19,5 +21,5 @@ module Ping =
             let duration = DateTime.UtcNow - startTime
             let timeOnline = $"{duration.TotalHours |> int} hours, {duration.Minutes} minutes, {duration.Seconds} seconds"
 
-            return Message $"Pong. Uptime: {timeOnline}. Running on platform: {platform} {platformVersion}, processors: {processors}, architecture: {architecture}, dotnet version: {version}."
+            return [ Message $"Pong. Uptime: {timeOnline}. Running on platform: {platform} {platformVersion}, processors: {processors}, architecture: {architecture}, dotnet version: {version}." ]
         }

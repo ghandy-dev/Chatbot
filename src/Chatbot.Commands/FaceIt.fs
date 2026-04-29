@@ -1,4 +1,4 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module FaceIt =
@@ -6,15 +6,15 @@ module FaceIt =
     open System
     open System.Text
 
-    open FSharpPlus
     open FsToolkit.ErrorHandling
 
-    open FaceIt.Api
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Services.FaceIt
 
-    let private stats playerName =
+    let private stats (faceItService: FaceItService) playerName =
         asyncResult {
-            let! player = getPlayer playerName |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
-            let! stats = getPlayerStats player.PlayerId |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
+            let! player = faceItService.GetPlayerByUsername playerName |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
+            let! stats = faceItService.GetPlayerStats player.PlayerId |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
             let recentResults =
                 stats.Lifetime.RecentResults |> List.map (fun r -> if r = "0" then "L" else "W") |> String.concat " "
 
@@ -30,23 +30,23 @@ module FaceIt =
                     .Append($"Average K/D ratio: {stats.Lifetime.AverageKDRatio}")
                     .ToString()
 
-            return Message message
+            return [ Message message ]
         }
 
-    let private history playerName =
+    let private history (faceItService: FaceItService) playerName =
         asyncResult {
-            let! player = getPlayer playerName |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
-            let! matchHistory = getPlayerMatchHistory player.PlayerId 5 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
+            let! player = faceItService.GetPlayerByUsername playerName |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
+            let! matchHistory = faceItService.GetPlayerMatchHistory player.PlayerId 5 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
 
             let! matches =
                 matchHistory.Items
-                |> List.map (fun m -> m.MatchId |> getMatchStats)
+                |> List.map (fun m -> m.MatchId |> faceItService.GetMatchStats)
                 |> Async.Parallel
                 |> Async.map (Array.choose Result.toOption)
                 |> Async.map List.ofArray
 
             if matches.Length = 0 then
-                return Message "No recent games played!"
+                return [ Message "No recent games played!" ]
             else
                 let matchResults =
                     matches
@@ -76,20 +76,20 @@ module FaceIt =
                     )
                     |> String.concat " | "
 
-                return Message results
+                return [ Message results ]
         }
 
-    let private lastGame playerName =
+    let private lastGame (faceItService: FaceItService) playerName =
         asyncResult {
-            let! player = getPlayer playerName |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
+            let! player = faceItService.GetPlayerByUsername playerName |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
 
             let! history =
-                getPlayerMatchHistory player.PlayerId 1
+                faceItService.GetPlayerMatchHistory player.PlayerId 1
                 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
                 |> AsyncResult.map _.Items
 
             match history with
-            | [] -> return Message "No matches played"
+            | [] -> return [ Message "No matches played" ]
             | { MatchId = matchId ; Teams = teams ; Results = { Winner = winner } } :: _ ->
                 let team1, team2 =
                     teams
@@ -101,7 +101,7 @@ module FaceIt =
                         | _ -> failwith "Expected 2 lists with one item each"
 
                 let! matchData =
-                    getMatch matchId
+                    faceItService.GetMatch matchId
                     |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
 
                 let gameMap = matchData.Voting.Map.Pick |> List.head
@@ -119,9 +119,9 @@ module FaceIt =
                     else
                         $"{team2.Nickname}"
 
-                let selectPlayerElo = fun (p: FaceIt.Types.Players.Player) -> p.Games["cs2"].FaceItElo |> float
-                let selectPlayers = fun (t: FaceIt.Types.Players.Team) -> t.Players
-                let lookUpPlayer = fun (p: FaceIt.Types.Players.TeamPlayer) -> getPlayerById p.PlayerId
+                let selectPlayerElo = fun (p: Types.Players.Player) -> p.Games["cs2"].FaceItElo |> float
+                let selectPlayers = fun (t: Types.Players.Team) -> t.Players
+                let lookUpPlayer = fun (p: Types.Players.TeamPlayer) -> faceItService.GetPlayerById p.PlayerId
 
                 let calcTeamAverageElo =
                     selectPlayers
@@ -144,17 +144,17 @@ module FaceIt =
                         .Append($"%s{team2.Nickname}: %f{team2Elo}")
                         .ToString()
 
-                return Message message
+                return [ Message message ]
         }
 
-    let faceit context =
+    let faceit (faceItService: FaceItService) context =
         async {
-            match context.Args with
+            match context.MessageArgs with
             | [] -> return Error <| InvalidArgs $"No subcommand/player specified"
             | command :: player :: _ ->
                 match command with
-                | "stats" -> return! stats player
-                | "history" -> return! history player
+                | "stats" -> return! stats (faceItService: FaceItService) player
+                | "history" -> return! history (faceItService: FaceItService) player
                 | _ -> return Error <| InvalidArgs "Unknown subcommand."
-            | player :: _ -> return! lastGame player
+            | player :: _ -> return! lastGame (faceItService: FaceItService) player
         }

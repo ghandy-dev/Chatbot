@@ -1,4 +1,4 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module Nasa =
@@ -6,25 +6,22 @@ module Nasa =
     open FSharpPlus
     open FsToolkit.ErrorHandling
 
-    open Nasa.Api
-    open Nasa.Types
+    open Chatbot.Common
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Services.Nasa
 
-    let apod context =
+    let apod (nasaService: NasaService) context =
         asyncResult {
             let! apod =
-                match context.Args with
+                match context.MessageArgs with
                 | [] ->
-                    getCurrentPictureOfTheDay ()
+                    nasaService.GetCurrentPictureOfTheDay ()
                     |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Nasa")
                 | args ->
-                    async.Return (
-                        Parsing.tryParseDateOnly (args |> String.concat " ") |> Option.toResultWith (InvalidArgs "Couldn't parse date")
-                    )
-                    |> AsyncResult.bind (
-                        getPictureOfTheDay >> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Nasa")
-                    )
+                    Parsing.tryParseDateOnly (args |> String.concat " ") |> Option.toResultWith (InvalidArgs "Couldn't parse date") |> async.Return
+                    |> AsyncResult.bind (nasaService.GetPictureOfTheDay >> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Nasa"))
 
-            let url = apod.HdUrl |> Option.defaultValue  apod.Url
+            let url = apod.HdUrl |> Option.defaultValue apod.Url
 
-            return Message $"%s{apod.Title} %s{url}"
+            return [ Message $"%s{apod.Title} %s{url}" ]
         }

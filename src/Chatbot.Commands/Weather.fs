@@ -1,13 +1,17 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module Weather =
 
     open FsToolkit.ErrorHandling
 
-    open CommandError
-    open Geolocation.Azure
-    open Weather
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain.Commands.CommandError
+    open Chatbot.Core.Services.Weather
+    open Chatbot.Core.Services.Weather.Types
+    open Chatbot.Core.Services.Geolocation
+    open Chatbot.Core.Services.Geolocation.Azure.Types
+    open Chatbot.Core.Services.Geolocation.Google.Types
 
     let private weatherCodeToEmoji iconCode =
         match iconCode with
@@ -52,9 +56,6 @@ module Weather =
         | IconCode.N_MostlyCloudyWithSnow -> "🌨️"
         | _ -> ""
 
-    let private geolocationService = Services.services.GeolocationService
-    let private weatherService = Services.services.WeatherService
-
     let private processWeatherResult (geocoding: SearchAddressResultItem) (weather: CurrentConditions) =
         let location = geocoding.Address.FreeformAddress
         let emoji = weatherCodeToEmoji weather.IconCode
@@ -70,18 +71,17 @@ module Weather =
         let precipitation = $"Precipitation {weather.PrecipitationSummary.PastHour.Value} {weather.PrecipitationSummary.PastHour.Unit}"
         let uv = $"UV: {weather.UvIndexPhrase}"
 
-        Message $"{location} {emoji} {summary} {temperature} - feels like {perceivedTemperature}, {wind}, {precipitation}, {uv}"
+        [ Message $"{location} {emoji} {summary} {temperature} - feels like {perceivedTemperature}, {wind}, {precipitation}, {uv}" ]
 
-
-    let weather context =
+    let weather (geolocationService: IGeolocationService) (weatherService: IWeatherService) context =
         asyncResult {
-            match context.Args with
+            match context.MessageArgs with
             | [] -> return! invalidArgs "No location provided"
             | address ->
                 let! geocoding = geolocationService.GetSearchAddress (address |> String.concat " ") |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Geolocation")
                 let! weather = weatherService.GetCurrentWeather geocoding.Position.Lat geocoding.Position.Lon |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Weather")
 
                 match weather with
-                | [] -> return Message "No weather conditions reported for location"
+                | [] -> return [ Message "No weather conditions reported for location" ]
                 | w :: _ -> return processWeatherResult geocoding w
             }

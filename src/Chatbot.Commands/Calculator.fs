@@ -1,10 +1,12 @@
-namespace Commands
+namespace Chatbot.Commands
 
 // https://github.com/stephan-tolksdorf/fparsec/blob/fdd990ad5abe32fd65d926005b4c7bd71dd2384f/Samples/Calculator/calculator.fs
 [<AutoOpen>]
 module Calculator =
 
     open FParsec
+
+    open Chatbot.Core.Domain.Commands
 
     let private ws = spaces
     let private str_ws s = pstring s .>> ws
@@ -44,9 +46,9 @@ module Calculator =
     let private innerCalculate s = run completeExpression s
 
     let calculate context =
-        let input = String.concat " " context.Args
+        let input = String.concat " " context.MessageArgs
         let result = innerCalculate input
 
         match result with
-        | Success(r, _, _) -> Result.Ok <| CommandOk.Message $"{r}"
-        | Failure(msg, _, _) -> Result.Ok <| CommandOk.Message msg
+        | Success(r, _, _) -> Result.Ok [ CommandResponse.Message $"{r}" ]
+        | Failure(msg, _, _) -> Result.Ok [ CommandResponse.Message msg ]

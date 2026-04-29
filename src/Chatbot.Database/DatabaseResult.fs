@@ -1,4 +1,4 @@
-namespace Database
+namespace Chatbot.Database
 
 [<RequireQualifiedAccess>]
 type DatabaseResult<'TSuccess> =

@@ -1,4 +1,4 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module RiotGames =
@@ -8,8 +8,9 @@ module RiotGames =
     open FSharpPlus
     open FsToolkit.ErrorHandling
 
-    open CommandError
-    open RiotGames.Api
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain.Commands.CommandError
+    open Chatbot.Core.Services.RiotGames
 
     let private regions =
         [
@@ -36,20 +37,21 @@ module RiotGames =
         |> Map.tryFind (region.ToLower())
         |> Option.toResultWith (InvalidArgs "Invalid region specified")
 
-    let league context =
+    let league (riotGamesService: RiotGamesService) context =
+
         asyncResult {
-            match context.Args with
+            match context.MessageArgs with
             | [] -> return! invalidArgs "Arguments missing"
             | region :: riotId ->
                 let! region = parseRegion region
                 let! gameName, tagLine = parseRiotId riotId
-                let! account = getAccount gameName tagLine |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "RiotGames - Account")
-                let! summoner = getSummoner region account.PUUID |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "RiotGames - Summoner")
-                let! leagueEntries = getLeagueEntries region account.PUUID |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "RiotGames - League Entries")
+                let! account = riotGamesService.GetAccount gameName tagLine |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "RiotGames - Account")
+                let! summoner = riotGamesService.GetSummoner region account.PUUID |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "RiotGames - Summoner")
+                let! leagueEntries = riotGamesService.GetLeagueEntries region account.PUUID |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "RiotGames - League Entries")
                 let maybeLeagueEntry = leagueEntries |> List.tryFind (fun e -> e.QueueType = "RANKED_SOLO_5x5")
 
                 match maybeLeagueEntry with
-                | None -> return Message $"{account.GameName |? gameName} has not played any ranked games this season"
+                | None -> return [ Message $"{account.GameName |? gameName} has not played any ranked games this season" ]
                 | Some leagueEntry ->
                     let tier = leagueEntry.Tier
                     let rank = leagueEntry.Rank
@@ -58,5 +60,5 @@ module RiotGames =
                     let losses = leagueEntry.Losses
                     let winRate =  int <| float leagueEntry.Wins / (float leagueEntry.Wins + float leagueEntry.Losses) * 100.0
 
-                    return Message $"%s{account.GameName |? gameName}#%s{account.TagLine |? tagLine}, Level {summoner.SummonerLevel}. (Summoners Rift 5v5 Ranked Solo), Rank: %s{tier} %s{rank} (%d{lp} LP). W/L: %d{wins}/%d{losses}, W/R: %d{winRate}%%"
+                    return [ Message $"%s{account.GameName |? gameName}#%s{account.TagLine |? tagLine}, Level {summoner.SummonerLevel}. (Summoners Rift 5v5 Ranked Solo), Rank: %s{tier} %s{rank} (%d{lp} LP). W/L: %d{wins}/%d{losses}, W/R: %d{winRate}%%" ]
         }

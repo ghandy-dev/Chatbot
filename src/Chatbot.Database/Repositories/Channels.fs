@@ -1,4 +1,4 @@
-﻿namespace Database
+﻿namespace Chatbot.Database
 
 module Channels =
 
@@ -6,9 +6,9 @@ module Channels =
 
     open Dapper.FSharp.SQLite
 
-    open Database.Models
-    open Database.Entities
-    open DB
+    open Chatbot.Database.Models
+    open Chatbot.Database.Entities
+    open Db
 
     let mapToModel (channel: Entities.Channel) : Models.Channel = {
         ChannelId = string channel.channel_id

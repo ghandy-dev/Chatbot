@@ -1,7 +1,10 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module Fill =
+
+    open Chatbot.Common
+    open Chatbot.Core.Domain.Commands
 
     let [<Literal>] private MaxLength = 500
 
@@ -21,19 +24,20 @@ module Fill =
             Some (word, (accLength + word.Length + 1, words))
 
     let fill context =
-        let kvp: KeyValueParser.KeyValueParserResult = KeyValueParser.parse context.Args keys
+        let kvp: KeyValueParser.KeyValueParserResult = KeyValueParser.parse context.MessageArgs keys
         let repeat = kvp.KeyValues.TryFind "repeat" |> Option.bind Parsing.tryParseBoolean |? true
 
         match kvp.Input with
         | [] -> Error <| InvalidArgs "No word(s) specified."
         | words ->
-            match repeat with
-            | true ->
-                (0, 0, words)
-                |> Seq.unfold repeatFill
-            | false ->
-                (0, words)
-                |> Seq.unfold randomFill
-            |> String.concat " "
-            |> Message
-            |> Ok
+            let message =
+                match repeat with
+                | true ->
+                    (0, 0, words)
+                    |> Seq.unfold repeatFill
+                | false ->
+                    (0, words)
+                    |> Seq.unfold randomFill
+                |> strJoin " "
+
+            Ok [ Message message ]

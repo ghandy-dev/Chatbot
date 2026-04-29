@@ -1,34 +1,14 @@
-[<AutoOpen>]
-module Types
+namespace Chatbot.Core.Types
 
-type RoomState = {
-    Channel: string
-    EmoteOnly: bool
-    FollowersOnly: bool
-    R9K: bool
-    RoomId: string
-    Slow: int
-    SubsOnly: bool
-    LastMessageSent: System.DateTime
-} with
+open Microsoft.Extensions.Logging
 
-    static member create channel emoteOnly followersOnly r9k roomId slow subsOnly = {
-        Channel = channel
-        EmoteOnly = emoteOnly |? false
-        FollowersOnly = followersOnly |? false
-        R9K = r9k |? false
-        RoomId = roomId
-        Slow = slow |? 0
-        SubsOnly = subsOnly |? false
-        LastMessageSent = System.DateTime.UtcNow
-    }
+open Chatbot.Core.Caching
+open Chatbot.Core.Http
+open Chatbot.Database.Db
 
-type UserState = {
-    Moderator: bool
-    Subscriber: bool
-} with
-
-    static member create moderator subscriber = {
-        Moderator = moderator
-        Subscriber = subscriber
-    }
+type Env = {
+    HttpClient: HttpClient
+    Cache: MemoryCache
+    Database: Database
+    Logger: ILogger
+}

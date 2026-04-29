@@ -1,11 +1,12 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module RockPaperScissors =
 
     open FsToolkit.ErrorHandling
 
-    open Database
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Database
 
     type private Shapes =
         | Rock
@@ -30,9 +31,9 @@ module RockPaperScissors =
         | Paper, Rock -> 6
         | _ -> 0
 
-    let rps context =
+    let rps db context =
         asyncResult {
-            let! shape = context.Args |> List.tryHead |> Option.bind Shapes.tryParse |> Result.requireSome (InvalidArgs """Invalid shape (valid choices are "rock" "paper" "scissors")""")
+            let! shape = context.MessageArgs |> List.tryHead |> Option.bind Shapes.tryParse |> Result.requireSome (InvalidArgs """Invalid shape (valid choices are "rock" "paper" "scissors")""")
             let cpuShape = shapes |> List.randomChoice
             let score = calculateScore shape cpuShape
 
@@ -42,7 +43,7 @@ module RockPaperScissors =
                 let onFailure = fun _ -> InternalError "Error occurred creating stats"
 
                 return!
-                    RpsRepository.add stats
+                    Rps.add db stats
                     |> Async.map DatabaseResult.toResult
                     |> AsyncResult.eitherMap
                         onSuccess
@@ -50,7 +51,7 @@ module RockPaperScissors =
             }
 
             let! stats =
-                RpsRepository.get (context.UserId |> int)
+                Rps.get db (context.UserId |> int)
                 |> AsyncOption.either
                     onSome
                     (onNone (Models.RpsStats.create (context.UserId |> int)))
@@ -62,9 +63,9 @@ module RockPaperScissors =
                 | _ -> $"you lose! +{score} points", stats.addLoss ()
 
             return!
-                RpsRepository.update updatedStats
+                Rps.update db updatedStats
                 |> Async.map DatabaseResult.toResult
                 |> AsyncResult.eitherMap
-                    (fun _ -> Message $"CPU picked {cpuShape}, {outcome}. Total points: {updatedStats.Score}")
+                    (fun _ -> [ Message $"CPU picked {cpuShape}, {outcome}. Total points: {updatedStats.Score}" ])
                     (fun _ -> InternalError "Error occurred updating stats.")
         }

@@ -1,39 +1,17 @@
-namespace Commands
-
-
-module Api =
-
-    open Http
-
-    type CatFact = {
-        Fact: string
-        Length: int
-    }
-
-    [<Literal>]
-    let private ApiUrl = "https://catfact.ninja"
-
-    let private catFactUrl = $"{ApiUrl}/fact"
-
-    let getCatFact () =
-        async {
-            let request = Request.get catFactUrl
-            let! response = request |> Http.send Http.client
-
-            return
-                response
-                |> Response.toJsonResult<CatFact>
-                |> Result.mapError _.StatusCode
-        }
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module CatFacts =
 
     open FsToolkit.ErrorHandling
-    open Api
 
-    let catFact _ =
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Services.CatFact
+
+    let catFact (catFactService: ICatFactService) context =
+
         asyncResult {
-            let! fact = getCatFact () |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Cat Fact")
-            return Message fact.Fact
+            let! fact = catFactService.GetCatFact () |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Cat Fact")
+
+            return [ Message fact.Fact ]
         }

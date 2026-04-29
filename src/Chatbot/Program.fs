@@ -1,4 +1,4 @@
-module Program
+module Chatbot.Program
 
 open System
 open System.Threading
@@ -23,7 +23,7 @@ let main args =
         with ex ->
             Logging.errorEx "Exception caught" ex
 
-        cancellationTokenSource.Token.WaitHandle.WaitOne() |> ignore
+        cancellationToken.WaitHandle.WaitOne() |> ignore
 
         Logging.info "Stopped."
     }

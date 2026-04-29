@@ -1,27 +1,28 @@
-﻿namespace IRC
-
-type Source = {
-    Nick: string
-    Host: string option
-}
-
-type MessageData = {
-    Tags: Map<string, string>
-    Source: Source option
-    Command: string
-    Parameters: string
-}
-
-module MessageData =
-
-    let empty = {
-        Tags = Map.empty
-        Source = None
-        Command = ""
-        Parameters = ""
-    }
+﻿namespace Chatbot.Core.IRC
 
 module Parsing =
+
+    type Source = {
+        Nick: string
+        Host: string option
+    }
+
+    type MessageData = {
+        Tags: Map<string, string>
+        Source: Source option
+        Command: string
+        Parameters: string
+    }
+
+    module MessageData =
+
+        let empty = {
+            Tags = Map.empty
+            Source = None
+            Command = ""
+            Parameters = ""
+        }
+
 
     let private parseTags (message: string) =
         message.Split(";")
@@ -93,4 +94,4 @@ module Parsing =
 
         parseComponents parts ParseTags MessageData.empty
 
-    let parseRaw = parseMessageComponents
+    let parse = parseMessageComponents

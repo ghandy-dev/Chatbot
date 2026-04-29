@@ -1,4 +1,4 @@
-namespace IRC
+namespace Chatbot.Core.IRC
 
 type Request =
     | CapReq of capabilities: string seq

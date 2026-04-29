@@ -1,31 +1,32 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module UrbanDictionary =
-
-    open UrbanDictionary.Api
 
     open System.Text.RegularExpressions
 
     open FsToolkit.ErrorHandling
 
-    let urban context =
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Services.UrbanDictionary
+
+    let urban (urbanDictionaryService: UrbanDictionaryService) context =
         asyncResult {
             let getTerm =
-                match context.Args with
-                | [] -> random ()
+                match context.MessageArgs with
+                | [] -> urbanDictionaryService.Random ()
                 | args ->
                     let query = args |> String.concat " "
-                    search query
+                    urbanDictionaryService.Search query
 
             let! terms = getTerm |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "UrbanDictionary")
 
             match terms with
-            | [] -> return Message "No definition found!"
+            | [] -> return [ Message "No definition found!" ]
             | term :: _ ->
                 let definition =
                     [ @"[\[\]]", "" ; @"(\r\n|\n)", " " ]
                     |> List.fold (fun acc (pattern, replacement) -> Regex.Replace(acc, pattern, replacement)) term.Definition
 
-                return Message $"{term.Permalink} (+{term.ThumbsUp}/-{term.ThumbsDown}) {term.Word}: {definition}"
+                return [ Message $"{term.Permalink} (+{term.ThumbsUp}/-{term.ThumbsDown}) {term.Word}: {definition}" ]
         }

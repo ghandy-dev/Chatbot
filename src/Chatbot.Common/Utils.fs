@@ -1,0 +1,102 @@
+namespace Chatbot.Common
+
+[<AutoOpen>]
+module Utils =
+
+    open System
+    open System.Text.RegularExpressions
+
+    let [<Literal>] DateStringFormat = "dd/MM/yyyy"
+    let [<Literal>] TimeStringFormat = "HH:mm:ss"
+    let [<Literal>] DateTimeStringFormat = $"dd/MM/yyyy HH:mm:ss"
+    let [<Literal>] UtcDateTimeStringFormat = $"yyyy-MM-ddTHH:mm:ss.ffffZ"
+
+    let utcNow () = DateTime.UtcNow
+    let now () = DateTime.Now
+    let epochTime () = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+    let epochTimeSeconds () = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+    let today () = DateOnly.FromDateTime(utcNow())
+    let base64: string -> string = System.Text.Encoding.UTF8.GetBytes >> System.Convert.ToBase64String
+
+    let formatTimeSpan (ts: TimeSpan) =
+        let formatComponent value =
+            if value > 0 then Some (value.ToString()) else None
+
+        let years = if ts.Days >= 365 then Some ((ts.Days / 365).ToString()) else None
+        let days = if years.IsSome then formatComponent (ts.Days % 365) else formatComponent ts.Days
+        let hours = formatComponent ts.Hours
+        let minutes = formatComponent ts.Minutes
+        let seconds = formatComponent ts.Seconds
+
+        match years, days, hours, minutes, seconds with
+        | Some y, Some d,Some h, _, _ -> sprintf "%sy, %sd, %sh" y d h
+        | Some y, None, Some h, _, _ -> sprintf "%sy, %sh" y h
+        | Some y, Some d, None, _, _ -> sprintf "%sy, %sd" y d
+        | Some y, None , None, _, _ -> sprintf "%sy" y
+        | None, Some d, Some h, Some m, _ -> sprintf "%sd, %sh, %sm" d h m
+        | None, Some d, None, Some m, _ -> sprintf "%sd, %sm" d m
+        | None, Some d, Some h, None, _ -> sprintf "%sd, %sh" d h
+        | None, Some d, None, None, _ -> sprintf "%sd" d
+        | None, None, Some h, Some m, Some _ -> sprintf "%sh, %sm" h m
+        | None, None, Some h, None, Some _ -> sprintf "%sh" h
+        | None, None, Some h, Some m, None -> sprintf "%sh, %sm" h m
+        | None, None, Some h, None, None -> sprintf "%sh" h
+        | None, None, None, Some m, Some s -> sprintf "%sm, %ss" m s
+        | None, None, None, Some m, None -> sprintf "%sm" m
+        | None, None, None, None, Some s -> sprintf "%ss" s
+        | _ -> "0s"
+
+    let stripMarkdownTags content =
+        let patterns = [
+            @"`{3}", ""                             // Code Blocks
+            @"`{1}([\S].*?)`{1}", "$1"              // Inline code
+            @"\*{1,2}([\S].*?)\*{1,2}", "$1"        // Bold
+            @"-{2,3}", "-"                          // Em/en dash
+            @"_{2}([\S].*?)_{2}", "$1"              // Italics
+            @"~{2}([\S].*?)~{2}", "$1"              // Strikethrough
+            @"^(?:#{1,6}\s(.*?))", "$1"             // Headers
+            @"^(?:={5,}|-{5,})\s*\n", ""            // Other Headers
+            @"\[.*?\][\(](.*?)[\)]", "$1"           // Links
+            @"\r\n{1,}", " "                        // CRLF
+            @"\n{1,}", " "                          // LF
+        ]
+
+        let stripped =
+            patterns
+            |> List.fold (fun acc (pattern, replacement) ->
+                Regex.Replace(acc, pattern, replacement, RegexOptions.Multiline)
+            ) content
+
+        stripped
+
+    let strFormat (s: string) (args: string list) =
+        let pattern = @"\{(\d+)\}"
+        Regex.Replace(s, pattern, fun m ->
+            let index = int m.Groups.[1].Value
+            args.[index])
+
+    let strCompare a b = String.Compare(a, b) = 0
+    let strCompareIgnoreCase a b = String.Compare(a, b, ignoreCase = true) = 0
+    let strEmpty = String.IsNullOrWhiteSpace
+    let strNotEmpty = not << strEmpty
+    let strConcat (values: string seq) = String.Concat(values)
+    let strJoin (separator: string) (values: string seq) = String.Join(separator, values)
+    let strStartsWith (value: string) (s: string) = s.StartsWith(value)
+    let strReplace (oldValue: string) (newValue: string) (s: string) = s.Replace(oldValue, newValue)
+    let strSplit (separator: string) (s: string) = s.Split(separator, StringSplitOptions.RemoveEmptyEntries ||| StringSplitOptions .TrimEntries)
+    let strSubstring length (s: string) = s.Substring(length)
+
+    let htmlEncode = System.Web.HttpUtility.HtmlEncode
+    let htmlDecode = System.Web.HttpUtility.HtmlDecode
+
+    let zeroWidthUnicodeStrings = [
+        "\U000e0000"
+        "\ue34f"
+    ]
+
+    let removeHiddenChars text =
+        zeroWidthUnicodeStrings
+        |> Seq.fold (fun text value ->
+            text
+            |> strReplace value ""
+        ) text

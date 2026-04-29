@@ -1,28 +1,29 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module TextTransform =
 
     open System
 
+    open Chatbot.Common
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain.Commands.CommandError
+
     let private random = Random.Shared
 
-    let private toUpper text =
-        text |> String.concat " " |> _.ToUpper()
+    let private toUpper text = text |> strJoin " " |> _.ToUpper()
 
-    let private toLower text =
-        text |> String.concat " " |> _.ToLower()
+    let private toLower text = text |> strJoin " " |> _.ToLower()
 
-    let private reverse text =
-        text |> String.concat " " |> Seq.rev |> Array.ofSeq |> fun s -> new string (s)
+    let private reverse text = text |> strJoin " " |> Seq.rev |> Array.ofSeq |> fun s -> new string (s)
 
     let private shuffle text =
         let array = text |> Array.ofSeq
         array |> Array.iteri (fun n _ -> Array.swap array n (random.Next(array.Length)) |> ignore)
-        array |> String.concat " "
+        array |> strJoin " "
 
     let private explode text =
-        text |> String.concat " " |> Array.ofSeq |> fun s -> String.Join(" ", s)
+        text |> strJoin " " |> Array.ofSeq |> fun s -> String.Join(" ", s)
 
     let private alternating (text: string seq) =
         let mutable alternated = false
@@ -38,7 +39,7 @@ module TextTransform =
                 else
                     c
             )
-            |> fun s -> new string (s)) |> String.concat " "
+            |> fun s -> new string (s)) |> strJoin " "
 
     let private transforms =
         [
@@ -53,12 +54,13 @@ module TextTransform =
         |> Map.ofList
 
     let texttransform context =
-        match context.Args with
-        | [] -> Error <| InvalidArgs "No transform/text provided"
-        | [ _ ] -> Error <| InvalidArgs "No transform and/or text provided"
+        match context.MessageArgs with
+        | [] ->  invalidArgs "No transform/text provided"
+        | [ _ ] -> invalidArgs "No transform and/or text provided"
         | transform :: words ->
             match transforms |> Map.tryFind transform with
-            | None -> Error <| InvalidArgs $"Unknown transform: \"{transform}\""
+            | None -> invalidArgs $"Unknown transform: \"{transform}\""
             | Some f ->
-                let text = f words
-                Ok <| Message text
+                let message = f words
+
+                Ok [ Message message ]

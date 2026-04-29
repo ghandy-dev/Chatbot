@@ -1,35 +1,38 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module SubAge =
 
     open FsToolkit.ErrorHandling
 
-    let private ivrService = Services.ivrService
+    open Chatbot.Common
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain
+    open Chatbot.Core.Services.Ivr
 
-    let subAge context =
+    let subAge (ivrService: IvrService) context =
         asyncResult {
             let maybeData: (string * string) option =
-                match context.Source with
+                match context.MessageSource with
                 | Whisper _ ->
-                    match context.Args with
+                    match context.MessageArgs with
                     | [] -> None
                     | user :: channel :: _ -> Some (user, channel)
                     | _ -> None
-                | Channel channel ->
-                    match context.Args with
-                    | [] -> Some (context.Username, channel.Channel)
+                | Channel (channel, _) ->
+                    match context.MessageArgs with
+                    | [] -> Some (context.Username, channel)
                     | user :: channel :: _ -> Some (user, channel)
-                    | user :: _ -> Some (user, channel.Channel)
+                    | user :: _ -> Some (user, channel)
 
             match maybeData with
-            | None -> return Message "You must specify a user and channel when using this command in whispers"
+            | None -> return [ Message "You must specify a user and channel when using this command in whispers" ]
             | Some (user, channel) ->
 
                 let! subage = ivrService.GetSubAge user channel |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
                 match subage.StatusHidden with
-                | None -> return Message $"Unable to look up subscription status to channel {channel}"
-                | Some true -> return Message "Subscription status hidden"
+                | None -> return [ Message $"Unable to look up subscription status to channel {channel}" ]
+                | Some true -> return [ Message "Subscription status hidden" ]
                 | Some false ->
                     let self = if System.String.Compare(user, context.Username, ignoreCase = true) = 0 then true else false
 
@@ -48,5 +51,5 @@ module SubAge =
                         | _, _, true ->
                             $"You have not subscribed to %s{subage.Channel.DisplayName} before"
 
-                    return Message message
+                    return [ Message message ]
         }

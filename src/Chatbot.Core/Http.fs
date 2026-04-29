@@ -1,229 +1,241 @@
-module Http
+namespace Chatbot.Core
 
-open System.Net
-open System.Net.Http
-open System.Net.Http.Headers
+module Http =
 
-open Configuration
-open System.Net.Http.Json
+    open System.Net.Http
+    open System.Net.Http.Headers
 
-[<AutoOpen>]
-module Types =
+    open Chatbot.Common
 
-    type Header = (string * string)
+    type HttpClient = System.Net.Http.HttpClient
 
-    type Method =
-        | Get
-        | Post
-        | Delete
-        | Put
-        | Patch
-        | Head
-        | Options
-        | Trace
-        | Connect
+    [<AutoOpen>]
+    module Types =
 
-    type Content =
-        | Empty
-        | String of string
-        | ByteArray of byte array
-        | FormUrlEncoded of (string * string) seq
-        | File of string * string * byte array
-        | MultipartFormData of (string * Content) seq
+        type Header = (string * string)
 
-    type Request = {
-        Url: string
-        Method: Method
-        Headers: Header list
-        Content: Content
-        ContentType: string option
-    }
+        type Method =
+            | Get
+            | Post
+            | Delete
+            | Put
+            | Patch
+            | Head
+            | Options
+            | Trace
+            | Connect
 
-    type Response = {
-        RequestUrl: string
-        Content: string
-        Bytes: byte array
-        Headers: Map<string, string seq>
-        StatusCode: int
-    }
+        type Content =
+            | Empty
+            | String of string
+            | ByteArray of byte array
+            | FormUrlEncoded of (string * string) seq
+            | File of string * string * byte array
+            | MultipartFormData of (string * Content) seq
 
-module Method =
+        type Request = {
+            Url: string
+            Method: Method
+            Headers: Header list
+            Content: Content
+            ContentType: string option
+        }
 
-    let toString =
-        function
-        | Get -> "GET"
-        | Post -> "POST"
-        | Delete -> "DELETE"
-        | Put -> "PUT"
-        | Patch -> "PATCH"
-        | Head -> "HEAD"
-        | Options -> "OPTIONS"
-        | Trace -> "TRACE"
-        | Connect -> "CONNECT"
+        type Response = {
+            RequestUrl: string
+            Content: string
+            Bytes: byte array
+            Headers: Map<string, string seq>
+            StatusCode: int
+        }
 
-    let toHttpMethod method = new System.Net.Http.HttpMethod(method |> toString)
+        type HttpStatusCode = System.Net.HttpStatusCode
 
-module AuthenticationScheme =
+    module Method =
 
-    let bearer token = $"Bearer {token}"
-    let basic (username, password) = $"""Basic {base64 $"%s{username}:%s{password}"}"""
+        let toString =
+            function
+            | Get -> "GET"
+            | Post -> "POST"
+            | Delete -> "DELETE"
+            | Put -> "PUT"
+            | Patch -> "PATCH"
+            | Head -> "HEAD"
+            | Options -> "OPTIONS"
+            | Trace -> "TRACE"
+            | Connect -> "CONNECT"
 
-module Content =
+        let toHttpMethod method = new System.Net.Http.HttpMethod(method |> toString)
 
-    let string content =  String content
-    let byteArray content = ByteArray content
-    let formUrlEncoded content = FormUrlEncoded content
-    let file filename contentType content = File (filename, contentType, content)
-    let multipartFormData content = MultipartFormData content
+    module AuthenticationScheme =
 
-    let rec toHttpContent content : HttpContent =
-        match content with
-            | Empty -> null
-            | String s -> new StringContent(s)
-            | ByteArray bs -> new ByteArrayContent(bs)
-            | FormUrlEncoded m -> new FormUrlEncodedContent(m |> Map.ofSeq)
-            | File (_, contentType, bs) ->
-                let content = new ByteArrayContent(bs)
-                content.Headers.ContentType <- MediaTypeHeaderValue(contentType)
-                content
-            | MultipartFormData cs ->
-                let multipartContent = new MultipartFormDataContent()
+        let bearer token = $"Bearer %s{token}"
+        let basic (username, password) = $"""Basic {base64 $"%s{username}:%s{password}"}"""
 
-                cs
-                |> Seq.iter (fun (name, c) ->
-                    match c with
-                    | File (filename, contentType, bs) ->
-                        let content = new ByteArrayContent(bs)
-                        content.Headers.ContentType <- MediaTypeHeaderValue(contentType)
-                        multipartContent.Add(content, name, filename)
-                    | _ ->
-                        multipartContent.Add(toHttpContent c, name)
-                )
+    module Content =
 
-                multipartContent
+        let string content =  String content
+        let byteArray content = ByteArray content
+        let formUrlEncoded content = FormUrlEncoded content
+        let file filename contentType content = File (filename, contentType, content)
+        let multipartFormData content = MultipartFormData content
 
-module ContentType =
+        let rec toHttpContent (content: Content) : HttpContent =
+            match content with
+                | Empty -> null
+                | String s -> new StringContent(s)
+                | ByteArray bs -> new ByteArrayContent(bs)
+                | FormUrlEncoded m -> new FormUrlEncodedContent(m |> Map.ofSeq)
+                | File (_, contentType, bs) ->
+                    let content = new ByteArrayContent(bs)
+                    content.Headers.ContentType <- MediaTypeHeaderValue(contentType)
+                    content
+                | MultipartFormData cs ->
+                    let multipartContent = new MultipartFormDataContent()
 
-    let [<Literal>] ApplicationJson = "application/json"
-    let [<Literal>] ApplicationXml = "application/xml"
-    let [<Literal>] ApplicationPdf = "application/pdf"
-    let [<Literal>] ApplicationOctetStream = "application/octet-stream"
-    let [<Literal>] ApplicationFormUrlEncoded = "application/x-www-form-urlencoded"
-    let [<Literal>] TextHtml = "text/html"
-    let [<Literal>] TextPlain = "text/plain"
-    let [<Literal>] TextCss = "text/css"
-    let [<Literal>] TextJavascript = "text/javascript"
-    let [<Literal>] ImageJpeg = "image/jpeg"
-    let [<Literal>] ImagePng = "image/png"
-    let [<Literal>] ImageGif = "image/gif"
-    let [<Literal>] ImageWebp = "image/webp"
-    let [<Literal>] ImageSvgXml = "image/svg+xml"
-    let [<Literal>] AudioMpeg = "audio/mpeg"
-    let [<Literal>] AudioWav = "audio/wav"
-    let [<Literal>] VideoMp4 = "video/mp4"
-    let [<Literal>] VideoWebm = "video/webp"
-    let [<Literal>] MultipartFormData = "multipart/form-data"
-    let [<Literal>] MultipartMixed = "multipart/mixed"
+                    cs
+                    |> Seq.iter (fun (name, c) ->
+                        match c with
+                        | File (filename, contentType, bs) ->
+                            let content = new ByteArrayContent(bs)
+                            content.Headers.ContentType <- MediaTypeHeaderValue(contentType)
+                            multipartContent.Add(content, name, filename)
+                        | _ ->
+                            multipartContent.Add(toHttpContent c, name)
+                    )
 
-    let toMediaHeaderValue contentType =  MediaTypeHeaderValue.Parse(contentType)
+                    multipartContent
 
-module Header =
+    module ContentType =
 
-    let accept value = "Accept", value
-    let authorization value = "Authorization", value
-    let contentType value = "Content-Type", value
+        let [<Literal>] ApplicationJson = "application/json"
+        let [<Literal>] ApplicationXml = "application/xml"
+        let [<Literal>] ApplicationPdf = "application/pdf"
+        let [<Literal>] ApplicationOctetStream = "application/octet-stream"
+        let [<Literal>] ApplicationFormUrlEncoded = "application/x-www-form-urlencoded"
+        let [<Literal>] TextHtml = "text/html"
+        let [<Literal>] TextPlain = "text/plain"
+        let [<Literal>] TextCss = "text/css"
+        let [<Literal>] TextJavascript = "text/javascript"
+        let [<Literal>] ImageJpeg = "image/jpeg"
+        let [<Literal>] ImagePng = "image/png"
+        let [<Literal>] ImageGif = "image/gif"
+        let [<Literal>] ImageWebp = "image/webp"
+        let [<Literal>] ImageSvgXml = "image/svg+xml"
+        let [<Literal>] AudioMpeg = "audio/mpeg"
+        let [<Literal>] AudioWav = "audio/wav"
+        let [<Literal>] VideoMp4 = "video/mp4"
+        let [<Literal>] VideoWebm = "video/webp"
+        let [<Literal>] MultipartFormData = "multipart/form-data"
+        let [<Literal>] MultipartMixed = "multipart/mixed"
 
-module Request =
+        let toMediaHeaderValue contentType =  MediaTypeHeaderValue.Parse(contentType)
 
-    let empty = {
-        Url = System.String.Empty
-        Method = Method.Get
-        Headers = []
-        Content = Content.Empty
-        ContentType = None
-    }
+    module Header =
 
-    let get url = { empty with Url = url ; Method = Get }
-    let post url = { empty with Url = url ; Method = Post }
-    let delete url = { empty with Url = url ; Method = Delete }
-    let put url = { empty with Url = url ; Method = Put }
-    let patch url = { empty with Url = url ; Method = Patch }
+        let accept value = "Accept", value
+        let authorization value = "Authorization", value
+        let contentType value = "Content-Type", value
 
-    let withUrl url (request: Request) = { request with Url = url }
-    let withMethod method (request: Request) = { request with Method = method }
-    let withHeader header (request: Request) = { request with Headers = header :: request.Headers }
-    let withHeaders headers (request: Request) = { request with Headers = request.Headers @ headers }
-    let withBody body (request: Request) = { request with Content = body }
-    let withContentType contentType (request: Request) = { request with ContentType = Some contentType }
+    module HttpStatusCode =
 
-module Response =
+        let fromInt statusCode : HttpStatusCode = enum statusCode
 
-    let create requestUrl content bytes headers statusCode =  {
-        RequestUrl = requestUrl
-        Content = content
-        Bytes = bytes
-        Headers = headers
-        StatusCode = statusCode
-    }
+        let toResult statusCode =
+            match statusCode with
+            | sc when sc >= 200 && sc < 300 -> Ok statusCode
+            | _ -> Error statusCode
 
-    let toResult response =
-        match response.StatusCode with
-        | sc when sc >= 200 && sc < 300 -> Ok response
-        | _ -> Error response
+    module Request =
 
-    let toJsonResult<'T> response =
-        response
-        |> toResult
-        |> Result.bind (fun r -> Ok <| Json.deserializeJson<'T> r.Content)
+        let empty = {
+            Url = System.String.Empty
+            Method = Method.Get
+            Headers = []
+            Content = Content.Empty
+            ContentType = None
+        }
 
-let applyHeaders (headers: (string * string) seq) (req: HttpRequestMessage) =
-    headers
-    |> Seq.iter req.Headers.Add
+        let get url = { empty with Url = url ; Method = Get }
+        let post url = { empty with Url = url ; Method = Post }
+        let delete url = { empty with Url = url ; Method = Delete }
+        let put url = { empty with Url = url ; Method = Put }
+        let patch url = { empty with Url = url ; Method = Patch }
 
-let send (client: HttpClient) (request: Request) =
-    async {
-        use content: HttpContent = request.Content |> Content.toHttpContent
+        let withUrl url (request: Request) = { request with Url = url }
+        let withMethod method (request: Request) = { request with Method = method }
+        let withHeader header (request: Request) = { request with Headers = header :: request.Headers }
+        let withHeaders headers (request: Request) = { request with Headers = request.Headers @ headers }
+        let withBody body (request: Request) = { request with Content = body }
+        let withContentType contentType (request: Request) = { request with ContentType = Some contentType }
 
-        match request.ContentType with
-        | None -> ()
-        | Some contentType -> content.Headers.ContentType <- contentType |> ContentType.toMediaHeaderValue
+    module Response =
 
-        use httpRequest = new HttpRequestMessage(
-            method = (request.Method |> Method.toHttpMethod),
-            requestUri = request.Url,
+        let create requestUrl content bytes headers statusCode =  {
+            RequestUrl = requestUrl
             Content = content
-        )
+            Bytes = bytes
+            Headers = headers
+            StatusCode = statusCode
+        }
 
-        applyHeaders request.Headers httpRequest
+        let toResult response =
+            match response.StatusCode with
+            | sc when sc >= 200 && sc < 300 -> Ok response
+            | _ -> Error response
 
-        use! httpResponse = client.SendAsync(httpRequest) |> Async.AwaitTask
-        let requestUrl = httpRequest.RequestUri.ToString()
-        let statusCode = int httpResponse.StatusCode
-        let! content = httpResponse.Content.ReadAsStringAsync() |> Async.AwaitTask
-        let! bytes = httpResponse.Content.ReadAsByteArrayAsync() |> Async.AwaitTask
+        let toJsonResult<'T> response =
+            response
+            |> toResult
+            |> Result.bind (fun r -> Ok <| Json.deserializeJson<'T> r.Content)
 
-        let responseHeaders =
-            httpResponse.Headers
-            |> Seq.map (function KeyValue (k, v) -> k, seq v)
-            |> Map.ofSeq
+    let applyHeaders (headers: (string * string) seq) (req: HttpRequestMessage) =
+        headers
+        |> Seq.iter req.Headers.Add
 
-        if not <| httpResponse.IsSuccessStatusCode then
-            Logging.errorEx $"Http Error: %d{statusCode} %A{httpRequest.Method} %s{requestUrl} %s{content}" (exn())
+    let send (client: HttpClient) (request: Request) =
+        async {
+            use content: HttpContent = request.Content |> Content.toHttpContent
 
-        let response = Response.create requestUrl content bytes responseHeaders statusCode
+            match request.ContentType with
+            | None -> ()
+            | Some contentType -> content.Headers.ContentType <- contentType |> ContentType.toMediaHeaderValue
 
-        return response
-    }
+            use httpRequest = new HttpRequestMessage(
+                method = (request.Method |> Method.toHttpMethod),
+                requestUri = request.Url,
+                Content = content
+            )
 
-let getUserAgent =
-    let parseProduct (p: string) =
-        p.Split("/")
-        |> function
-        | [| product ; version |] -> product, version
-        | _ -> failwith "Invalid Product Info"
+            applyHeaders request.Headers httpRequest
 
-    let parseUserAgent (u: string) =
-        u.Split(" ", 2)
+            use! httpResponse = client.SendAsync(httpRequest) |> Async.AwaitTask
+            let requestUrl = httpRequest.RequestUri.ToString()
+            let statusCode = int httpResponse.StatusCode
+            let! content = httpResponse.Content.ReadAsStringAsync() |> Async.AwaitTask
+            let! bytes = httpResponse.Content.ReadAsByteArrayAsync() |> Async.AwaitTask
+
+            let responseHeaders =
+                httpResponse.Headers
+                |> Seq.map (function KeyValue (k, v) -> k, seq v)
+                |> Map.ofSeq
+
+            if not <| httpResponse.IsSuccessStatusCode then
+                Logging.errorEx $"Http Error: %d{statusCode} %A{httpRequest.Method} %s{requestUrl} %s{content}" (exn())
+
+            let response = Response.create requestUrl content bytes responseHeaders statusCode
+
+            return response
+        }
+
+    let parseUserAgent (userAgent: string) =
+        let parseProduct (p: string) =
+            p.Split("/")
+            |> function
+            | [| product ; version |] -> product, version
+            | _ -> failwith "Invalid Product Info"
+
+        userAgent.Split(" ", 2)
         |> function
         | [| product |] ->
             let product, version = parseProduct product
@@ -233,11 +245,11 @@ let getUserAgent =
             product, version, comment
         | _ -> failwith "Invalid User-Agent format"
 
-    parseUserAgent (configuration.Item("UserAgent"))
+    let create userAgent =
+        let client = new HttpClient()
+        let product, version, comment = parseUserAgent userAgent
+        client.DefaultRequestHeaders.UserAgent.Add(new Headers.ProductInfoHeaderValue(product, version))
+        client.DefaultRequestHeaders.UserAgent.Add(new Headers.ProductInfoHeaderValue(comment))
+        client
 
-let client =
-    let client = new HttpClient()
-    let product, version, comment = getUserAgent
-    client.DefaultRequestHeaders.UserAgent.Add(new Headers.ProductInfoHeaderValue(product, version))
-    client.DefaultRequestHeaders.UserAgent.Add(new Headers.ProductInfoHeaderValue(comment))
-    client
+    let client = new HttpClient ()

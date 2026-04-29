@@ -1,55 +1,71 @@
-module Trivia
+namespace Chatbot.Core.Services
 
-open System
+module Trivia =
 
-type Question = {
-    Id: string
-    Categories: string array
-    Question: string
-    Answer: string
-    Hint1: string option
-    Hint2: string option
-    Submitter: string option
-    CreatedAt: DateTime
-    Category: string
-}
+    open System
 
-open System.Net.Http
+    module Types =
 
-open FsToolkit.ErrorHandling
+        type Question = {
+            Id: string
+            Categories: string array
+            Question: string
+            Answer: string
+            Hint1: string option
+            Hint2: string option
+            Submitter: string option
+            CreatedAt: DateTime
+            Category: string
+        }
 
-open Http
+    open FsToolkit.ErrorHandling
 
-let [<Literal>] private ApiUrl = "https://api.gazatu.xyz/trivia/questions"
+    open Chatbot.Common
+    open Chatbot.Core
+    open Chatbot.Core.Http
+    open Chatbot.Core.Types
+    open Types
 
-let private getQuestionsUrl (count: string) (excludeCategories: string option) (includeCategories: string option) =
-    let queryParams =
-        [
-            Some $"count={count}"
-            excludeCategories |> Option.map (sprintf "exclude=%s")
-            includeCategories |> Option.map (sprintf "include=%s")
-        ]
-        |> List.choose id
-        |> String.concat "&"
+    type ITriviaService =
+        abstract member GetQuestions: count: int -> excludeCategories: string list -> includeCategories: string list -> Async<Result<Question list, int>>
 
-    $"{ApiUrl}?{queryParams}"
+    module TriviaService =
 
-let getQuestions (count: int) (excludeCategories: string array option) (includeCategories: string array option) =
-    let maybeConcat v = v |> Option.map (fun s -> $"""[{s |> String.concat ","}]""")
+        let create env =
 
-    async {
-        let url =
-            getQuestionsUrl
-                $"{count}"
-                (maybeConcat excludeCategories)
-                (maybeConcat includeCategories)
+            let apiUrl = "https://api.gazatu.xyz/trivia/questions"
 
-        let request = Request.get url
-        let! response = request |> Http.send Http.client
+            let httpClient = env.HttpClient
 
-        return
-            response
-            |> Response.toJsonResult<Question list>
-            |> Result.map(List.map (fun q -> { q with Answer = q.Answer.Trim() }))
-            |> Result.mapError _.StatusCode
-    }
+            let getQuestionsUrl (count: string) (excludeCategories: string list) (includeCategories: string list) =
+                UrlBuilder.buildUrl
+                    apiUrl
+                    ([
+                        Some ("count", count)
+                        if excludeCategories |> List.isEmpty then None else Some (excludeCategories |> String.concat "," |> fun cs -> "exclude", cs)
+                        if includeCategories |> List.isEmpty then None else Some (includeCategories |> String.concat "," |> fun cs -> "include", cs)
+                    ]
+                    |> List.choose id)
+
+            let getQuestions (count: int) (excludeCategories: string list) (includeCategories: string list) =
+                async {
+                    let url =
+                        getQuestionsUrl
+                            $"{count}"
+                            excludeCategories
+                            includeCategories
+
+                    let request = Request.get url
+                    let! response = request |> Http.send httpClient
+
+                    return
+                        response
+                        |> Response.toJsonResult<Question list>
+                        |> Result.map(List.map (fun q -> { q with Answer = q.Answer.Trim() }))
+                        |> Result.mapError _.StatusCode
+                }
+
+            {
+                new ITriviaService with
+                    member _.GetQuestions count excludeCategories includeCategories = getQuestions count excludeCategories includeCategories
+            }

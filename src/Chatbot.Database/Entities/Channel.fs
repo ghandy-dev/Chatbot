@@ -1,4 +1,4 @@
-namespace Database.Entities
+namespace Chatbot.Database.Entities
 
 type Channel = {
     channel_id: int

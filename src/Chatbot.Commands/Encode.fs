@@ -1,9 +1,12 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module Encode =
 
     open System
+
+    open Chatbot.Common
+    open Chatbot.Core.Domain.Commands
 
     let private caesar (shift: int) (text: string) =
         let chars = text.ToCharArray()
@@ -25,10 +28,11 @@ module Encode =
         text |> System.Text.Encoding.UTF8.GetBytes |> System.Convert.ToBase64String
 
     let encode context =
-        let runEncode f (s: string) = f s |> Message |> Ok
+        let runEncode f (s: string) = Ok [ Message (f s) ]
 
-        match context.Args with
-        | [] | [ _ ] -> Error <| InvalidArgs "No encoder and/or text provided"
+        match context.MessageArgs with
+        | [] | [ _ ] ->
+            Error <| InvalidArgs "No encoder and/or text provided"
         | encoder :: input ->
             let text = input |> String.concat " "
             match encoder with
@@ -41,4 +45,5 @@ module Encode =
                     | Some n -> runEncode (caesar n) (rest |> String.concat " ")
                     | None -> runEncode (caesar (System.Random.Shared.Next(1, 27))) text
                 | _ -> runEncode (caesar (System.Random.Shared.Next(1, 27))) text
-            | _ -> Error <| InvalidArgs "Unknown encoder specified"
+            | _ ->
+                Error <| InvalidArgs "Unknown encoder specified"

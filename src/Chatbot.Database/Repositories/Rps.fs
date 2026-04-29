@@ -1,4 +1,4 @@
-﻿namespace Database
+﻿namespace Chatbot.Database
 
 module Rps =
 
@@ -6,9 +6,9 @@ module Rps =
 
     open Dapper.FSharp.SQLite
 
-    open Database.Models
-    open Database.Entities
-    open DB
+    open Chatbot.Database.Models
+    open Chatbot.Database.Entities
+    open Db
 
     let get (db: Database) (userId: int) =
         async {

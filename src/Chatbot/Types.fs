@@ -1,24 +1,29 @@
-module Types
+namespace Chatbot.Types
 
-open Commands
+open Chatbot.Core.Domain.Commands
 
-type ClientRequest =
-    | HandleIrcMessage of IRC.IrcMessage
-    | SendRawIrcMessage of string
-    | SendPrivateMessage of channel: string * message: string
-    | SendWhisperMessage of userId: string * username: string * message: string
-    | SendReplyMessage of messageId: string * channel: string * message: string
-    | BotCommand of BotCommand
+type PrefixConfig = {
+    CommandPrefix: string
+    PipePrefix: string
+    AliasPrefix: string
+}
 
-type ReminderMessage =
-    | CheckReminders
-    | UserMessaged of channel: string * userId: int * username: string
+type BotConfig = {
+    Commands: Map<string, Command>
+    Prefixes: PrefixConfig
+}
 
-type TriviaRequest =
-    | StartTrivia of config: Commands.TriviaConfig
-    | StopTrivia of channel: string
-    | SendQuestion of channel: string
-    | SendHint of channel: string
-    | SendAnswer of channel: string
-    | Update
-    | UserMessaged of channel: string * userId: int * username: string * message: string
+module PrefixConfig =
+
+    let create commandPrefix pipePrefix aliasPrefix = {
+        CommandPrefix = commandPrefix
+        PipePrefix = pipePrefix
+        AliasPrefix = aliasPrefix
+    }
+
+module BotConfig =
+
+    let create commands prefixes = {
+        Commands = commands
+        Prefixes = prefixes
+    }

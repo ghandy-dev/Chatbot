@@ -1,4 +1,4 @@
-namespace Database.Models
+namespace Chatbot.Database.Models
 
 type Alias = {
     Name: string

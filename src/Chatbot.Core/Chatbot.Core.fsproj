@@ -6,28 +6,32 @@
 
   <ItemGroup>
     <Compile Include="Operators.fs" />
-    <Compile Include="Types.fs" />
-    <Compile Include="Utilities/Utils.fs" />
-    <Compile Include="Utilities/DateTime.fs" />
-    <Compile Include="Utilities/Parsing.fs" />
-    <Compile Include="Utilities/UrlBuilder.fs" />
-    <Compile Include="Utilities/KeyValueParser.fs" />
     <Compile Include="DotEnv.fs" />
-    <Compile Include="Configuration.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Json.fs" />
     <Compile Include="Http.fs" />
     <Compile Include="IO.fs" />
-    <Compile Include="Extensions/Seq.fs" />
-    <Compile Include="Extensions/List.fs" />
-    <Compile Include="Extensions/Array.fs" />
-    <Compile Include="RateLimiter.fs" />
+    <Compile Include="Caching.fs" />
+    <Compile Include="Types.fs" />
     <Compile Include="Serialization/UnixEpochDateTimeConverter.fs" />
     <Compile Include="Serialization/NonCompliantDateTimeConverter.fs" />
+    <Compile Include="IRC/Requests.fs" />
+    <Compile Include="IRC/Parsing.fs" />
+    <Compile Include="IRC/Messages.fs" />
+    <Compile Include="Domain/Domain.fs" />
+    <Compile Include="Domain/Messages.fs" />
+    <Compile Include="Domain/Emotes.fs" />
+    <Compile Include="Domain/Trivia.fs" />
+    <Compile Include="Domain/Commands/Context.fs" />
+    <Compile Include="Domain/Commands/CommandError.fs" />
+    <Compile Include="Domain/Commands/CommandResponse.fs" />
+    <Compile Include="Domain/Commands/Command.fs" />
+    <Compile Include="Services/Types.fs" />
+    <Compile Include="Services/CatFact.fs" />
     <Compile Include="Services/Ivr.fs" />
     <Compile Include="Services/Pastebin.fs" />
     <Compile Include="Services/Twitch.fs" />
-    <Compile Include="Services/EmoteProviders.fs" />
+    <Compile Include="Services/Emotes.fs" />
     <Compile Include="Services/Weather.fs" />
     <Compile Include="Services/Geolocation.fs" />
     <Compile Include="Services/OpenAI.fs" />
@@ -40,38 +44,18 @@
     <Compile Include="Services/Trivia.fs" />
     <Compile Include="Services/UrbanDictionary.fs" />
     <Compile Include="Services/Wikipedia.fs" />
-    <Compile Include="Services/Services.fs" />
-    <Compile Include="TokenStore.fs" />
-    <Compile Include="IrcCommands.fs" />
-    <Compile Include="IrcMessageParser.fs" />
-    <Compile Include="IrcMessages.fs" />
-    <Compile Include="ITwitchConnection.fs" />
-    <Compile Include="IrcClient.fs" />
-    <Compile Include="WebSocketClient.fs" />
-    <Compile Include="TwitchChatClient.fs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FSharpPlus" Version="1.8.0" />
     <PackageReference Include="FsToolkit.ErrorHandling" Version="5.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Recognizers.Text.DateTime" Version="1.8.13" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.5" />
+    <PackageReference Include="System.ServiceModel.Syndication" Version="10.0.0" />
     <PackageReference Include="TTVSharp.Helix" Version="0.3.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Chatbot.Common\Chatbot.Common.fsproj" />
     <ProjectReference Include="..\Chatbot.Database\Chatbot.Database.fsproj" />
   </ItemGroup>
 

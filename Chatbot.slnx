@@ -6,6 +6,7 @@
   </Configurations>
   <Folder Name="/src/">
     <Project Path="src/Chatbot.Commands/Chatbot.Commands.fsproj" />
+    <Project Path="src/Chatbot.Common/Chatbot.Common.fsproj" />
     <Project Path="src/Chatbot.Core/Chatbot.Core.fsproj" />
     <Project Path="src/Chatbot.Database/Chatbot.Database.fsproj" />
     <Project Path="src/Chatbot/Chatbot.fsproj" />

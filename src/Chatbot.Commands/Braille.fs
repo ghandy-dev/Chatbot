@@ -1,4 +1,4 @@
-namespace Commands
+namespace Chatbot.Commands
 
 module private Dithering =
 
@@ -77,8 +77,12 @@ module Braille =
     open FsToolkit.ErrorHandling
     open SkiaSharp
 
-    open CommandError
-    open Http
+    open Chatbot.Common
+    open Chatbot.Core
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain.Commands.CommandError
+    open Chatbot.Core.Http
+    open Chatbot.Core.Domain
 
     let private offsets = [
         (0, 0, 1)
@@ -238,7 +242,7 @@ module Braille =
             | Some bitmap ->
                 let brailleAscii = imageToBraille bitmap setting dithering invert monospace
                 bitmap.Dispose()
-                return Message brailleAscii
+                return [ Message brailleAscii ]
         }
 
     let private brailleKeys = [ "greyscale" ; "dithering" ; "invert" ; "monospace" ]
@@ -249,34 +253,50 @@ module Braille =
         | "bayer" -> Dithering.bayer
         | _ -> fun _ -> ()
 
-    let braille context =
+    let braille (context: Context) =
         asyncResult {
-            let kvp = KeyValueParser.parse context.Args brailleKeys
+            let kvp = KeyValueParser.parse context.MessageArgs brailleKeys
 
             let greyscaleMode = kvp.KeyValues.TryFind "greyscale" |? DefaultGreyscaleFunction
             let dithering = kvp.KeyValues.TryFind "dithering" |> Option.map stringToDitheringFunction
             let invert = kvp.KeyValues.TryFind "invert" |> Option.bind Parsing.tryParseBoolean |? true
             let monospace = kvp.KeyValues.TryFind "monospace" |> Option.bind Parsing.tryParseBoolean |? false
 
-            let url =
-                match context.Args with
-                | [] -> None
-                | value :: _ ->
-                    context.Emotes.MessageEmotes
-                    |> Map.tryFind value
-                    |> Option.orElseWith (fun _ ->
-                        match context.Emotes.TryFind value with
-                        | Some emote -> Some emote.DirectUrl
-                        | None -> Some value
-                    )
+            match context.MessageSource with
+            | Whisper _ ->
+                let url =
+                    match context.MessageArgs with
+                    | [] -> None
+                    | value :: _ ->
+                        context.MessageEmotes |> Map.tryFind value
+                        |> Option.orElseWith (fun _ ->
+                            match context.Emotes.GlobalEmotes |> List.tryFind (fun e -> e.Name = value) with
+                            | Some emote -> Some emote.DirectUrl
+                            | None -> Some value
+                        )
 
-            match url with
-            | None -> return! Error <| InvalidArgs "No url/emote specified"
-            | Some url -> return! internalBraille url greyscaleMode dithering invert monospace
-        }
+                match url with
+                | None -> return! invalidArgs "No url/emote specified"
+                | Some url -> return! internalBraille url greyscaleMode dithering invert monospace
+            | Channel (channel, _) ->
+                let url =
+                    match context.MessageArgs with
+                    | [] -> None
+                    | value :: _ ->
+                        context.MessageEmotes |> Map.tryFind value
+                        |> Option.orElseWith (fun _ ->
+                            match context.Emotes |> Emotes.tryFind value channel with
+                            | Some emote -> Some emote.DirectUrl
+                            | None -> Some value
+                        )
+
+                match url with
+                | None -> return! invalidArgs "No url/emote specified"
+                | Some url -> return! internalBraille url greyscaleMode dithering invert monospace
+            }
 
     let textToAscii context =
-        let kvp = KeyValueParser.parse context.Args brailleKeys
+        let kvp = KeyValueParser.parse context.MessageArgs brailleKeys
 
         let greyscaleMode = kvp.KeyValues.TryFind "greyscale" |? DefaultGreyscaleFunction
         let dithering = kvp.KeyValues.TryFind "dithering" |> Option.map stringToDitheringFunction
@@ -288,4 +308,5 @@ module Braille =
         | text ->
             let text = System.String.Join(" ", text)
             let ascii = textToBraille text greyscaleMode dithering invert monospace
-            Ok <| Message ascii
+
+            Ok [ Message ascii ]

@@ -1,4 +1,4 @@
-﻿namespace Database
+﻿namespace Chatbot.Database
 
 module Reminders =
 
@@ -7,9 +7,9 @@ module Reminders =
     open Dapper.FSharp.SQLite
     open Dapper
 
-    open Database.Entities
-    open Database.Models
-    open DB
+    open Chatbot.Database.Entities
+    open Chatbot.Database.Models
+    open Db
 
     let getTimedReminders (db: Database) =
         async {

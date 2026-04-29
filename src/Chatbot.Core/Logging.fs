@@ -3,8 +3,6 @@ module Logging
 
 open System
 
-open Configuration
-
 [<RequireQualifiedAccess>]
 type LogLevel =
     | Trace
@@ -34,7 +32,7 @@ let private parseLogLevel logLevel =
     | "Critical" -> LogLevel.Critical
     | _ -> failwithf "Unknown Log Level: %s" logLevel
 
-let currentLogLevel = parseLogLevel appConfig.Logging.LogLevel.Default
+let currentLogLevel = LogLevel.Info
 
 let private toColor logLevel =
     match logLevel with
@@ -84,3 +82,4 @@ let warning msg = log LogLevel.Warning msg None
 let error msg = log LogLevel.Error msg None
 let errorEx msg ex = log LogLevel.Error msg (Some ex)
 let critical msg ex = log LogLevel.Critical msg (Some ex)
+

@@ -1,21 +1,21 @@
-module DotEnv
+namespace Chatbot.Core
 
-open System
-open System.IO
+module DotEnv =
 
-let private parseLine (line: string) =
-    match line.Split('=', StringSplitOptions.RemoveEmptyEntries) with
-    | [| key ; value |] -> Some(key, value)
-    | _ -> None
+    open System
+    open System.IO
 
-let load () =
-    async {
+    let private parseLine (line: string) =
+        match line.Split('=', StringSplitOptions.RemoveEmptyEntries) with
+        | [| key ; value |] -> Some(key, value)
+        | _ -> None
+
+    let load () =
         let fileName = ".env"
 
         if File.Exists(fileName) then
-            let! lines = fileName |> File.ReadAllLinesAsync |> Async.AwaitTask
+            let lines = fileName |> File.ReadLines
 
             lines
             |> Seq.choose parseLine
             |> Seq.iter Environment.SetEnvironmentVariable
-    }

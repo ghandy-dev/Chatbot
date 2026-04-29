@@ -1,9 +1,13 @@
-namespace Commands
-
-open EmoteProviders.Types
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module Slots =
+
+    open Chatbot.Common
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain.Commands.CommandError
+    open Chatbot.Core
+    open Chatbot.Core.Domain
 
     type private SetSource =
         | Static of string list
@@ -46,34 +50,38 @@ module Slots =
     let private keys = [ "set" ]
 
     let slots context =
-        let kvp = KeyValueParser.parse context.Args keys
+        match context.MessageSource with
+        | Whisper _ -> invalidUsage "This command can't be used in whispers"
+        | Channel (channel, _) ->
+            let kvp = KeyValueParser.parse context.MessageArgs keys
 
-        let maybeSet =
-            match kvp.KeyValues.TryFind "set" with
-            | Some set ->
-                match sets |> Map.tryFind set with
-                | Some (Static set) -> Some set
-                | Some (Emote f) ->
-                    match f (List.collect id [ context.Emotes.GlobalEmotes ; context.Emotes.ChannelEmotes ]) with
+            let maybeSet =
+                match kvp.KeyValues.TryFind "set" with
+                | Some set ->
+                    match sets |> Map.tryFind set with
+                    | Some (Static set) -> Some set
+                    | Some (Emote f) ->
+                        match f (List.collect id [ context.Emotes.GlobalEmotes ; context.Emotes.ChannelEmotes |> Map.tryFind channel |> Option.defaultValue [] ]) with
+                        | [] -> None
+                        | emotes -> Some emotes
+                    | None -> None
+                | None ->
+                    match context.MessageArgs with
                     | [] -> None
-                    | emotes -> Some emotes
-                | None -> None
-            | None ->
-                match context.Args with
-                | [] -> None
-                | _ -> Some context.Args
+                    | _ -> Some context.MessageArgs
 
-        match maybeSet with
-        | None -> Error <| InvalidArgs "Unknown or empty set"
-        | Some set ->
-            let spin = set |> List.randomChoices 3
+            match maybeSet with
+            | None -> invalidArgs "Unknown or empty set"
+            | Some set ->
+                let spin = set |> List.randomChoices 3
 
-            if spin |> List.distinct |> List.length = 1 then
-                let limit = 3
-                let totalOutcomes = pown set.Length limit
-                let probability = totalOutcomes / set.Length
-                $"""[ {spin |> String.concat " "} ] You won! (1 in %d{probability})"""
-            else
-                $"""[ {spin |> String.concat " "} ]"""
-            |> Message
-            |> Ok
+                let message =
+                    if spin |> List.distinct |> List.length = 1 then
+                        let limit = 3
+                        let totalOutcomes = pown set.Length limit
+                        let probability = totalOutcomes / set.Length
+                        $"""[ {spin |> String.concat " "} ] You won! (1 in %d{probability})"""
+                    else
+                        $"""[ {spin |> String.concat " "} ]"""
+
+                Ok [ Message message ]

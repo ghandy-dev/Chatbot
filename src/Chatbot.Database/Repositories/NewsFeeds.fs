@@ -1,4 +1,4 @@
-﻿namespace Database
+﻿namespace Chatbot.Database
 
 module NewsFeeds =
 
@@ -6,8 +6,8 @@ module NewsFeeds =
 
     open Dapper
 
-    open Database.Entities
-    open DB
+    open Chatbot.Database.Entities
+    open Db
 
     let get (db: Database) (category: string) =
         async {

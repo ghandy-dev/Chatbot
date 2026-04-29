@@ -1,4 +1,4 @@
-﻿namespace Database
+﻿namespace Chatbot.Database
 
 module Users =
 
@@ -6,9 +6,9 @@ module Users =
 
     open Dapper.FSharp.SQLite
 
-    open Database.Entities
-    open Database.Models
-    open DB
+    open Chatbot.Database.Entities
+    open Chatbot.Database.Models
+    open Db
 
     let get (db: Database) (userId: int) =
         async {
@@ -25,11 +25,6 @@ module Users =
 
             return
                 user
-                |> Seq.map (fun r -> {
-                    UserId = r.user_id
-                    Username = r.username
-                    IsAdmin = r.is_admin
-                } : Entities.User -> Models.User)
                 |> Seq.tryHead
         }
 

@@ -1,4 +1,4 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module RandomClip =
@@ -7,19 +7,21 @@ module RandomClip =
 
     open FsToolkit.ErrorHandling
 
-    open CommandError
-
-    let twitchService = Services.services.TwitchService
+    open Chatbot.Common
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain.Commands.CommandError
+    open Chatbot.Core.Domain
+    open Chatbot.Core.Services.Twitch
 
     let private getChannel (context: Context) =
-        match context.Source with
+        match context.MessageSource with
         | Whisper _ ->
-            match context.Args with
+            match context.MessageArgs with
             | channel :: _ -> Ok channel
             | _ -> invalidArgs "You must specify a channel when using this command in whispers"
-        | Channel channel ->
-            match context.Args with
-            | [] -> Ok channel.Channel
+        | Channel (channel, _) ->
+            match context.MessageArgs with
+            | [] -> Ok channel
             | channel :: _ -> Ok channel
 
     let private periodToDateRange period =
@@ -38,21 +40,21 @@ module RandomClip =
 
     let private keys = [ "period" ]
 
-    let randomClip context  =
+    let randomClip (twitchService: TwitchService) context  =
         asyncResult {
-            let kvp = KeyValueParser.parse context.Args keys
+            let kvp = KeyValueParser.parse context.MessageArgs keys
             let period = kvp.KeyValues.TryFind "period" |? "week"
             let dateFrom, dateTo = periodToDateRange period
 
             let! channel = getChannel context
             let! user =
-                twitchService.GetUser channel
+                twitchService.Users.GetUser channel
                 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")
                 |> AsyncResult.bindRequireSome (InvalidArgs "User not found")
 
-            match! twitchService.GetClips user.Id dateFrom dateTo |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - Clips") with
-            | [] -> return Message "No clips found"
+            match! twitchService.Clips.GetClips user.Id dateFrom dateTo |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - Clips") with
+            | [] -> return [ Message "No clips found" ]
             | clips ->
                 let clip = clips |> Seq.randomChoice
-                return Message $""""{clip.Title}" - clipped on {clip.CreatedAt.ToString(DateStringFormat)}, {clip.Duration} secs, {clip.ViewCount.ToString("N0")} views - {clip.Url}"""
+                return [ Message $""""{clip.Title}" - clipped on {clip.CreatedAt.ToString(DateStringFormat)}, {clip.Duration} secs, {clip.ViewCount.ToString("N0")} views - {clip.Url}""" ]
         }

@@ -1,4 +1,4 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module Gpt =
@@ -8,9 +8,13 @@ module Gpt =
     open FSharpPlus
     open FsToolkit.ErrorHandling
 
-    open CommandError
-    open OpenAI.Chat
-    open Parsing
+    open Chatbot.Common
+    open Chatbot.Common.Parsing
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain.Commands.CommandError
+    open Chatbot.Core.Domain
+    open Chatbot.Core.Services.OpenAI
+    open Chatbot.Core.Services.OpenAI.Chat.Types
 
     type MessageHistory = {
         LastMessageTimestamp: System.DateTime
@@ -19,7 +23,6 @@ module Gpt =
         ContinueMessageIndex: int
     }
 
-    let private openAiService = Services.openAiService
 
     let private systemMessage = {
         Role = "system"
@@ -38,12 +41,12 @@ module Gpt =
 
     let [<Literal>] private MessageInterval = 497
 
-    let gpt context =
+    let gpt (genAIService: IGenAIService) context =
         asyncResult {
-            match context.Source with
+            match context.MessageSource with
             | Whisper _ -> return! invalidArgs "Gpt currently cannot be used in whispers"
-            | Channel channel ->
-                let parserResult = KeyValueParser.parse context.Args keys
+            | Channel (channel, _) ->
+                let parserResult = KeyValueParser.parse context.MessageArgs keys
 
                 let continueLastMessage =
                     parserResult.KeyValues
@@ -84,7 +87,7 @@ module Gpt =
                                 updatedMessages
 
                         let! responseMessage =
-                            openAiService.SendGptMessage messages
+                            genAIService.SendGptMessage messages
                             |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "OpenAI")
                             |> AsyncResult.map (fun response ->
                                 match response.Choices with
@@ -116,14 +119,14 @@ module Gpt =
                                     message
                             )
 
-                        return Message responseMessage
+                        return [ Message responseMessage ]
                 | Some true ->
                     match userChatHistory |> Dict.tryGetValue chatHistoryKey with
                     | Some messages when (utcNow () - messages.LastMessageTimestamp).TotalMinutes <= 10 ->
                         let lastMessage = messages.LastMessage
 
                         if lastMessage.Length < messages.ContinueMessageIndex then
-                            return Message "End of message reached"
+                            return [ Message "End of message reached" ]
                         else
                             userChatHistory[chatHistoryKey] <- {
                                 messages with
@@ -131,6 +134,6 @@ module Gpt =
                                     ContinueMessageIndex = messages.ContinueMessageIndex + MessageInterval
                             }
 
-                            return Message lastMessage[messages.ContinueMessageIndex..]
-                    | _ -> return Message "No message to continue"
+                            return [ Message lastMessage[messages.ContinueMessageIndex..] ]
+                    | _ -> return [ Message "No message to continue" ]
         }

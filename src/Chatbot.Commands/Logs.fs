@@ -1,16 +1,16 @@
-namespace Commands
+namespace Chatbot.Commands
 
 [<AutoOpen>]
 module Logs =
 
-    open FSharpPlus
     open FsToolkit.ErrorHandling
 
-    open Commands
-    open CommandError
-    open Parsing
-
-    let private ivrService = Services.ivrService
+    open Chatbot.Common
+    open Chatbot.Common.Parsing
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Core.Domain.Commands.CommandError
+    open Chatbot.Core.Domain
+    open Chatbot.Core.Services.Ivr
 
     let private mapHttpError = fun err ->
         match err with
@@ -18,43 +18,43 @@ module Logs =
         | 404 -> AsyncResult.ok "No message(s) found"
         | _ -> AsyncResult.error err
 
-    let randomLine context =
+    let randomLine (ivrService: IvrService) context =
         asyncResult {
-            match context.Source with
+            match context.MessageSource with
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
-            | Channel channel ->
+            | Channel (channel, _) ->
                 let! message =
-                    match context.Args with
-                    | [] -> ivrService.GetChannelRandomLine channel.Channel
-                    | user :: _ -> ivrService.GetUserRandomLine channel.Channel user
+                    match context.MessageArgs with
+                    | [] -> ivrService.GetChannelRandomLine channel
+                    | user :: _ -> ivrService.GetUserRandomLine channel user
                     |> AsyncResult.orElseWith mapHttpError
                     |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
 
-                return Message message
+                return [ Message message ]
         }
 
-    let randomQuote context =
+    let randomQuote (ivrService: IvrService) context =
         asyncResult {
-            match context.Source with
+            match context.MessageSource with
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
-            | Channel channel ->
+            | Channel (channel, _) ->
                 let! message =
-                    ivrService.GetUserRandomLine channel.Channel context.Username
+                    ivrService.GetUserRandomLine channel context.Username
                     |> AsyncResult.orElseWith mapHttpError
                     |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
 
-                return Message message
+                return [ Message message ]
         }
 
     let searchKeys = [ "channel" ; "user" ; "reverse" ; "offset" ]
 
-    let search context =
+    let search (ivrService: IvrService) context =
         asyncResult {
-            match context.Source with
+            match context.MessageSource with
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
-            | Channel channel ->
-                let kvp = KeyValueParser.parse context.Args searchKeys
-                let channel = kvp.KeyValues.TryFind "channel" |> Option.defaultValue channel.Channel
+            | Channel (channel, _) ->
+                let kvp = KeyValueParser.parse context.MessageArgs searchKeys
+                let channel = kvp.KeyValues.TryFind "channel" |> Option.defaultValue channel
                 let user = kvp.KeyValues.TryFind "user" |> Option.defaultValue context.Username
                 let reverse = kvp.KeyValues.TryFind "reverse" |> Option.bind tryParseBoolean |> Option.defaultValue false
                 let offset = kvp.KeyValues.TryFind "offset" |> Option.bind tryParseInt |> Option.defaultValue 0
@@ -65,20 +65,20 @@ module Logs =
                     |> AsyncResult.orElseWith mapHttpError
                     |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
 
-                return Message message
+                return [ Message message ]
         }
 
-    let lastLine context =
+    let lastLine (ivrService: IvrService) context =
         asyncResult {
-            match context.Source with
+            match context.MessageSource with
             | Whisper _ -> return! invalidArgs "This command is only avaiable in channels"
-            | Channel channel ->
-                let user = context.Args |> List.tryHead |> Option.defaultValue context.Username
+            | Channel (channel, _) ->
+                let user = context.MessageArgs |> List.tryHead |> Option.defaultValue context.Username
 
                 let! message =
-                    ivrService.GetLastLine channel.Channel user
+                    ivrService.GetLastLine channel user
                     |> AsyncResult.orElseWith mapHttpError
                     |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
 
-                return Message message
+                return [ Message message ]
         }
