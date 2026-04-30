@@ -54,7 +54,7 @@ let run connectionString =
                     printfn "Applying migration %d %s" version file
 
                     let content = stream.ReadToEnd()
-                    let transaction = connection.BeginTransaction()
+                    use transaction = connection.BeginTransaction()
 
                     let _ = connection.Execute(content)
                     let _ = connection.Execute(
