@@ -12,7 +12,7 @@
     <Compile Include="Entities/NewsFeed.fs" />
     <Compile Include="Entities/Alias.fs" />
     <Compile Include="Entities/Reminder.fs" />
-    <Compile Include="DB.fs" />
+    <Compile Include="Db.fs" />
     <Compile Include="Models/Channel.fs" />
     <Compile Include="Models/Rps.fs" />
     <Compile Include="Models/User.fs" />
@@ -24,6 +24,15 @@
     <Compile Include="Repositories/NewsFeeds.fs" />
     <Compile Include="Repositories/Aliases.fs" />
     <Compile Include="Repositories/Reminders.fs" />
+    <Compile Include="Migration.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="./Migrations/*.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Chatbot.Common/Chatbot.Common.fsproj" />
   </ItemGroup>
 
   <ItemGroup>
