@@ -76,7 +76,7 @@ Get the picture for a given date. (date format: yyyy/mm/dd)
     let Alias =
         {
             Name = "Alias"
-            Description = "Runs a command using a custom alias."
+            Description = "Manage custom aliases for running commands."
             ExampleUsage = $"""
 Add a new alias
 {exampleArgs "alias" "add <alias name> <commands>"}
@@ -105,10 +105,6 @@ Copy an alias
 Copy and overwrite an existing alias
 {exampleArgs "alias" "copyplace <username> <alias name>"}
 {exampleArgs "alias" "copyplace forsen randomForsenClip"}
-
-Run an alias
-{exampleArgs "run" "<alias name>"}
-{exampleArgs "alias" "run <alias name>"}
 """
         }
 
@@ -508,18 +504,6 @@ Get news based on category
 Custom delimiter:
 {exampleArgs "pick" "delimiter:<delimiter> <input sequence>"}
 {exampleArgs "pick" "delimiter:, Elden Ring, Dark Souls 1, Dark Souls 2, Dark Souls 3, Sekiro"}
-"""
-        }
-
-    let Pipe =
-        {
-            Name = "Pipe"
-            Description = "Pipe together 2 or more commands, taking the result from the previous command, and sending it to the next."
-            ExampleUsage = $"""
-Commands must be delimited by a "|" character
-
-{exampleArgs "pipe" "<command> | <command> | ..."}
-{exampleArgs "pipe" "pick one two three | texttransform uppercase"}
 """
         }
 
