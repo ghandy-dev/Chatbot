@@ -1,6 +1,5 @@
 module Pages.Index
 
-open Commands
 open Html
 
 let private generate' (ctx: SiteContents) (page: string) =
@@ -16,17 +15,21 @@ let private generate' (ctx: SiteContents) (page: string) =
                 th [] [ !! "Name" ]
                 th [ Scope "col" ] [ !! "Aliases" ]
                 th [ Scope "col" ] [ !! "Admin only?" ]
+                th [ Scope "col" ] [ !! "Pipe?" ]
                 th [ Scope "col" ] [ !! "Cooldown (seconds)" ]
                 th [ Scope "col" ] [ !! "Description" ]
             ]
 
-            for command in Commands.commandsList |> List.sortBy (fun c -> c.Name) do
+            let commands = Commands.commands |> List.sortBy (fun c -> c.Name)
+
+            for command in commands do
                 tr [] [
-                    td [] [ a [ Href $"{command.Name}" ] [ !! command.Name ] ]
+                    td [] [ a [ Href $"%s{command.Name}" ] [ !! command.Name ] ]
                     td [] [ !! (command.Aliases |> String.concat ",") ]
                     td [] [ !! (if command.AdminOnly then "✓" else "✘") ]
-                    td [] [ !! $"{command.Cooldown / 1000}" ]
-                    td [] [ !! command.Details.Description ]
+                    td [] [ !! (if command.CanPipe then "✓" else "✘") ]
+                    td [] [ !! $"%d{command.Cooldown}" ]
+                    td [] [ !! command.HelpInfo.Description ]
                 ]
         ]
 

@@ -21,5 +21,6 @@ type CommandPage = {
     Aliases: string list
     Cooldown: int
     AdminOnly: bool
+    CanPipe: bool
     ExampleUsage: string
 }

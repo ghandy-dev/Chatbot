@@ -1,6 +1,5 @@
 module Pages.Command
 
-open Commands
 open Html
 
 let private generate' (ctx: SiteContents) (page: string) =

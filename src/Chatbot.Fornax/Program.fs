@@ -1,12 +1,5 @@
 module Program
 
-// #nowarn "20"
-
-open System
-open System.IO
-
-open Microsoft.AspNetCore.Builder
-
 [<EntryPoint>]
 let main args =
     async {
@@ -15,7 +8,6 @@ let main args =
         | "build" :: _ -> do! Build.build()
         | "serve" :: _ -> Serve.serve()
         | _ -> failwith "Unknown switch"
-
 
         return 0
     }

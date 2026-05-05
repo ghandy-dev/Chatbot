@@ -6,6 +6,7 @@
 
   <ItemGroup>
       <Compile Include="Types.fs" />
+      <Compile Include="Commands.fs" />
       <Compile Include="Loaders/GlobalLoader.fs" />
       <Compile Include="Loaders/CommandLoader.fs" />
       <Compile Include="Shared/Layout.fs" />

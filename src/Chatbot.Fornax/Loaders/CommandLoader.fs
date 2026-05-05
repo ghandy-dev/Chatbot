@@ -1,16 +1,17 @@
 module Loaders.CommandLoader
 
 let private loadCommands =
-    Commands.Commands.commandsList
-    |> Seq.map (fun (command) ->
+    Commands.commands
+    |> Seq.map (fun command ->
         {
-            Title = command.Details.Name
-            Description = command.Details.Description
+            Title = command.HelpInfo.Name
+            Description = command.HelpInfo.Description
             Command = command.Name
             Aliases = command.Aliases
-            Cooldown = command.Cooldown / 1000
+            Cooldown = command.Cooldown
             AdminOnly = command.AdminOnly
-            ExampleUsage = command.Details.ExampleUsage
+            CanPipe = command.CanPipe
+            ExampleUsage = command.HelpInfo.ExampleUsage
         }
     )
 

@@ -1,11 +1,13 @@
 module Config
 
+open Chatbot
+
 let [<Literal>] ProjectRoot = __SOURCE_DIRECTORY__
 let [<Literal>] OutputFolderName = "wwwroot"
 let [<Literal>] OutputDir = ProjectRoot + "/" + OutputFolderName
 
 let siteContents =
-    (new SiteContents())
+    new SiteContents()
     |> Loaders.GlobalLoader.loader ProjectRoot
     |> Loaders.CommandLoader.loader ProjectRoot
 
@@ -17,7 +19,8 @@ let config: PageGenerators = {
             Output = Config.NewFileName "index.html"
         }
         yield!
-            Commands.Commands.commandsList |> List.map (fun (command) ->
+            Commands.commands
+            |> Seq.map (fun command ->
                 {
                     Page = command.Name
                     GenerateOutput = Pages.Command.generate siteContents ProjectRoot command.Name

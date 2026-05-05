@@ -10,5 +10,6 @@
     <Project Path="src/Chatbot.Core/Chatbot.Core.fsproj" />
     <Project Path="src/Chatbot.Database/Chatbot.Database.fsproj" />
     <Project Path="src/Chatbot/Chatbot.fsproj" />
+    <Project Path="src/Chatbot.Fornax/Chatbot.Fornax.fsproj" />
   </Folder>
 </Solution>
