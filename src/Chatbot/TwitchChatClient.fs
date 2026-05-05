@@ -4,7 +4,8 @@ open System
 open System.Collections.Generic
 open System.Threading
 
-open Connection
+open Chatbot.Common
+open Chatbot.Connection
 open Chatbot.Core
 open Chatbot.Core.IRC
 open Chatbot.Core.IRC.Messages
@@ -165,18 +166,17 @@ module Agent =
                     return { state with Channels = channels' }
                 }
 
-            let messageReceived message state =
+            let messageReceived message =
                 async {
-                    Logging.info $"Receieved: {message}"
-                    let messages = message |> parseMessage
+                    if not (message |> strEmpty) then
+                        Logging.info $"Receieved: {message}"
+                        let messages = message |> parseMessage
 
-                    messages
-                    |> Seq.iter (fun message ->
-                        handleMessage message
-                        onMessage message
-                    )
-
-                    return state
+                        messages
+                        |> Seq.iter (fun message ->
+                            handleMessage message
+                            onMessage message
+                        )
                 }
 
             let rec loop state =
