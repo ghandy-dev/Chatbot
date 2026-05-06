@@ -15,6 +15,8 @@ type Request =
 module Request =
 
     let private formatChatMessage (message: string) =
+        let message = message.ReplaceLineEndings("")
+
         if message.Length > 500 then
             message[0..496] + "..."
         else
