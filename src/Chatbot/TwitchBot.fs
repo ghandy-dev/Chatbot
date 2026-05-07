@@ -2,16 +2,12 @@ module Chatbot.Bot
 
 open System
 
-open FsToolkit.ErrorHandling
+open FSharpPlus
 
 open Chatbot.Agents
 open Chatbot.CompositionRoot
 open Chatbot.Configuration
-open Chatbot.Core
 open Chatbot.Core.Domain.Messages
-open Chatbot.Core.IRC
-open Chatbot.Core.Services
-open Chatbot.Core.Services.Twitch
 open Chatbot.Twitch
 
 let getChannels () =
@@ -27,47 +23,11 @@ let getChannels () =
             return channels |> Seq.map (fun u -> u.Id, u.Login)
     }
 
-let getAccessToken (twitchService: TwitchService) =
-        twitchService.Authentication.GetAccessToken ()
-        |> AsyncResult.map _.AccessToken
-        |> AsyncResult.mapError (fun statusCode ->
-            statusCode
-            |> Http.HttpStatusCode.fromInt
-            |> fun (err: Http.Types.HttpStatusCode) -> $"Failed to get access token: {err}")
-
-let getAccessTokenUser (twitchService: TwitchService) token =
-    twitchService.Users.GetAccessTokenUser token
-    |> AsyncResult.mapError (fun statusCode ->
-        statusCode
-        |> Http.HttpStatusCode.fromInt
-        |> fun err -> $"Failed to get access token user: {err}")
-        |> AsyncResult.map (fun user -> (user, token))
-
-let authenticate (twitchClient: TwitchClient) =
-    async {
-        match!
-            getAccessToken twitchService
-            |> AsyncResult.bind (getAccessTokenUser twitchService)
-        with
-        | Ok (user, token) ->
-            twitchClient.Send (Request.capReq configuration.TwitchChatConfig.Capabilities)
-            twitchClient.Send (Request.pass token)
-            twitchClient.Send (Request.nick user.Login)
-        | Error err ->
-            Logging.error err
-    }
-
-let joinChannels (twitchClient: TwitchClient) =
-    async {
-        let! channels = getChannels () |> Async.map (Seq.map snd)
-        let message = Request.joinMultiple channels
-        twitchClient.Send message
-    }
-
 let run (cancellationToken: Threading.CancellationToken) =
     async {
         let uri = new Uri(configuration.ConnectionStrings.IrcServer)
-        let twitchClient = new TwitchClient(uri.Host, uri.Port)
+        let! channels = getChannels () |> Async.map (Seq.map snd >> Set.ofSeq)
+        let twitchClient = new TwitchClient(uri.Host, uri.Port, configuration.TwitchChatConfig, twitchService, channels)
 
         let reminderAgent = Reminder.create db pastebinService twitchClient cancellationToken
         let triviaAgent = Trivia.create twitchClient cancellationToken
@@ -86,9 +46,5 @@ let run (cancellationToken: Threading.CancellationToken) =
         reminderAgent.Start()
         triviaAgent.Start()
 
-        twitchClient.Connect()
         twitchClient.Start()
-
-        do! authenticate twitchClient
-        do! joinChannels twitchClient
     }

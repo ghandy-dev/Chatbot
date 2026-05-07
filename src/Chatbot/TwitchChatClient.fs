@@ -4,25 +4,55 @@ open System
 open System.Collections.Generic
 open System.Threading
 
+open FsToolkit.ErrorHandling
+
 open Chatbot.Common
 open Chatbot.Connection
 open Chatbot.Core
 open Chatbot.Core.IRC
 open Chatbot.Core.IRC.Messages
 open RateLimiter
+open Chatbot.Core.Services.Twitch
+
+type ConnectionState =
+    | Disconnected
+    | Connected
 
 type State = {
     Connection: Connection
     Channels: Set<string>
+    ConnectionState: ConnectionState
+    Username: string
 }
 
 type TwitchClientMessage =
-    | Start
     | Connect
+    | Authenticate
+    | JoinChannels
     | Reconnect of attempt: int
     | ClientDisconnected
     | MessageReceived of string
     | Send of Request
+    | SendWhisper of fromUserId: string * toUserId: string * message: string
+    | SetUsername of string
+
+let getAccessToken (twitchService: TwitchService) =
+        twitchService.Authentication.GetAccessToken ()
+        |> AsyncResult.map _.AccessToken
+        |> AsyncResult.mapError (
+            Http.HttpStatusCode.fromInt
+            >> fun err -> $"Failed to get access token: {err}")
+
+let getAccessTokenUser (twitchService: TwitchService) token =
+    twitchService.Users.GetAccessTokenUser token
+    |> AsyncResult.mapError (
+        Http.HttpStatusCode.fromInt
+        >> fun err -> $"Failed to get access token user: {err}")
+        |> AsyncResult.map (fun user -> user, token)
+
+let sendWhisper (twitchService: TwitchService) fromUserId toUserId message accessToken =
+    twitchService.Whispers.SendWhisper fromUserId toUserId message accessToken
+    |> AsyncResult.mapError (Http.HttpStatusCode.fromInt >> fun err -> $"Failed to send whisper: {err}")
 
 let parseMessage (message: string) =
     message.Split("\r\n")
@@ -34,16 +64,24 @@ module Agent =
     let create
         (host: string)
         (port: int)
+        (configuration: Configuration.TwitchChatConfig)
+        (channels: Set<string>)
+        twitchService
         (onMessage: IrcMessage -> unit)
         cancellationToken =
 
         let mutable cancellationTokenSource: CancellationTokenSource option = None
+
         let chatRateLimiter = new RateLimiter(RateLimiter.MessageLimit_Chat, RateLimiter.ResetInterval_Chat)
         let messageQueue = new Queue<Request>()
 
+        let whisperRateLimiter = new RateLimiter(RateLimiter.MessageLimit_Whispers, RateLimiter.ResetInterval_Whispers)
+
         let initial = {
             Connection = new Connection(host, port)
-            Channels = Set.empty
+            Channels = channels
+            ConnectionState = Disconnected
+            Username = ""
         }
 
         MailboxProcessor<TwitchClientMessage>.Start((fun mb ->
@@ -54,14 +92,12 @@ module Agent =
                 | _ -> pown 5 4
                 |> fun s -> TimeSpan.FromSeconds(int64 s)
 
-            let handlePing (message: PingMessage) = mb.Post (Send (Request.pong message.Message))
-
-            let handleReconnect () = mb.Post (Reconnect 0)
-
             let handleMessage message =
                 match message with
-                | PingMessage m -> handlePing m
-                | ReconnectMessage -> handleReconnect ()
+                | AuthenticatedMessage m -> mb.Post (SetUsername m.Username)
+                | ConnectedMessage -> mb.Post JoinChannels
+                | PingMessage m -> mb.Post (Send (Request.pong m.Message))
+                | ReconnectMessage -> mb.Post (Reconnect 1)
                 | _ -> ()
 
             let readerLoop (connection: Connection) =
@@ -78,20 +114,31 @@ module Agent =
                                 Logging.errorEx "Reader loop error" ex
                                 mb.Post ClientDisconnected
                                 return ()
-                            return! loop ()
                         }
 
                     return! loop ()
                 }
 
-            let connect (connection: Connection) =
+            let authenticate () =
                 async {
-                    Logging.info "Connecting..."
-                    let! result = connection.ConnectAsync cancellationToken
+                    match!
+                        getAccessToken twitchService
+                        |> AsyncResult.bind (getAccessTokenUser twitchService)
+                    with
+                    | Ok (user, token) ->
+                        mb.Post (Send (Request.capReq configuration.Capabilities))
+                        mb.Post (Send (Request.pass token))
+                        mb.Post (Send (Request.nick user.Login))
+                    | Error err ->
+                        Logging.error err
+                }
 
-                    match result with
-                    | Ok _ -> ()
-                    | _ -> mb.Post (Reconnect 0)
+            let joinChannels state =
+                async {
+                    if not (state.Channels |> Set.isEmpty) then
+                        mb.Post (Send (Request.joinMultiple state.Channels))
+                    else
+                        Logging.info "No channels set to join on connect"
                 }
 
             let start (connection: Connection) =
@@ -103,25 +150,44 @@ module Agent =
                     Async.Start(readerLoop connection, cts.Token)
                 }
 
+            let connect (connection: Connection) state =
+                async {
+                    Logging.info "Connecting..."
+                    let! result = connection.ConnectAsync cancellationToken
+
+                    match result with
+                    | Ok _ ->
+                        do! start connection
+                        mb.Post Authenticate
+                        return { state with ConnectionState = Connected }
+                    | _ ->
+                        mb.Post (Reconnect 1)
+                        return { state with ConnectionState = Disconnected }
+                }
+
             let reconnect attempt state =
                 async {
                     Logging.info "Reconnecting..."
-                    cancellationTokenSource |> Option.iter (fun cts -> cts.Cancel())
+
+                    cancellationTokenSource |> Option.iter (fun cts -> cts.Cancel() ; cts.Dispose() )
 
                     (state.Connection :> IDisposable).Dispose()
 
                     let connection = new Connection(host, port)
 
+                    let sleepTime = backoff attempt
+                    do! Async.Sleep(sleepTime)
+
                     let! result = connection.ConnectAsync cancellationToken
 
                     match result with
-                    | Ok _ -> mb.Post Start
+                    | Ok _ ->
+                        do! start connection
+                        mb.Post Authenticate
+                        return { state with ConnectionState = Connected ; Connection = connection }
                     | _ ->
-                        let sleepTime = backoff attempt
-                        do! Async.Sleep(sleepTime)
                         mb.Post (Reconnect (attempt+1))
-
-                    return { state with Connection = connection }
+                        return { state with ConnectionState = Disconnected ; Connection = connection }
                 }
 
             let send (connection: Connection) (request: Request) (state: State) =
@@ -130,7 +196,7 @@ module Agent =
 
                     messageQueue.Enqueue(request)
 
-                    while messageQueue.Count > 0 do
+                    while messageQueue.Count > 0 && state.ConnectionState = ConnectionState.Connected do
                         let requestOpt =
                             match messageQueue.Dequeue() with
                             | PrivMsg (channel, _) ->
@@ -166,6 +232,23 @@ module Agent =
                     return { state with Channels = channels' }
                 }
 
+            let sendWhisper (fromUserId, toUserId, message) (state: State) =
+                async {
+                    if whisperRateLimiter.CanSend "whisper" then
+                        Logging.info $"Sending whisper ({fromUserId} -> {toUserId}) : {message}"
+                        match!
+                            getAccessToken twitchService
+                            |> AsyncResult.bind (sendWhisper twitchService fromUserId toUserId message)
+                        with
+                        | Error err ->
+                            Logging.warning err
+                            return state
+                        | Ok _ ->
+                            return state
+                    else
+                        return state
+                }
+
             let messageReceived message =
                 async {
                     if not (message |> strEmpty) then
@@ -184,40 +267,51 @@ module Agent =
                     let! message = mb.Receive()
 
                     match message with
-                    | Connect -> do! connect state.Connection
-                    | Start -> do! start state.Connection
-                    | ClientDisconnected -> mb.Post (Reconnect 0)
+                    | Connect ->
+                        let! state' = connect state.Connection state
+                        return! loop state'
+                    | SetUsername username ->
+                        let state' = { state with Username = username }
+                        return! loop state'
+                    | Authenticate ->
+                        do! authenticate ()
+                        return! loop state
+                    | JoinChannels ->
+                        do! joinChannels state
+                        return! loop state
+                    | ClientDisconnected ->
+                        mb.Post (Reconnect 1)
+                        return! loop { state with ConnectionState = Disconnected }
                     | Reconnect attempt ->
                         let! state' = reconnect attempt state
                         return! loop state'
                     | MessageReceived message ->
-                        let! state' = messageReceived message state
-                        return! loop state'
+                        do! messageReceived message
+                        return! loop state
                     | Send request ->
                         let! state' = send state.Connection request state
                         return! loop state'
-
-                    return! loop state
+                    | SendWhisper (fromUserId, toUserId, message) ->
+                        let! state' = sendWhisper (fromUserId, toUserId, message) state
+                        return! loop state'
                 }
 
             loop initial
             ), cancellationToken
         )
 
-type TwitchClient (host, port) =
+type TwitchClient (host, port, configuration, twitchService, channels) =
 
     let cancellationTokenSource = new CancellationTokenSource()
     let messageReceived = new Event<IrcMessage>()
 
-    let agent = Agent.create host port (fun message -> messageReceived.Trigger message) cancellationTokenSource.Token
+    let agent = Agent.create host port configuration channels twitchService (fun message -> messageReceived.Trigger message) cancellationTokenSource.Token
 
     [<CLIEvent>]
     member _.MessageReceived = messageReceived.Publish
 
-    member _.Start () = agent.Post Start
-
-    member _.Connect () = agent.Post Connect
+    member _.Start () = agent.Post Connect
 
     member _.Send message = agent.Post (Send message)
 
-    member _.SendWhisper (fromUserId, toUserId, message) = ()
+    member _.SendWhisper (fromUserId, toUserId, message) = agent.Post (SendWhisper (fromUserId, toUserId, message))
