@@ -8,6 +8,7 @@ module Messages =
         let [<Literal>] Cap = "CAP"
         let [<Literal>] ClearChat = "CLEARCHAT"
         let [<Literal>] ClearMsg = "CLEARMSG"
+        let [<Literal>] Connected = "376"
         let [<Literal>] Join = "JOIN"
         let [<Literal>] GlobalUserState = "GLOBALUSERSTATE"
         let [<Literal>] HostTarget = "HOSTTARGET"
@@ -514,10 +515,16 @@ module Messages =
         Capabilities: string array
     }
 
+    type AuthenticatedMessage = {
+        Username: string
+    }
+
     type IrcMessage =
+        | AuthenticatedMessage of AuthenticatedMessage
         | CapMessage of CapMessage
         | ClearChatMessage of ClearChatMessage
         | ClearMsgMessage of ClearMsgMessage
+        | ConnectedMessage
         | GlobalUserStateMessage of GlobalUserStateMessage
         | HostTargetMessage of HostTargetMessage
         | JoinMessage of JoinMessage
@@ -577,6 +584,21 @@ module Messages =
         open Helpers
         open Parsing
 
+        let (|AuthenticatedCommand|_|) (message: MessageData) : AuthenticatedMessage option =
+            match message.Command with
+            | Command.Authenticated ->
+                let parts = message.Parameters.Split(" ")
+
+                let username =
+                    match parts |> List.ofArray with
+                    | username :: _ -> username
+                    | _ -> ""
+
+                Some {
+                    Username = username
+                }
+            | _ -> None
+
         let (|CapCommand|_|) (message: MessageData) : CapMessage option =
             match message.Command with
             | Command.Cap ->
@@ -621,6 +643,11 @@ module Messages =
                     TargetMsgId = message.Tags["target-msg-id"]
                     TmiSentTimestamp = message.Tags["tmi-sent-ts"]
                 }
+            | _ -> None
+
+        let (|ConnectedCommand|_|) (message: MessageData) : IrcMessage option =
+            match message.Command with
+            | Command.Connected -> Some ConnectedMessage
             | _ -> None
 
         let (|GlobalUserStateCommand|_|) (message: MessageData) : GlobalUserStateMessage option =
@@ -806,9 +833,11 @@ module Messages =
 
         let parse (message: MessageData) =
             match message with
+            | AuthenticatedCommand msg -> Some(AuthenticatedMessage msg)
             | CapCommand msg -> Some(CapMessage msg)
             | ClearChatCommand msg -> Some(ClearChatMessage msg)
             | ClearMsgCommand msg -> Some(ClearMsgMessage msg)
+            | ConnectedCommand _ -> Some ConnectedMessage
             | GlobalUserStateCommand msg -> Some(GlobalUserStateMessage msg)
             | HostTargetCommand msg -> Some(HostTargetMessage msg)
             | JoinCommand msg -> Some(JoinMessage msg)
@@ -816,7 +845,7 @@ module Messages =
             | PingCommand msg -> Some(PingMessage msg)
             | NoticeCommand msg -> Some(NoticeMessage msg)
             | PrivateMessageCommand msg -> Some(PrivateMessage msg)
-            | ReconnectCommand _ -> Some(ReconnectMessage)
+            | ReconnectCommand _ -> Some ReconnectMessage
             | RoomStateCommand msg -> Some(RoomStateMessage msg)
             | UserNoticeCommand msg -> Some(UserNoticeMessage msg)
             | UserStateCommand msg -> Some(UserStateMessage msg)
