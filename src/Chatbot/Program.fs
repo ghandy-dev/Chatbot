@@ -22,9 +22,7 @@ let main args =
 
         let configuration =
             ConfigurationBuilder()
-                .AddEnvironmentVariables()
                 .AddJsonFile("appsettings.json", false, true)
-                .AddEnvironmentVariables()
                 .Build()
 
         let dbConnectionString = configuration.GetValue<string>("ConnectionStrings:Database")
