@@ -31,7 +31,7 @@
     <Compile Include="Calculator.fs" />
     <Compile Include="EightBall.fs" />
     <Compile Include="RockPaperScissors.fs" />
-    <Compile Include="RNG.fs" />
+    <Compile Include="CoinFlip.fs" />
     <Compile Include="Ping.fs" />
     <Compile Include="Time.fs" />
     <Compile Include="Vod.fs" />
