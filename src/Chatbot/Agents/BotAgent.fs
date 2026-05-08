@@ -102,7 +102,7 @@ let create env config (emoteService: EmoteService) userId (twitchClient: TwitchC
 
                     match msg.Source with
                     | Channel (channel, _) -> mb.Post (SendChannelMessage (channel, message))
-                    | Whisper (_, fromUserId) ->  mb.Post (SendWhisperMessage (fromUserId, userId, message))
+                    | Whisper (_, fromUserId) ->  mb.Post (SendWhisperMessage (userId, fromUserId, message))
 
                     logger.LogWarning("Command response did not indicate success {message}", message)
                 | Ok responses ->
@@ -112,7 +112,7 @@ let create env config (emoteService: EmoteService) userId (twitchClient: TwitchC
                             match msg.Source, msg.ParentMessageId with
                             | Channel (channel, _), Some messageId -> mb.Post (SendChannelReplyMessage (messageId, channel, message))
                             | Channel (channel, _), None -> mb.Post (SendChannelMessage (channel, message))
-                            | Whisper (_, fromUserId), None -> mb.Post (SendWhisperMessage (fromUserId, userId, message))
+                            | Whisper (_, fromUserId), None -> mb.Post (SendWhisperMessage (userId, fromUserId, message))
                             | _ -> ()
                         | CommandResponse.BotAction action -> mb.Post (BotAction action)
                     )
