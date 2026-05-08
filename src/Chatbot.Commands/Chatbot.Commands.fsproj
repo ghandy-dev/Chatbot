@@ -33,6 +33,7 @@
     <Compile Include="RockPaperScissors.fs" />
     <Compile Include="CoinFlip.fs" />
     <Compile Include="Chance.fs" />
+    <Compile Include="Roll.fs" />
     <Compile Include="Ping.fs" />
     <Compile Include="Time.fs" />
     <Compile Include="Vod.fs" />
