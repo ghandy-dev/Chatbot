@@ -15,7 +15,6 @@ DotEnv.load ()
 let loadConfig () : Config =
     let configuration =
         ConfigurationBuilder()
-            .AddEnvironmentVariables()
             .AddJsonFile("appsettings.json", false, true)
             .AddEnvironmentVariables()
             .Build()
