@@ -7,7 +7,6 @@
   <ItemGroup>
     <Compile Include="Operators.fs" />
     <Compile Include="DotEnv.fs" />
-    <Compile Include="Logging.fs" />
     <Compile Include="Json.fs" />
     <Compile Include="Http.fs" />
     <Compile Include="IO.fs" />

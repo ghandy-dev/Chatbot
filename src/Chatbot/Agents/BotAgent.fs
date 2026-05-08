@@ -2,6 +2,8 @@ module Chatbot.Agents.Bot
 
 open System
 
+open Microsoft.Extensions.Logging
+
 open FsToolkit.ErrorHandling
 
 open Chatbot
@@ -9,6 +11,7 @@ open Chatbot.Core.Domain
 open Chatbot.Core.Services.Emotes
 open Chatbot.Core.IRC.Request
 open Chatbot.Core.Domain.Commands
+open Chatbot.Core.Types
 open Chatbot.Types
 open Chatbot.Twitch
 open Chatbot.Database
@@ -37,9 +40,12 @@ type State = {
     Emotes: Emotes
 }
 
-let create config (emoteService: EmoteService) db userId (twitchClient: TwitchClient) (triviaAgent: MailboxProcessor<Trivia.TriviaMessage>) cancellationToken =
+let create env config (emoteService: EmoteService) userId (twitchClient: TwitchClient) (triviaAgent: MailboxProcessor<Trivia.TriviaMessage>) cancellationToken =
     new MailboxProcessor<BotMessage>(
         (fun mb ->
+            let db = env.Database
+            let logger = env.Logger
+
             let initial = {
                 Channels = Set.empty
                 UserCommandCooldowns = Map.empty
@@ -83,7 +89,7 @@ let create config (emoteService: EmoteService) db userId (twitchClient: TwitchCl
                         try
                             return! command.Invoke context config.Commands
                         with ex ->
-                            do Logging.errorEx "Error occurred running command" ex
+                            do logger.LogError(ex, "Error occurred running command {command}", command)
                             return CommandError.internalError "Error running command"
                     else
                         return CommandError.commandOnCooldown command.Name
@@ -98,7 +104,7 @@ let create config (emoteService: EmoteService) db userId (twitchClient: TwitchCl
                     | Channel (channel, _) -> mb.Post (SendChannelMessage (channel, message))
                     | Whisper (_, fromUserId) ->  mb.Post (SendWhisperMessage (fromUserId, userId, message))
 
-                    Logging.error (err |> CommandError.toString)
+                    logger.LogWarning("Command response did not indicate success {message}", message)
                 | Ok responses ->
                     responses |> List.iter (fun r ->
                         match r with

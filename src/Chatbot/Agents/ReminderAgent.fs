@@ -2,19 +2,25 @@ module Chatbot.Agents.Reminder
 
 open System
 
+open Microsoft.Extensions.Logging
+
 open Chatbot.Database
 open Chatbot.Common
 open Chatbot.Core.Domain
 open Chatbot.Core.IRC
 open Chatbot.Core.Services.Pastebin
+open Chatbot.Core.Types
 
 type ReminderMessage =
     | TwitchEvent of TwitchEvent
     | CheckReminders
 
-let create db (textStorageService: ITextStorageService) (twitchChatClient: Chatbot.Twitch.TwitchClient) cancellationToken =
+let create env (textStorageService: ITextStorageService) (twitchChatClient: Chatbot.Twitch.TwitchClient) cancellationToken =
     new MailboxProcessor<ReminderMessage>(
         (fun mb ->
+            let db = env.Database
+            let logger = env.Logger
+
             let checkReminders () =
                 async {
                     let! reminders = Reminders.getTimedReminders db
@@ -58,7 +64,7 @@ let create db (textStorageService: ITextStorageService) (twitchChatClient: Chatb
 
                         if message.Length > 500 then
                             match! textStorageService.CreatePost "" message with
-                            | Error _ -> Logging.errorEx "Failed to create paste" exn
+                            | Error err -> logger.LogError("Failed to create paste: {err}", err)
                             | Ok url -> do twitchChatClient.Send(Request.privMsg channel $"@%s{username}, reminders were too long to send, check %s{url} for your reminders")
                         else
                             do twitchChatClient.Send(Request.privMsg channel $"@%s{username}, %s{message}")
@@ -76,7 +82,7 @@ let create db (textStorageService: ITextStorageService) (twitchChatClient: Chatb
                     return! loop ()
                 }
 
-            Logging.trace "Reminder agent started."
+            logger.LogInformation "Reminder agent started."
             mb.Post CheckReminders
             loop ()
         ), cancellationToken

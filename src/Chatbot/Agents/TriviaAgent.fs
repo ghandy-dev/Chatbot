@@ -2,9 +2,12 @@ module Chatbot.Agents.Trivia
 
 open System
 
+open Microsoft.Extensions.Logging
+
 open Chatbot.Common
 open Chatbot.Core.IRC
 open Chatbot.Core.Domain
+open Chatbot.Core.Types
 
 type TriviaMessage =
     | StartTrivia of config: Trivia
@@ -15,9 +18,11 @@ type TriviaMessage =
     | Update
     | TwitchEvent of TwitchEvent
 
-let create (twitchChatClient: Chatbot.Twitch.TwitchClient) cancellationToken =
+let create env (twitchChatClient: Chatbot.Twitch.TwitchClient) cancellationToken =
     new MailboxProcessor<TriviaMessage>(
         (fun mb ->
+            let logger = env.Logger
+
             let send channel message = twitchChatClient.Send(Request.privMsg channel message)
 
             let startTrivia (trivia: Trivia) state =
@@ -142,7 +147,7 @@ let create (twitchChatClient: Chatbot.Twitch.TwitchClient) cancellationToken =
                     return! loop state'
                 }
 
-            Logging.trace "Trivia agent started."
+            logger.LogInformation("Trivia agent started.")
             loop (Map.empty)
         ),
         cancellationToken

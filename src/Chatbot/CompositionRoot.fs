@@ -1,6 +1,7 @@
 module Chatbot.CompositionRoot
 
 open Microsoft.Extensions.Configuration
+open Microsoft.Extensions.Logging
 
 open Configuration
 open Chatbot.Commands
@@ -12,13 +13,13 @@ open Chatbot.Types
 
 DotEnv.load ()
 
-let loadConfig () : Config =
-    let configuration =
-        ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", false, true)
-            .AddEnvironmentVariables()
-            .Build()
+let configuration =
+    ConfigurationBuilder()
+        .AddJsonFile("appsettings.json", false, true)
+        .AddEnvironmentVariables()
+        .Build()
 
+let loadConfigs () : Configs =
     {
         Logging = configuration |> getSection<LoggingConfig> "Logging"
         ConnectionStrings = configuration |> getSection<ConnectionStrings> "ConnectionStrings"
@@ -41,12 +42,23 @@ let loadConfig () : Config =
         HelpUrl = configuration |> getItem "HelpUrl"
     }
 
-let configuration = loadConfig ()
+let loggerFactory = LoggerFactory.Create(fun options ->
+    options.AddConfiguration(configuration) |> ignore
+    options.AddSimpleConsole(fun options ->
+        options.ColorBehavior <- Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Enabled
+        options.SingleLine <- true
+        options.UseUtcTimestamp <- true
+        options.TimestampFormat <- "[HH:mm:ss] "
+    ) |> ignore
+)
+
+let configs = loadConfigs ()
+
 let memoryCache = MemoryCache.empty ()
-let db = Chatbot.Database.Db.create configuration.ConnectionStrings.Database
-let httpClient = Http.create configuration.UserAgent
-let loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(fun options -> ())
+let db = Chatbot.Database.Db.create configs.ConnectionStrings.Database
 let logger = loggerFactory.CreateLogger("Default")
+let httpHandler = new Http.LoggingHandler(loggerFactory.CreateLogger<Http.LoggingHandler>())
+let httpClient = Http.create httpHandler configs.UserAgent
 
 let env: Types.Env = {
     Cache = memoryCache
@@ -55,7 +67,7 @@ let env: Types.Env = {
     Logger = logger
 }
 
-let twitchService = Twitch.TwitchService.create env { ClientId = configuration.TwitchApi.ClientId ; ClientSecret = configuration.TwitchApi.ClientSecret ; RefreshToken = configuration.TwitchApi.RefreshToken }
+let twitchService = Twitch.TwitchService.create env { ClientId = configs.TwitchApi.ClientId ; ClientSecret = configs.TwitchApi.ClientSecret ; RefreshToken = configs.TwitchApi.RefreshToken }
 
 let emoteService =
     Emotes.EmoteService.create [
@@ -66,19 +78,19 @@ let emoteService =
     ]
 
 let catFactService = CatFact.CatFactService.create env
-let faceItService = FaceIt.FaceItService.create env { ApiKey = configuration.FaceIt.ApiKey }
-let geolocationService = Geolocation.GeolocationService.create env { MapsApiKey = configuration.Microsoft.Maps.ApiKey } { GeocodingApiKey = configuration.Google.Geocoding.ApiKey ; TimezoneApiKey = configuration.Google.Timezone.ApiKey}
+let faceItService = FaceIt.FaceItService.create env { ApiKey = configs.FaceIt.ApiKey }
+let geolocationService = Geolocation.GeolocationService.create env { MapsApiKey = configs.Microsoft.Maps.ApiKey } { GeocodingApiKey = configs.Google.Geocoding.ApiKey ; TimezoneApiKey = configs.Google.Timezone.ApiKey}
 let imageUploadService = ImageUpload.ImageUploadService.create env
 let ivrService = Ivr.IvrService.create env
-let nasaService = Nasa.NasaService.create env { ApiKey = configuration.Nasa.ApiKey }
+let nasaService = Nasa.NasaService.create env { ApiKey = configs.Nasa.ApiKey }
 let newsService = News.NewsService.create env
-let genAIService = OpenAI.OpenAIService.create env { ApiKey = configuration.OpenAI.ApiKey ; DefaultChatModel = configuration.OpenAI.DefaultChatModel ; DefaultImageModel = configuration.OpenAI.DefaultImageModel}
-let pastebinService = Pastebin.PastebinService.create env { ApiKey = configuration.Pastebin.ApiKey }
-let redditService = Reddit.RedditService.create env { ClientId = configuration.Reddit.ClientId ; ClientSecret = configuration.Reddit.ClientSecret}
-let riotGamesService = RiotGames.RiotGamesService.create env { ApiKey = configuration.RiotGames.ApiKey }
+let genAIService = OpenAI.OpenAIService.create env { ApiKey = configs.OpenAI.ApiKey ; DefaultChatModel = configs.OpenAI.DefaultChatModel ; DefaultImageModel = configs.OpenAI.DefaultImageModel}
+let pastebinService = Pastebin.PastebinService.create env { ApiKey = configs.Pastebin.ApiKey }
+let redditService = Reddit.RedditService.create env { ClientId = configs.Reddit.ClientId ; ClientSecret = configs.Reddit.ClientSecret}
+let riotGamesService = RiotGames.RiotGamesService.create env { ApiKey = configs.RiotGames.ApiKey }
 let triviaService = Trivia.TriviaService.create env
 let urbanDictionaryService = UrbanDictionary.UrbanDictionaryService.create env
-let weatherService = Weather.WeatherService.create env { MapsApiKey = configuration.Microsoft.Maps.ApiKey }
+let weatherService = Weather.WeatherService.create env { MapsApiKey = configs.Microsoft.Maps.ApiKey }
 let wikipediaService = Wikipedia.WikipediaService.create env
 
 let buildCommands commandPrefix =
@@ -90,7 +102,7 @@ let buildCommands commandPrefix =
     [
         Command.create "accountage" [ "accage" ] HelpInfo.AccountAge (Async (accountAge twitchService)) 10 false true
         Command.create "addbetween" [ "ab" ] HelpInfo.AddBetween (Sync addBetween) 10 false true
-        Command.create "alias" [] HelpInfo.Alias (Alias (alias db configuration.PipeSeparator twitchService)) 10 false false
+        Command.create "alias" [] HelpInfo.Alias (Alias (alias db configs.PipeSeparator twitchService)) 10 false false
         Command.create "apod" [] HelpInfo.AstronomyPictureOfTheDay (Async (apod nasaService)) 20 false true
         Command.create "braille" [ "ascii" ] HelpInfo.Braille (Async braille) 20 false true
         Command.create "calculator" [ "calc" ; "math" ] HelpInfo.Calculator (Sync calculate) 50 false true
@@ -108,7 +120,7 @@ let buildCommands commandPrefix =
         Command.create "followage" [ "fa" ] HelpInfo.FollowAge (Async (followAge ivrService)) 20 false true
         Command.create "gpt" [] HelpInfo.Gpt (Async (gpt genAIService)) 15 false true
         // Command.create ("gptimage" [] HelpInfo.Gpt Async (gptImage genAIService imageUploadService) 15 false))
-        Command.create "help" []  HelpInfo.Help (Help (help configuration.HelpUrl)) 10 false false
+        Command.create "help" []  HelpInfo.Help (Help (help configs.HelpUrl)) 10 false false
         Command.create "joinchannel" [] HelpInfo.JoinChannel (Async (joinChannel db twitchService)) 50 true false
         Command.create "lastline" [ "ll" ] HelpInfo.LastLine (Async (lastLine ivrService)) 50 false true
         Command.create "leavechannel" [] HelpInfo.LeaveChannel (Async (leaveChannel db twitchService)) 50 true false
@@ -150,6 +162,6 @@ let buildCommands commandPrefix =
     |> List.collect id
     |> Map.ofList
 
-let commands = buildCommands configuration.CommandPrefix
-let prefixConfig = PrefixConfig.create configuration.CommandPrefix configuration.PipePrefix configuration.AliasPrefix
+let commands = buildCommands configs.CommandPrefix
+let prefixConfig = PrefixConfig.create configs.CommandPrefix configs.PipePrefix configs.AliasPrefix
 let botConfig = BotConfig.create commands prefixConfig

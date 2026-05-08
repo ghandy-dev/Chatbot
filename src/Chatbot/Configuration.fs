@@ -83,7 +83,7 @@ type RiotGamesConfig = {
     ApiKey: string
 }
 
-type Config = {
+type Configs = {
     ConnectionStrings: ConnectionStrings
     FaceIt: FaceItConfig
     Logging: LoggingConfig

@@ -5,6 +5,8 @@ module Http =
     open System.Net.Http
     open System.Net.Http.Headers
 
+    open Microsoft.Extensions.Logging
+
     open Chatbot.Common
 
     type HttpClient = System.Net.Http.HttpClient
@@ -42,7 +44,7 @@ module Http =
         }
 
         type Response = {
-            RequestUrl: string
+            Request: Request
             Content: string
             Bytes: byte array
             Headers: Map<string, string seq>
@@ -171,8 +173,8 @@ module Http =
 
     module Response =
 
-        let create requestUrl content bytes headers statusCode =  {
-            RequestUrl = requestUrl
+        let create request content bytes headers statusCode =  {
+            Request = request
             Content = content
             Bytes = bytes
             Headers = headers
@@ -188,6 +190,9 @@ module Http =
             response
             |> toResult
             |> Result.bind (fun r -> Ok <| Json.deserializeJson<'T> r.Content)
+
+    let logFailure (logger: ILogger) (response: Response) =
+        logger.LogWarning ("Http Error: {statusCode} {method} {requestUrl} {content}", response.StatusCode, response.Request.Method, response.Request.Url, response.Content)
 
     let applyHeaders (headers: (string * string) seq) (req: HttpRequestMessage) =
         headers
@@ -210,7 +215,6 @@ module Http =
             applyHeaders request.Headers httpRequest
 
             use! httpResponse = client.SendAsync(httpRequest) |> Async.AwaitTask
-            let requestUrl = httpRequest.RequestUri.ToString()
             let statusCode = int httpResponse.StatusCode
             let! content = httpResponse.Content.ReadAsStringAsync() |> Async.AwaitTask
             let! bytes = httpResponse.Content.ReadAsByteArrayAsync() |> Async.AwaitTask
@@ -220,10 +224,7 @@ module Http =
                 |> Seq.map (function KeyValue (k, v) -> k, seq v)
                 |> Map.ofSeq
 
-            if not <| httpResponse.IsSuccessStatusCode then
-                Logging.errorEx $"Http Error: %d{statusCode} %A{httpRequest.Method} %s{requestUrl} %s{content}" (exn())
-
-            let response = Response.create requestUrl content bytes responseHeaders statusCode
+            let response = Response.create request content bytes responseHeaders statusCode
 
             return response
         }
@@ -245,8 +246,36 @@ module Http =
             product, version, comment
         | _ -> failwith "Invalid User-Agent format"
 
-    let create userAgent =
-        let client = new HttpClient()
+    type LoggingHandler(logger : ILogger<LoggingHandler>) =
+        inherit DelegatingHandler(new HttpClientHandler())
+
+        override _.SendAsync(request, cancellationToken) =
+
+            let sendAsync = base.SendAsync(request, cancellationToken)
+
+            task {
+                try
+                    let! response = sendAsync
+
+                    if not response.IsSuccessStatusCode then
+                        logger.LogWarning(
+                            "Http Error: {statusCode} {method} {url}",
+                            int response.StatusCode, request.Method, request.RequestUri
+                        )
+
+                    return response
+                with ex ->
+                    logger.LogError(
+                        ex,
+                        "Http request {method} {url} failed",
+                        request.Method,
+                        request.RequestUri)
+
+                    return raise ex
+        }
+
+    let create handler userAgent =
+        let client = new HttpClient(handler)
         let product, version, comment = parseUserAgent userAgent
         client.DefaultRequestHeaders.UserAgent.Add(new Headers.ProductInfoHeaderValue(product, version))
         client.DefaultRequestHeaders.UserAgent.Add(new Headers.ProductInfoHeaderValue(comment))

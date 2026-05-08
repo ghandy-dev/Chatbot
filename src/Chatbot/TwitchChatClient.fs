@@ -4,6 +4,8 @@ open System
 open System.Collections.Generic
 open System.Threading
 
+open Microsoft.Extensions.Logging
+
 open FsToolkit.ErrorHandling
 
 open Chatbot.Common
@@ -65,6 +67,7 @@ module Agent =
         (host: string)
         (port: int)
         (configuration: Configuration.TwitchChatConfig)
+        (logger: ILogger)
         (channels: Set<string>)
         twitchService
         (onMessage: IrcMessage -> unit)
@@ -102,7 +105,7 @@ module Agent =
 
             let readerLoop (connection: Connection) =
                 async {
-                    Logging.info "Reader starting..."
+                    logger.LogInformation "Reader starting..."
 
                     let rec loop () =
                         async {
@@ -111,7 +114,7 @@ module Agent =
                                 mb.Post (MessageReceived data)
                                 return! loop ()
                             | Error ex ->
-                                Logging.errorEx "Reader loop error" ex
+                                logger.LogWarning(ex, "Reader loop error")
                                 mb.Post ClientDisconnected
                                 return ()
                         }
@@ -130,7 +133,7 @@ module Agent =
                         mb.Post (Send (Request.pass token))
                         mb.Post (Send (Request.nick user.Login))
                     | Error err ->
-                        Logging.error err
+                        logger.LogError("Error requesting access token: {err}", err)
                 }
 
             let joinChannels state =
@@ -138,12 +141,12 @@ module Agent =
                     if not (state.Channels |> Set.isEmpty) then
                         mb.Post (Send (Request.joinMultiple state.Channels))
                     else
-                        Logging.info "No channels set to join on connect"
+                        logger.LogInformation("No channels set to join")
                 }
 
             let start (connection: Connection) =
                 async {
-                    Logging.info "Starting..."
+                    logger.LogInformation("Starting...")
                     let cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
                     cancellationTokenSource <- Some cts
 
@@ -152,7 +155,7 @@ module Agent =
 
             let connect (connection: Connection) state =
                 async {
-                    Logging.info "Connecting..."
+                    logger.LogInformation("Connecting...")
                     let! result = connection.ConnectAsync cancellationToken
 
                     match result with
@@ -160,14 +163,15 @@ module Agent =
                         do! start connection
                         mb.Post Authenticate
                         return { state with ConnectionState = Connected }
-                    | _ ->
+                    | Error ex ->
+                        logger.LogWarning(ex, "Error trying to connect to host")
                         mb.Post (Reconnect 1)
                         return { state with ConnectionState = Disconnected }
                 }
 
             let reconnect attempt state =
                 async {
-                    Logging.info "Reconnecting..."
+                    logger.LogInformation("Reconnecting...")
 
                     cancellationTokenSource |> Option.iter (fun cts -> cts.Cancel() ; cts.Dispose() )
 
@@ -185,7 +189,8 @@ module Agent =
                         do! start connection
                         mb.Post Authenticate
                         return { state with ConnectionState = Connected ; Connection = connection }
-                    | _ ->
+                    | Error ex ->
+                        logger.LogWarning(ex, "Error trying to connect to host")
                         mb.Post (Reconnect (attempt+1))
                         return { state with ConnectionState = Disconnected ; Connection = connection }
                 }
@@ -211,11 +216,11 @@ module Agent =
                         match requestOpt with
                         | Some r ->
                             let message = r |> Request.toString
-                            Logging.info $"Sending: {message}"
+                            logger.LogInformation("Sending: {message}", message)
 
                             match! connection.SendAsync(message, cancellationToken) with
                             | Ok _ -> ()
-                            | Error err -> Logging.errorEx "Error sending message" err
+                            | Error ex -> logger.LogWarning(ex, "Error occurred sending message")
                         | None -> ()
 
                         match requestOpt with
@@ -235,13 +240,13 @@ module Agent =
             let sendWhisper (fromUserId, toUserId, message) (state: State) =
                 async {
                     if whisperRateLimiter.CanSend "whisper" then
-                        Logging.info $"Sending whisper ({fromUserId} -> {toUserId}) : {message}"
+                        logger.LogInformation($"Sending whisper ({fromUserId} -> {toUserId}) : {message}")
                         match!
                             getAccessToken twitchService
                             |> AsyncResult.bind (sendWhisper twitchService fromUserId toUserId message)
                         with
                         | Error err ->
-                            Logging.warning err
+                            logger.LogWarning("Failed to send whisper: {err}", err)
                             return state
                         | Ok _ ->
                             return state
@@ -252,7 +257,7 @@ module Agent =
             let messageReceived message =
                 async {
                     if not (message |> strEmpty) then
-                        Logging.info $"Receieved: {message}"
+                        logger.LogInformation("Receieved: {message}", message)
                         let messages = message |> parseMessage
 
                         messages
@@ -300,12 +305,12 @@ module Agent =
             ), cancellationToken
         )
 
-type TwitchClient (host, port, configuration, twitchService, channels) =
+type TwitchClient (host, port, configuration, logger, twitchService, channels) =
 
     let cancellationTokenSource = new CancellationTokenSource()
     let messageReceived = new Event<IrcMessage>()
 
-    let agent = Agent.create host port configuration channels twitchService (fun message -> messageReceived.Trigger message) cancellationTokenSource.Token
+    let agent = Agent.create host port configuration logger channels twitchService (fun message -> messageReceived.Trigger message) cancellationTokenSource.Token
 
     [<CLIEvent>]
     member _.MessageReceived = messageReceived.Publish
