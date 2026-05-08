@@ -122,13 +122,16 @@ module Agent =
                     return! loop ()
                 }
 
-            let authenticate state =
+            let authenticate () =
                 async {
-                    match! getAccessToken twitchService with
-                    | Ok token ->
+                    match!
+                        getAccessToken twitchService
+                        |> AsyncResult.bind (getAccessTokenUser twitchService)
+                    with
+                    | Ok (user, token) ->
                         mb.Post (Send (Request.capReq configuration.Capabilities))
                         mb.Post (Send (Request.pass token))
-                        mb.Post (Send (Request.nick state.Username))
+                        mb.Post (Send (Request.nick user.Login))
                     | Error err ->
                         logger.LogError("Error requesting access token: {err}", err)
                 }
@@ -276,7 +279,7 @@ module Agent =
                         let state' = { state with Username = username }
                         return! loop state'
                     | Authenticate ->
-                        do! authenticate state
+                        do! authenticate ()
                         return! loop state
                     | JoinChannels ->
                         do! joinChannels state
