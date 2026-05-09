@@ -12,7 +12,7 @@ services:
       - .env
     volumes:
       - ~/.vsdbg:/remote_debugger:rw
-      - data/chat.db:/app/data/chat.db
+      - ./data/:/app/data/
 
 networks:
   private_network:
