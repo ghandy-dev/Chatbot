@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Pipe.fs" />
     <Compile Include="Alias.fs" />
     <Compile Include="Logs.fs" />
     <Compile Include="Help.fs" />
