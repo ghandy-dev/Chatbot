@@ -170,7 +170,7 @@ module OpenAI =
                             Messages = messages
                             n = 1
                             Verbosity = "low"
-                            ReasoningEffort = "minimal"
+                            ReasoningEffort = "low"
                         }
                         |> serializeJson
 
