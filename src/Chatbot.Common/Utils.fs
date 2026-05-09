@@ -89,14 +89,15 @@ module Utils =
     let htmlEncode = System.Web.HttpUtility.HtmlEncode
     let htmlDecode = System.Web.HttpUtility.HtmlDecode
 
-    let zeroWidthUnicodeStrings = [
+    let whiteSpaceUnicodeCharacters = [
         "\U000e0000"
         "\ue34f"
     ]
 
+    // https://learn.microsoft.com/en-us/dotnet/standard/base-types/character-classes-in-regular-expressions#supported-unicode-general-categories
+    let whiteSpaceAndAnnoyingUnicodeCharactersRegex = new Regex("\p{Z}|\p{Cc}|\p{Cf}|\p{Co}|\p{Cn}", RegexOptions.Compiled)
+
     let removeHiddenChars text =
-        zeroWidthUnicodeStrings
-        |> Seq.fold (fun text value ->
-            text
-            |> strReplace value ""
-        ) text
+        whiteSpaceAndAnnoyingUnicodeCharactersRegex.Split(text)
+        |> Array.filter (not << String.IsNullOrWhiteSpace)
+        |> strJoin " "
