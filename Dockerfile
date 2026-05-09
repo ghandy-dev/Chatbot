@@ -36,8 +36,10 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 COPY --from=publish /src/fonts/*.ttf /usr/share/fonts/
 
+USER root
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+USER app
 ENTRYPOINT [ "entrypoint.sh" ]
 CMD ["dotnet", "Chatbot.dll"]
