@@ -90,12 +90,12 @@ module Wikipedia =
 
         open Chatbot.Common
 
-        let [<Literal>] ApiUrl = "https://api.wikimedia.org/"
+        let [<Literal>] ApiUrl = "https://api.wikimedia.org"
 
         let searchUrl query numberOfResults =
             UrlBuilder.buildUrl
                 $"{ApiUrl}/core/v1/wikipedia/en/search/page"
-                [ "query", query ; "limit", numberOfResults ]
+                [ "q", query ; "limit", numberOfResults ]
 
         let feedUrl date = $"{ApiUrl}/feed/v1/wikipedia/en/featured/%s{date}"
 
