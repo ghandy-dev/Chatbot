@@ -6,6 +6,7 @@ open System.Threading
 
 open Microsoft.Extensions.Logging
 
+open FSharpPlus
 open FsToolkit.ErrorHandling
 
 open Chatbot.Common
@@ -24,7 +25,7 @@ type State = {
     Connection: Connection
     Channels: Set<string>
     ConnectionState: ConnectionState
-    Username: string
+    Username: string option
 }
 
 type TwitchClientMessage =
@@ -36,21 +37,22 @@ type TwitchClientMessage =
     | MessageReceived of string
     | Send of Request
     | SendWhisper of fromUserId: string * toUserId: string * message: string
-    | SetUsername of string
 
 let getAccessToken (twitchService: TwitchService) =
-        twitchService.Authentication.GetAccessToken ()
-        |> AsyncResult.map _.AccessToken
-        |> AsyncResult.mapError (
-            Http.HttpStatusCode.fromInt
-            >> fun err -> $"Failed to get access token: {err}")
+    twitchService.Authentication.GetAccessToken ()
+    |> AsyncResult.map _.AccessToken
+    |> AsyncResult.mapError (
+        Http.HttpStatusCode.fromInt
+        >> fun err -> $"Failed to get access token: {err}"
+    )
 
 let getAccessTokenUser (twitchService: TwitchService) token =
     twitchService.Users.GetAccessTokenUser token
     |> AsyncResult.mapError (
         Http.HttpStatusCode.fromInt
-        >> fun err -> $"Failed to get access token user: {err}")
-        |> AsyncResult.map (fun user -> user, token)
+        >> fun err -> $"Failed to get access token user: {err}"
+    )
+    |> AsyncResult.map _.DisplayName
 
 let sendWhisper (twitchService: TwitchService) fromUserId toUserId message accessToken =
     twitchService.Whispers.SendWhisper fromUserId toUserId message accessToken
@@ -84,7 +86,7 @@ module Agent =
             Connection = new Connection(host, port)
             Channels = channels
             ConnectionState = Disconnected
-            Username = ""
+            Username = None
         }
 
         MailboxProcessor<TwitchClientMessage>.Start((fun mb ->
@@ -97,7 +99,6 @@ module Agent =
 
             let handleMessage message =
                 match message with
-                | AuthenticatedMessage m -> mb.Post (SetUsername m.Username)
                 | ConnectedMessage -> mb.Post JoinChannels
                 | PingMessage m -> mb.Post (Send (Request.pong m.Message))
                 | ReconnectMessage -> mb.Post (Reconnect 1)
@@ -122,18 +123,30 @@ module Agent =
                     return! loop ()
                 }
 
-            let authenticate () =
+            let authenticate state =
                 async {
-                    match!
-                        getAccessToken twitchService
-                        |> AsyncResult.bind (getAccessTokenUser twitchService)
-                    with
-                    | Ok (user, token) ->
+                    let! result =
+                        asyncResult {
+                            let! token = getAccessToken twitchService
+
+                            let! username =
+                                state.Username
+                                |> Option.toResultWith "Username has not been set"
+                                |> Async.singleton
+                                |> AsyncResult.orElse (getAccessTokenUser twitchService token)
+
+                            return token, username
+                        }
+
+                    match result with
+                    | Ok (token, username) ->
                         mb.Post (Send (Request.capReq configuration.Capabilities))
                         mb.Post (Send (Request.pass token))
-                        mb.Post (Send (Request.nick user.Login))
+                        mb.Post (Send (Request.nick username))
+                        return { state with Username = Some username }
                     | Error err ->
                         logger.LogError("Error requesting access token: {err}", err)
+                        return state
                 }
 
             let joinChannels state =
@@ -275,12 +288,9 @@ module Agent =
                     | Connect ->
                         let! state' = connect state.Connection state
                         return! loop state'
-                    | SetUsername username ->
-                        let state' = { state with Username = username }
-                        return! loop state'
                     | Authenticate ->
-                        do! authenticate ()
-                        return! loop state
+                        let! state' = authenticate state
+                        return! loop state'
                     | JoinChannels ->
                         do! joinChannels state
                         return! loop state
