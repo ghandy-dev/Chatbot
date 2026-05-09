@@ -250,15 +250,16 @@ module RiotGames =
         ApiKey: string
     }
 
+    // TODO: fix broken url?
     module RiotGamesService =
 
         let create env config =
 
-            let accountUrl (username: string) (tag: string) = $"https://europe.api.env.com/riot/account/v1/accounts/by-riot-id/%s{username |> Uri.EscapeDataString}/%s{tag |> Uri.EscapeDataString}"
-            let summonerUrl region puuid = $"https://%s{region}.api.env.com/lol/summoner/v4/summoners/by-puuid/%s{puuid}"
-            let leagueEntryUrl region puuid = $"https://%s{region}.api.env.com/lol/league/v4/entries/by-puuid/%s{puuid}"
-            let matchIdsUrl puuid = $"https://europe.api.env.com/lol/match/v5/matches/by-puuid/%s{puuid}/ids"
-            let matchUrl matchId = $"https://europe.api.env.com/lol/match/v5/matches/%s{matchId}"
+            let accountUrl (username: string) (tag: string) = $"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/%s{username |> Uri.EscapeDataString}/%s{tag |> Uri.EscapeDataString}"
+            let summonerUrl region puuid = $"https://%s{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/%s{puuid}"
+            let leagueEntryUrl region puuid = $"https://%s{region}.api.riotgames.com/lol/league/v4/entries/by-puuid/%s{puuid}"
+            let matchIdsUrl puuid = $"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/%s{puuid}/ids"
+            let matchUrl matchId = $"https://europe.api.riotgames.com/lol/match/v5/matches/%s{matchId}"
 
             let apiKey = config.ApiKey
             let httpClient = env.HttpClient
