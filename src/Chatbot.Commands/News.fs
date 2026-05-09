@@ -10,20 +10,19 @@ module News =
 
     let news (newsService: INewsService) context =
         asyncResult {
-            let maybeCategory =
-                if context.MessageArgs |> List.isEmpty then
-                    None
-                else
-                    Some <| (context.MessageArgs |> String.concat " ")
+            let categoryOpt =
+                match context.MessageArgs with
+                | [] -> None
+                | args -> Some (args |> String.concat " ")
 
             let! newsItem =
-                newsService.GetNews maybeCategory
+                newsService.GetNews categoryOpt
                 |> AsyncResult.mapError InternalError
 
             let title = newsItem.Title.Text
-            let date = newsItem.PublishDate.UtcDateTime.ToString("dd MMM yyyy, HH:mm")
+            let date = newsItem.PublishDate.UtcDateTime.ToString("dd MMM yyyy")
             let summary = if newsItem.Summary = null then "" else newsItem.Summary.Text
             let link = newsItem.Links |> Seq.tryHead |> Option.bind (fun l -> Some l.Uri.AbsoluteUri) |? ""
 
-            return [ Message $"{date} {title} {summary} {link}" ]
+            return [ Message $"{date}, {title} {summary} {link}" ]
         }
