@@ -28,5 +28,5 @@ module UrbanDictionary =
                     [ @"[\[\]]", "" ; @"(\r\n|\n)", " " ]
                     |> List.fold (fun acc (pattern, replacement) -> Regex.Replace(acc, pattern, replacement)) term.Definition
 
-                return [ Message $"{term.Permalink} (+{term.ThumbsUp}/-{term.ThumbsDown}) {term.Word}: {definition}" ]
+                return [ Message $"{term.Permalink} {term.Word}: {definition}" ]
         }
