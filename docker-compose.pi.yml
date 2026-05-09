@@ -2,13 +2,12 @@ services:
   chatbot:
     image: chatbot:latest
     platform: linux/arm/v7
-    volumes:
-      - chatbot_data:/app/data
-    env_file:
-      - .env
-
     networks:
       - private_network
+    env_file:
+      - .env
+    volumes:
+      - chatbot_data:/app/data
 
 networks:
   private_network:
