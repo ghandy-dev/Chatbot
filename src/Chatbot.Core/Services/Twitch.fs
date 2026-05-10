@@ -209,15 +209,15 @@ module Twitch =
                 helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(First = first)) |> Async.AwaitTask
                 |> Async.map handleResponse
 
-            let getStream userId =
-                helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(UserIds = [ userId ])) |> Async.AwaitTask
+            let getStream channel =
+                helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(LoginNames = [ channel ])) |> Async.AwaitTask
                 |> Async.map handleResponse
                 |> AsyncResult.map List.tryHead
 
             {
                 new Streams with
-                    member _.GetStreams channel = getStreams channel
-                    member _.GetStream count = getStream count
+                    member _.GetStreams count = getStreams count
+                    member _.GetStream channel = getStream channel
             }
 
     module Users =
