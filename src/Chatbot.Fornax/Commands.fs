@@ -33,6 +33,7 @@ let commands =
         CommandInfo.create "chatsummary" [] HelpInfo.ChatSummary 20 false true
         CommandInfo.create "channel" [] HelpInfo.Channel 20 false true
         CommandInfo.create "coinflip" [ "cf" ] HelpInfo.CoinFlip 10 false true
+        CommandInfo.create "createclip" [ "cc" ; "clip" ] HelpInfo.CreateClip 30 false false
         CommandInfo.create "didyouknow" [ "dyk" ] HelpInfo.DidYouKnow 10 false true
         CommandInfo.create "eightball" ["8ball"] HelpInfo.Eightball 10 false true
         CommandInfo.create "echo" [] HelpInfo.Echo 5 true true

@@ -50,7 +50,7 @@
     <PackageReference Include="FsToolkit.ErrorHandling" Version="5.1.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.5" />
     <PackageReference Include="System.ServiceModel.Syndication" Version="10.0.0" />
-    <PackageReference Include="TTVSharp.Helix" Version="0.3.0" />
+    <PackageReference Include="TTVSharp.Helix" Version="0.4.0" />
   </ItemGroup>
 
   <ItemGroup>

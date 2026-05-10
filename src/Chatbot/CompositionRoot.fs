@@ -111,6 +111,7 @@ let buildCommands commandPrefix =
         Command.create "chatsummary" [] HelpInfo.ChatSummary (Async (chatSummary ivrService genAIService)) 20 false true
         Command.create "channel" [] HelpInfo.Channel (Async (channel twitchService)) 20 false true
         Command.create "coinflip" [ "cf" ] HelpInfo.CoinFlip (Sync coinFlip) 10 false true
+        Command.create "createclip" [ "cc" ; "clip" ] HelpInfo.CreateClip (Async (createClip twitchService)) 30 false false
         Command.create "didyouknow" [ "dyk" ] HelpInfo.DidYouKnow (Async (didYouKnow wikipediaService)) 10 false true
         Command.create "eightball" ["8ball"] HelpInfo.Eightball (Sync eightball) 10 false true
         Command.create "echo" [] HelpInfo.Echo (Sync echo) 5 true true

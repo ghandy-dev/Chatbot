@@ -222,6 +222,19 @@ Get a summary of another channel's chats.
             ExampleUsage = $"""{example "coinflip"}"""
         }
 
+    let CreateClip =
+        {
+            Name = "Create Clip"
+            Description = "Create a clip of the last 60 seconds of a stream"
+            ExampleUsage = $"""
+Create a clip from the current stream:
+{example "createclip"}
+
+Create a clip from a specified stream:
+{exampleArgs "createclip" "<channel>"}
+{exampleArgs "createclip" "pobelter"}
+"""
+        }
 
     let DidYouKnow =
         {
