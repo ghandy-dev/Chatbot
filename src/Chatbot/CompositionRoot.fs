@@ -111,6 +111,7 @@ let buildCommands commandPrefix =
         Command.create "chatsummary" [] HelpInfo.ChatSummary (Async (chatSummary ivrService genAIService)) 20 false true
         Command.create "channel" [] HelpInfo.Channel (Async (channel twitchService)) 20 false true
         Command.create "coinflip" [ "cf" ] HelpInfo.CoinFlip (Sync coinFlip) 10 false true
+        Command.create "createclip" [ "cc" ; "clip" ] HelpInfo.CreateClip (Async (createClip twitchService)) 30 false false
         Command.create "didyouknow" [ "dyk" ] HelpInfo.DidYouKnow (Async (didYouKnow wikipediaService)) 10 false true
         Command.create "eightball" ["8ball"] HelpInfo.Eightball (Sync eightball) 10 false true
         Command.create "echo" [] HelpInfo.Echo (Sync echo) 5 true true
@@ -130,6 +131,7 @@ let buildCommands commandPrefix =
         Command.create "onthisday" [ "otd" ] HelpInfo.Pick (Async (onThisDay wikipediaService)) 10 false true
         Command.create "pick" [] HelpInfo.Pick (Sync pick) 10 false true
         Command.create "ping" [] HelpInfo.Ping (Sync ping) 5 false true
+        Command.create "profilepicture" [ "pfp" ] HelpInfo.ProfilePicture (Async (profilePicture twitchService)) 20 false true
         Command.create "randomclip" [ "rc" ] HelpInfo.RandomClip (Async (randomClip twitchService)) 20 false true
         Command.create "randomemote" [] HelpInfo.RandomEmote (Sync randomEmote) 5 false true
         Command.create "randomline" [ "rl" ] HelpInfo.RandomLine (Async (randomLine ivrService)) 10 false true
@@ -147,6 +149,7 @@ let buildCommands commandPrefix =
         Command.create "time" [] HelpInfo.Time (Async (time geolocationService)) 5 false true
         Command.create "texttoascii" [ "tta" ] HelpInfo.TextToAscii (Sync textToAscii) 15 false true
         Command.create "texttransform" [ "tt" ] HelpInfo.TextTransform (Sync texttransform) 5 false true
+        Command.create "thumbnail" [ "tn" ] HelpInfo.Thumbnail (Async (thumbnail twitchService)) 20 false true
         Command.create "topstreams" [ "ts" ] HelpInfo.TopStreams (Async (topStreams twitchService)) 20 false true
         Command.create "trivia" [] HelpInfo.Trivia (Async (trivia triviaService)) 20 false false
         Command.create "urban" [ "ud" ] HelpInfo.UrbanDictionary (Async (urban urbanDictionaryService)) 20 false true

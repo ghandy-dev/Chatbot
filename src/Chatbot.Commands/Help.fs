@@ -222,6 +222,19 @@ Get a summary of another channel's chats.
             ExampleUsage = $"""{example "coinflip"}"""
         }
 
+    let CreateClip =
+        {
+            Name = "Create Clip"
+            Description = "Create a clip of the last 60 seconds of a stream"
+            ExampleUsage = $"""
+Create a clip from the current stream:
+{example "createclip"}
+
+Create a clip from a specified stream:
+{exampleArgs "createclip" "<channel>"}
+{exampleArgs "createclip" "pobelter"}
+"""
+        }
 
     let DidYouKnow =
         {
@@ -512,6 +525,20 @@ Custom delimiter:
             Name = "Ping"
             Description = "Ping to check bot is up and running."
             ExampleUsage = $"""{example "ping"}"""
+        }
+
+    let ProfilePicture =
+        {
+            Name = "Profile Picture"
+            Description = "Get a link to a user's profile picture"
+            ExampleUsage = $"""
+Get your own profile picture:
+{example "profilepicture"}
+
+Get a user's profile picture:
+{exampleArgs "profilepicture" "<user>"}
+{exampleArgs "profilepicture" "nintendo"}
+"""
         }
 
     let RandomClip =
@@ -831,6 +858,16 @@ Supported transforms are:
 
 {exampleArgs "texttransform" "<transform> <text>"}
 {exampleArgs "texttransform" "uppercase hello world!"}
+"""
+        }
+
+    let Thumbnail =
+        {
+            Name = "Thumbnail"
+            Description = "Get the thumbnail for a stream that is currently live"
+            ExampleUsage = $"""
+{exampleArgs "thumbnail" "<channel>"}
+{exampleArgs "thumbnail" "Day9tv"}
 """
         }
 

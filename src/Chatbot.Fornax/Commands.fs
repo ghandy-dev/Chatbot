@@ -33,6 +33,7 @@ let commands =
         CommandInfo.create "chatsummary" [] HelpInfo.ChatSummary 20 false true
         CommandInfo.create "channel" [] HelpInfo.Channel 20 false true
         CommandInfo.create "coinflip" [ "cf" ] HelpInfo.CoinFlip 10 false true
+        CommandInfo.create "createclip" [ "cc" ; "clip" ] HelpInfo.CreateClip 30 false false
         CommandInfo.create "didyouknow" [ "dyk" ] HelpInfo.DidYouKnow 10 false true
         CommandInfo.create "eightball" ["8ball"] HelpInfo.Eightball 10 false true
         CommandInfo.create "echo" [] HelpInfo.Echo 5 true true
@@ -52,6 +53,7 @@ let commands =
         CommandInfo.create "onthisday" [ "otd" ] HelpInfo.Pick 10 false true
         CommandInfo.create "pick" [] HelpInfo.Pick 10 false true
         CommandInfo.create "ping" [] HelpInfo.Ping 5 false true
+        CommandInfo.create "profilepicture" [ "pfp" ] HelpInfo.ProfilePicture 20 false true
         CommandInfo.create "randomclip" [ "rc" ] HelpInfo.RandomClip 20 false true
         CommandInfo.create "randomemote" [] HelpInfo.RandomEmote 5 false true
         CommandInfo.create "randomline" [ "rl" ] HelpInfo.RandomLine 10 false true
@@ -69,6 +71,7 @@ let commands =
         CommandInfo.create "time" [] HelpInfo.Time 5 false true
         CommandInfo.create "texttoascii" [ "tta" ] HelpInfo.TextToAscii 15 false true
         CommandInfo.create "texttransform" [ "tt" ] HelpInfo.TextTransform 5 false true
+        CommandInfo.create "thumbnail" [ "tn" ] HelpInfo.Thumbnail 20 false true
         CommandInfo.create "topstreams" [ "ts" ] HelpInfo.TopStreams 20 false true
         CommandInfo.create "trivia" [] HelpInfo.Trivia 20 false false
         CommandInfo.create "urban" [ "ud" ] HelpInfo.UrbanDictionary 20 false true

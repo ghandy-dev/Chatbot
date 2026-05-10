@@ -25,6 +25,7 @@ module Twitch =
 
     type Clips =
         abstract member GetClips: channel: string -> dateFrom: System.DateTime -> dateTo: System.DateTime -> Async<Result<Clip list, int>>
+        abstract member CreateClip: broadcasterId: string -> accessToken: string -> Async<Result<CreateClip option, int>>
 
     type Emotes =
         abstract member GetGlobalEmotes: unit -> Async<Result<GlobalEmote list, int>>
@@ -145,9 +146,15 @@ module Twitch =
                 helixApi.Clips.GetClipsAsync(new GetClipsRequestByBroadcasterId(BroadcasterId = userId, StartedAt = dateFrom, EndedAt = dateTo, First = 50)) |> Async.AwaitTask
                 |> Async.map handleResponse
 
+            let createClip broadcasterId accessToken =
+                helixApi.Clips.CreateClipAsync(new CreateClipRequest(BroadcasterId = broadcasterId, Duration = 60.0f), accessToken) |> Async.AwaitTask
+                |> Async.map handleResponse
+                |> AsyncResult.map List.tryHead
+
             {
                 new Clips with
                     member _.GetClips channel dateFrom dateTo = getClips channel dateFrom dateTo
+                    member _.CreateClip broadcasterId accessToken = createClip broadcasterId accessToken
             }
 
     module Emotes =
@@ -209,15 +216,15 @@ module Twitch =
                 helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(First = first)) |> Async.AwaitTask
                 |> Async.map handleResponse
 
-            let getStream userId =
-                helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(UserIds = [ userId ])) |> Async.AwaitTask
+            let getStream channel =
+                helixApi.Streams.GetStreamsAsync(new GetStreamsRequest(LoginNames = [ channel ])) |> Async.AwaitTask
                 |> Async.map handleResponse
                 |> AsyncResult.map List.tryHead
 
             {
                 new Streams with
-                    member _.GetStreams channel = getStreams channel
-                    member _.GetStream count = getStream count
+                    member _.GetStreams count = getStreams count
+                    member _.GetStream channel = getStream channel
             }
 
     module Users =
