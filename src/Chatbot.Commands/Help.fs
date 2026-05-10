@@ -514,6 +514,20 @@ Custom delimiter:
             ExampleUsage = $"""{example "ping"}"""
         }
 
+    let ProfilePicture =
+        {
+            Name = "Profile Picture"
+            Description = "Get a link to a user's profile picture"
+            ExampleUsage = $"""
+Get your own profile picture:
+{example "profilepicture"}
+
+Get a user's profile picture:
+{exampleArgs "profilepicture" "<user>"}
+{exampleArgs "profilepicture" "nintendo"}
+"""
+        }
+
     let RandomClip =
         {
             Name = "Random Clip"

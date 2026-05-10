@@ -52,6 +52,7 @@ let commands =
         CommandInfo.create "onthisday" [ "otd" ] HelpInfo.Pick 10 false true
         CommandInfo.create "pick" [] HelpInfo.Pick 10 false true
         CommandInfo.create "ping" [] HelpInfo.Ping 5 false true
+        CommandInfo.create "profilepicture" [ "pfp" ] HelpInfo.ProfilePicture 20 false true
         CommandInfo.create "randomclip" [ "rc" ] HelpInfo.RandomClip 20 false true
         CommandInfo.create "randomemote" [] HelpInfo.RandomEmote 5 false true
         CommandInfo.create "randomline" [ "rl" ] HelpInfo.RandomLine 10 false true

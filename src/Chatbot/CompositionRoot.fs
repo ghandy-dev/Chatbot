@@ -130,6 +130,7 @@ let buildCommands commandPrefix =
         Command.create "onthisday" [ "otd" ] HelpInfo.Pick (Async (onThisDay wikipediaService)) 10 false true
         Command.create "pick" [] HelpInfo.Pick (Sync pick) 10 false true
         Command.create "ping" [] HelpInfo.Ping (Sync ping) 5 false true
+        Command.create "profilepicture" [ "pfp" ] HelpInfo.ProfilePicture (Async (profilePicture twitchService)) 20 false true
         Command.create "randomclip" [ "rc" ] HelpInfo.RandomClip (Async (randomClip twitchService)) 20 false true
         Command.create "randomemote" [] HelpInfo.RandomEmote (Sync randomEmote) 5 false true
         Command.create "randomline" [ "rl" ] HelpInfo.RandomLine (Async (randomLine ivrService)) 10 false true
