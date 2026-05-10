@@ -148,6 +148,7 @@ let buildCommands commandPrefix =
         Command.create "time" [] HelpInfo.Time (Async (time geolocationService)) 5 false true
         Command.create "texttoascii" [ "tta" ] HelpInfo.TextToAscii (Sync textToAscii) 15 false true
         Command.create "texttransform" [ "tt" ] HelpInfo.TextTransform (Sync texttransform) 5 false true
+        Command.create "thumbnail" [ "tn" ] HelpInfo.Thumbnail (Async (thumbnail twitchService)) 20 false true
         Command.create "topstreams" [ "ts" ] HelpInfo.TopStreams (Async (topStreams twitchService)) 20 false true
         Command.create "trivia" [] HelpInfo.Trivia (Async (trivia triviaService)) 20 false false
         Command.create "urban" [ "ud" ] HelpInfo.UrbanDictionary (Async (urban urbanDictionaryService)) 20 false true

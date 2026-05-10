@@ -70,6 +70,7 @@ let commands =
         CommandInfo.create "time" [] HelpInfo.Time 5 false true
         CommandInfo.create "texttoascii" [ "tta" ] HelpInfo.TextToAscii 15 false true
         CommandInfo.create "texttransform" [ "tt" ] HelpInfo.TextTransform 5 false true
+        CommandInfo.create "thumbnail" [ "tn" ] HelpInfo.Thumbnail 20 false true
         CommandInfo.create "topstreams" [ "ts" ] HelpInfo.TopStreams 20 false true
         CommandInfo.create "trivia" [] HelpInfo.Trivia 20 false false
         CommandInfo.create "urban" [ "ud" ] HelpInfo.UrbanDictionary 20 false true

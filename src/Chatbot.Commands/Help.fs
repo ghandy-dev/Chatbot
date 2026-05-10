@@ -848,6 +848,16 @@ Supported transforms are:
 """
         }
 
+    let Thumbnail =
+        {
+            Name = "Thumbnail"
+            Description = "Get the thumbnail for a stream that is currently live"
+            ExampleUsage = $"""
+{exampleArgs "thumbnail" "<channel>"}
+{exampleArgs "thumbnail" "Day9tv"}
+"""
+        }
+
     let TopStreams =
         {
             Name = "Top Streams"

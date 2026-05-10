@@ -53,6 +53,7 @@
     <Compile Include="GptImage.fs" />
     <Compile Include="ChatSummary.fs" />
     <Compile Include="ProfilePicture.fs" />
+    <Compile Include="Thumbnail.fs" />
   </ItemGroup>
 
   <ItemGroup>
