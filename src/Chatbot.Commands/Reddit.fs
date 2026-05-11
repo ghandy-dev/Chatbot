@@ -16,7 +16,7 @@ module Reddit =
         not <| p.Data.Over18 && not <| p.Data.IsSelf
 
     let private flairFilter (flair: string) (p: Thing<T3>) =
-        (p.Data.Flair |? "", flair) ||> strCompareIgnoreCase
+        (p.Data.Flair |? "", flair) ||> String.compareIgnoreCase
 
     let private redditKeys = [ "sort" ; "flair" ]
     let private defaultSorting = "hot"
@@ -33,7 +33,7 @@ module Reddit =
                     match kvp.KeyValues.TryFind "sort" with
                     | None -> Some defaultSorting
                     | Some s -> sortings |> List.tryFind ((=) s)
-                    |> Result.requireSome (InvalidArgs $"""Unknown sorting. Valid sortings: {sortings |> strJoin ", "}""")
+                    |> Result.requireSome (InvalidArgs $"""Unknown sorting. Valid sortings: {sortings |> String.join ", "}""")
 
                 let maybeFlair = kvp.KeyValues.TryFind "flair"
 

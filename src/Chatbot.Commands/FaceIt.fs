@@ -16,7 +16,7 @@ module FaceIt =
             let! player = faceItService.GetPlayerByUsername playerName |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
             let! stats = faceItService.GetPlayerStats player.PlayerId |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "FaceIt")
             let recentResults =
-                stats.Lifetime.RecentResults |> List.map (fun r -> if r = "0" then "L" else "W") |> String.concat " "
+                stats.Lifetime.RecentResults |> List.map (fun r -> if r = "0" then "L" else "W") |> String.join " "
 
             let message =
                 (new StringBuilder())
@@ -72,9 +72,9 @@ module FaceIt =
                         |> List.map (fun (outcome, score) ->
                             $"{DateTimeOffset.FromUnixTimeSeconds(h.FinishedAt).Date.ToShortDateString()} {outcome}, {score}"
                         )
-                        |> String.concat " | "
+                        |> String.join " | "
                     )
-                    |> String.concat " | "
+                    |> String.join " | "
 
                 return [ Message results ]
         }

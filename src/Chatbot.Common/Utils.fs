@@ -69,23 +69,6 @@ module Utils =
 
         stripped
 
-    let strFormat (s: string) (args: string list) =
-        let pattern = @"\{(\d+)\}"
-        Regex.Replace(s, pattern, fun m ->
-            let index = int m.Groups.[1].Value
-            args.[index])
-
-    let strCompare a b = String.Compare(a, b) = 0
-    let strCompareIgnoreCase a b = String.Compare(a, b, ignoreCase = true) = 0
-    let strEmpty = String.IsNullOrWhiteSpace
-    let strNotEmpty = not << strEmpty
-    let strConcat (values: string seq) = String.Concat(values)
-    let strJoin (separator: string) (values: string seq) = String.Join(separator, values)
-    let strStartsWith (value: string) (s: string) = s.StartsWith(value)
-    let strReplace (oldValue: string) (newValue: string) (s: string) = s.Replace(oldValue, newValue)
-    let strSplit (separator: string) (s: string) = s.Split(separator, StringSplitOptions.RemoveEmptyEntries ||| StringSplitOptions .TrimEntries)
-    let strSubstring length (s: string) = s.Substring(length)
-
     let htmlEncode = System.Web.HttpUtility.HtmlEncode
     let htmlDecode = System.Web.HttpUtility.HtmlDecode
 
@@ -100,4 +83,4 @@ module Utils =
     let removeHiddenChars text =
         whiteSpaceAndAnnoyingUnicodeCharactersRegex.Split(text)
         |> Array.filter (not << String.IsNullOrWhiteSpace)
-        |> strJoin " "
+        |> String.join " "

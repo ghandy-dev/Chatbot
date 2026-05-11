@@ -147,7 +147,7 @@ let create env config (emoteService: EmoteService) userId (twitchClient: TwitchC
                                 | Ok (CommandResponse.BotAction _) -> return CommandError.invalidUsage "Invalid command in pipe", userCommandCooldowns
                                 | Ok (CommandResponse.Message acc) ->
                                     let command, args = command
-                                    let args = List.append args (acc |> strSplit " " |> List.ofArray)
+                                    let args = List.append args (acc |> String.split " " |> List.ofArray)
                                     let context = Context.create (string msg.UserId) msg.Username args msg.Source state.Emotes msg.MessageEmotes
 
                                     let! responseResult = runCommand state command user context
@@ -164,7 +164,7 @@ let create env config (emoteService: EmoteService) userId (twitchClient: TwitchC
                                         let message =
                                             responses
                                             |> List.choose (function | CommandResponse.Message m -> Some m | _ -> None)
-                                            |> strJoin " "
+                                            |> String.join " "
 
                                         return Ok (Message message), userCommandCooldowns
                             }
@@ -193,9 +193,9 @@ let create env config (emoteService: EmoteService) userId (twitchClient: TwitchC
                         match! Aliases.get db (Chatbot.Database.Aliases.ByUserIdAliasName (int msg.UserId, alias)) with
                         | None -> return None
                         | Some a ->
-                            let commandText =  strFormat a.Command args
+                            let commandText = String.format a.Command args
 
-                            match commandText |> strSplit " " |> List.ofArray with
+                            match commandText |> String.split " " |> List.ofArray with
                             | [] -> return None
                             | command :: args ->
                                 return

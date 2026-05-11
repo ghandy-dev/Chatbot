@@ -27,7 +27,7 @@ module RiotGames =
         |> Map.ofList
 
     let private parseRiotId (riotId: string seq) =
-        riotId |> String.concat " "  |> _.Split("#", StringSplitOptions.TrimEntries)
+        riotId |> String.join " "  |> _.Split("#", StringSplitOptions.TrimEntries)
         |> function
         | [| gameName ; tagLine |] -> Ok (gameName, tagLine)
         | _ -> invalidArgs "Username#Tag required"

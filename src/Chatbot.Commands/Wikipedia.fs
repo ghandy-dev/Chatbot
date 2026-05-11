@@ -17,7 +17,7 @@ module Wikipedia =
             match context.MessageArgs with
             | [] -> return! invalidArgs "No input provided."
             | input ->
-                let query = String.concat " " input
+                let query = String.join " " input
                 let! pages = wikiService.GetWikiResults query |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Wikipedia")
                 let htmlTagPattern = "<.*?>"
 
@@ -44,7 +44,7 @@ module Wikipedia =
                         let today = utcNow()
                         let year = otd.Year
                         let text = otd.Text
-                        let links = otd.Pages |> Seq.map _.ContentUrls.Desktop.Page |> strJoin ", "
+                        let links = otd.Pages |> Seq.map _.ContentUrls.Desktop.Page |> String.join ", "
 
                         [ Message $"""{today.ToString("dd MMM")} {year}, {text} ({links})""" ]
         }
@@ -62,7 +62,7 @@ module Wikipedia =
                     |> Seq.randomChoice
                     |> fun n ->
                         let story = Regex.Replace(n.Story, htmlTagPattern, "")
-                        let links = n.Links |> Seq.map  _.ContentUrls.Desktop.Page |> strJoin ", "
+                        let links = n.Links |> Seq.map  _.ContentUrls.Desktop.Page |> String.join ", "
 
                         [ Message $"{story} ({links})" ]
         }
@@ -84,7 +84,7 @@ module Wikipedia =
                         let links =
                             Regex.Matches(dyk.Html, referenceLinkPattern)
                             |> Seq.map _.Groups.[1].Value
-                            |> strJoin ", "
+                            |> String.join ", "
 
                         [ Message $"{text} ({links})" ]
         }

@@ -8,6 +8,7 @@
     <Compile Include="Extensions/Seq.fs" />
     <Compile Include="Extensions/Array.fs" />
     <Compile Include="Extensions/List.fs" />
+    <Compile Include="Extensions/String.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Utilities/DateTime.fs" />
     <Compile Include="Utilities/KeyValueParser.fs" />

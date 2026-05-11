@@ -269,7 +269,7 @@ module Agent =
 
             let messageReceived message =
                 async {
-                    if not (message |> strEmpty) then
+                    if not (message |> String.isEmpty) then
                         logger.LogInformation("Receieved: {message}", message)
                         let messages = message |> parseMessage
 

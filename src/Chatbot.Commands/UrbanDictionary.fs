@@ -16,7 +16,7 @@ module UrbanDictionary =
                 match context.MessageArgs with
                 | [] -> urbanDictionaryService.Random ()
                 | args ->
-                    let query = args |> String.concat " "
+                    let query = args |> String.join " "
                     urbanDictionaryService.Search query
 
             let! terms = getTerm |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "UrbanDictionary")

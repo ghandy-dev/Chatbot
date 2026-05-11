@@ -19,7 +19,7 @@ module TopStreams =
                     let topStreams =
                         streams
                         |> Seq.map (fun s -> $"""@{s.UserName} - {s.GameName} ({s.ViewerCount.ToString("N0")})""")
-                        |> String.concat ", "
+                        |> String.join ", "
 
                     [ Message topStreams ]
         }

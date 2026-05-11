@@ -34,7 +34,7 @@ module Encode =
         | [] | [ _ ] ->
             Error <| InvalidArgs "No encoder and/or text provided"
         | encoder :: input ->
-            let text = input |> String.concat " "
+            let text = input |> String.join " "
             match encoder with
             | "base64" -> runEncode base64 text
             | "rot13" -> runEncode rot13 text
@@ -42,7 +42,7 @@ module Encode =
                 match input with
                 | shift :: rest ->
                     match Parsing.tryParseInt shift with
-                    | Some n -> runEncode (caesar n) (rest |> String.concat " ")
+                    | Some n -> runEncode (caesar n) (rest |> String.join " ")
                     | None -> runEncode (caesar (System.Random.Shared.Next(1, 27))) text
                 | _ -> runEncode (caesar (System.Random.Shared.Next(1, 27))) text
             | _ ->

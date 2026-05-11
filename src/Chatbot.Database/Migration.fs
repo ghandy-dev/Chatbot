@@ -43,7 +43,7 @@ let run connectionString =
     try
         for resource in resources do
             use stream = new StreamReader(assembly.GetManifestResourceStream(resource))
-            let file = resource |> strReplace $"{assemblyName}.Migrations." ""
+            let file = resource |> String.replace $"{assemblyName}.Migrations." ""
 
             let versionRegex = versionRegex.Match(file)
 

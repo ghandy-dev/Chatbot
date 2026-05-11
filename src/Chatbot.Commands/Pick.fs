@@ -23,7 +23,7 @@ module Pick =
                     match m.Success with
                     | false -> context.MessageArgs
                     | true ->
-                        String.concat " " tail
+                        String.join " " tail
                         |> _.Split(m.Groups[1].Value, StringSplitOptions.TrimEntries)
                         |> List.ofArray
 

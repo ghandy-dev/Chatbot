@@ -16,7 +16,7 @@ module AddBetween =
             | word :: text ->
                 let message =
                     seq { yield word ; for t in text -> $"{t} {word}" }
-                    |> strJoin " "
+                    |> String.join " "
 
                 return [ Message message ]
         }

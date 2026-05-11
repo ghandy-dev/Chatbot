@@ -53,14 +53,14 @@ let create env (textStorageService: ITextStorageService) (twitchChatClient: Chat
                                         let ts = DateTime.UtcNow - r.Timestamp
                                         $"(%s{formatTimeSpan ts} ago): %s{r.Message}"
                                     )
-                                    |> strJoin ", "
+                                    |> String.join ", "
 
                                 if rs |> Seq.length = 1 then
                                     $"reminder from %s{sender} %s{message}"
                                 else
                                     $"reminders from %s{sender} %s{message}"
                             )
-                            |> strJoin ", "
+                            |> String.join ", "
 
                         if message.Length > 500 then
                             match! textStorageService.CreatePost "" message with

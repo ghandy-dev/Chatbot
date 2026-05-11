@@ -58,7 +58,7 @@ module Logs =
                 let user = kvp.KeyValues.TryFind "user" |> Option.defaultValue context.Username
                 let reverse = kvp.KeyValues.TryFind "reverse" |> Option.bind tryParseBoolean |> Option.defaultValue false
                 let offset = kvp.KeyValues.TryFind "offset" |> Option.bind tryParseInt |> Option.defaultValue 0
-                let query = kvp.Input |> strJoin " "
+                let query = kvp.Input |> String.join " "
 
                 let! message =
                     ivrService.Search channel user query reverse offset

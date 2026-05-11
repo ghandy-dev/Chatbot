@@ -116,7 +116,7 @@ let create env (twitchChatClient: Chatbot.Twitch.TwitchClient) cancellationToken
             let userMessaged channel username message state =
                 async {
                     match state |> Map.tryFind channel with
-                    | Some { Questions = q :: qs } when message |> strCompareIgnoreCase q.Answer ->
+                    | Some { Questions = q :: qs } when message |> String.compareIgnoreCase q.Answer ->
                         do send channel $"""[Trivia] @%s{username}, got it! The answer was %s{q.Answer}"""
 
                         if qs.IsEmpty then

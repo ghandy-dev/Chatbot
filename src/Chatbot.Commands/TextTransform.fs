@@ -11,19 +11,19 @@ module TextTransform =
 
     let private random = Random.Shared
 
-    let private toUpper text = text |> strJoin " " |> _.ToUpper()
+    let private toUpper text = text |> String.join " " |> _.ToUpper()
 
-    let private toLower text = text |> strJoin " " |> _.ToLower()
+    let private toLower text = text |> String.join " " |> _.ToLower()
 
-    let private reverse text = text |> strJoin " " |> Seq.rev |> Array.ofSeq |> fun s -> new string (s)
+    let private reverse text = text |> String.join " " |> Seq.rev |> Array.ofSeq |> fun s -> new string (s)
 
     let private shuffle text =
         let array = text |> Array.ofSeq
         array |> Array.iteri (fun n _ -> Array.swap array n (random.Next(array.Length)) |> ignore)
-        array |> strJoin " "
+        array |> String.join " "
 
     let private explode text =
-        text |> strJoin " " |> Array.ofSeq |> fun s -> String.Join(" ", s)
+        text |> String.join " " |> Array.ofSeq |> fun s -> String.Join(" ", s)
 
     let private alternating (text: string seq) =
         let mutable alternated = false
@@ -39,7 +39,7 @@ module TextTransform =
                 else
                     c
             )
-            |> fun s -> new string (s)) |> strJoin " "
+            |> fun s -> new string (s)) |> String.join " "
 
     let private transforms =
         [

@@ -80,8 +80,8 @@ module Slots =
                         let limit = 3
                         let totalOutcomes = pown set.Length limit
                         let probability = totalOutcomes / set.Length
-                        $"""[ {spin |> String.concat " "} ] You won! (1 in %d{probability})"""
+                        $"""[ {spin |> String.join " "} ] You won! (1 in %d{probability})"""
                     else
-                        $"""[ {spin |> String.concat " "} ]"""
+                        $"""[ {spin |> String.join " "} ]"""
 
                 Ok [ Message message ]

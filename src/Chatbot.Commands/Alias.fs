@@ -15,8 +15,8 @@ module Alias =
     let private validateCommand (command: string list) pipeSeparator (commands: Map<string, _>) =
         let aliasCommands =
             command
-            |> String.concat " "
-            |> fun s -> s |> strSplit pipeSeparator
+            |> String.join " "
+            |> fun s -> s |> String.split pipeSeparator
             |> fun a ->
                 a |> Array.map (fun s -> s.Split(" ", System.StringSplitOptions.TrimEntries ||| System.StringSplitOptions.RemoveEmptyEntries) |> Array.tryHead) |> Array.choose id
 
@@ -36,7 +36,7 @@ module Alias =
                 match! Aliases.get db (ByUserIdAliasName (int userId, alias)) with
                 | Some _ -> return [ Message $"Alias {alias} already exists" ]
                 | None ->
-                    match! Aliases.add db (Models.NewAlias.create (userId |> int) alias (String.concat " " command)) with
+                    match! Aliases.add db (Models.NewAlias.create (userId |> int) alias (String.join " " command)) with
                     | DatabaseResult.Failure -> return! internalError "Error occured trying to add alias"
                     | DatabaseResult.Success 0 -> return [ Message $"You already have alias \"{alias}\"" ]
                     | DatabaseResult.Success _ -> return [ Message $"Alias \"{alias}\" successfully added" ]
@@ -47,7 +47,7 @@ module Alias =
             match validateCommand command pipeSeparator commands with
             | false -> return! invalidArgs "Invalid command definition"
             | true ->
-                match! Aliases.update db (Models.UpdateAlias.create (userId |> int) alias (String.concat " " command)) with
+                match! Aliases.update db (Models.UpdateAlias.create (userId |> int) alias (String.join " " command)) with
                 | DatabaseResult.Failure -> return! internalError "Error occurred trying to update alias"
                 | DatabaseResult.Success 0 -> return [ Message $"You don't have the alias \"{alias}\"" ]
                 | DatabaseResult.Success _ -> return [ Message $"Alias \"{alias}\" successfully updated" ]
@@ -68,7 +68,7 @@ module Alias =
             | Some user ->
                 match! Aliases.get db (ByUserIdAliasName (int user.Id, alias)) with
                 | None ->
-                    if strCompareIgnoreCase username user.Login then
+                    if String.compareIgnoreCase username user.Login then
                         return [ Message $"You don't have the alias \"{alias}\"" ]
                     else
                         return [ Message $"{username} doesn't have the alias \"{alias}\"" ]

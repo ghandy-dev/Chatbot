@@ -8,6 +8,6 @@ module UrlBuilder =
         let query =
             parameters
             |> Seq.map (fun (k, v) -> $"{k}={Uri.EscapeDataString(v)}")
-            |> strJoin "&"
+            |> String.join "&"
 
         $"{url}?{query}"

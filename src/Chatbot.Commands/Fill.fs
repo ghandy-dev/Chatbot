@@ -38,6 +38,6 @@ module Fill =
                 | false ->
                     (0, words)
                     |> Seq.unfold randomFill
-                |> strJoin " "
+                |> String.join " "
 
             Ok [ Message message ]

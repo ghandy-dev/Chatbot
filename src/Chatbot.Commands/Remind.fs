@@ -60,7 +60,7 @@ module Remind =
 
     let private remind' db twitchService (args: string seq) (user: string) (context: Context) =
         asyncResult {
-            let content = String.concat " " args
+            let content = String.join " " args
             let isTimedReminder = Regex.IsMatch(sprintf $"%s{user} %s{content}", whenPattern user, RegexOptions.IgnoreCase)
 
             if isTimedReminder then

@@ -27,7 +27,7 @@ module FollowAge =
 
             let! user, channel = maybeData |> Result.requireSome (InvalidArgs "You must specify a user and channel when using this command in whispers")
             let! subage =  ivrService.GetSubAge user channel |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "IVR")
-            let isSelf = strCompareIgnoreCase user context.Username
+            let isSelf = String.compareIgnoreCase user context.Username
 
             let message =
                 match subage.FollowedAt, isSelf with

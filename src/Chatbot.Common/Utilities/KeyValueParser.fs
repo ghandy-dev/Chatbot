@@ -20,18 +20,18 @@ module KeyValueParser =
             | _ -> None
 
     let private removeKeyValues (list: string seq) (keys: string seq)  =
-        let string = list |> String.concat " "
+        let string = list |> String.join " "
 
         let pattern =
             keys
             |> Seq.map patternTemplate
-            |> String.concat "|"
+            |> String.join "|"
 
         Regex.Replace(string, pattern, "").Split(" ", System.StringSplitOptions.RemoveEmptyEntries)
         |> List.ofArray
 
     let parse (input: string seq) (keys: string seq) =
-        let s = input |> String.concat " "
+        let s = input |> String.join " "
 
         let patterns =
             keys

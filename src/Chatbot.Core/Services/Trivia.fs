@@ -42,8 +42,8 @@ module Trivia =
                     apiUrl
                     ([
                         Some ("count", count)
-                        if excludeCategories |> List.isEmpty then None else Some (excludeCategories |> String.concat "," |> fun cs -> "exclude", cs)
-                        if includeCategories |> List.isEmpty then None else Some (includeCategories |> String.concat "," |> fun cs -> "include", cs)
+                        if excludeCategories |> List.isEmpty then None else Some (excludeCategories |> String.join "," |> fun cs -> "exclude", cs)
+                        if includeCategories |> List.isEmpty then None else Some (includeCategories |> String.join "," |> fun cs -> "include", cs)
                     ]
                     |> List.choose id)
 

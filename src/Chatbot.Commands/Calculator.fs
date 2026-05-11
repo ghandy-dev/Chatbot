@@ -46,7 +46,7 @@ module Calculator =
     let private innerCalculate s = run completeExpression s
 
     let calculate context =
-        let input = String.concat " " context.MessageArgs
+        let input = String.join " " context.MessageArgs
         let result = innerCalculate input
 
         match result with

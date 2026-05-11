@@ -20,7 +20,7 @@ module Help =
                     let aliases =
                         if c.Aliases.Length > 0 then
                             c.Aliases
-                            |> strJoin ", "
+                            |> String.join ", "
                             |> sprintf "(%s)"
                         else
                             ""

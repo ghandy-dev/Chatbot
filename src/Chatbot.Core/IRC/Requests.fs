@@ -42,7 +42,7 @@ module Request =
 
     let toString command =
         match command with
-        | CapReq capabilities -> $"""CAP REQ :%s{String.concat " " capabilities}"""
+        | CapReq capabilities -> $"""CAP REQ :%s{String.join " " capabilities}"""
         | Pass token -> $"PASS oauth:%s{token}"
         | Nick username -> $"NICK %s{username}"
         | PrivMsg(channel, message) -> $"PRIVMSG #%s{channel} :%s{message}"
@@ -50,5 +50,5 @@ module Request =
         | Pong message -> $"PONG :%s{message}"
         | Part channel -> $"PART #%s{channel}"
         | Join channel -> $"JOIN #%s{channel}"
-        | JoinM channels -> $"""JOIN %s{channels |> Seq.map (sprintf "#%s") |> String.concat ","}"""
+        | JoinM channels -> $"""JOIN %s{channels |> Seq.map (sprintf "#%s") |> String.join ","}"""
         | Raw message -> message

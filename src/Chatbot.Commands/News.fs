@@ -13,7 +13,7 @@ module News =
             let categoryOpt =
                 match context.MessageArgs with
                 | [] -> None
-                | args -> Some (args |> String.concat " ")
+                | args -> Some (args |> String.join " ")
 
             let! newsItem =
                 newsService.GetNews categoryOpt

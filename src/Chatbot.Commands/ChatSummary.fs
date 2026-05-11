@@ -109,7 +109,7 @@ module ChatSummary =
                         )
                     | Some messages -> async { return Ok <| messages.Message }
 
-                if summary |> strEmpty then
+                if summary |> String.isEmpty then
                     return [ Message "Empty response..." ]
                 else
                     return [ Message summary ]

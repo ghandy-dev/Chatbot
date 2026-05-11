@@ -61,7 +61,7 @@ module Gpt =
                     match parserResult.Input with
                     | [] -> return! invalidArgs "No input provided"
                     | args ->
-                        let message = args |> String.concat " "
+                        let message = args |> String.join " "
 
                         let messages =
                             let message = [
@@ -107,7 +107,7 @@ module Gpt =
                                             }
                                         ]
 
-                                    let message = choice.Message.Content |> stripMarkdownTags |> strReplace "  " " "
+                                    let message = choice.Message.Content |> stripMarkdownTags |> String.replace "  " " "
 
                                     userChatHistory[chatHistoryKey] <- {
                                         LastMessageTimestamp = utcNow ()

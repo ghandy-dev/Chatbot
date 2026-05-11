@@ -16,7 +16,7 @@ module GptImage =
             match context.MessageArgs with
             | [] -> return! invalidArgs $"No prompt provided"
             | _ ->
-                let prompt = context.MessageArgs |> String.concat " "
+                let prompt = context.MessageArgs |> String.join " "
                 let! response = genAIService.GetImage prompt |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "OpenAI")
 
                 match response.Data with
