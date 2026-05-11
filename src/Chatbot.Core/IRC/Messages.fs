@@ -448,7 +448,8 @@ module Messages =
     type NoticeMessage = {
         Channel: string
         Message: string
-        MsgId: NoticeEventType
+        MsgId: NoticeEventType option
+        TargetUserId: string option
     }
 
     type RoomStateMessage = {
@@ -729,7 +730,8 @@ module Messages =
                 Some {
                     Channel = parts.[0].[1..]
                     Message = parts.[1].[1..]
-                    MsgId = message.Tags["msg-id"] |> NoticeEventType.parse
+                    MsgId = message.Tags.TryFind "msg-id" |> Option.map NoticeEventType.parse
+                    TargetUserId = message.Tags.TryFind "target-user-id"
                 }
             | _ -> None
 
