@@ -95,7 +95,7 @@ module Utils =
     ]
 
     // https://learn.microsoft.com/en-us/dotnet/standard/base-types/character-classes-in-regular-expressions#supported-unicode-general-categories
-    let whiteSpaceAndAnnoyingUnicodeCharactersRegex = new Regex("\p{Z}|\p{Cc}|\p{Cf}|\p{Co}|\p{Cn}", RegexOptions.Compiled)
+    let whiteSpaceAndAnnoyingUnicodeCharactersRegex = new Regex("\p{Z}|\p{Cc}|\p{Cf}|\p{Co}|\p{Cn}|\u034F", RegexOptions.Compiled)
 
     let removeHiddenChars text =
         whiteSpaceAndAnnoyingUnicodeCharactersRegex.Split(text)
