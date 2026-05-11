@@ -1,5 +1,6 @@
 namespace Chatbot.Core.Domain
 
+open Chatbot.Core
 open Chatbot.Core.Domain
 
 type MessageSource =
@@ -55,67 +56,143 @@ type GlobalEmotesUpdated = {
     EmoteSets: string list
 }
 
+type RoomStateMessage = {
+    EmoteOnly: bool
+    FollowersOnly: FollowMode
+    R9K: bool
+    ChannelId: string
+    SlowMode: SlowMmode
+    SubsOnly: bool
+}
+
+and FollowMode =
+    | On of int
+    | Off
+    with
+
+        static member parse duration =
+            match duration with
+            | -1 -> FollowMode.Off
+            | _ -> FollowMode.On duration
+
+and SlowMmode =
+    | On of int
+    | Off
+    with
+
+        static member parse duration =
+            match duration with
+            | -1 -> SlowMmode.Off
+            | _ -> SlowMmode.On duration
+
+type NoticeMessage = {
+    Channel: string
+    TargetUserId: string
+    NoticeEventType: IRC.Messages.NoticeEventType
+}
+
 type TwitchEvent =
     | ChannelMessage of ChannelMessage
     | ChannelReplyMessage of ChannelReplyMessage
     | WhisperMessage of WhisperMessage
     | GlobalEmotesUpdated of GlobalEmotesUpdated
+    | RoomStateMessage of RoomStateMessage
+    | NoticeMessage of NoticeMessage
 
 module Messages =
 
     open System.Text.RegularExpressions
 
-    open Chatbot.Core
     open Chatbot.Common.Utils
 
     let private mentionUserRegex = new Regex($"^@\S+", RegexOptions.Compiled)
 
     let private emoteUrl id = $"https://static-cdn.jtvnw.net/emoticons/v2/%s{id}/static/dark/3.0"
 
-    let mapPrivateMessage (message: IRC.Messages.PrivateMessage) : TwitchEvent =
-        match message.ReplyParentMessageId, message.ReplyParentMessageBody with
-        | None, None ->
-            ChannelMessage
+    let (|ChannelMessage|_|) = function
+        | IRC.Messages.PrivateMessage message ->
+            match message.ReplyParentMessageId, message.ReplyParentMessageBody with
+            | None, None ->
+                Some
+                    {
+                        UserId = message.UserId
+                        Username = message.Username
+                        Channel = message.Channel
+                        ChannelId = message.RoomId
+                        Message = message.Message |> removeHiddenChars
+                        MessageEmotes = message.Emotes |> Map.map (fun _ id -> emoteUrl id)
+                    } : ChannelMessage option
+            | Some _, Some _ -> None
+            | _ -> failwith "Expected both parent message id and parent message body, or neither"
+        | _ -> None
+
+    let (|ChannelReplyMessage|_|) = function
+        | IRC.Messages.PrivateMessage message ->
+            match message.ReplyParentMessageId, message.ReplyParentMessageBody with
+            | None, None -> None
+            | Some parentMessageId, Some parentMessage ->
+                Some
+                    {
+                        ParentMessageId = parentMessageId
+                        ParentMessage = parentMessage
+                        Username = message.Username
+                        UserId = message.UserId
+                        Channel = message.Channel
+                        ChannelId = message.RoomId
+                        Message = message.Message |> removeHiddenChars |> fun text -> mentionUserRegex.Replace(text, "", 1) // remove leading @mention placed in message
+                        MessageEmotes = message.Emotes |> Map.map (fun _ id -> emoteUrl id)
+                    } : ChannelReplyMessage option
+            | _ -> failwith "Expected both parent message id and parent message body, or neither"
+        | _ -> None
+
+    let (|WhisperMessage|_|) = function
+        | IRC.Messages.WhisperMessage message ->
+            Some
                 {
                     UserId = message.UserId
-                    Username = message.Username
-                    Channel = message.Channel
-                    ChannelId = message.RoomId
+                    Username = message.FromUser
                     Message = message.Message |> removeHiddenChars
                     MessageEmotes = message.Emotes |> Map.map (fun _ id -> emoteUrl id)
-                }
-        | Some parentMessageId, Some parentMessage ->
-            ChannelReplyMessage
+                } : WhisperMessage option
+        | _ -> None
+
+    let (|GlobalEmotesUpdated|_|) = function
+        | IRC.Messages.GlobalUserStateMessage message ->
+            Some
                 {
-                    ParentMessageId = parentMessageId
-                    ParentMessage = parentMessage
-                    Username = message.Username
-                    UserId = message.UserId
-                    Channel = message.Channel
+                    EmoteSets = message.EmoteSets
+                } : GlobalEmotesUpdated option
+        | _ -> None
+
+    let (|RoomStateMessage|_|) = function
+        | IRC.Messages.RoomStateMessage message ->
+            Some
+                {
+                    EmoteOnly = message.EmoteOnly |> Option.defaultValue false
+                    FollowersOnly = message.FollowersOnly |> Option.map FollowMode.parse |> Option.defaultValue FollowMode.Off
+                    R9K = message.R9K |> Option.defaultValue false
                     ChannelId = message.RoomId
-                    Message = message.Message |> removeHiddenChars |> fun text -> mentionUserRegex.Replace(text, "", 1) // remove leading @mention placed in message
-                    MessageEmotes = message.Emotes |> Map.map (fun _ id -> emoteUrl id)
-                }
-        | _ -> failwith "Expected both parent message id and parent message body, or neither"
+                    SlowMode = message.Slow |> Option.map SlowMmode.parse |> Option.defaultValue SlowMmode.Off
+                    SubsOnly = message.SubsOnly |> Option.defaultValue false
+                } : RoomStateMessage option
+        | _ -> None
 
-    let mapWhisperMessage (message: IRC.Messages.WhisperMessage) : TwitchEvent =
-        WhisperMessage
-            {
-                UserId = message.UserId
-                Username = message.FromUser
-                Message = message.Message |> removeHiddenChars
-                MessageEmotes = message.Emotes |> Map.map (fun _ id -> emoteUrl id)
-            }
-
-    let mapGlobalUserStateMessage (message: IRC.Messages.GlobalUserStateMessage) : TwitchEvent =
-        GlobalEmotesUpdated
-            {
-                EmoteSets = message.EmoteSets
-            }
+    let (|NoticeMessage|_|) = function
+        | IRC.Messages.NoticeMessage message ->
+            Some
+                {
+                    Channel = message.Channel
+                    NoticeEventType = message.MsgId |> Option.defaultValue (IRC.Messages.NoticeEventType.Unknown "")
+                    TargetUserId = message.TargetUserId |> Option.defaultValue ""
+                } : NoticeMessage option
+        | _ -> None
 
     let tryMapMessage message =
         match message with
-        | IRC.Messages.IrcMessage.PrivateMessage m -> Some (mapPrivateMessage m)
-        | IRC.Messages.IrcMessage.WhisperMessage m -> Some (mapWhisperMessage m)
-        | IRC.Messages.IrcMessage.GlobalUserStateMessage m -> Some (mapGlobalUserStateMessage m)
+        | ChannelMessage m -> Some (TwitchEvent.ChannelMessage m)
+        | ChannelReplyMessage m -> Some (TwitchEvent.ChannelReplyMessage m)
+        | WhisperMessage m -> Some (TwitchEvent.WhisperMessage m)
+        | GlobalEmotesUpdated m -> Some (TwitchEvent.GlobalEmotesUpdated m)
+        | RoomStateMessage m -> Some (TwitchEvent.RoomStateMessage m)
+        | NoticeMessage m -> Some (TwitchEvent.NoticeMessage m)
         | _ -> None
