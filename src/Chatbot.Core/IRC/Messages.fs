@@ -454,16 +454,12 @@ module Messages =
     type RoomStateMessage = {
         Channel: string
         EmoteOnly: bool option
-        FollowersOnly: FollowMode option
+        FollowersOnly: int option
         R9K: bool option
         RoomId: string
         Slow: int option
         SubsOnly: bool option
     }
-
-    and FollowMode =
-        | On of duration: int
-        | Off
 
     type UserNoticeMessage = {
         Channel: string
@@ -743,20 +739,12 @@ module Messages =
             | _ -> None
 
         let (|RoomStateCommand|_|) (message: MessageData) : RoomStateMessage option =
-            let tryParseFollowMode =
-                tryParseInt
-                >> Option.bind (
-                function
-                | d when d >= 0 -> Some <| FollowMode.On d
-                | -1 -> Some FollowMode.Off
-                | _ -> None)
-
             match message.Command with
             | Command.RoomState ->
                 Some {
                     Channel = message.Parameters.[1..]
                     EmoteOnly = message.Tags.TryFind "emote-only" |> Option.map parseBit
-                    FollowersOnly = message.Tags.TryFind "followers-only" |> Option.bind tryParseFollowMode
+                    FollowersOnly = message.Tags.TryFind "followers-only" |> Option.bind tryParseInt
                     R9K = message.Tags.TryFind "r9k" |> Option.map parseBit
                     RoomId = message.Tags["room-id"]
                     Slow = message.Tags.TryFind "slow" |> Option.bind tryParseInt
