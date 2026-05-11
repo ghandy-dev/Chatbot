@@ -249,8 +249,14 @@ let create env config (emoteService: EmoteService) userId (twitchClient: TwitchC
                         let message = Message.create msg.UserId msg.Username msg.Message (MessageSource.Channel (msg.Channel, msg.ChannelId)) None msg.MessageEmotes
                         do! tryQueueComand message
                     | ChannelReplyMessage msg ->
-                        let message = Message.create msg.UserId msg.Username msg.Message (MessageSource.Channel (msg.Channel, msg.ChannelId)) (Some msg.ParentMessageId) msg.MessageEmotes
-                        do! tryQueueComand message
+                        if msg.Message.StartsWith(config.Prefixes.CommandPrefix)
+                            || msg.Message.StartsWith(config.Prefixes.PipePrefix)
+                            || msg.Message.StartsWith(config.Prefixes.AliasPrefix) then
+
+                            let message = Message.create msg.UserId msg.Username $"{msg.Message} {msg.ParentMessage}" (MessageSource.Channel (msg.Channel, msg.ChannelId)) (Some msg.ParentMessageId) msg.MessageEmotes
+                            do! tryQueueComand message
+                        else
+                            ()
                     | WhisperMessage msg ->
                         let message = Message.create msg.UserId msg.Username msg.Message (Whisper (msg.Username, msg.UserId)) None msg.MessageEmotes
                         do! tryQueueComand message

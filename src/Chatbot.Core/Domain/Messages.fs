@@ -105,7 +105,7 @@ module Messages =
 
     open Chatbot.Common.Utils
 
-    let private mentionUserRegex = new Regex($"^@\S+", RegexOptions.Compiled)
+    let private mentionUserRegex = new Regex($"^@\S+ ", RegexOptions.Compiled)
 
     let private emoteUrl id = $"https://static-cdn.jtvnw.net/emoticons/v2/%s{id}/static/dark/3.0"
 
@@ -134,12 +134,12 @@ module Messages =
                 Some
                     {
                         ParentMessageId = parentMessageId
-                        ParentMessage = parentMessage
+                        ParentMessage = parentMessage |> removeHiddenChars
                         Username = message.Username
                         UserId = message.UserId
                         Channel = message.Channel
                         ChannelId = message.RoomId
-                        Message = message.Message |> removeHiddenChars |> fun text -> mentionUserRegex.Replace(text, "", 1) // remove leading @mention placed in message
+                        Message = message.Message |> removeHiddenChars |> fun text -> mentionUserRegex.Replace(text, "", 1)
                         MessageEmotes = message.Emotes |> Map.map (fun _ id -> emoteUrl id)
                     } : ChannelReplyMessage option
             | _ -> failwith "Expected both parent message id and parent message body, or neither"
