@@ -256,6 +256,7 @@ let create env config (emoteService: EmoteService) userId (twitchClient: TwitchC
                         do! tryQueueComand message
                     | GlobalEmotesUpdated _ ->
                         mb.Post (BotAction (RefreshGlobalEmotes EmoteProvider.Twitch))
+                    | _ -> ()
                 }
 
             let processBotAction (state: State) action =
