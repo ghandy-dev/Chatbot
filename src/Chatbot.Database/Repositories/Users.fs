@@ -1,14 +1,22 @@
 ﻿namespace Chatbot.Database
 
+[<RequireQualifiedAccess>]
 module Users =
 
     open Microsoft.Data.Sqlite
 
     open Dapper.FSharp.SQLite
 
-    open Chatbot.Database.Entities
-    open Chatbot.Database.Models
-    open Db
+    open Chatbot.Database.Db
+    open Chatbot.Database.DbModels
+    open Chatbot.Database.Types
+
+    let private toUser (dbUser: DbUser) : User =
+        {
+            UserId = dbUser.user_id
+            Username = dbUser.username
+            IsAdmin = dbUser.is_admin
+        }
 
     let get (db: Database) (userId: int) =
         async {
@@ -20,12 +28,13 @@ module Users =
                     for row in users do
                         where (row.user_id = userId)
                 }
-                |> connection.SelectAsync<Entities.User>
+                |> connection.SelectAsync<DbUser>
                 |> Async.AwaitTask
 
             return
                 user
                 |> Seq.tryHead
+                |> Option.map toUser
         }
 
     let add (db: Database) (user: NewUser) =
@@ -48,7 +57,7 @@ module Users =
                     |> connection.InsertAsync
                     |> Async.AwaitTask
 
-                return DatabaseResult.Success rowsAffected
+                return Ok rowsAffected
             with ex ->
-                return DatabaseResult.Failure
+                return Error ex
         }

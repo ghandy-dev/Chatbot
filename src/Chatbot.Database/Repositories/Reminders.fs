@@ -1,5 +1,6 @@
 ﻿namespace Chatbot.Database
 
+[<RequireQualifiedAccess>]
 module Reminders =
 
     open Microsoft.Data.Sqlite
@@ -7,9 +8,26 @@ module Reminders =
     open Dapper.FSharp.SQLite
     open Dapper
 
-    open Chatbot.Database.Entities
-    open Chatbot.Database.Models
-    open Db
+    open Chatbot.Database.Db
+    open Chatbot.Database.DbModels
+    open Chatbot.Database.Types
+
+    let toTimedReminder (dbReminder: DbTimedReminder) =
+        {
+            FromUsername = dbReminder.from_username
+            TargetUsername = dbReminder.target_username
+            Timestamp = System.DateTime.Parse dbReminder.timestamp
+            Message = dbReminder.message
+            Channel = dbReminder.channel
+        }
+
+    let toReminder (dbReminder: DbReminder) =
+        {
+            FromUsername = dbReminder.from_username
+            TargetUsername = dbReminder.target_username
+            Timestamp = System.DateTime.Parse dbReminder.timestamp
+            Message = dbReminder.message
+        }
 
     let getTimedReminders (db: Database) =
         async {
@@ -32,18 +50,12 @@ module Reminders =
                 use connection = new SqliteConnection(db.ConnectionString)
                 connection.Open()
 
-                let! results = connection.QueryAsync<Entities.TimedReminder>(query) |> Async.AwaitTask
+                let! results = connection.QueryAsync<DbTimedReminder>(query) |> Async.AwaitTask
                 connection.ExecuteAsync(update, results |> Seq.map (fun r -> {| reminderId = r.reminder_id |})) |> Async.AwaitTask |> ignore
 
                 return
                     results
-                    |> Seq.map (fun r -> {
-                        FromUsername = r.from_username
-                        TargetUsername = r.target_username
-                        Timestamp = System.DateTime.Parse r.timestamp
-                        Message = r.message
-                        Channel = r.channel
-                    })
+                    |> Seq.map toTimedReminder
             with ex ->
                 return []
         }
@@ -70,17 +82,16 @@ module Reminders =
                 use connection = new SqliteConnection(db.ConnectionString)
                 connection.Open()
 
-                let! results = connection.QueryAsync<Entities.Reminder>(query, {| userId = userId |}) |> Async.AwaitTask
-                connection.ExecuteAsync(update, results |> Seq.map (fun r -> {| reminderId = r.reminder_id |})) |> Async.AwaitTask |> ignore
+                let! transaction = connection.BeginTransactionAsync().AsTask() |> Async.AwaitTask
+
+                let! results = connection.QueryAsync<DbReminder>(query, {| userId = userId |}) |> Async.AwaitTask
+                let! _ = connection.ExecuteAsync(update, results |> Seq.map (fun r -> {| reminderId = r.reminder_id |})) |> Async.AwaitTask
+
+                transaction.CommitAsync() |> Async.AwaitTask |> ignore
 
                 return
                     results
-                    |> Seq.map (fun r -> {
-                        FromUsername = r.from_username
-                        TargetUsername = r.target_username
-                        Timestamp = System.DateTime.Parse r.timestamp
-                        Message = r.message
-                    })
+                    |> Seq.map toReminder
             with ex ->
                 return []
         }
@@ -102,9 +113,9 @@ module Reminders =
 
                 let! count = connection.ExecuteScalarAsync<int>(query, {| userId = userId |}) |> Async.AwaitTask
 
-                return DatabaseResult.Success count
+                return Ok count
             with ex ->
-                return DatabaseResult.Failure
+                return Error ex
         }
 
     let getPendingReminderCount (db: Database) (userId: int) =
@@ -124,9 +135,9 @@ module Reminders =
 
                 let! count = connection.ExecuteScalarAsync<int>(query, {| userId = userId |}) |> Async.AwaitTask
 
-                return DatabaseResult.Success count
+                return Ok count
             with ex ->
-                return DatabaseResult.Failure
+                return Error ex
         }
 
     let add (db: Database) (reminder: NewReminder) =
@@ -158,9 +169,9 @@ module Reminders =
                     )
                     |> Async.AwaitTask
 
-                return DatabaseResult.Success id
+                return Ok id
             with ex ->
-                return DatabaseResult.Failure
+                return Error ex
         }
 
     let update (db: Database) (reminder: UpdateReminder) =
@@ -178,9 +189,9 @@ module Reminders =
                     |> connection.UpdateAsync
                     |> Async.AwaitTask
 
-                return DatabaseResult.Success rowsAffected
+                return Ok rowsAffected
             with ex ->
-                return DatabaseResult.Failure
+                return Error ex
         }
 
     let delete (db: Database) (reminderId: int) =
@@ -197,7 +208,7 @@ module Reminders =
                     |> connection.DeleteAsync
                     |> Async.AwaitTask
 
-                return DatabaseResult.Success rowsAffected
+                return Ok rowsAffected
             with ex ->
-                return DatabaseResult.Failure
+                return Error ex
         }

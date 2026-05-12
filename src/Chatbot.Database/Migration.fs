@@ -11,11 +11,12 @@ open Microsoft.Data.Sqlite
 open Dapper
 
 open Chatbot.Common
+open Chatbot.Database.Db
 
 let private versionRegex = new Regex("^\d{3}", RegexOptions.Compiled)
 
-let run connectionString =
-    use connection = new SqliteConnection(connectionString)
+let run (db: Database) =
+    use connection = new SqliteConnection(db.ConnectionString)
 
     connection.Open()
 

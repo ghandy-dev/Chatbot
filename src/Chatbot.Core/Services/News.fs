@@ -22,7 +22,7 @@ module News =
             let db = env.Database
             let cache = env.Cache
 
-            let dbGetNews = Chatbot.Database.NewsFeeds.get db
+            let dbGetNews = Chatbot.Database.NewsFeeds.getFeeds db
 
             let tryGetFeed (url: string) =
                 async {

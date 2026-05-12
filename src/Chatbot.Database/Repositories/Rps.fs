@@ -1,14 +1,24 @@
 ﻿namespace Chatbot.Database
 
+[<RequireQualifiedAccess>]
 module Rps =
 
     open Microsoft.Data.Sqlite
 
     open Dapper.FSharp.SQLite
 
-    open Chatbot.Database.Models
-    open Chatbot.Database.Entities
-    open Db
+    open Chatbot.Database.Db
+    open Chatbot.Database.DbModels
+    open Chatbot.Database.Types
+
+    let private toRpsStats (dbStats: DbRpsStats) : RpsStats =
+        {
+            UserId = dbStats.user_id
+            Score = dbStats.score
+            TotalMoves = dbStats.total_moves
+            Wins = dbStats.wins
+            Losses = dbStats.losses
+        }
 
     let get (db: Database) (userId: int) =
         async {
@@ -20,22 +30,16 @@ module Rps =
                     for row in rpsStats do
                         where (row.user_id = userId)
                 }
-                |> connection.SelectAsync<Entities.RpsStats>
+                |> connection.SelectAsync<DbRpsStats>
                 |> Async.AwaitTask
 
             return
                 stats
-                |> Seq.map (fun r -> {
-                    UserId = r.user_id
-                    Score = r.score
-                    TotalMoves = r.total_moves
-                    Wins = r.wins
-                    Losses = r.losses
-                })
-                |> Seq.tryExactlyOne
+                |> Seq.tryHead
+                |> Option.map toRpsStats
         }
 
-    let add (db: Database) (stats: Models.RpsStats) =
+    let add (db: Database) (stats: RpsStats) =
         async {
             use connection = new SqliteConnection(db.ConnectionString)
             connection.Open()
@@ -59,12 +63,12 @@ module Rps =
                     |> connection.InsertAsync
                     |> Async.AwaitTask
 
-                return DatabaseResult.Success rowsAffected
+                return Ok rowsAffected
             with ex ->
-                return DatabaseResult.Failure
+                return Error ex
         }
 
-    let update (db: Database) (stats: Models.RpsStats) =
+    let update (db: Database) (stats: RpsStats) =
         async {
             use connection = new SqliteConnection(db.ConnectionString)
             connection.Open()
@@ -86,10 +90,10 @@ module Rps =
                             where (row.user_id = updatedStats.user_id)
                             excludeColumn updatedStats.rps_stats_id
                     }
-                    |> connection.UpdateAsync<Entities.RpsStats>
+                    |> connection.UpdateAsync<DbRpsStats>
                     |> Async.AwaitTask
 
-                return DatabaseResult.Success rowsAffected
+                return Ok rowsAffected
             with ex ->
-                return DatabaseResult.Failure
+                return Error ex
         }

@@ -93,6 +93,14 @@ let urbanDictionaryService = UrbanDictionary.UrbanDictionaryService.create env
 let weatherService = Weather.WeatherService.create env { MapsApiKey = configs.Microsoft.Maps.ApiKey }
 let wikipediaService = Wikipedia.WikipediaService.create env
 
+let aliasService = Database.Services.AliasService.create db
+let channelService = Database.Services.ChannelService.create db
+let newsFeedService = Database.Services.NewsFeedService.create db
+let reminderService = Database.Services.ReminderService.create db
+let rpsService = Database.Services.RpsService.create db
+let userService = Database.Services.UserService.create db
+
+
 let buildCommands commandPrefix =
     let toKeyValuePair command =
         match command.Aliases with

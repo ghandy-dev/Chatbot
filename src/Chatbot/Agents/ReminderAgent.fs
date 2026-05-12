@@ -38,7 +38,7 @@ let create env (textStorageService: ITextStorageService) (twitchChatClient: Chat
             let userMessaged channel userId username =
                 async {
                     match! Reminders.getPendingReminderCount db userId with
-                    | DatabaseResult.Success c when c > 0 ->
+                    | Ok c when c > 0 ->
                         let! reminders = Reminders.getReminders db userId
 
                         let message =

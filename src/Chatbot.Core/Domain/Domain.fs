@@ -24,7 +24,7 @@ module User =
         IsAdmin = isAdmin
     }
 
-    let fromDbUser (dbUser: Entities.User) = {
+    let fromDbUser (dbUser: Entities.DbUser) = {
         UserId = string dbUser.user_id
         Username = dbUser.username
         IsAdmin = dbUser.is_admin

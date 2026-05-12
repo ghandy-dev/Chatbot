@@ -1,19 +1,21 @@
 ﻿namespace Chatbot.Database
 
+[<RequireQualifiedAccess>]
 module Channels =
 
     open Microsoft.Data.Sqlite
 
     open Dapper.FSharp.SQLite
 
-    open Chatbot.Database.Models
-    open Chatbot.Database.Entities
-    open Db
+    open Chatbot.Database.Db
+    open Chatbot.Database.DbModels
+    open Chatbot.Database.Types
 
-    let mapToModel (channel: Entities.Channel) : Models.Channel = {
-        ChannelId = string channel.channel_id
-        ChannelName = channel.channel_name
-    }
+    let private toChannel (dbChannel: DbChannel) : Channel =
+        {
+            ChannelId = dbChannel.channel_id
+            ChannelName = dbChannel.channel_name
+        }
 
     let getAll (db: Database) =
         async {
@@ -22,13 +24,15 @@ module Channels =
 
             let! channel =
                 select {
-                    for row: Channel in channels do
+                    for row in channels do
                         selectAll
                 }
-                |> connection.SelectAsync<Entities.Channel>
+                |> connection.SelectAsync<DbChannel>
                 |> Async.AwaitTask
 
-            return channel |> Seq.map mapToModel
+            return
+                channel
+                |> Seq.map toChannel
         }
 
     let get (db: Database) (channelId: int) =
@@ -41,18 +45,22 @@ module Channels =
                     for row in channels do
                         where (row.channel_id = channelId)
                 }
-                |> connection.SelectAsync<Entities.Channel>
+                |> connection.SelectAsync<DbChannel>
                 |> Async.AwaitTask
 
-            return channel |> Seq.map mapToModel |> Seq.tryExactlyOne
+            return
+                channel
+                |> Seq.map toChannel
+                |> Seq.tryExactlyOne
         }
 
-    let add (db: Database) (channel: NewChannel) =
+    let add (db: Database) (newChannel: NewChannel) =
         async {
-            let newChannel = {
-                channel_id = int channel.ChannelId
-                channel_name = channel.ChannelName
-            }
+            let channel =
+                {
+                    channel_id = int newChannel.ChannelId
+                    channel_name = newChannel.ChannelName
+                }
 
             try
                 use connection = new SqliteConnection(db.ConnectionString)
@@ -61,14 +69,14 @@ module Channels =
                 let! rowsAffected =
                     insert {
                         into channels
-                        value newChannel
+                        value channel
                     }
                     |> connection.InsertAsync
                     |> Async.AwaitTask
 
-                return DatabaseResult.Success rowsAffected
+                return Ok rowsAffected
             with ex ->
-                return DatabaseResult.Failure
+                return Error ex
         }
 
     let delete (db: Database) (channelId: int) =
@@ -85,7 +93,7 @@ module Channels =
                     |> connection.DeleteAsync
                     |> Async.AwaitTask
 
-                return DatabaseResult.Success rowsAffected
+                return Ok rowsAffected
             with ex ->
-                return DatabaseResult.Failure
+                return Error ex
         }

@@ -1,37 +1,39 @@
 ﻿namespace Chatbot.Database
 
+[<RequireQualifiedAccess>]
 module Aliases =
 
     open Microsoft.Data.Sqlite
 
     open Dapper.FSharp.SQLite
 
-    open Chatbot.Database.Models
-    open Chatbot.Database.Entities
-    open Db
+    open Chatbot.Database.Db
+    open Chatbot.Database.DbModels
+    open Chatbot.Database.Types
 
-    type AliasQuery =
-        | ByUserIdAliasName of userId: int * alias: string
+    let toAlias (dbAlias: DbAlias) : Alias =
+        {
+            Name = dbAlias.name
+            Command = dbAlias.command
+        }
 
-    let get (db: Database) (query: AliasQuery) =
+    let get (db: Database) (userId: int) (alias: string) =
         async {
             use connection = new SqliteConnection(db.ConnectionString)
             connection.Open()
 
             let! results =
-                match query with
-                | ByUserIdAliasName (userId, alias) ->
-                    select {
-                        for row in aliases do
-                            where (row.user_id = userId && row.name = alias)
-                    }
-                |> connection.SelectAsync<Entities.Alias>
+                select {
+                    for row in aliases do
+                        where (row.user_id = userId && row.name = alias)
+                }
+                |> connection.SelectAsync<DbAlias>
                 |> Async.AwaitTask
 
             return
                 results
-                |> Seq.map (fun r -> { Command = r.command ; Name = r.name })
-                |> Seq.tryExactlyOne
+                |> Seq.tryHead
+                |> Option.map toAlias
         }
 
     let add (db: Database) (alias: NewAlias) =
@@ -56,9 +58,9 @@ module Aliases =
                     |> connection.InsertAsync
                     |> Async.AwaitTask
 
-                return DatabaseResult.Success rowsAffected
+                return Ok rowsAffected
             with ex ->
-                return DatabaseResult.Failure
+                return Error ex
         }
 
     let update (db: Database) (alias: UpdateAlias) =
@@ -84,12 +86,12 @@ module Aliases =
                     |> connection.UpdateAsync
                     |> Async.AwaitTask
 
-                return DatabaseResult.Success rowsAffected
+                return Ok rowsAffected
             with ex ->
-                return DatabaseResult.Failure
+                return Error ex
         }
 
-    let delete (db: Database) (alias: DeleteAlias) =
+    let delete (db: Database) aliasName userId =
         async {
             try
                 use connection = new SqliteConnection(db.ConnectionString)
@@ -98,12 +100,12 @@ module Aliases =
                 let! rowsAffected =
                     delete {
                         for row in aliases do
-                            where (row.user_id = alias.UserId && row.name = alias.Name)
+                            where (row.user_id = userId && row.name = aliasName)
                     }
                     |> connection.DeleteAsync
                     |> Async.AwaitTask
 
-                return DatabaseResult.Success rowsAffected
+                return Ok rowsAffected
             with ex ->
-                return DatabaseResult.Failure
+                return Error ex
         }

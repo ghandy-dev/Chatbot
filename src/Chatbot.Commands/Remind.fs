@@ -40,7 +40,7 @@ module Remind =
                     let targetUsername = if targetUser.Id = context.UserId then "you" else $"@%s{targetUser.DisplayName}"
 
                     match! Reminders.add db reminder with
-                    | DatabaseResult.Success id -> return [ Message $"(ID: %d{id}) I will remind %s{targetUsername} in %s{formatTimeSpan timespan}" ]
+                    | Ok id -> return [ Message $"(ID: %d{id}) I will remind %s{targetUsername} in %s{formatTimeSpan timespan}" ]
                     | DatabaseResult.Failure -> return [ Message "Error occurred trying to create reminder" ]
         }
 

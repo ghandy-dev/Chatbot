@@ -1,25 +1,21 @@
-﻿namespace Chatbot.Database
+﻿module Chatbot.Database.Db
 
-module Db =
+open Dapper.FSharp.SQLite
 
-    open Dapper
-    open Dapper.FSharp.SQLite
+open Chatbot.Database.DbModels
 
-    open Chatbot.Database
+OptionTypes.register ()
 
-    OptionTypes.register ()
-    DefaultTypeMap.MatchNamesWithUnderscores <- true
+type Database = {
+    ConnectionString: string
+}
 
-    type Database = {
-        ConnectionString: string
-    }
+let create connectionString = {
+    ConnectionString = connectionString
+}
 
-    let create connectionString = {
-        ConnectionString = connectionString
-    }
-
-    let internal users = table'<Entities.User> "users"
-    let internal rpsStats = table'<Entities.RpsStats> "rps_stats"
-    let internal channels = table'<Entities.Channel> "channels"
-    let internal aliases = table'<Entities.Alias> "aliases"
-    let internal reminders = table'<Entities.Reminder> "reminders"
+let internal users = table'<DbUser> "users"
+let internal rpsStats = table'<DbRpsStats> "rps_stats"
+let internal channels = table'<DbChannel> "channels"
+let internal aliases = table'<DbAlias> "aliases"
+let internal reminders = table'<DbReminder> "reminders"

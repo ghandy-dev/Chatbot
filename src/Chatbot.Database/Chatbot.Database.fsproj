@@ -5,25 +5,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="DatabaseResult.fs" />
-    <Compile Include="Entities/Channel.fs" />
-    <Compile Include="Entities/Rps.fs" />
-    <Compile Include="Entities/User.fs" />
-    <Compile Include="Entities/NewsFeed.fs" />
-    <Compile Include="Entities/Alias.fs" />
-    <Compile Include="Entities/Reminder.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="DbModels.fs" />
     <Compile Include="Db.fs" />
-    <Compile Include="Models/Channel.fs" />
-    <Compile Include="Models/Rps.fs" />
-    <Compile Include="Models/User.fs" />
-    <Compile Include="Models/Alias.fs" />
-    <Compile Include="Models/Reminder.fs" />
     <Compile Include="Repositories/Channels.fs" />
     <Compile Include="Repositories/Rps.fs" />
     <Compile Include="Repositories/Users.fs" />
     <Compile Include="Repositories/NewsFeeds.fs" />
     <Compile Include="Repositories/Aliases.fs" />
     <Compile Include="Repositories/Reminders.fs" />
+    <Compile Include="Services/ChannelService.fs" />
+    <Compile Include="Services/RpsService.fs" />
+    <Compile Include="Services/NewsFeedService.fs" />
+    <Compile Include="Services/AliasService.fs" />
+    <Compile Include="Services/ReminderService.fs" />
+    <Compile Include="Services/UserService.fs" />
     <Compile Include="Migration.fs" />
   </ItemGroup>
 
