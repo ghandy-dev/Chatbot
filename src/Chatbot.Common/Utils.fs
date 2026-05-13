@@ -78,10 +78,7 @@ module Utils =
         let v = rune.Value
         let cat = Rune.GetUnicodeCategory rune
 
-        let allowedFormatChars =
-            v = 0x200D ||
-            v = 0xFE0E ||
-            v = 0xFE0F
+        let allowedFormatChars = v = 0x200D // Zero Width Joiner (used by some emojis)
 
         if allowedFormatChars then
             false
@@ -90,7 +87,8 @@ module Utils =
             | UnicodeCategory.Control
             | UnicodeCategory.PrivateUse
             | UnicodeCategory.Surrogate
-            | UnicodeCategory.Format ->
+            | UnicodeCategory.Format
+            | UnicodeCategory.OtherNotAssigned  ->
                 true
 
             | _ ->
