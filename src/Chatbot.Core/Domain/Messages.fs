@@ -119,7 +119,7 @@ module Messages =
                         Username = message.Username
                         Channel = message.Channel
                         ChannelId = message.RoomId
-                        Message = message.Message |> removeHiddenChars
+                        Message = message.Message |> cleanInput
                         MessageEmotes = message.Emotes |> Map.map (fun _ id -> emoteUrl id)
                     } : ChannelMessage option
             | Some _, Some _ -> None
@@ -134,12 +134,12 @@ module Messages =
                 Some
                     {
                         ParentMessageId = parentMessageId
-                        ParentMessage = parentMessage |> removeHiddenChars
+                        ParentMessage = parentMessage |> cleanInput
                         Username = message.Username
                         UserId = message.UserId
                         Channel = message.Channel
                         ChannelId = message.RoomId
-                        Message = message.Message |> removeHiddenChars |> fun text -> mentionUserRegex.Replace(text, "", 1)
+                        Message = message.Message |> cleanInput |> fun text -> mentionUserRegex.Replace(text, "", 1)
                         MessageEmotes = message.Emotes |> Map.map (fun _ id -> emoteUrl id)
                     } : ChannelReplyMessage option
             | _ -> failwith "Expected both parent message id and parent message body, or neither"
@@ -151,7 +151,7 @@ module Messages =
                 {
                     UserId = message.UserId
                     Username = message.FromUser
-                    Message = message.Message |> removeHiddenChars
+                    Message = message.Message |> cleanInput
                     MessageEmotes = message.Emotes |> Map.map (fun _ id -> emoteUrl id)
                 } : WhisperMessage option
         | _ -> None

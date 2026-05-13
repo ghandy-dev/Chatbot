@@ -4,6 +4,8 @@ namespace Chatbot.Common
 module Utils =
 
     open System
+    open System.Globalization
+    open System.Text
     open System.Text.RegularExpressions
 
     let [<Literal>] DateStringFormat = "dd/MM/yyyy"
@@ -72,15 +74,41 @@ module Utils =
     let htmlEncode = System.Web.HttpUtility.HtmlEncode
     let htmlDecode = System.Web.HttpUtility.HtmlDecode
 
-    let whiteSpaceUnicodeCharacters = [
-        "\U000e0000"
-        "\ue34f"
-    ]
+    let private isDangerousRune (rune: Rune) =
+        let v = rune.Value
+        let cat = Rune.GetUnicodeCategory rune
 
-    // https://learn.microsoft.com/en-us/dotnet/standard/base-types/character-classes-in-regular-expressions#supported-unicode-general-categories
-    let whiteSpaceAndAnnoyingUnicodeCharactersRegex = new Regex("\p{Z}|\p{Cc}|\p{Cf}|\p{Co}|\p{Cn}|\u034F", RegexOptions.Compiled)
+        let allowedFormatChars =
+            v = 0x200D ||
+            v = 0xFE0E ||
+            v = 0xFE0F
 
-    let removeHiddenChars text =
-        whiteSpaceAndAnnoyingUnicodeCharactersRegex.Split(text)
-        |> Array.filter (not << String.IsNullOrWhiteSpace)
-        |> String.join " "
+        if allowedFormatChars then
+            false
+        else
+            match cat with
+            | UnicodeCategory.Control
+            | UnicodeCategory.PrivateUse
+            | UnicodeCategory.Surrogate
+            | UnicodeCategory.Format ->
+                true
+
+            | _ ->
+                let isTagChar =
+                    v >= 0xE0000 && v <= 0xE007F
+
+                let isNonCharacter =
+                    v >= 0xFDD0 && v <= 0xFDEF ||
+                    v &&& 0xFFFE = 0xFFFE
+
+                isTagChar || isNonCharacter
+
+    let cleanInput (input: string) =
+        let normalized = input.Normalize(NormalizationForm.FormKC)
+        let sb = StringBuilder()
+
+        for rune in normalized.EnumerateRunes() do
+            if not (isDangerousRune rune) then
+                sb.Append(rune.ToString()) |> ignore
+
+        sb.ToString()
