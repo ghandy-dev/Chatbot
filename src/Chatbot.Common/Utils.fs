@@ -97,9 +97,17 @@ module Utils =
 
                 let isNonCharacter =
                     v >= 0xFDD0 && v <= 0xFDEF ||
-                    v &&& 0xFFFE = 0xFFFE
+                    v &&& 0xFFFE = 0xFFFE ||
+                    v = 0x034F // Combining grapheme joiner
 
-                isTagChar || isNonCharacter
+                // https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-5/#G40025
+                // Default Ignorable Code Point
+                let defaultIgnorableCodePointChar =
+                    v >= 0x2060 && v <= 0x206F ||
+                    v >= 0xFFF0 && v <= 0xFFF8 ||
+                    v >= 0xE0000 && v <= 0xE0FFF
+
+                isTagChar || isNonCharacter || defaultIgnorableCodePointChar
 
     let cleanInput (input: string) =
         let normalized = input.Normalize(NormalizationForm.FormKC)
