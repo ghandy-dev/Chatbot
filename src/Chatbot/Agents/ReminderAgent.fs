@@ -4,9 +4,9 @@ open System
 
 open Microsoft.Extensions.Logging
 
-open Chatbot.Database
 open Chatbot.Common
 open Chatbot.Core.Domain
+open Chatbot.Core.Domain.Types
 open Chatbot.Core.IRC
 open Chatbot.Core.Services.Pastebin
 open Chatbot.Core.Types
@@ -15,15 +15,14 @@ type ReminderMessage =
     | TwitchEvent of TwitchEvent
     | CheckReminders
 
-let create env (textStorageService: ITextStorageService) (twitchChatClient: Chatbot.Twitch.TwitchClient) cancellationToken =
+let create env (reminders: IReminderRepository) (textStorageService: ITextStorageService) (twitchChatClient: Chatbot.Twitch.TwitchClient) cancellationToken =
     new MailboxProcessor<ReminderMessage>(
         (fun mb ->
-            let db = env.Database
             let logger = env.Logger
 
             let checkReminders () =
                 async {
-                    let! reminders = Reminders.getTimedReminders db
+                    let! reminders = reminders.GetTimedReminders ()
 
                     for reminder in reminders do
                         let ts = DateTime.UtcNow - reminder.Timestamp
@@ -37,9 +36,9 @@ let create env (textStorageService: ITextStorageService) (twitchChatClient: Chat
 
             let userMessaged channel userId username =
                 async {
-                    match! Reminders.getPendingReminderCount db userId with
+                    match! reminders.GetPendingReminderCount userId with
                     | Ok c when c > 0 ->
-                        let! reminders = Reminders.getReminders db userId
+                        let! reminders = reminders.GetReminders userId
 
                         let message =
                             reminders

@@ -6,15 +6,14 @@ open Microsoft.Extensions.Logging
 
 open FsToolkit.ErrorHandling
 
-open Chatbot
 open Chatbot.Core.Domain
 open Chatbot.Core.Services.Emotes
 open Chatbot.Core.IRC.Request
 open Chatbot.Core.Domain.Commands
+open Chatbot.Core.Domain.Types
 open Chatbot.Core.Types
 open Chatbot.Types
 open Chatbot.Twitch
-open Chatbot.Database
 open Chatbot.Common
 open Chatbot.Command.Parsing
 
@@ -40,10 +39,9 @@ type State = {
     Emotes: Emotes
 }
 
-let create env config (emoteService: EmoteService) userId (twitchClient: TwitchClient) (triviaAgent: MailboxProcessor<Trivia.TriviaMessage>) cancellationToken =
+let create env config (users: IUsersRepository) (aliases: IAliasRepository) (emoteService: EmoteService) userId (twitchClient: TwitchClient) (triviaAgent: MailboxProcessor<Trivia.TriviaMessage>) cancellationToken =
     new MailboxProcessor<BotMessage>(
         (fun mb ->
-            let db = env.Database
             let logger = env.Logger
 
             let initial = {
@@ -60,14 +58,15 @@ let create env config (emoteService: EmoteService) userId (twitchClient: TwitchC
 
             let getOrAddUser userId username =
                 async {
-                    let! userOpt = Chatbot.Database.Users.get db (int userId)
+                    let! userOpt = users.Get (int userId)
 
                     match userOpt with
                     | None ->
-                        let! _ = Chatbot.Database.Users.add db (Models.NewUser.create (int userId) username)
-                        return User.create userId username false
+                        let newUser = NewUser.create (int userId) username
+                        let! _ = users.Add newUser
+                        return User.create userId username
                     | Some user ->
-                        return User.fromDbUser user
+                        return user
                 }
 
             let isOnCooldown (userCommandCooldowns: CooldownMap) (user: User) (command: Command) =
@@ -120,7 +119,7 @@ let create env config (emoteService: EmoteService) userId (twitchClient: TwitchC
             let executeCommand state command (msg: Message) =
                 async {
                     let timestamp = utcNow()
-                    let! user = getOrAddUser msg.UserId msg.Username
+                    let! user = getOrAddUser (int msg.UserId) msg.Username
 
                     match command with
                     | ValidatedCommand.Command (command, args) ->
@@ -190,7 +189,7 @@ let create env config (emoteService: EmoteService) userId (twitchClient: TwitchC
                             |> Map.tryFind command
                             |> Option.map (fun c -> ValidatedCommand.Command (c, args))
                     | ParsedCommand.AliasCommand (alias, args) ->
-                        match! Aliases.get db (Chatbot.Database.Aliases.ByUserIdAliasName (int msg.UserId, alias)) with
+                        match! aliases.Get (int msg.UserId) alias with
                         | None -> return None
                         | Some a ->
                             let commandText = String.format a.Command args

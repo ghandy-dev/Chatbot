@@ -1,4 +1,4 @@
-﻿namespace Chatbot.Database
+﻿namespace Chatbot.Database.Repositories
 
 [<RequireQualifiedAccess>]
 module Users =
@@ -7,9 +7,9 @@ module Users =
 
     open Dapper.FSharp.SQLite
 
+    open Chatbot.Core.Domain.Types
     open Chatbot.Database.Db
     open Chatbot.Database.DbModels
-    open Chatbot.Database.Types
 
     let private toUser (dbUser: DbUser) : User =
         {
@@ -60,4 +60,12 @@ module Users =
                 return Ok rowsAffected
             with ex ->
                 return Error ex
+        }
+
+    let create db =
+
+        {
+            new IUsersRepository with
+                member _.Get userId = get db userId
+                member _.Add user = add db user
         }

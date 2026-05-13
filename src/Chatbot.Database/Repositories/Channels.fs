@@ -1,4 +1,4 @@
-﻿namespace Chatbot.Database
+﻿namespace Chatbot.Database.Repositories
 
 [<RequireQualifiedAccess>]
 module Channels =
@@ -7,9 +7,9 @@ module Channels =
 
     open Dapper.FSharp.SQLite
 
+    open Chatbot.Core.Domain.Types
     open Chatbot.Database.Db
     open Chatbot.Database.DbModels
-    open Chatbot.Database.Types
 
     let private toChannel (dbChannel: DbChannel) : Channel =
         {
@@ -96,4 +96,14 @@ module Channels =
                 return Ok rowsAffected
             with ex ->
                 return Error ex
+        }
+
+    let create db =
+
+        {
+            new IChannelRepository with
+                member _.Add channel = add db channel
+                member _.Delete channelId = delete db channelId
+                member _.Get channelId =  get db channelId
+                member _.GetAll() = getAll db
         }

@@ -1,4 +1,4 @@
-﻿namespace Chatbot.Database
+﻿namespace Chatbot.Database.Repositories
 
 [<RequireQualifiedAccess>]
 module NewsFeeds =
@@ -7,10 +7,11 @@ module NewsFeeds =
 
     open Dapper
 
+    open Chatbot.Core.Domain.Types
     open Chatbot.Database.Db
     open Chatbot.Database.DbModels
 
-    let getFeeds (db: Database) (category: string) =
+    let getByCategory (db: Database) (category: string) =
         async {
             let pattern = "%" + category + "%"
 
@@ -36,4 +37,11 @@ module NewsFeeds =
                 return rssFeeds
             with ex ->
                 return []
+        }
+
+    let create db =
+
+        {
+            new INewsFeedRepository with
+                member _.Get category = getByCategory db category
         }

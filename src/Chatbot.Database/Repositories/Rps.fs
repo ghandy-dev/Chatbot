@@ -1,15 +1,15 @@
-﻿namespace Chatbot.Database
+﻿namespace Chatbot.Database.Repositories
 
 [<RequireQualifiedAccess>]
-module Rps =
+module RockPaperScissors =
 
     open Microsoft.Data.Sqlite
 
     open Dapper.FSharp.SQLite
 
+    open Chatbot.Core.Domain.Types
     open Chatbot.Database.Db
     open Chatbot.Database.DbModels
-    open Chatbot.Database.Types
 
     let private toRpsStats (dbStats: DbRpsStats) : RpsStats =
         {
@@ -96,4 +96,13 @@ module Rps =
                 return Ok rowsAffected
             with ex ->
                 return Error ex
+        }
+
+    let create db =
+
+        {
+            new IRockPaperScissorsRepository with
+                member _.Add rpsStats = add db rpsStats
+                member _.Get userId = get db userId
+                member _.Update rpsStats = update db rpsStats
         }

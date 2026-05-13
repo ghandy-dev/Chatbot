@@ -10,17 +10,19 @@ open Chatbot.Agents
 open Chatbot.CompositionRoot
 open Chatbot.Configuration
 open Chatbot.Core.Domain.Messages
+open Chatbot.Core.Domain.Types
+open Chatbot.Core.Services.Twitch
 open Chatbot.Twitch
 
-let getChannels () =
+let getChannels (channels: IChannelRepository) (twitchService: TwitchService) =
     async {
-        let! channels = Chatbot.Database.Channels.getAll db
-        let channelIds = channels |> Seq.map _.ChannelId
+        let! channels = channels.GetAll ()
+        let channelIds = channels |> Seq.map (_.ChannelId >> string)
 
         match! twitchService.Users.GetUsersById channelIds with
         | Error _ ->
             logger.LogWarning("Twitch API error, falling back on database channel names")
-            return channels |> Seq.map (fun c -> c.ChannelId, c.ChannelName)
+            return channels |> Seq.map (fun c -> string c.ChannelId, c.ChannelName)
         | Ok channels ->
             return channels |> Seq.map (fun u -> u.Id, u.Login)
     }
@@ -28,12 +30,12 @@ let getChannels () =
 let run (cancellationToken: Threading.CancellationToken) =
     async {
         let uri = new Uri(configs.ConnectionStrings.IrcServer)
-        let! channels = getChannels () |> Async.map (Seq.map snd >> Set.ofSeq)
+        let! channels = getChannels channels twitchService |> Async.map (Seq.map snd >> Set.ofSeq)
         let twitchClient = new TwitchClient(uri.Host, uri.Port, configs.TwitchChatConfig, loggerFactory.CreateLogger<TwitchClient>(), twitchService, channels)
 
-        let reminderAgent = Reminder.create env pastebinService twitchClient cancellationToken
+        let reminderAgent = Reminder.create env reminders pastebinService twitchClient cancellationToken
         let triviaAgent = Trivia.create env twitchClient cancellationToken
-        let botAgent = Bot.create env botConfig emoteService configs.UserId twitchClient triviaAgent cancellationToken
+        let botAgent = Bot.create env botConfig users aliases emoteService configs.UserId twitchClient triviaAgent cancellationToken
 
         twitchClient.MessageReceived.Subscribe(fun message ->
             match message |> tryMapMessage with

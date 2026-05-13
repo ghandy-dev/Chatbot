@@ -1,4 +1,4 @@
-﻿namespace Chatbot.Database
+﻿namespace Chatbot.Database.Repositories
 
 [<RequireQualifiedAccess>]
 module Reminders =
@@ -8,11 +8,11 @@ module Reminders =
     open Dapper.FSharp.SQLite
     open Dapper
 
+    open Chatbot.Core.Domain.Types
     open Chatbot.Database.Db
     open Chatbot.Database.DbModels
-    open Chatbot.Database.Types
 
-    let toTimedReminder (dbReminder: DbTimedReminder) =
+    let private toTimedReminder (dbReminder: DbTimedReminder) =
         {
             FromUsername = dbReminder.from_username
             TargetUsername = dbReminder.target_username
@@ -21,7 +21,7 @@ module Reminders =
             Channel = dbReminder.channel
         }
 
-    let toReminder (dbReminder: DbReminder) =
+    let private toReminder (dbReminder: DbReminder) =
         {
             FromUsername = dbReminder.from_username
             TargetUsername = dbReminder.target_username
@@ -211,4 +211,17 @@ module Reminders =
                 return Ok rowsAffected
             with ex ->
                 return Error ex
+        }
+
+    let create db =
+
+        {
+            new IReminderRepository with
+                member _.Add newReminder = add db newReminder
+                member _.Delete reminderId = delete db reminderId
+                member _.GetReminders userId = getReminders db userId
+                member _.GetPendingReminderCount userId = getPendingReminderCount db userId
+                member _.GetPendingTimedReminderCount userId = getPendingTimedReminderCount db userId
+                member _.GetTimedReminders () = getTimedReminders db
+                member _.Update updateReminder = update db updateReminder
         }

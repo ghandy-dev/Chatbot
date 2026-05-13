@@ -1,4 +1,4 @@
-﻿namespace Chatbot.Database
+﻿namespace Chatbot.Database.Repositories
 
 [<RequireQualifiedAccess>]
 module Aliases =
@@ -7,11 +7,11 @@ module Aliases =
 
     open Dapper.FSharp.SQLite
 
+    open Chatbot.Core.Domain.Types
     open Chatbot.Database.Db
     open Chatbot.Database.DbModels
-    open Chatbot.Database.Types
 
-    let toAlias (dbAlias: DbAlias) : Alias =
+    let private toAlias (dbAlias: DbAlias) : Alias =
         {
             Name = dbAlias.name
             Command = dbAlias.command
@@ -108,4 +108,14 @@ module Aliases =
                 return Ok rowsAffected
             with ex ->
                 return Error ex
+        }
+
+    let create db =
+
+        {
+            new IAliasRepository with
+                member _.Add alias = add db alias
+                member _.Delete aliasName userId = delete db aliasName userId
+                member _.Get userId aliasName = get db userId aliasName
+                member _.Update alias = update db alias
         }

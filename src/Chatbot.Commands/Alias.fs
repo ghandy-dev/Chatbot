@@ -3,79 +3,103 @@ namespace Chatbot.Commands
 [<AutoOpen>]
 module Alias =
 
+    // open FSharpPlus
     open FsToolkit.ErrorHandling
 
-    open Chatbot.Common
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
+    open Chatbot.Core.Domain.Types
     open Chatbot.Core.Services.Twitch
-    open Chatbot.Database
-    open Chatbot.Database.Aliases
 
     let private validateCommand (command: string list) pipeSeparator (commands: Map<string, _>) =
         let aliasCommands =
             command
             |> String.join " "
-            |> fun s -> s |> String.split pipeSeparator
-            |> fun a ->
-                a |> Array.map (fun s -> s.Split(" ", System.StringSplitOptions.TrimEntries ||| System.StringSplitOptions.RemoveEmptyEntries) |> Array.tryHead) |> Array.choose id
+            |> String.split pipeSeparator
+            |> Array.map (fun s -> s.Split(" ", System.StringSplitOptions.TrimEntries ||| System.StringSplitOptions.RemoveEmptyEntries) |> Array.tryHead)
+            |> Array.choose id
 
         match aliasCommands.Length with
-        | 0 -> false
+        | 0 -> invalidArgs "Invalid command definition"
         | _ ->
             match aliasCommands |> Array.exists (fun ac -> commands |> Map.containsKey ac |> not) with
-            | true -> false
-            | false -> true
+            | true -> invalidArgs "Invalid command definition"
+            | false -> Ok (String.join " " command)
 
 
-    let private add db pipeSeparator userId alias command commands =
+    let private add pipeSeparator (aliasRepo: IAliasRepository) userId alias command commands =
         asyncResult {
-            match validateCommand command pipeSeparator commands with
-            | false -> return! invalidArgs "Invalid command definition"
-            | true ->
-                match! Aliases.get db (ByUserIdAliasName (int userId, alias)) with
-                | Some _ -> return [ Message $"Alias {alias} already exists" ]
-                | None ->
-                    match! Aliases.add db (Models.NewAlias.create (userId |> int) alias (String.join " " command)) with
-                    | DatabaseResult.Failure -> return! internalError "Error occured trying to add alias"
-                    | DatabaseResult.Success 0 -> return [ Message $"You already have alias \"{alias}\"" ]
-                    | DatabaseResult.Success _ -> return [ Message $"Alias \"{alias}\" successfully added" ]
+            let! command = validateCommand command pipeSeparator commands
+
+            match! aliasRepo.Get userId alias with
+            | Some _ -> return [ Message $"Alias {alias} already exists" ]
+            | None ->
+                let newAlias = NewAlias.create (userId |> int) alias command
+
+                return!
+                    aliasRepo.Add newAlias
+                    |> AsyncResult.eitherMap
+                        (fun ok ->
+                            match ok with
+                            | 0 -> [ Message $"You already have alias \"{alias}\"" ]
+                            | _ -> [ Message $"Alias \"{alias}\" successfully added" ]
+                        )
+                        (fun _ -> InternalError "Error occured trying to add alias")
         }
 
-    let private update db pipeSeparator userId alias command commands =
+    let private update pipeSeparator (aliasRepo: IAliasRepository) userId alias command commands =
         asyncResult {
-            match validateCommand command pipeSeparator commands with
-            | false -> return! invalidArgs "Invalid command definition"
-            | true ->
-                match! Aliases.update db (Models.UpdateAlias.create (userId |> int) alias (String.join " " command)) with
-                | DatabaseResult.Failure -> return! internalError "Error occurred trying to update alias"
-                | DatabaseResult.Success 0 -> return [ Message $"You don't have the alias \"{alias}\"" ]
-                | DatabaseResult.Success _ -> return [ Message $"Alias \"{alias}\" successfully updated" ]
+            let! command = validateCommand command pipeSeparator commands
+
+            let updatedAlias = UpdateAlias.create (userId |> int) alias command
+
+            return!
+                aliasRepo.Update updatedAlias
+                |> AsyncResult.eitherMap
+                    (fun ok ->
+                        match ok with
+                        | 0 -> [ Message $"You don't have the alias \"{alias}\"" ]
+                        | _ -> [ Message $"Alias \"{alias}\" successfully updated" ]
+                    )
+                    (fun _ -> InternalError "Error occurred trying to update alias")
+                }
+
+    // |> AsyncResult.eitherMap
+    //     (fun ok ->
+
+    //     )
+    //     (fun _ -> )
+
+    let private delete (aliasRepo: IAliasRepository) userId alias =
+        asyncResult {
+            return!
+                aliasRepo.Delete alias (int userId)
+                |> AsyncResult.eitherMap
+                    (fun ok ->
+                        match ok with
+                        | 0 -> [ Message $"You don't have the alias \"{alias}\"" ]
+                        | _ -> [ Message $"Alias \"{alias}\" successfully removed" ]
+                    )
+                    (fun _ -> InternalError "Error occurred trying to delete alias")
         }
 
-    let private delete db userId alias =
+    let private definition (twitchService: TwitchService) (aliasRepo: IAliasRepository) (username: string) alias =
         asyncResult {
-            match! Aliases.delete db (Models.DeleteAlias.create (userId |> int) alias) with
-            | DatabaseResult.Failure -> return! internalError "Error occurred trying to delete alias"
-            | DatabaseResult.Success 0 -> return [ Message $"You don't have the alias \"{alias}\"" ]
-            | DatabaseResult.Success _ -> return [ Message $"Alias \"{alias}\" successfully removed" ]
+            let! user =
+                twitchService.Users.GetUser username
+                |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")
+                |> AsyncResult.bindRequireSome (InvalidArgs "User not found")
+
+            match! aliasRepo.Get (int user.Id) alias with
+            | None ->
+                if String.compareIgnoreCase username user.Login then
+                    return [ Message $"You don't have the alias \"{alias}\"" ]
+                else
+                    return [ Message $"{username} doesn't have the alias \"{alias}\"" ]
+            | Some alias -> return [ Message alias.Command ]
         }
 
-    let private definition db (twitchService: TwitchService) (username: string) alias =
-        asyncResult {
-            match! twitchService.Users.GetUser username |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User") with
-            | None -> return [ Message "User not found" ]
-            | Some user ->
-                match! Aliases.get db (ByUserIdAliasName (int user.Id, alias)) with
-                | None ->
-                    if String.compareIgnoreCase username user.Login then
-                        return [ Message $"You don't have the alias \"{alias}\"" ]
-                    else
-                        return [ Message $"{username} doesn't have the alias \"{alias}\"" ]
-                | Some alias -> return [ Message alias.Command ]
-        }
-
-    let private copy db (twitchService: TwitchService) sourceUsername targetUserId alias =
+    let private copy (twitchService: TwitchService) (aliasRepo: IAliasRepository) sourceUsername targetUserId alias =
         asyncResult {
             let! user =
                 twitchService.Users.GetUser sourceUsername
@@ -83,58 +107,73 @@ module Alias =
                 |> AsyncResult.bindRequireSome (InvalidArgs "User not found")
 
             let! source =
-                Aliases.get db (ByUserIdAliasName (int user.Id, alias))
+                aliasRepo.Get (int user.Id) alias
                 |> AsyncResult.requireSome (InvalidArgs $"{sourceUsername} doesn't have the alias \"{alias}\"")
 
             let! _ =
-                Aliases.get db (ByUserIdAliasName (int targetUserId, alias))
+                aliasRepo.Get (int targetUserId) alias
                 |> AsyncResult.requireNone (InvalidArgs "You already have the alias \"{alias}\", use \"copyplace\" to replace an existing alias")
 
-            match! Aliases.add db (Models.NewAlias.create (targetUserId |> int) source.Name source.Command) with
-            | DatabaseResult.Failure
-            | DatabaseResult.Success 0 -> return! internalError "Error occured trying to add copied alias"
-            | DatabaseResult.Success _ -> return [ Message $"Alias \"{source.Name}\" successfully copied" ]
+            let copiedAlias = NewAlias.create (targetUserId |> int) source.Name source.Command
+
+            return!
+                async {
+                    match! aliasRepo.Add copiedAlias with
+                    | Error _
+                    | Ok 0 -> return internalError "Error occured trying to add copied alias"
+                    | Ok _ -> return Ok [ Message $"Alias \"{source.Name}\" successfully copied" ]
+                }
         }
 
-    let private copyPlace db (twitchService: TwitchService) sourceUsername targetUserId alias =
+    let private copyPlace (twitchService: TwitchService) (aliasRepo: IAliasRepository) sourceUsername targetUserId alias =
         asyncResult {
             let! user =
                 twitchService.Users.GetUser sourceUsername
                 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")
                 |> AsyncResult.bindRequireSome (InvalidArgs "User not found")
 
-            let! sourceAlias = Aliases.get db (ByUserIdAliasName (int user.Id, alias))
-            let! targetAlias = Aliases.get db (ByUserIdAliasName (int targetUserId, alias))
+            let! sourceAlias =
+                aliasRepo.Get (int user.Id) alias
+                |> Async.bind (FSharpPlus.Option.toResult >> Async.singleton)
+                |> AsyncResult.mapError (fun _ -> InvalidArgs $"{sourceUsername} doesn't have the alias \"{alias}\"")
 
-            match sourceAlias, targetAlias with
-            | None, _ -> return [ Message $"{sourceUsername} doesn't have the alias \"{alias}\"" ]
-            | Some sa, Some _ ->
-                match! Aliases.update db (Models.UpdateAlias.create (targetUserId |> int) sa.Name sa.Command) with
-                | DatabaseResult.Failure
-                | DatabaseResult.Success 0 -> return! internalError "Error occured trying to overwrite existing alias"
-                | DatabaseResult.Success _ -> return [ Message $"Alias \"{sa.Name}\" successfully copied" ]
-            | Some sa, None ->
-                match! Aliases.add db (Models.NewAlias.create (targetUserId |> int) sa.Name sa.Command) with
-                | DatabaseResult.Failure
-                | DatabaseResult.Success 0 -> return! internalError "Error occured trying to add copied alias"
-                | DatabaseResult.Success _ -> return [ Message $"Alias \"{sa.Name}\" successfully copied" ]
+            let targetAlias = aliasRepo.Get (int targetUserId) alias
+
+            return!
+                async {
+                    match! targetAlias with
+                    | Some _ ->
+                        let updatedAlias = UpdateAlias.create (targetUserId |> int) sourceAlias.Name sourceAlias.Command
+
+                        match! aliasRepo.Update updatedAlias with
+                        | Error _
+                        | Ok 0 -> return internalError "Error occured trying to overwrite existing alias"
+                        | Ok _ -> return Ok [ Message $"Alias \"{sourceAlias.Name}\" successfully copied" ]
+                    | None ->
+                        let copiedAlias = NewAlias.create (targetUserId |> int) sourceAlias.Name sourceAlias.Command
+
+                        match! aliasRepo.Add copiedAlias with
+                        | Error _
+                        | Ok 0 -> return internalError "Error occured trying to add copied alias"
+                        | Ok _ -> return Ok [ Message $"Alias \"{sourceAlias.Name}\" successfully copied" ]
+                }
         }
 
-    let alias db pipeSeparator (twitchService: TwitchService) (context: Context) (commands: Map<string, Command>) =
+    let alias pipeSeparator (aliasRepo: IAliasRepository) (twitchService: TwitchService) (context: Context) (commands: Map<string, Command>) =
         asyncResult {
             match context.MessageArgs with
-            | "add" :: alias :: command -> return! add db pipeSeparator context.UserId alias command commands
+            | "add" :: alias :: command -> return! add pipeSeparator aliasRepo (int context.UserId) alias command commands
             | "remove" :: alias :: _
-            | "delete" :: alias :: _ -> return! delete db context.UserId alias
+            | "delete" :: alias :: _ -> return! delete aliasRepo (int context.UserId) alias
             | "edit" :: alias :: command
-            | "update" :: alias :: command -> return! update db pipeSeparator context.UserId alias command commands
-            | "copy" :: username :: alias :: _ -> return! copy db twitchService username context.UserId alias
-            | "copyplace" :: username :: alias :: _ -> return! copyPlace db twitchService username context.UserId alias
+            | "update" :: alias :: command -> return! update pipeSeparator aliasRepo (int context.UserId) alias command commands
+            | "copy" :: username :: alias :: _ -> return! copy twitchService aliasRepo username (int context.UserId) alias
+            | "copyplace" :: username :: alias :: _ -> return! copyPlace twitchService aliasRepo username (int context.UserId) alias
             | [ "check" ; alias ]
             | [ "spy" ; alias ]
-            | ["definition" ; alias ] -> return! definition db twitchService context.Username alias
+            | ["definition" ; alias ] -> return! definition twitchService aliasRepo context.Username alias
             | "check" :: username :: alias :: _
             | "spy" :: username :: alias :: _
-            | "definition" :: username :: alias :: _ -> return! definition db twitchService username alias
+            | "definition" :: username :: alias :: _ -> return! definition twitchService aliasRepo username alias
             | _ -> return! invalidArgs "Missing args"
         }

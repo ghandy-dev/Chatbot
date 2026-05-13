@@ -6,7 +6,7 @@ module RockPaperScissors =
     open FsToolkit.ErrorHandling
 
     open Chatbot.Core.Domain.Commands
-    open Chatbot.Database
+    open Chatbot.Core.Domain.Types
 
     type private Shapes =
         | Rock
@@ -31,30 +31,30 @@ module RockPaperScissors =
         | Paper, Rock -> 6
         | _ -> 0
 
-    let rps db context =
+    let rps (rps: IRockPaperScissorsRepository) context =
         asyncResult {
             let! shape = context.MessageArgs |> List.tryHead |> Option.bind Shapes.tryParse |> Result.requireSome (InvalidArgs """Invalid shape (valid choices are "rock" "paper" "scissors")""")
             let cpuShape = shapes |> List.randomChoice
             let score = calculateScore shape cpuShape
 
             let onSome = fun stats -> async.Return (Ok stats)
+
             let onNone = fun stats -> asyncResult {
-                let onSuccess = fun _ -> Models.RpsStats.create (context.UserId |> int)
+                let onSuccess = fun _ -> RpsStats.create (context.UserId |> int)
                 let onFailure = fun _ -> InternalError "Error occurred creating stats"
 
                 return!
-                    Rps.add db stats
-                    |> Async.map DatabaseResult.toResult
+                    rps.Add stats
                     |> AsyncResult.eitherMap
                         onSuccess
                         onFailure
             }
 
             let! stats =
-                Rps.get db (context.UserId |> int)
+                rps.Get (context.UserId |> int)
                 |> AsyncOption.either
                     onSome
-                    (onNone (Models.RpsStats.create (context.UserId |> int)))
+                    (onNone (RpsStats.create (context.UserId |> int)))
 
             let outcome, updatedStats =
                 match score with
@@ -63,8 +63,7 @@ module RockPaperScissors =
                 | _ -> $"you lose! +{score} points", stats.addLoss ()
 
             return!
-                Rps.update db updatedStats
-                |> Async.map DatabaseResult.toResult
+                rps.Update updatedStats
                 |> AsyncResult.eitherMap
                     (fun _ -> [ Message $"CPU picked {cpuShape}, {outcome}. Total points: {updatedStats.Score}" ])
                     (fun _ -> InternalError "Error occurred updating stats.")

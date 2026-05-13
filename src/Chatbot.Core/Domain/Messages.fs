@@ -1,18 +1,17 @@
 namespace Chatbot.Core.Domain
 
 open Chatbot.Core
-open Chatbot.Core.Domain
 
 type MessageSource =
-    | Whisper of Username * UserId
-    | Channel of ChannelName * ChannelId
+    | Whisper of username: string * userId: string
+    | Channel of channel: string * channelId: string
 
 type Message = {
-    UserId: UserId
-    Username: Username
+    UserId: string
+    Username: string
     Message: string
     Source: MessageSource
-    ParentMessageId: MessageId option
+    ParentMessageId: string option
     MessageEmotes: Map<string, string>
 } with
 
@@ -26,10 +25,10 @@ type Message = {
     }
 
 type ChannelMessage = {
-    Username: Username
-    UserId: UserId
-    Channel: ChannelName
-    ChannelId: ChannelId
+    Username: string
+    UserId: string
+    Channel: string
+    ChannelId: string
     Message: string
     MessageEmotes: Map<string, string>
 }

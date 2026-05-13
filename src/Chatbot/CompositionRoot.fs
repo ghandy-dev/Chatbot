@@ -54,18 +54,24 @@ let loggerFactory = LoggerFactory.Create(fun options ->
 
 let configs = loadConfigs ()
 
-let memoryCache = MemoryCache.empty ()
 let db = Chatbot.Database.Db.create configs.ConnectionStrings.Database
+let memoryCache = MemoryCache.empty ()
 let logger = loggerFactory.CreateLogger("Default")
 let httpHandler = new Http.LoggingHandler(loggerFactory.CreateLogger<Http.LoggingHandler>())
 let httpClient = Http.create httpHandler configs.UserAgent
 
 let env: Types.Env = {
     Cache = memoryCache
-    Database = db
     HttpClient = httpClient
     Logger = logger
 }
+
+let aliases = Database.Repositories.Aliases.create db
+let channels = Database.Repositories.Channels.create db
+let newsFeeds = Database.Repositories.NewsFeeds.create db
+let reminders = Database.Repositories.Reminders.create db
+let rpsStats = Database.Repositories.RockPaperScissors.create db
+let users = Database.Repositories.Users.create db
 
 let twitchService = Twitch.TwitchService.create env { ClientId = configs.TwitchApi.ClientId ; ClientSecret = configs.TwitchApi.ClientSecret ; RefreshToken = configs.TwitchApi.RefreshToken }
 
@@ -83,7 +89,7 @@ let geolocationService = Geolocation.GeolocationService.create env { MapsApiKey 
 let imageUploadService = ImageUpload.ImageUploadService.create env
 let ivrService = Ivr.IvrService.create env
 let nasaService = Nasa.NasaService.create env { ApiKey = configs.Nasa.ApiKey }
-let newsService = News.NewsService.create env
+let newsService = News.NewsService.create env newsFeeds
 let genAIService = OpenAI.OpenAIService.create env { ApiKey = configs.OpenAI.ApiKey ; DefaultChatModel = configs.OpenAI.DefaultChatModel ; DefaultImageModel = configs.OpenAI.DefaultImageModel}
 let pastebinService = Pastebin.PastebinService.create env { ApiKey = configs.Pastebin.ApiKey }
 let redditService = Reddit.RedditService.create env { ClientId = configs.Reddit.ClientId ; ClientSecret = configs.Reddit.ClientSecret}
@@ -92,14 +98,6 @@ let triviaService = Trivia.TriviaService.create env
 let urbanDictionaryService = UrbanDictionary.UrbanDictionaryService.create env
 let weatherService = Weather.WeatherService.create env { MapsApiKey = configs.Microsoft.Maps.ApiKey }
 let wikipediaService = Wikipedia.WikipediaService.create env
-
-let aliasService = Database.Services.AliasService.create db
-let channelService = Database.Services.ChannelService.create db
-let newsFeedService = Database.Services.NewsFeedService.create db
-let reminderService = Database.Services.ReminderService.create db
-let rpsService = Database.Services.RpsService.create db
-let userService = Database.Services.UserService.create db
-
 
 let buildCommands commandPrefix =
     let toKeyValuePair command =
@@ -110,7 +108,7 @@ let buildCommands commandPrefix =
     [
         Command.create "accountage" [ "accage" ] HelpInfo.AccountAge (Async (accountAge twitchService)) 10 false true
         Command.create "addbetween" [ "ab" ] HelpInfo.AddBetween (Sync addBetween) 10 false true
-        Command.create "alias" [] HelpInfo.Alias (Alias (alias db configs.PipeSeparator twitchService)) 10 false false
+        Command.create "alias" [] HelpInfo.Alias (Alias (alias configs.PipeSeparator aliases twitchService)) 10 false false
         Command.create "apod" [] HelpInfo.AstronomyPictureOfTheDay (Async (apod nasaService)) 20 false true
         Command.create "braille" [ "ascii" ] HelpInfo.Braille (Async braille) 20 false true
         Command.create "calculator" [ "calc" ; "math" ] HelpInfo.Calculator (Sync calculate) 5 false true
@@ -130,9 +128,9 @@ let buildCommands commandPrefix =
         Command.create "gpt" [] HelpInfo.Gpt (Async (gpt genAIService)) 15 false true
         // Command.create ("gptimage" [] HelpInfo.Gpt Async (gptImage genAIService imageUploadService) 15 false))
         Command.create "help" []  HelpInfo.Help (Help (help configs.HelpUrl)) 10 false false
-        Command.create "joinchannel" [] HelpInfo.JoinChannel (Async (joinChannel db twitchService)) 5 true false
+        Command.create "joinchannel" [] HelpInfo.JoinChannel (Async (joinChannel channels twitchService)) 5 true false
         Command.create "lastline" [ "ll" ] HelpInfo.LastLine (Async (lastLine ivrService)) 5 false true
-        Command.create "leavechannel" [] HelpInfo.LeaveChannel (Async (leaveChannel db twitchService)) 5 true false
+        Command.create "leavechannel" [] HelpInfo.LeaveChannel (Async (leaveChannel channels twitchService)) 5 true false
         Command.create "leagueoflegends" [ "lol" ; "league" ] HelpInfo.LeagueOfLegends (Async (league riotGamesService)) 15 false true
         Command.create "namecolor" [ "color" ] HelpInfo.NameColor (Async (namecolor twitchService)) 20 false true
         Command.create "news" [] HelpInfo.News (Async (news newsService)) 15 false true
@@ -147,8 +145,8 @@ let buildCommands commandPrefix =
         Command.create "reddit" [] HelpInfo.Reddit (Async (reddit redditService)) 15 false true
         Command.create "refreshchannelemotes" [ "rce" ] HelpInfo.RefreshChannelEmotes (Sync refreshChannelEmotes) 5 true false
         Command.create "refreshglobalemotes" [ "rge" ] HelpInfo.RefreshGlobalEmotes (Sync refreshGlobalEmotes) 5 true false
-        Command.create "remind" [ "notify" ] HelpInfo.Remind (Async (remind db twitchService)) 5 false true
-        Command.create "rockpaperscissors" [ "rps" ] HelpInfo.RockPaperScissors (Async (rps db)) 10 false true
+        Command.create "remind" [ "notify" ] HelpInfo.Remind (Async (remind reminders twitchService)) 5 false true
+        Command.create "rockpaperscissors" [ "rps" ] HelpInfo.RockPaperScissors (Async (rps rpsStats)) 10 false true
         Command.create "roll" [] HelpInfo.Roll (Sync roll) 10 false true
         Command.create "search" [] HelpInfo.Search (Async (search ivrService)) 10 false true
         Command.create "slots" [] HelpInfo.Slots (Sync slots) 10 false true

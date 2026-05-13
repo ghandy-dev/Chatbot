@@ -17,7 +17,7 @@
     <Compile Include="IRC/Requests.fs" />
     <Compile Include="IRC/Parsing.fs" />
     <Compile Include="IRC/Messages.fs" />
-    <Compile Include="Domain/Domain.fs" />
+    <Compile Include="Domain/Types.fs" />
     <Compile Include="Domain/Messages.fs" />
     <Compile Include="Domain/Emotes.fs" />
     <Compile Include="Domain/Trivia.fs" />
@@ -55,7 +55,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Chatbot.Common\Chatbot.Common.fsproj" />
-    <ProjectReference Include="..\Chatbot.Database\Chatbot.Database.fsproj" />
   </ItemGroup>
 
 </Project>

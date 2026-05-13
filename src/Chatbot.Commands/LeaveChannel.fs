@@ -7,10 +7,10 @@ module LeaveChannel =
 
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
+    open Chatbot.Core.Domain.Types
     open Chatbot.Core.Services.Twitch
-    open Chatbot.Database
 
-    let leaveChannel db (twitchService: TwitchService) context =
+    let leaveChannel (channels: IChannelRepository) (twitchService: TwitchService) context =
         asyncResult {
             let! channelName = context.MessageArgs |> List.tryHead |> Result.requireSome (InvalidArgs "No channel specified")
 
@@ -19,13 +19,16 @@ module LeaveChannel =
                 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")
                 |> AsyncResult.bindRequireSome (InvalidArgs "User not found")
 
-            let! channel = Channels.get db (int user.Id) |> AsyncResult.requireSome (InvalidArgs $"Not in channel %s{channelName}")
+            let! channel = channels.Get (int user.Id) |> AsyncResult.requireSome (InvalidArgs $"Not in channel %s{channelName}")
 
-            match! Channels.delete db (channel.ChannelId |> int) with
-            | DatabaseResult.Failure -> return! internalError "Failed to remove and leave channel"
-            | DatabaseResult.Success _ ->
-                return [
-                    CommandResponse.leave channel.ChannelName
-                    Message $"Channel removed (%s{channel.ChannelId} %s{channel.ChannelName})"
-                ]
+            return!
+                async {
+                    match! channels.Delete (channel.ChannelId |> int) with
+                    | Error _ -> return internalError "Failed to remove and leave channel"
+                    | Ok _ ->
+                        return Ok [
+                            CommandResponse.leave channel.ChannelName
+                            Message $"Channel removed (%d{channel.ChannelId} %s{channel.ChannelName})"
+                        ]
+                }
         }

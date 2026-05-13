@@ -40,6 +40,7 @@
     <ProjectReference Include="..\Chatbot.Core\Chatbot.Core.fsproj" />
     <ProjectReference Include="..\Chatbot.Common\Chatbot.Common.fsproj" />
     <ProjectReference Include="..\Chatbot.Commands\Chatbot.Commands.fsproj" />
+    <ProjectReference Include="..\Chatbot.Database\Chatbot.Database.fsproj" />
   </ItemGroup>
 
 </Project>

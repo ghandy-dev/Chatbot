@@ -1,8 +1,11 @@
-module Chatbot.Database.Types
+module Chatbot.Core.Domain.Types
 
 type UserId = int
 type ChannelId = int
 type ReminderId = int
+
+type Username = string
+type ChannelName = string
 
 type Alias =
     {
@@ -111,7 +114,6 @@ and UpdateReminder =
             Message = message
         }
 
-
 type RpsStats =
     {
         UserId: UserId
@@ -177,35 +179,35 @@ type NewUser =
             IsAdmin = false
         }
 
-type IAliasService =
+type IAliasRepository =
     abstract member Get: UserId -> aliasName: string -> Async<Alias option>
     abstract member Delete: aliasName: string -> UserId -> Async<Result<int, exn>>
     abstract member Add: NewAlias -> Async<Result<int, exn>>
     abstract member Update: UpdateAlias -> Async<Result<int, exn>>
 
-type IChannelsService =
+type IChannelRepository =
     abstract member Get: ChannelId -> Async<Channel option>
     abstract member GetAll: unit -> Async<Channel seq>
     abstract member Delete: ChannelId -> Async<Result<int, exn>>
     abstract member Add: NewChannel -> Async<Result<int, exn>>
 
-type INewsFeedService =
+type INewsFeedRepository =
     abstract member Get: category: string -> Async<string list>
 
-type IReminderService =
+type IReminderRepository =
     abstract member GetTimedReminders: unit -> Async<TimedReminder seq>
     abstract member GetReminders: UserId -> Async<Reminder seq>
     abstract member GetPendingTimedReminderCount: UserId -> Async<Result<int, exn>>
-    abstract member GetPendingRemindersCount: UserId -> Async<Result<int, exn>>
+    abstract member GetPendingReminderCount: UserId -> Async<Result<int, exn>>
     abstract member Add: NewReminder -> Async<Result<int, exn>>
     abstract member Update: UpdateReminder -> Async<Result<int, exn>>
     abstract member Delete: ReminderId -> Async<Result<int, exn>>
 
-type IUsersService =
+type IUsersRepository =
     abstract member Get: UserId -> Async<User option>
     abstract member Add: NewUser -> Async<Result<int, exn>>
 
-type IRockPaperScissorsService =
+type IRockPaperScissorsRepository =
     abstract member Get: UserId -> Async<RpsStats option>
     abstract member Add: RpsStats -> Async<Result<int, exn>>
     abstract member Update: RpsStats -> Async<Result<int, exn>>

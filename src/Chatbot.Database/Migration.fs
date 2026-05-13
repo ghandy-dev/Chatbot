@@ -15,8 +15,8 @@ open Chatbot.Database.Db
 
 let private versionRegex = new Regex("^\d{3}", RegexOptions.Compiled)
 
-let run (db: Database) =
-    use connection = new SqliteConnection(db.ConnectionString)
+let run (connectionString) =
+    use connection = new SqliteConnection(connectionString)
 
     connection.Open()
 
