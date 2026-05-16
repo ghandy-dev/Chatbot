@@ -3,7 +3,6 @@ namespace Chatbot.Commands
 [<AutoOpen>]
 module Alias =
 
-    // open FSharpPlus
     open FsToolkit.ErrorHandling
 
     open Chatbot.Core.Domain.Commands
@@ -63,12 +62,6 @@ module Alias =
                     )
                     (fun _ -> InternalError "Error occurred trying to update alias")
                 }
-
-    // |> AsyncResult.eitherMap
-    //     (fun ok ->
-
-    //     )
-    //     (fun _ -> )
 
     let private delete (aliasRepo: IAliasRepository) userId alias =
         asyncResult {
