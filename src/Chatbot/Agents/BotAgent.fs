@@ -183,25 +183,24 @@ let create env config (users: IUsersRepository) (aliases: IAliasRepository) (emo
                         |> validateCommand config.Commands
                 }
 
-            let tryGetAlias (message: string) =
-                match message |> String.split " " |> List.ofArray with
-                | [] -> None
-                | alias :: args -> Some (alias, args)
+            let tryGetAlias (message: string) userId =
+                async {
+                    match message |> String.split " " |> List.ofArray with
+                    | [] -> return None
+                    | alias :: args ->
+                        match! aliases.Get (int userId) alias with
+                        | None -> return None
+                        | Some command ->
+                            let formattedCommand = String.format command.Command args
+                            return Some formattedCommand
+                }
 
             let handleMessage (msg: Message) =
                 async {
                     let! messageOpt =
                         async {
                             if msg.Message.StartsWith(config.Prefixes.AliasPrefix) then
-                                match tryGetAlias msg.Message[config.Prefixes.AliasPrefix |> String.length ..] with
-                                | Some (alias, args) ->
-                                    match! aliases.Get (int msg.UserId) alias with
-                                    | None -> return None
-                                    | Some command ->
-                                        let formattedCommand = String.format command.Command args
-                                        return Some formattedCommand
-                                | None ->
-                                    return None
+                                return! tryGetAlias msg.Message[config.Prefixes.AliasPrefix |> String.length ..] msg.UserId
                             elif msg.Message.StartsWith(config.Prefixes.CommandPrefix) then
                                 return Some msg.Message[config.Prefixes.CommandPrefix |> String.length ..]
                             else
