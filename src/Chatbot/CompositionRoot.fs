@@ -34,7 +34,6 @@ let loadConfigs () : Configs =
         TwitchChatConfig = configuration |> getSection<TwitchChatConfig> "TwitchChat"
         TwitchApi = configuration |> getSection<TwitchApiConfig> "TwitchApi"
         CommandPrefix = configuration |> getItem "CommandPrefix"
-        PipePrefix = configuration |> getItem "PipePrefix"
         AliasPrefix = configuration |> getItem "AliasPrefix"
         PipeSeparator = configuration |> getItem "PipeSeparator"
         UserAgent = configuration |> getItem "UserAgent"
@@ -172,5 +171,5 @@ let buildCommands commandPrefix =
     |> Map.ofList
 
 let commands = buildCommands configs.CommandPrefix
-let prefixConfig = PrefixConfig.create configs.CommandPrefix configs.PipePrefix configs.AliasPrefix
-let botConfig = BotConfig.create commands prefixConfig
+let prefixConfig = PrefixConfig.create configs.CommandPrefix configs.AliasPrefix
+let botConfig = BotConfig.create commands prefixConfig configs.PipeSeparator

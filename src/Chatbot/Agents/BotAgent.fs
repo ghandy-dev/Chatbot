@@ -10,20 +10,16 @@ open Chatbot.Core.Domain
 open Chatbot.Core.Services.Emotes
 open Chatbot.Core.IRC.Request
 open Chatbot.Core.Domain.Commands
+open Chatbot.Core.Domain.Command.Parsing
 open Chatbot.Core.Domain.Types
 open Chatbot.Core.Types
 open Chatbot.Types
 open Chatbot.Twitch
 open Chatbot.Common
-open Chatbot.Command.Parsing
 
 type CommandName = string
 type CooldownKey = User * CommandName
 type CooldownMap = Map<CooldownKey, DateTime>
-
-type ValidatedCommand =
-    | Command of Command * args: string list
-    | Pipe of (Command * string list) list
 
 type BotMessage =
     | TwitchEvent of TwitchEvent
@@ -136,7 +132,7 @@ let create env config (users: IUsersRepository) (aliases: IAliasRepository) (emo
                         dispatchCommandResponse responseResult msg
 
                         return { state with UserCommandCooldowns = userCommandCooldowns }
-                    | ValidatedCommand.Pipe (commands) ->
+                    | ValidatedCommand.Pipe commands ->
                         let folder folderState (command: (Command * string list)) =
                             async {
                                 let! acc, userCommandCooldowns = folderState
@@ -180,85 +176,58 @@ let create env config (users: IUsersRepository) (aliases: IAliasRepository) (emo
                         return { state with UserCommandCooldowns = userCommandCooldowns }
                 }
 
-            let validateCommand command (msg: Message) =
+            let parseAndValidateCommand message =
                 async {
-                    match command with
-                    | ParsedCommand.Command (command, args) ->
-                        return
-                            config.Commands
-                            |> Map.tryFind command
-                            |> Option.map (fun c -> ValidatedCommand.Command (c, args))
-                    | ParsedCommand.AliasCommand (alias, args) ->
-                        match! aliases.Get (int msg.UserId) alias with
-                        | None -> return None
-                        | Some a ->
-                            let commandText = String.format a.Command args
-
-                            match commandText |> String.split " " |> List.ofArray with
-                            | [] -> return None
-                            | command :: args ->
-                                return
-                                    config.Commands
-                                    |> Map.tryFind command
-                                    |> Option.map (fun c -> ValidatedCommand.Command (c, args))
-                    | ParsedCommand.Pipe cmds ->
-                        let commands =
-                            cmds
-                            |> List.map (fun (command, args) ->
-                                config.Commands
-                                |> Map.tryFind command
-                                |> Option.bind (fun c ->
-                                    if c.CanPipe then
-                                        Some (c, args)
-                                    else
-                                        None
-                                )
-                            )
-
-                        if commands |> List.exists Option.isNone then
-                            return None
-                        else
-                            return
-                                commands
-                                |> List.choose id
-                                |> ValidatedCommand.Pipe
-                                |> Some
+                    return
+                        parse (char config.PipeSeparator) message
+                        |> validateCommand config.Commands
                 }
 
-            let parseAndValidateCommand state (msg: Message) =
+            let tryGetAlias (message: string) =
+                match message |> String.split " " |> List.ofArray with
+                | [] -> None
+                | alias :: args -> Some (alias, args)
+
+            let handleMessage (msg: Message) =
                 async {
-                    return!
-                        tryParse config.Prefixes msg.Message
-                        |> Async.singleton
-                        |> AsyncOption.bind (fun parsedCommand ->
-                            validateCommand parsedCommand msg
-                        )
+                    let! messageOpt =
+                        async {
+                            if msg.Message.StartsWith(config.Prefixes.AliasPrefix) then
+                                match tryGetAlias msg.Message[config.Prefixes.AliasPrefix |> String.length ..] with
+                                | Some (alias, args) ->
+                                    match! aliases.Get (int msg.UserId) alias with
+                                    | None -> return None
+                                    | Some command ->
+                                        let formattedCommand = String.format command.Command args
+                                        return Some formattedCommand
+                                | None ->
+                                    return None
+                            elif msg.Message.StartsWith(config.Prefixes.CommandPrefix) then
+                                return Some msg.Message[config.Prefixes.CommandPrefix |> String.length ..]
+                            else
+                                return None
+                        }
+
+                    match messageOpt with
+                    | None -> ()
+                    | Some commandMessage ->
+                        match! parseAndValidateCommand commandMessage with
+                        | Error err -> do logger.LogInformation("Failed to parse/validate command {err}", err)
+                        | Ok validatedCommand -> do mb.Post (RunCommand (validatedCommand, msg))
                 }
 
-            let processTwitchEvent state message =
-                let tryQueueComand message =
-                    async {
-                        let! parsedCommandOpt = parseAndValidateCommand state message
-                        parsedCommandOpt |> Option.iter (fun parsedCommand -> do mb.Post (RunCommand (parsedCommand, message)))
-                    }
-
+            let processTwitchEvent message =
                 async {
                     match message with
                     | ChannelMessage msg ->
                         let message = Message.create msg.UserId msg.Username msg.Message (MessageSource.Channel (msg.Channel, msg.ChannelId)) None msg.MessageEmotes
-                        do! tryQueueComand message
+                        do! handleMessage message
                     | ChannelReplyMessage msg ->
-                        if msg.Message.StartsWith(config.Prefixes.CommandPrefix)
-                            || msg.Message.StartsWith(config.Prefixes.PipePrefix)
-                            || msg.Message.StartsWith(config.Prefixes.AliasPrefix) then
-
-                            let message = Message.create msg.UserId msg.Username $"{msg.Message} {msg.ParentMessage}" (MessageSource.Channel (msg.Channel, msg.ChannelId)) (Some msg.ParentMessageId) msg.MessageEmotes
-                            do! tryQueueComand message
-                        else
-                            ()
+                        let message = Message.create msg.UserId msg.Username $"{msg.Message} {msg.ParentMessage}" (MessageSource.Channel (msg.Channel, msg.ChannelId)) (Some msg.ParentMessageId) msg.MessageEmotes
+                        do! handleMessage message
                     | WhisperMessage msg ->
                         let message = Message.create msg.UserId msg.Username msg.Message (Whisper (msg.Username, msg.UserId)) None msg.MessageEmotes
-                        do! tryQueueComand message
+                        do! handleMessage message
                     | GlobalEmotesUpdated _ ->
                         mb.Post (BotAction (RefreshGlobalEmotes EmoteProvider.Twitch))
                     | _ -> ()
@@ -292,7 +261,7 @@ let create env config (users: IUsersRepository) (aliases: IAliasRepository) (emo
                 async {
                     match! mb.Receive() with
                     | TwitchEvent m ->
-                        do! processTwitchEvent state m
+                        do! processTwitchEvent m
                     | SendChannelMessage (channel, message) ->
                         do sendChannelMessage channel message
                     | SendChannelReplyMessage (messageId, channel, message) ->

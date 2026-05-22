@@ -97,7 +97,6 @@ type Configs = {
     TwitchApi: TwitchApiConfig
     TwitchChatConfig: TwitchChatConfig
     CommandPrefix: string
-    PipePrefix: string
     AliasPrefix: string
     PipeSeparator: string
     UserAgent: string

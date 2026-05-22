@@ -4,26 +4,26 @@ open Chatbot.Core.Domain.Commands
 
 type PrefixConfig = {
     CommandPrefix: string
-    PipePrefix: string
     AliasPrefix: string
 }
 
 type BotConfig = {
     Commands: Map<string, Command>
     Prefixes: PrefixConfig
+    PipeSeparator: string
 }
 
 module PrefixConfig =
 
-    let create commandPrefix pipePrefix aliasPrefix = {
+    let create commandPrefix aliasPrefix = {
         CommandPrefix = commandPrefix
-        PipePrefix = pipePrefix
         AliasPrefix = aliasPrefix
     }
 
 module BotConfig =
 
-    let create commands prefixes = {
+    let create commands prefixes pipeSepartor = {
         Commands = commands
         Prefixes = prefixes
+        PipeSeparator = pipeSepartor
     }

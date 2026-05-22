@@ -25,6 +25,7 @@
     <Compile Include="Domain/Commands/CommandError.fs" />
     <Compile Include="Domain/Commands/CommandResponse.fs" />
     <Compile Include="Domain/Commands/Command.fs" />
+    <Compile Include="Domain/Commands/CommandParser.fs" />
     <Compile Include="Services/Types.fs" />
     <Compile Include="Services/CatFact.fs" />
     <Compile Include="Services/Ivr.fs" />
