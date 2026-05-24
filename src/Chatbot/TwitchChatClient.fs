@@ -111,6 +111,10 @@ module Agent =
                     let rec loop () =
                         async {
                             match! connection.ReadAsync cancellationToken with
+                            | Ok null ->
+                                logger.LogWarning("null message received")
+                                mb.Post ClientDisconnected
+                                return ()
                             | Ok data ->
                                 mb.Post (MessageReceived data)
                                 return! loop ()
