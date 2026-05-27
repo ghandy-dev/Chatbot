@@ -122,4 +122,4 @@ let validateCommand (commands: Map<string, Command>) (command: string list list)
     | cmds ->
         cmds
         |> List.traverseResultM validatePipe
-        |> Result.map (List.rev >> ValidatedCommand.Pipe)
+        |> Result.map ValidatedCommand.Pipe
