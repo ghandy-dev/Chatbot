@@ -11,20 +11,12 @@ module Alias =
     open Chatbot.Core.Services.Twitch
 
     let private validateCommand (command: string list) pipeSeparator (commands: Map<string, _>) =
-        let aliasCommands =
-            command
-            |> String.join " "
-            |> String.split pipeSeparator
-            |> Array.map (fun s -> s.Split(" ", System.StringSplitOptions.TrimEntries ||| System.StringSplitOptions.RemoveEmptyEntries) |> Array.tryHead)
-            |> Array.choose id
-
-        match aliasCommands.Length with
-        | 0 -> invalidArgs "Invalid command definition"
-        | _ ->
-            match aliasCommands |> Array.exists (fun ac -> commands |> Map.containsKey ac |> not) with
-            | true -> invalidArgs "Invalid command definition"
-            | false -> Ok (String.join " " command)
-
+        match
+            Parsing.parse pipeSeparator (command |> String.join " ")
+            |> Parsing.validateCommand commands
+        with
+        | Error _ -> invalidArgs "Invalid command definition"
+        | Ok _ -> Ok (String.join " " command)
 
     let private add pipeSeparator (aliasRepo: IAliasRepository) userId alias command commands =
         asyncResult {
