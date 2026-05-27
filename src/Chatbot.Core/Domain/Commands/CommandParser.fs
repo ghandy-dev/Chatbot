@@ -1,4 +1,4 @@
-module Chatbot.Core.Domain.Command.Parsing
+module Chatbot.Core.Domain.Commands.Parsing
 
 open System
 open System.Text

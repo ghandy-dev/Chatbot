@@ -10,7 +10,7 @@ open Chatbot.Core.Domain
 open Chatbot.Core.Services.Emotes
 open Chatbot.Core.IRC.Request
 open Chatbot.Core.Domain.Commands
-open Chatbot.Core.Domain.Command.Parsing
+open Chatbot.Core.Domain.Commands.Parsing
 open Chatbot.Core.Domain.Types
 open Chatbot.Core.Types
 open Chatbot.Types
