@@ -10,7 +10,7 @@ type PrefixConfig = {
 type BotConfig = {
     Commands: Map<string, Command>
     Prefixes: PrefixConfig
-    PipeSeparator: string
+    PipeSeparator: char
 }
 
 module PrefixConfig =

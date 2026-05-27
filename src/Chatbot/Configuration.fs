@@ -98,7 +98,7 @@ type Configs = {
     TwitchChatConfig: TwitchChatConfig
     CommandPrefix: string
     AliasPrefix: string
-    PipeSeparator: string
+    PipeSeparator: char
     UserAgent: string
     UserId: string
     HelpUrl: string
