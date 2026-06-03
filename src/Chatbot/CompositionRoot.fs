@@ -47,7 +47,7 @@ let loggerFactory = LoggerFactory.Create(fun options ->
         options.ColorBehavior <- Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Enabled
         options.SingleLine <- true
         options.UseUtcTimestamp <- true
-        options.TimestampFormat <- "[HH:mm:ss] "
+        options.TimestampFormat <- "[yyyy/MM/dd HH:mm:ss] "
     ) |> ignore
 )
 
