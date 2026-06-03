@@ -79,8 +79,15 @@ Get the picture for a given date. (date format: yyyy/mm/dd)
             Description = "Manage custom aliases for running commands."
             ExampleUsage = $"""
 Add a new alias
-{exampleArgs "alias" "add <alias name> <commands>"}
-{exampleArgs "alias" "add forsenclip randomclip forsen"}
+{exampleArgs "alias" "add <alias name> <command>"}
+{exampleArgs "alias" "add <alias name> \"<command1> | <command2>\""}
+{exampleArgs "alias" "add forsenclip \"randomclip forsen\""}
+{exampleArgs "alias" "add tf \"randomquote | texttransform alternate\""}
+
+Use custom positional arguments with {{n}}, indexed starting from {{0}}
+e.g. {{0}} {{1}} {{2}}
+{exampleArgs "alias" "add <alias name> \"{0}\""}
+{exampleArgs "alias" "add upper \"texttransform {0}\""}
 
 Remove an alias
 {exampleArgs "alias" "remove <alias name>"}
