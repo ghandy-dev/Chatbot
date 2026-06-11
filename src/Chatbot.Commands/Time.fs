@@ -18,10 +18,13 @@ module Time =
             | [] -> return [ Message $"{DateTime.UtcNow.ToString(DateTimeFormat)} (UTC)" ]
             | address ->
                 let timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-                let! location = geolocationService.GetSearchAddress (address |> String.join " ") |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Geolocation")
-                let! timezone = geolocationService.GetTimeZone location.Position.Lat location.Position.Lon timestamp |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Geolocation")
-                let unixTime = timestamp + int64 timezone.DstOffset + int64 timezone.RawOffset
-                let dateTime = DateTimeOffset.FromUnixTimeSeconds(unixTime).ToString(DateTimeFormat)
 
-                return [ Message $"{dateTime} {timezone.TimeZoneName}" ]
+                match! geolocationService.GetSearchAddress (address |> String.join " ") |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Geolocation") with
+                | { Results = [] } -> return [ Message "Location not found" ]
+                | { Results = location :: _ } ->
+                    let! timezone = geolocationService.GetTimeZone location.Position.Lat location.Position.Lon timestamp |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Geolocation")
+                    let unixTime = timestamp + int64 timezone.DstOffset + int64 timezone.RawOffset
+                    let dateTime = DateTimeOffset.FromUnixTimeSeconds(unixTime).ToString(DateTimeFormat)
+
+                    return [ Message $"{dateTime} {timezone.TimeZoneName}" ]
         }

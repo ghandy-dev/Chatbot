@@ -78,10 +78,12 @@ module Weather =
             match context.MessageArgs with
             | [] -> return! invalidArgs "No location provided"
             | address ->
-                let! geocoding = geolocationService.GetSearchAddress (address |> String.join " ") |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Geolocation")
-                let! weather = weatherService.GetCurrentWeather geocoding.Position.Lat geocoding.Position.Lon |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Weather")
+                match! geolocationService.GetSearchAddress (address |> String.join " ") |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Geolocation") with
+                | { Results = [] } -> return [ Message "Location not found" ]
+                | { Results = location :: _ } ->
+                    let! weather = weatherService.GetCurrentWeather location.Position.Lat location.Position.Lon |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Weather")
 
-                match weather with
-                | [] -> return [ Message "No weather conditions reported for location" ]
-                | w :: _ -> return processWeatherResult geocoding w
+                    match weather with
+                    | [] -> return [ Message "No weather conditions reported for location" ]
+                    | w :: _ -> return processWeatherResult location w
             }

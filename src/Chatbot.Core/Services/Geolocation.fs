@@ -288,8 +288,8 @@ module Geolocation =
 
     type IGeolocationService =
         abstract member GetTimeZone: double -> double -> int64 -> Async<Result<Timezone, int>>
-        abstract member GetReverseAddress: double -> double -> Async<Result<ReverseSearchAddressResultItem, int>>
-        abstract member GetSearchAddress: string -> Async<Result<SearchAddressResultItem, int>>
+        abstract member GetReverseAddress: double -> double -> Async<Result<ReverseSearchAddressResult, int>>
+        abstract member GetSearchAddress: string -> Async<Result<SearchAddressResult, int>>
 
     module GeolocationService =
 
@@ -342,7 +342,7 @@ module Geolocation =
                         return
                             response
                             |> Response.toJsonResult<ReverseSearchAddressResult>
-                            |> Result.eitherMap _.Addresses.Head _.StatusCode
+                            |> Result.mapError _.StatusCode
                     }
 
                 let getSearchAddress (address: string) =
@@ -355,7 +355,7 @@ module Geolocation =
                         return
                             response
                             |> Response.toJsonResult<SearchAddressResult>
-                            |> Result.eitherMap _.Results.Head _.StatusCode
+                            |> Result.mapError _.StatusCode
                     }
 
                 getReverseAddress,
