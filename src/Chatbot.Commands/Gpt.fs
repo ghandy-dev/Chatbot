@@ -17,7 +17,7 @@ module Gpt =
     open Chatbot.Core.Services.OpenAI.Chat.Types
 
     type MessageHistory = {
-        LastMessageTimestamp: System.DateTime
+        LastMessageTimestamp: System.DateTimeOffset
         Messages: TextGenerationMessage list
         LastMessage: string
         ContinueMessageIndex: int

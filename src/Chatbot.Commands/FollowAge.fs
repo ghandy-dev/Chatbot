@@ -3,6 +3,8 @@ namespace Chatbot.Commands
 [<AutoOpen>]
 module FollowAge =
 
+    open System
+
     open FsToolkit.ErrorHandling
 
     open Chatbot.Common
@@ -34,10 +36,10 @@ module FollowAge =
                 | None, false -> $"%s{user} is not following %s{channel}"
                 | None, true -> $"You are not following %s{channel}"
                 | Some followedAt, false ->
-                    let duration = System.DateTimeOffset.UtcNow - followedAt |> formatTimeSpan
+                    let duration = formatElapsed followedAt DateTimeOffset.UtcNow
                     $"%s{user} has been following %s{channel} for %s{duration}"
                 | Some followedAt, true ->
-                    let duration = System.DateTimeOffset.UtcNow - followedAt |> formatTimeSpan
+                    let duration = formatElapsed followedAt DateTimeOffset.UtcNow
                     $"You have been following %s{channel} for %s{duration}"
 
             return [ Message message ]

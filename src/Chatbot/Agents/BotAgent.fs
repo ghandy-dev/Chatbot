@@ -19,7 +19,7 @@ open Chatbot.Common
 
 type CommandName = string
 type CooldownKey = User * CommandName
-type CooldownMap = Map<CooldownKey, DateTime>
+type CooldownMap = Map<CooldownKey, DateTimeOffset>
 
 type BotMessage =
     | TwitchEvent of TwitchEvent

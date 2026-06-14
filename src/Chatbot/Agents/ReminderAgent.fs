@@ -25,9 +25,10 @@ let create env (reminders: IReminderRepository) (textStorageService: ITextStorag
                     let! reminders = reminders.GetTimedReminders ()
 
                     for reminder in reminders do
-                        let ts = DateTime.UtcNow - reminder.Timestamp
+                        let now = utcNow()
+                        let ts = reminder.Timestamp
                         let sender = if reminder.FromUsername = reminder.TargetUsername then "yourself" else $"@%s{reminder.FromUsername}"
-                        let message = $"@%s{reminder.TargetUsername}, reminder from %s{sender} (%s{formatTimeSpan ts} ago): %s{reminder.Message}"
+                        let message = $"@%s{reminder.TargetUsername}, reminder from %s{sender} (%s{formatElapsed ts now} ago): %s{reminder.Message}"
                         do twitchChatClient.Send(Request.privMsg reminder.Channel message)
 
                     do! Async.Sleep(250)
@@ -49,8 +50,9 @@ let create env (reminders: IReminderRepository) (textStorageService: ITextStorag
                                 let message =
                                     rs
                                     |> Seq.map (fun r ->
-                                        let ts = DateTime.UtcNow - r.Timestamp
-                                        $"(%s{formatTimeSpan ts} ago): %s{r.Message}"
+                                        let now = utcNow()
+                                        let ts = r.Timestamp
+                                        $"(%s{formatElapsed ts now} ago): %s{r.Message}"
                                     )
                                     |> String.join ", "
 

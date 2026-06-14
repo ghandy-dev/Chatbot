@@ -88,7 +88,7 @@ module Ivr =
         abstract member GetChannelRandomLine: string -> Async<Result<string, int>>
         abstract member GetUserRandomLine: string -> string -> Async<Result<string, int>>
         abstract member GetLastLine: string -> string -> Async<Result<string, int>>
-        abstract member GetLines: string -> DateTime -> DateTime -> int -> Async<Result<string, int>>
+        abstract member GetLines: string -> DateTimeOffset -> DateTimeOffset -> int -> Async<Result<string, int>>
         abstract member Search: string -> string -> string -> bool -> int -> Async<Result<string, int>>
         abstract member GetEmoteByName: string -> Async<Result<Emote, int>>
         abstract member GetSubAge: string -> string -> Async<Result<SubAge, int>>
@@ -191,7 +191,7 @@ module Ivr =
                             _.StatusCode
                 }
 
-            let getLines (channel: string) (from: DateTime) (``to``: DateTime) (limit: int) =
+            let getLines (channel: string) (from: DateTimeOffset) (``to``: DateTimeOffset) (limit: int) =
                 async {
                     let fromString = from.ToUniversalTime().ToString(UtcDateTimeStringFormat)
                     let toString = ``to``.ToUniversalTime().ToString(UtcDateTimeStringFormat)

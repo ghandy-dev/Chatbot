@@ -22,14 +22,15 @@ module Remind =
             match context.MessageSource with
             | Whisper _ -> return! invalidArgs "Timed reminders can only be used in channels"
             | Channel (channel, _) ->
-                let! datetime, start, ``end`` = DateTime.tryParseNaturalLanguageDateTime content |> Option.toResultWith (InvalidArgs "Couldn't parse reminder time")
+                let! datetime, _, ``end`` = DateTime.tryParseNaturalLanguageDateTime content |> Option.toResultWith (InvalidArgs "Couldn't parse reminder time")
                 let now = utcNow()
-                let reminderTimestamp = datetime.ToUniversalTime()
-                if (reminderTimestamp - now).Days / 365 > 5 then
+                let maxDate = now.AddYears(5)
+                let reminderTimestamp = datetime
+
+                if reminderTimestamp > maxDate then
                     return! invalidArgs "Max reminder time span is now + 5 years"
                 else
                     let message = content[``end`` + 1..]
-                    let timespan = reminderTimestamp.AddSeconds(1) - now
 
                     let! targetUser =
                         twitchService.Users.GetUser user
@@ -43,7 +44,7 @@ module Remind =
                         async {
                             match! reminders.Add newReminder with
                             | Error _ -> return [ Message "Error occurred trying to create reminder" ]
-                            | Ok id -> return [ Message $"(ID: %d{id}) I will remind %s{targetUsername} in %s{formatTimeSpan timespan}" ]
+                            | Ok id -> return [ Message $"(ID: %d{id}) I will remind %s{targetUsername} in %s{formatElapsed now reminderTimestamp}" ]
                         }
         }
 

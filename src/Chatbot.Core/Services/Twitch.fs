@@ -24,7 +24,7 @@ module Twitch =
         abstract member GetUserChatColor: userId: string -> Async<Result<UserChatColor option, int>>
 
     type Clips =
-        abstract member GetClips: channel: string -> dateFrom: System.DateTime -> dateTo: System.DateTime -> Async<Result<Clip list, int>>
+        abstract member GetClips: channel: string -> dateFrom: System.DateTimeOffset -> dateTo: System.DateTimeOffset -> Async<Result<Clip list, int>>
         abstract member CreateClip: broadcasterId: string -> accessToken: string -> Async<Result<CreateClip option, int>>
 
     type Emotes =
@@ -142,8 +142,8 @@ module Twitch =
 
         let create (helixApi: HelixApi) =
 
-            let getClips userId (dateFrom: System.DateTime) (dateTo: System.DateTime) =
-                helixApi.Clips.GetClipsAsync(new GetClipsRequestByBroadcasterId(BroadcasterId = userId, StartedAt = dateFrom, EndedAt = dateTo, First = 50)) |> Async.AwaitTask
+            let getClips userId (dateFrom: System.DateTimeOffset) (dateTo: System.DateTimeOffset) =
+                helixApi.Clips.GetClipsAsync(new GetClipsRequestByBroadcasterId(BroadcasterId = userId, StartedAt = new System.DateTime(dateFrom.Ticks), EndedAt = new System.DateTime(dateTo.Ticks), First = 50)) |> Async.AwaitTask
                 |> Async.map handleResponse
 
             let createClip broadcasterId accessToken =

@@ -13,40 +13,33 @@ module Utils =
     let [<Literal>] DateTimeStringFormat = $"dd/MM/yyyy HH:mm:ss"
     let [<Literal>] UtcDateTimeStringFormat = $"yyyy-MM-ddTHH:mm:ss.ffffZ"
 
-    let utcNow () = DateTime.UtcNow
-    let now () = DateTime.Now
+    let utcNow () = DateTimeOffset.UtcNow
+    let now () = DateTimeOffset.Now
     let epochTime () = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
     let epochTimeSeconds () = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-    let today () = DateOnly.FromDateTime(utcNow())
+    let today () = DateOnly.FromDateTime(utcNow().Date)
     let base64: string -> string = System.Text.Encoding.UTF8.GetBytes >> System.Convert.ToBase64String
 
-    let formatTimeSpan (ts: TimeSpan) =
-        let formatComponent value =
-            if value > 0 then Some (value.ToString()) else None
+    let formatElapsed (start: DateTimeOffset) (``end``: DateTimeOffset) =
+        let years = ``end``.Year - start.Year
+        let ts = ``end`` - start.AddYears(years)
 
-        let years = if ts.Days >= 365 then Some ((ts.Days / 365).ToString()) else None
-        let days = if years.IsSome then formatComponent (ts.Days % 365) else formatComponent ts.Days
-        let hours = formatComponent ts.Hours
-        let minutes = formatComponent ts.Minutes
-        let seconds = formatComponent ts.Seconds
+        let days = ts.Days
+        let hours = ts.Hours
+        let mins = ts.Minutes
+        let secs = ts.Seconds
 
-        match years, days, hours, minutes, seconds with
-        | Some y, Some d,Some h, _, _ -> sprintf "%sy, %sd, %sh" y d h
-        | Some y, None, Some h, _, _ -> sprintf "%sy, %sh" y h
-        | Some y, Some d, None, _, _ -> sprintf "%sy, %sd" y d
-        | Some y, None , None, _, _ -> sprintf "%sy" y
-        | None, Some d, Some h, Some m, _ -> sprintf "%sd, %sh, %sm" d h m
-        | None, Some d, None, Some m, _ -> sprintf "%sd, %sm" d m
-        | None, Some d, Some h, None, _ -> sprintf "%sd, %sh" d h
-        | None, Some d, None, None, _ -> sprintf "%sd" d
-        | None, None, Some h, Some m, Some _ -> sprintf "%sh, %sm" h m
-        | None, None, Some h, None, Some _ -> sprintf "%sh" h
-        | None, None, Some h, Some m, None -> sprintf "%sh, %sm" h m
-        | None, None, Some h, None, None -> sprintf "%sh" h
-        | None, None, None, Some m, Some s -> sprintf "%sm, %ss" m s
-        | None, None, None, Some m, None -> sprintf "%sm" m
-        | None, None, None, None, Some s -> sprintf "%ss" s
-        | _ -> "0s"
+        let format =
+            function
+            | y, _, _, _, _ when y > 0 -> [ $"{years}y" ; $"{days}d"; $"{hours}h"; $"{mins}m" ]
+            | _, d, _, _, _ when d > 0 -> [ $"{days}d"; $"{hours}h"; $"{mins}m" ]
+            | _, _, h, _, _ when h > 0 -> [ $"{hours}h"; $"{mins}m"; $"{secs}s" ]
+            | _, _, _, m, _ when m > 0 -> [ $"{mins}m"; $"{secs}s" ]
+            | _, _, _, _, s -> [ $"{s}s" ]
+
+        let parts = format (years, days, hours, mins, secs)
+
+        String.concat ", " parts
 
     let stripMarkdownTags content =
         let patterns = [

@@ -32,7 +32,7 @@ module DateTime =
 
                         match value, ``type``, timex  with
                         | _, Some "date", Some d ->
-                            let date = DateTime.Parse(d)
+                            let date = DateTimeOffset.Parse(d)
                             let difference = date - now()
                             let datetime = now().AddDays(difference.Days)
                             Some (datetime, result.Start, result.End)

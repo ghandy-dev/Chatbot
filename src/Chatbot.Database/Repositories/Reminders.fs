@@ -16,7 +16,7 @@ module Reminders =
         {
             FromUsername = dbReminder.from_username
             TargetUsername = dbReminder.target_username
-            Timestamp = System.DateTime.Parse dbReminder.timestamp
+            Timestamp = System.DateTimeOffset.Parse dbReminder.timestamp
             Message = dbReminder.message
             Channel = dbReminder.channel
         }
@@ -25,7 +25,7 @@ module Reminders =
         {
             FromUsername = dbReminder.from_username
             TargetUsername = dbReminder.target_username
-            Timestamp = System.DateTime.Parse dbReminder.timestamp
+            Timestamp = System.DateTimeOffset.Parse dbReminder.timestamp
             Message = dbReminder.message
         }
 
@@ -36,7 +36,7 @@ module Reminders =
                 SELECT reminder_id, timestamp, from_user_id, from_username, target_user_id, target_username, message, channel, reminder_timestamp, reminded
                 FROM reminders
                 WHERE reminded = FALSE
-                AND reminder_timestamp < datetime('now')
+                AND datetime(reminder_timestamp) < datetime('now')
                 """
 
             let update =

@@ -4,7 +4,7 @@ type Trivia = {
     Questions: Question list
     Count: int
     Categories: string list
-    Timestamp: System.DateTime
+    Timestamp: System.DateTimeOffset
     HintsSent: int list
     UseHints: bool
     Channel: string

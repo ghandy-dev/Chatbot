@@ -63,7 +63,7 @@ type Reminder =
     {
         FromUsername: string
         TargetUsername: string
-        Timestamp: System.DateTime
+        Timestamp: System.DateTimeOffset
         Message: string
     }
 
@@ -71,7 +71,7 @@ and TimedReminder =
     {
         FromUsername: string
         TargetUsername: string
-        Timestamp: System.DateTime
+        Timestamp: System.DateTimeOffset
         Message: string
         Channel: string
     }
@@ -84,8 +84,8 @@ and NewReminder =
         TargetUsername: string
         Channel: string option
         Message: string
-        Timestamp: System.DateTime
-        ReminderTimestamp: System.DateTime option
+        Timestamp: System.DateTimeOffset
+        ReminderTimestamp: System.DateTimeOffset option
     }
 
     static member create fromUserId fromUsername targetUserId targetUsername channel message reminderTimestamp =
@@ -96,7 +96,7 @@ and NewReminder =
             TargetUsername = targetUsername
             Channel = channel
             Message = message
-            Timestamp = System.DateTime.UtcNow
+            Timestamp = System.DateTimeOffset.UtcNow
             ReminderTimestamp = reminderTimestamp
         }
 

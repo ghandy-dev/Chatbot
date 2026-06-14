@@ -6,6 +6,7 @@ module Parsing =
 
     let tryParseInt : _ -> System.Int32 option = tryParse
     let tryParseDateTime : _ -> System.DateTime option = tryParse
+    let tryParseDateTimeOffset : _ -> System.DateTimeOffset option = tryParse
     let tryParseDateOnly : _ -> System.DateOnly option = tryParse
     let tryParseBoolean : _ -> System.Boolean option = tryParse
 

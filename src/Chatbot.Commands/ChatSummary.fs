@@ -17,7 +17,7 @@ module ChatSummary =
     open Chatbot.Core.Services.Ivr
 
     type SummaryCache = {
-        LastMessage: System.DateTime
+        LastMessage: System.DateTimeOffset
         Message: string
     }
 
