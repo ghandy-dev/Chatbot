@@ -84,7 +84,7 @@ let create env config (users: IUsersRepository) (aliases: IAliasRepository) (emo
                         try
                             return! command.Invoke context config.Commands
                         with ex ->
-                            do logger.LogError(ex, "Error occurred running command {command}", command)
+                            do logger.LogError(ex, "Error occurred running command {command} {args}", command.Name, context.MessageArgs)
                             return CommandError.internalError "Error running command"
                     else
                         return CommandError.commandOnCooldown command.Name
