@@ -9,7 +9,6 @@ open Microsoft.Extensions.Logging
 open FSharpPlus
 open FsToolkit.ErrorHandling
 
-open Chatbot.Common
 open Chatbot.Connection
 open Chatbot.Core
 open Chatbot.Core.IRC
@@ -20,17 +19,21 @@ open Chatbot.Core.Services.Twitch
 type ConnectionState =
     | Disconnected
     | Connected
+    | Authenticating
+    | Ready
 
 type State = {
     Connection: Connection
     Channels: Set<string>
     ConnectionState: ConnectionState
     Username: string option
+    MessageQueue: Queue<Request>
 }
 
 type TwitchClientMessage =
     | Connect
     | Authenticate
+    | Authenticated
     | JoinChannels
     | Reconnect of attempt: int
     | ClientDisconnected
@@ -78,7 +81,6 @@ module Agent =
         let mutable cancellationTokenSource: CancellationTokenSource option = None
 
         let chatRateLimiter = new RateLimiter(RateLimiter.MessageLimit_Chat, RateLimiter.ResetInterval_Chat)
-        let messageQueue = new Queue<Request>()
 
         let whisperRateLimiter = new RateLimiter(RateLimiter.MessageLimit_Whispers, RateLimiter.ResetInterval_Whispers)
 
@@ -87,6 +89,7 @@ module Agent =
             Channels = channels
             ConnectionState = Disconnected
             Username = None
+            MessageQueue = new Queue<Request>()
         }
 
         MailboxProcessor<TwitchClientMessage>.Start((fun mb ->
@@ -97,12 +100,26 @@ module Agent =
                 | _ -> pown 5 4
                 |> fun s -> TimeSpan.FromSeconds(int64 s)
 
-            let handleMessage message =
-                match message with
-                | ConnectedMessage -> mb.Post JoinChannels
-                | PingMessage m -> mb.Post (Send (Request.pong m.Message))
-                | ReconnectMessage -> mb.Post (Reconnect 1)
-                | _ -> ()
+            let sendRequest (connection: Connection) request =
+                async {
+                    let message = request |> Request.toString
+                    logger.LogInformation("Sending: {message}", message)
+
+                    match! connection.SendAsync(message, cancellationToken) with
+                    | Ok _ -> ()
+                    | Error ex -> logger.LogWarning(ex, "Error occurred sending message")
+                }
+
+            let handleMessage connection message =
+                async {
+                    match message with
+                    | ConnectedMessage ->
+                        mb.Post Authenticated
+                        mb.Post JoinChannels
+                    | PingMessage m -> do! sendRequest connection (Request.pong m.Message)
+                    | ReconnectMessage -> mb.Post (Reconnect 1)
+                    | _ -> ()
+                }
 
             let readerLoop (connection: Connection) =
                 async {
@@ -140,13 +157,14 @@ module Agent =
                                 |> AsyncResult.orElse (getAccessTokenUser twitchService token)
 
                             return token, username
-                        }
+                    }
 
                     match result with
                     | Ok (token, username) ->
-                        mb.Post (Send (Request.capReq configuration.Capabilities))
-                        mb.Post (Send (Request.pass token))
-                        mb.Post (Send (Request.nick username))
+                        do! sendRequest state.Connection (Request.capReq configuration.Capabilities)
+                        do! sendRequest state.Connection (Request.pass token)
+                        do! sendRequest state.Connection (Request.nick username)
+
                         return { state with Username = Some username }
                     | Error err ->
                         logger.LogError("Error requesting access token: {err}", err)
@@ -156,7 +174,7 @@ module Agent =
             let joinChannels state =
                 async {
                     if not (state.Channels |> Set.isEmpty) then
-                        mb.Post (Send (Request.joinMultiple state.Channels))
+                        do! sendRequest state.Connection (Request.joinMultiple state.Channels)
                     else
                         logger.LogInformation("No channels set to join")
                 }
@@ -212,46 +230,40 @@ module Agent =
                         return { state with ConnectionState = Disconnected ; Connection = connection }
                 }
 
-            let send (connection: Connection) (request: Request) (state: State) =
+            let rec flush (connection: Connection) (state: State) =
                 async {
-                    let mutable channels' = state.Channels
-
-                    messageQueue.Enqueue(request)
-
-                    while messageQueue.Count > 0 && state.ConnectionState = ConnectionState.Connected do
+                    if state.MessageQueue.Count > 0 then
                         let requestOpt =
-                            match messageQueue.Dequeue() with
+                            let request = state.MessageQueue.Dequeue()
+
+                            match request with
                             | PrivMsg (channel, _) ->
                                 if chatRateLimiter.CanSend channel then
                                     Some request
                                 else
-                                    messageQueue.Enqueue(request)
+                                    state.MessageQueue.Enqueue(request)
                                     None
                             | _ ->
                                 Some request
 
                         match requestOpt with
-                        | Some r ->
-                            let message = r |> Request.toString
-                            logger.LogInformation("Sending: {message}", message)
-
-                            match! connection.SendAsync(message, cancellationToken) with
-                            | Ok _ -> ()
-                            | Error ex -> logger.LogWarning(ex, "Error occurred sending message")
+                        | Some r -> do! sendRequest connection r
                         | None -> ()
 
-                        match requestOpt with
-                        | Some (Join channel) -> channels' <- state.Channels |> Set.add channel
-                        | Some (JoinM channels) ->
-                            channels' <-
+                        let channels =
+                            match requestOpt with
+                            | Some (Join channel) -> state.Channels |> Set.add channel
+                            | Some (JoinM channels) ->
                                 channels
                                 |> Seq.fold (fun acc channel ->
                                     acc |> Set.add channel
                                 ) state.Channels
-                        | Some _
-                        | None -> ()
+                            | Some _
+                            | None -> state.Channels
 
-                    return { state with Channels = channels' }
+                        return! flush connection { state with Channels = channels }
+                    else
+                        return state
                 }
 
             let sendWhisper (fromUserId, toUserId, message) (state: State) =
@@ -271,18 +283,20 @@ module Agent =
                         return state
                 }
 
-            let messageReceived message =
+            let messageReceived connection message =
                 async {
                     if not (message |> String.isEmpty) then
                         logger.LogInformation("Receieved: {message}", message)
                         let messages = message |> parseMessage
 
-                        messages
-                        |> Seq.iter (fun message ->
-                            handleMessage message
-                            onMessage message
-                        )
+                        for message in messages do
+                            do! handleMessage connection message
+                            do onMessage message
                 }
+
+            let enqueue request state =
+                state.MessageQueue.Enqueue(request)
+                state
 
             let rec loop state =
                 async {
@@ -295,6 +309,10 @@ module Agent =
                     | Authenticate ->
                         let! state' = authenticate state
                         return! loop state'
+                    | Authenticated ->
+                        let state' = { state with ConnectionState = ConnectionState.Ready }
+                        let! state'' = flush state.Connection state'
+                        return! loop state''
                     | JoinChannels ->
                         do! joinChannels state
                         return! loop state
@@ -305,11 +323,16 @@ module Agent =
                         let! state' = reconnect attempt state
                         return! loop state'
                     | MessageReceived message ->
-                        do! messageReceived message
+                        do! messageReceived state.Connection message
                         return! loop state
                     | Send request ->
-                        let! state' = send state.Connection request state
-                        return! loop state'
+                        let state' = enqueue request state
+
+                        if state.ConnectionState = ConnectionState.Ready then
+                            let! state'' = flush state.Connection state
+                            return! loop state''
+                        else
+                            return! loop state'
                     | SendWhisper (fromUserId, toUserId, message) ->
                         let! state' = sendWhisper (fromUserId, toUserId, message) state
                         return! loop state'
