@@ -265,7 +265,7 @@ module Braille =
             match context.MessageSource with
             | Whisper _ ->
                 let url =
-                    match context.MessageArgs with
+                    match kvp.Input with
                     | [] -> None
                     | value :: _ ->
                         context.MessageEmotes |> Map.tryFind value
@@ -280,7 +280,7 @@ module Braille =
                 | Some url -> return! internalBraille url greyscaleMode dithering invert monospace
             | Channel (channel, _) ->
                 let url =
-                    match context.MessageArgs with
+                    match kvp.Input with
                     | [] -> None
                     | value :: _ ->
                         context.MessageEmotes |> Map.tryFind value
