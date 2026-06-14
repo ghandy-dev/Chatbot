@@ -171,9 +171,7 @@ module Emotes =
 
     open FsToolkit.ErrorHandling
 
-    open Chatbot.Core
     open Chatbot.Core.Http
-    open Chatbot.Core.Types
 
     module TwitchEmoteService =
 
