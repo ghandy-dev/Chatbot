@@ -21,6 +21,10 @@ type CommandName = string
 type CooldownKey = User * CommandName
 type CooldownMap = Map<CooldownKey, DateTimeOffset>
 
+type ChannelId = string
+type Channel = string
+type ChannelMap = Map<ChannelId, Channel>
+
 type BotMessage =
     | TwitchEvent of TwitchEvent
     | RunCommand of ValidatedCommand * Message
@@ -30,18 +34,18 @@ type BotMessage =
     | BotAction of BotAction
 
 type State = {
-    Channels: Set<string>
+    Channels: Map<string, string>
     UserCommandCooldowns: CooldownMap
     Emotes: Emotes
 }
 
-let create env config (users: IUsersRepository) (aliases: IAliasRepository) (emoteService: EmoteService) userId (twitchClient: TwitchClient) (triviaAgent: MailboxProcessor<Trivia.TriviaMessage>) cancellationToken =
+let create env config (users: IUsersRepository) (channels: ChannelMap) (aliases: IAliasRepository) (emoteService: EmoteService) userId (twitchClient: TwitchClient) (triviaAgent: MailboxProcessor<Trivia.TriviaMessage>) cancellationToken =
     new MailboxProcessor<BotMessage>(
         (fun mb ->
             let logger = env.Logger
 
             let initial = {
-                Channels = Set.empty
+                Channels = channels
                 UserCommandCooldowns = Map.empty
                 Emotes = Emotes.empty
             }
@@ -276,6 +280,8 @@ let create env config (users: IUsersRepository) (aliases: IAliasRepository) (emo
 
                     return! loop state
                 }
+
+            initial.Channels |> Map.iter (fun id _ -> mb.Post (BotAction (RefreshChannelEmotes id)))
 
             loop initial
         ),

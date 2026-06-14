@@ -30,12 +30,14 @@ let getChannels (channels: IChannelRepository) (twitchService: TwitchService) =
 let run (cancellationToken: Threading.CancellationToken) =
     async {
         let uri = new Uri(configs.ConnectionStrings.IrcServer)
-        let! channels = getChannels channels twitchService |> Async.map (Seq.map snd >> Set.ofSeq)
-        let twitchClient = new TwitchClient(uri.Host, uri.Port, configs.TwitchChatConfig, loggerFactory.CreateLogger<TwitchClient>(), twitchService, channels)
+        let! channels = getChannels channels twitchService
+        let channelSet = channels |> Seq.map snd |> Set.ofSeq
+        let channelMap = Map.ofSeq channels
+        let twitchClient = new TwitchClient(uri.Host, uri.Port, configs.TwitchChatConfig, loggerFactory.CreateLogger<TwitchClient>(), twitchService, channelSet)
 
         let reminderAgent = Reminder.create env reminders pastebinService twitchClient cancellationToken
         let triviaAgent = Trivia.create env twitchClient cancellationToken
-        let botAgent = Bot.create env botConfig users aliases emoteService configs.UserId twitchClient triviaAgent cancellationToken
+        let botAgent = Bot.create env botConfig users channelMap aliases emoteService configs.UserId twitchClient triviaAgent cancellationToken
 
         twitchClient.MessageReceived.Subscribe(fun message ->
             match message |> tryMapMessage with
