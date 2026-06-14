@@ -53,10 +53,10 @@ module Emotes =
         ChannelEmotes = Map.empty
     }
 
-    let tryFind emote channel emotes =
+    let tryFind emote channelId emotes =
         emotes.GlobalEmotes
         |> List.tryFind (fun e -> e.Name = emote)
-        |> Option.orElseWith (fun _ -> emotes.ChannelEmotes |> Map.tryFind channel |> Option.bind (List.tryFind (fun e -> e.Name = emote)))
+        |> Option.orElseWith (fun _ -> emotes.ChannelEmotes |> Map.tryFind channelId |> Option.bind (List.tryFind (fun e -> e.Name = emote)))
 
     let private providerFilter provider emotes = emotes |> List.filter (fun e -> e.Provider = provider)
 

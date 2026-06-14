@@ -278,14 +278,14 @@ module Braille =
                 match url with
                 | None -> return! invalidArgs "No url/emote specified"
                 | Some url -> return! internalBraille url greyscaleMode dithering invert monospace
-            | Channel (channel, _) ->
+            | Channel (_, channelId) ->
                 let url =
                     match kvp.Input with
                     | [] -> None
                     | value :: _ ->
                         context.MessageEmotes |> Map.tryFind value
                         |> Option.orElseWith (fun _ ->
-                            match context.Emotes |> Emotes.tryFind value channel with
+                            match context.Emotes |> Emotes.tryFind value channelId with
                             | Some emote -> Some emote.DirectUrl
                             | None -> Some value
                         )
