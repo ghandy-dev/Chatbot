@@ -26,18 +26,18 @@ module Utils =
 
         let days = ts.Days
         let hours = ts.Hours
-        let mins = ts.Minutes
-        let secs = ts.Seconds
+        let minutes = ts.Minutes
+        let seconds = ts.Seconds
 
         let format =
             function
-            | y, _, _, _, _ when y > 0 -> [ $"{years}y" ; $"{days}d"; $"{hours}h"; $"{mins}m" ]
-            | _, d, _, _, _ when d > 0 -> [ $"{days}d"; $"{hours}h"; $"{mins}m" ]
-            | _, _, h, _, _ when h > 0 -> [ $"{hours}h"; $"{mins}m"; $"{secs}s" ]
-            | _, _, _, m, _ when m > 0 -> [ $"{mins}m"; $"{secs}s" ]
+            | y, _, _, _, _ when y > 0 -> [ $"{years}y" ; $"{days}d" ]
+            | _, d, _, _, _ when d > 0 -> [ $"{days}d" ; $"{hours}h" ]
+            | _, _, h, _, _ when h > 0 -> [ $"{hours}h" ; $"{minutes}m" ]
+            | _, _, _, m, _ when m > 0 -> [ $"{minutes}m" ; $"{seconds}s" ]
             | _, _, _, _, s -> [ $"{s}s" ]
 
-        let parts = format (years, days, hours, mins, secs)
+        let parts = format (years, days, hours, minutes, seconds)
 
         String.concat ", " parts
 
