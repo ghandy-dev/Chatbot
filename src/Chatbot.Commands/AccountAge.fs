@@ -23,8 +23,18 @@ module AccountAge =
                 |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Twitch - User")
                 |> AsyncResult.bindRequireSome (InvalidArgs "User not found")
 
-            let age = formatTimeSpan (DateTimeOffset.UtcNow - user.CreatedAt)
-            let creationDate = user.CreatedAt.ToString("dd MMM yyyy")
+            let today = utcNow().Date
+            let createdAt = user.CreatedAt.Date
+            let years = today.Year - createdAt.Year
+            let remainingDays = (today - createdAt.AddYears(years)).Days
+
+            let age =
+                if years > 0 then
+                    $"{years}y, {remainingDays}d"
+                else
+                    $"{remainingDays}d"
+
+            let creationDate = createdAt.ToString("dd MMM yyyy")
 
             return [ Message $"""Account created %s{age} ago on %s{creationDate}""" ]
         }
