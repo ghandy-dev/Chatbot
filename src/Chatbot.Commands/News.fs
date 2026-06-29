@@ -19,10 +19,10 @@ module News =
                 newsService.GetNews categoryOpt
                 |> AsyncResult.mapError InternalError
 
-            let title = newsItem.Title.Text
             let date = newsItem.PublishDate.UtcDateTime.ToString("dd MMM yyyy")
-            let summary = if newsItem.Summary = null then "" else newsItem.Summary.Text
+            let title = newsItem.Title.Text
+            let summary = if newsItem.Summary = null then "" else $"| {newsItem.Summary.Text}"
             let link = newsItem.Links |> Seq.tryHead |> Option.bind (fun l -> Some l.Uri.AbsoluteUri) |? ""
 
-            return [ Message $"{date}, {title} | {summary} {link}" ]
+            return [ Message $"{date}, {title} {summary} {link}" ]
         }
