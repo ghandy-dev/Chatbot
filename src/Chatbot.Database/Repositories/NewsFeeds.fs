@@ -6,10 +6,30 @@ module NewsFeeds =
     open Microsoft.Data.Sqlite
 
     open Dapper
+    open Dapper.FSharp.SQLite
 
     open Chatbot.Core.Domain.Types
     open Chatbot.Database.Db
     open Chatbot.Database.DbModels
+
+    let getCategories (db: Database) =
+        async {
+            use connection = new SqliteConnection(db.ConnectionString)
+            connection.Open()
+
+            let! stats =
+                select {
+                    for _ in newsCategories do
+                      selectAll
+                }
+                |> connection.SelectAsync<DbNewsFeedCategory>
+                |> Async.AwaitTask
+
+            return
+                stats
+                |> Seq.map _.category
+                |> List.ofSeq
+        }
 
     let getByCategory (db: Database) (category: string) =
         async {
@@ -44,4 +64,5 @@ module NewsFeeds =
         {
             new INewsFeedRepository with
                 member _.Get category = getByCategory db category
+                member _.GetCategories () = getCategories db
         }

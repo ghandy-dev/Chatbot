@@ -31,26 +31,35 @@ module News =
 
             let getRandomItem (feed: SyndicationFeed) = feed.Items |> Seq.randomChoice
 
-            let getNews category =
+            let getNews categoryOpt =
                 async {
+                    let! categories = newsRepo.GetCategories ()
+
                     let category =
-                        match category with
+                        match categoryOpt with
                         | None -> "World"
-                        | Some c -> c
+                        | Some c ->
+                            if categories |> List.contains c then
+                                c
+                            else
+                                categories |> List.randomChoice
 
                     let! urls = newsRepo.Get category
 
-                    let url = urls |> List.randomChoice
+                    match urls with
+                    | [] -> return Error $"No news feeds for category {category}"
+                    | urls ->
+                        let url = urls |> List.randomChoice
 
-                    match cache |> MemoryCache.tryGetValue url with
-                    | Some (updated, feed: SyndicationFeed) when DateTime.UtcNow - updated < (Option.ofNullable feed.TimeToLive |> Option.defaultValue (TimeSpan.FromMinutes(10L))) ->
-                        return Ok(getRandomItem feed)
-                    | _ ->
-                        match! tryGetFeed url with
-                        | None -> return Error "Error reading RSS feed"
-                        | Some feed ->
-                            env.Cache |> MemoryCache.set url (DateTime.UtcNow, feed) |> ignore
+                        match cache |> MemoryCache.tryGetValue url with
+                        | Some (updated, feed: SyndicationFeed) when DateTime.UtcNow - updated < (Option.ofNullable feed.TimeToLive |> Option.defaultValue (TimeSpan.FromMinutes(10L))) ->
                             return Ok(getRandomItem feed)
+                        | _ ->
+                            match! tryGetFeed url with
+                            | None -> return Error "Error reading RSS feed"
+                            | Some feed ->
+                                env.Cache |> MemoryCache.set url (DateTime.UtcNow, feed) |> ignore
+                                return Ok(getRandomItem feed)
                 }
 
             {

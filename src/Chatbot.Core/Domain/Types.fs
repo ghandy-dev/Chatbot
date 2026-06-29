@@ -193,6 +193,7 @@ type IChannelRepository =
 
 type INewsFeedRepository =
     abstract member Get: category: string -> Async<string list>
+    abstract member GetCategories: unit -> Async<string list>
 
 type IReminderRepository =
     abstract member GetTimedReminders: unit -> Async<TimedReminder seq>
