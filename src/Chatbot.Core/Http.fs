@@ -7,6 +7,8 @@ module Http =
 
     open Microsoft.Extensions.Logging
 
+    open FsToolkit.ErrorHandling
+
     open Chatbot.Common
 
     type HttpClient = System.Net.Http.HttpClient
@@ -258,9 +260,25 @@ module Http =
                     let! response = sendAsync
 
                     if not response.IsSuccessStatusCode then
+                        let! requestBody =
+                            response.RequestMessage.Content
+                            |> Option.ofObj
+                            |> Option.traverseAsync (_.ReadAsStringAsync() >> Async.AwaitTask)
+
+                        let! responseBody =
+                            response.Content
+                            |> Option.ofObj
+                            |> Option.traverseAsync (_.ReadAsStringAsync() >> Async.AwaitTask)
+
                         logger.LogWarning(
-                            "Http Error: {statusCode} {method} {url}",
-                            int response.StatusCode, request.Method, request.RequestUri
+                            "Http request failed: {@HttpRequest}",
+                            {|
+                                StatusCode = int response.StatusCode
+                                Method = request.Method
+                                Uri = request.RequestUri
+                                RequestBody = requestBody
+                                ResponseBody = responseBody
+                            |}
                         )
 
                     return response
