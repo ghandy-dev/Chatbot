@@ -9,15 +9,22 @@ module News =
     open FsToolkit.ErrorHandling
 
     type INewsService =
-        abstract member GetNews: category: string option -> Async<Result<SyndicationItem, string>>
+        abstract member Get: category: string option -> Async<Result<SyndicationItem, string>>
+        abstract member Search: query: string -> Async<Result<SyndicationItem, string>>
 
     module NewsService =
 
         open Chatbot.Core.Domain.Types
         open Chatbot.Core.Caching
         open Chatbot.Core.Types
+        open Chatbot.Common.Utils
 
         let create env (newsRepo: INewsFeedRepository) =
+
+            let apiUrl = "https://news.google.com/rss"
+
+            let searchUrl query = $"{apiUrl}/search?q={query |> htmlEncode}"
+
             let cache = env.Cache
 
             let tryGetFeed (url: string) =
@@ -29,15 +36,29 @@ module News =
                     return formatter.Feed |> Option.ofNull
                 }
 
-            let getRandomItem (feed: SyndicationFeed) = feed.Items |> Seq.randomChoice
+            let getRssFeed (url: string) =
+                let getRandomItem (feed: SyndicationFeed) = feed.Items |> Seq.randomChoice
 
-            let getNews categoryOpt =
+                async {
+                    match cache |> MemoryCache.tryGetValue url with
+                    | Some (updated, feed: SyndicationFeed) when DateTime.UtcNow - updated < (Option.ofNullable feed.TimeToLive |> Option.defaultValue (TimeSpan.FromMinutes(10L))) ->
+                        return Ok(getRandomItem feed)
+                    | _ ->
+                        match! tryGetFeed url with
+                        | None -> return Error "Error reading RSS feed"
+                        | Some feed ->
+                            env.Cache |> MemoryCache.set url (DateTime.UtcNow, feed) |> ignore
+                            return Ok(getRandomItem feed)
+
+                }
+
+            let getFromCategory categoryOpt =
                 async {
                     let! categories = newsRepo.GetCategories ()
 
                     let category =
                         match categoryOpt with
-                        | None -> "World"
+                        | None -> "Top Stories"
                         | Some c ->
                             if categories |> List.contains c then
                                 c
@@ -50,19 +71,26 @@ module News =
                     | [] -> return Error $"No news feeds for category {category}"
                     | urls ->
                         let url = urls |> List.randomChoice
+                        return! getRssFeed url
+                }
 
-                        match cache |> MemoryCache.tryGetValue url with
-                        | Some (updated, feed: SyndicationFeed) when DateTime.UtcNow - updated < (Option.ofNullable feed.TimeToLive |> Option.defaultValue (TimeSpan.FromMinutes(10L))) ->
-                            return Ok(getRandomItem feed)
-                        | _ ->
-                            match! tryGetFeed url with
-                            | None -> return Error "Error reading RSS feed"
-                            | Some feed ->
-                                env.Cache |> MemoryCache.set url (DateTime.UtcNow, feed) |> ignore
-                                return Ok(getRandomItem feed)
+            let search query =
+                asyncResult {
+                    let url = searchUrl query
+                    let! feed = getRssFeed url
+
+                    feed.Links.Clear()
+                    feed.Title <- new TextSyndicationContent(feed.Title.Text.Replace($" - {feed.SourceFeed.Title.Text}", ""))
+                    feed.Summary <- new TextSyndicationContent(feed.Title.Text.Replace($" - {feed.SourceFeed.Title.Text}", ""))
+
+                    if feed.Title.Text = feed.Summary.Text then
+                        feed.Summary <- null
+
+                    return feed
                 }
 
             {
                 new INewsService with
-                    member _.GetNews category = getNews category
+                    member _.Get category = getFromCategory category
+                    member _.Search query = search query
             }
