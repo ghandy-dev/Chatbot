@@ -19,14 +19,13 @@ module Wikipedia =
             | input ->
                 let query = String.join " " input
                 let! pages = wikiService.GetWikiResults query |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Wikipedia")
-                let htmlTagPattern = "<.*?>"
 
                 return!
                     match pages.Pages with
                     | [] -> Ok [ Message "No wikipedia page found!" ]
                     | page :: _ ->
                         let key = page.Key
-                        let excerpt = Regex.Replace(page.Excerpt, htmlTagPattern, "")
+                        let excerpt = removeHtmlTags page.Excerpt
                         Ok [ Message $"https://en.wikipedia.org/wiki/{key} {excerpt}" ]
         }
 
@@ -52,7 +51,6 @@ module Wikipedia =
     let wikiNews (wikiService: WikipediaService) context =
         asyncResult {
             let! news = wikiService.GetNews () |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "Wikipedia")
-            let htmlTagPattern = "<.*?>"
 
             return
                 match news with
@@ -61,7 +59,7 @@ module Wikipedia =
                     ns
                     |> Seq.randomChoice
                     |> fun n ->
-                        let story = Regex.Replace(n.Story, htmlTagPattern, "")
+                        let story = removeHtmlTags n.Story
                         let links = n.Links |> Seq.map  _.ContentUrls.Desktop.Page |> String.join ", "
 
                         [ Message $"{story} ({links})" ]

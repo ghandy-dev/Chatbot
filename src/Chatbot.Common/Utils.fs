@@ -111,3 +111,7 @@ module Utils =
                 sb.Append(rune.ToString()) |> ignore
 
         sb.ToString()
+
+    let private htmlTagRegex = new Regex("<.*?>", RegexOptions.Compiled)
+
+    let removeHtmlTags (input: string) = htmlTagRegex.Replace(input, "")
