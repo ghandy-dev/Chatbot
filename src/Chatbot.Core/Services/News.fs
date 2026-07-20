@@ -10,20 +10,23 @@ module News =
 
     type INewsService =
         abstract member Get: category: string option -> Async<Result<SyndicationItem, string>>
-        abstract member Search: query: string -> Async<Result<SyndicationItem, string>>
+        abstract member Search: query: string -> string -> Async<Result<SyndicationItem, string>>
 
     module NewsService =
 
         open Chatbot.Core.Domain.Types
         open Chatbot.Core.Caching
         open Chatbot.Core.Types
-        open Chatbot.Common.Utils
+        open Chatbot.Common
 
         let create env (newsRepo: INewsFeedRepository) =
 
             let apiUrl = "https://news.google.com/rss"
 
-            let searchUrl query = $"{apiUrl}/search?q={query |> htmlEncode}"
+            let searchUrl query countryCode =
+                UrlBuilder.buildUrl
+                    $"{apiUrl}/search"
+                    [ "q", query ; "gl", countryCode ]
 
             let cache = env.Cache
 
@@ -74,12 +77,11 @@ module News =
                         return! getRssFeed url
                 }
 
-            let search query =
+            let search query countryCode =
                 asyncResult {
-                    let url = searchUrl query
+                    let url = searchUrl query countryCode
                     let! feed = getRssFeed url
 
-                    feed.Links.Clear()
                     feed.Title <- new TextSyndicationContent(feed.Title.Text.Replace($" - {feed.SourceFeed.Title.Text}", ""))
                     feed.Summary <- new TextSyndicationContent(feed.Title.Text.Replace($" - {feed.SourceFeed.Title.Text}", ""))
 
@@ -92,5 +94,5 @@ module News =
             {
                 new INewsService with
                     member _.Get category = getFromCategory category
-                    member _.Search query = search query
+                    member _.Search query countryCode = search query countryCode
             }
