@@ -194,7 +194,16 @@ module Http =
             |> Result.bind (fun r -> Ok <| Json.deserializeJson<'T> r.Content)
 
     let logFailure (logger: ILogger) (response: Response) =
-        logger.LogWarning ("Http Error: {statusCode} {method} {requestUrl} {content}", response.StatusCode, response.Request.Method, response.Request.Url, response.Content)
+        logger.LogWarning(
+            "Http request failed: {@HttpRequest}",
+            {|
+                StatusCode = int response.StatusCode
+                Method = response.Request.Method
+                Uri = response.Request.Url
+                RequestBody = response.Request.Content
+                ResponseBody = response.Content
+            |}
+        )
 
     let applyHeaders (headers: (string * string) seq) (req: HttpRequestMessage) =
         headers
