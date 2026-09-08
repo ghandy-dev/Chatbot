@@ -7,9 +7,7 @@ module GptImage =
 
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
-
-    open Chatbot.Core.Services.ImageUpload
-    open Chatbot.Core.Services.OpenAI
+    open Chatbot.Infrastructure.Services
 
     let gptImage (genAIService: IGenAIService) (imageUploadService: IImageUploadService) context =
         asyncResult {

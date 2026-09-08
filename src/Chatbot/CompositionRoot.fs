@@ -5,10 +5,10 @@ open Microsoft.Extensions.Logging
 
 open Configuration
 open Chatbot.Commands
-open Chatbot.Core
-open Chatbot.Core.Caching
 open Chatbot.Core.Domain.Commands
-open Chatbot.Core.Services
+open Chatbot.Common
+open Chatbot.Common.Caching
+open Chatbot.Infrastructure.Services
 open Chatbot.Types
 
 DotEnv.load ()
@@ -59,7 +59,7 @@ let logger = loggerFactory.CreateLogger("Default")
 let httpHandler = new Http.LoggingHandler(loggerFactory.CreateLogger<Http.LoggingHandler>())
 let httpClient = Http.create httpHandler configs.UserAgent
 
-let env: Types.Env = {
+let env: Env = {
     Cache = memoryCache
     HttpClient = httpClient
     Logger = logger
@@ -72,31 +72,31 @@ let reminders = Database.Repositories.Reminders.create db
 let rpsStats = Database.Repositories.RockPaperScissors.create db
 let users = Database.Repositories.Users.create db
 
-let twitchService = Twitch.TwitchService.create env { ClientId = configs.TwitchApi.ClientId ; ClientSecret = configs.TwitchApi.ClientSecret ; RefreshToken = configs.TwitchApi.RefreshToken }
+let twitchService = TwitchService.create env { ClientId = configs.TwitchApi.ClientId ; ClientSecret = configs.TwitchApi.ClientSecret ; RefreshToken = configs.TwitchApi.RefreshToken }
 
 let emoteService =
-    Emotes.EmoteService.create [
-        Emotes.TwitchEmoteService.create twitchService
-        Emotes.BttvEmoteService.create env
-        Emotes.FfzEmoteService.create env
-        Emotes.SevenTvService.create env
+    EmoteService.create [
+        TwitchEmoteService.create twitchService
+        BttvEmoteService.create env
+        FfzEmoteService.create env
+        SevenTvService.create env
     ]
 
-let catFactService = CatFact.CatFactService.create env
-let faceItService = FaceIt.FaceItService.create env { ApiKey = configs.FaceIt.ApiKey }
-let geolocationService = Geolocation.GeolocationService.create env { MapsApiKey = configs.Microsoft.Maps.ApiKey } { GeocodingApiKey = configs.Google.Geocoding.ApiKey ; TimezoneApiKey = configs.Google.Timezone.ApiKey}
-let imageUploadService = ImageUpload.ImageUploadService.create env
-let ivrService = Ivr.IvrService.create env
-let nasaService = Nasa.NasaService.create env { ApiKey = configs.Nasa.ApiKey }
-let newsService = News.NewsService.create env newsFeeds
-let genAIService = OpenAI.OpenAIService.create env { ApiKey = configs.OpenAI.ApiKey ; DefaultChatModel = configs.OpenAI.DefaultChatModel ; DefaultImageModel = configs.OpenAI.DefaultImageModel}
-let pastebinService = Pastebin.PastebinService.create env { ApiKey = configs.Pastebin.ApiKey }
-let redditService = Reddit.RedditService.create env { ClientId = configs.Reddit.ClientId ; ClientSecret = configs.Reddit.ClientSecret}
-let riotGamesService = RiotGames.RiotGamesService.create env { ApiKey = configs.RiotGames.ApiKey }
-let triviaService = Trivia.TriviaService.create env
-let urbanDictionaryService = UrbanDictionary.UrbanDictionaryService.create env
-let weatherService = Weather.WeatherService.create env { MapsApiKey = configs.Microsoft.Maps.ApiKey }
-let wikipediaService = Wikipedia.WikipediaService.create env
+let catFactService = CatFactService.create env
+let faceItService = FaceItService.create env { ApiKey = configs.FaceIt.ApiKey }
+let geolocationService = GeolocationService.create env { MapsApiKey = configs.Microsoft.Maps.ApiKey } { GeocodingApiKey = configs.Google.Geocoding.ApiKey ; TimezoneApiKey = configs.Google.Timezone.ApiKey}
+let imageUploadService = ImageUploadService.create env
+let ivrService = IvrService.create env
+let nasaService = NasaService.create env { ApiKey = configs.Nasa.ApiKey }
+let newsService = NewsService.create env newsFeeds
+let genAIService = OpenAIService.create env { ApiKey = configs.OpenAI.ApiKey ; DefaultChatModel = configs.OpenAI.DefaultChatModel ; DefaultImageModel = configs.OpenAI.DefaultImageModel}
+let pastebinService = PastebinService.create env { ApiKey = configs.Pastebin.ApiKey }
+let redditService = RedditService.create env { ClientId = configs.Reddit.ClientId ; ClientSecret = configs.Reddit.ClientSecret}
+let riotGamesService = RiotGamesService.create env { ApiKey = configs.RiotGames.ApiKey }
+let triviaService = TriviaService.create env
+let urbanDictionaryService = UrbanDictionaryService.create env
+let weatherService = WeatherService.create env { MapsApiKey = configs.Microsoft.Maps.ApiKey }
+let wikipediaService = WikipediaService.create env
 
 let buildCommands commandPrefix =
     let toKeyValuePair command =
@@ -154,7 +154,7 @@ let buildCommands commandPrefix =
         Command.create "time" [] HelpInfo.Time (Async (time geolocationService)) 5 false true
         Command.create "texttoascii" [ "tta" ] HelpInfo.TextToAscii (Sync textToAscii) 15 false true
         Command.create "texttransform" [ "tt" ] HelpInfo.TextTransform (Sync texttransform) 5 false true
-        Command.create "thumbnail" [ "tn" ] HelpInfo.Thumbnail (Async (thumbnail env twitchService)) 20 false true
+        Command.create "thumbnail" [ "tn" ] HelpInfo.Thumbnail (Async (thumbnail twitchService)) 20 false true
         Command.create "topstreams" [ "ts" ] HelpInfo.TopStreams (Async (topStreams twitchService)) 20 false true
         Command.create "trivia" [] HelpInfo.Trivia (Async (trivia triviaService)) 20 false false
         Command.create "urban" [ "ud" ] HelpInfo.UrbanDictionary (Async (urban urbanDictionaryService)) 20 false true

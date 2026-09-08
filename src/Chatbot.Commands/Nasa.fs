@@ -8,7 +8,7 @@ module Nasa =
 
     open Chatbot.Common
     open Chatbot.Core.Domain.Commands
-    open Chatbot.Core.Services.Nasa
+    open Chatbot.Infrastructure.Services
 
     let apod (nasaService: NasaService) context =
         asyncResult {

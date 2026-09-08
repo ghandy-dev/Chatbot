@@ -5,53 +5,30 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Operators.fs" />
-    <Compile Include="DotEnv.fs" />
-    <Compile Include="Json.fs" />
-    <Compile Include="Http.fs" />
-    <Compile Include="IO.fs" />
-    <Compile Include="Caching.fs" />
-    <Compile Include="Types.fs" />
-    <Compile Include="Serialization/UnixEpochDateTimeConverter.fs" />
-    <Compile Include="Serialization/NonCompliantDateTimeConverter.fs" />
-    <Compile Include="IRC/Requests.fs" />
-    <Compile Include="IRC/Parsing.fs" />
-    <Compile Include="IRC/Messages.fs" />
     <Compile Include="Domain/Types.fs" />
     <Compile Include="Domain/Messages.fs" />
     <Compile Include="Domain/Emotes.fs" />
+    <Compile Include="Domain/Alias.fs" />
+    <Compile Include="Domain/User.fs" />
+    <Compile Include="Domain/Channel.fs" />
+    <Compile Include="Domain/Reminder.fs" />
+    <Compile Include="Domain/RpsStats.fs" />
     <Compile Include="Domain/Trivia.fs" />
-    <Compile Include="Domain/Commands/Context.fs" />
-    <Compile Include="Domain/Commands/CommandError.fs" />
-    <Compile Include="Domain/Commands/CommandResponse.fs" />
-    <Compile Include="Domain/Commands/Command.fs" />
-    <Compile Include="Domain/Commands/CommandParser.fs" />
-    <Compile Include="Services/Types.fs" />
-    <Compile Include="Services/CatFact.fs" />
-    <Compile Include="Services/Ivr.fs" />
-    <Compile Include="Services/Pastebin.fs" />
-    <Compile Include="Services/Twitch.fs" />
-    <Compile Include="Services/Emotes.fs" />
-    <Compile Include="Services/Weather.fs" />
-    <Compile Include="Services/Geolocation.fs" />
-    <Compile Include="Services/OpenAI.fs" />
-    <Compile Include="Services/ImageUploader.fs" />
-    <Compile Include="Services/FaceIt.fs" />
-    <Compile Include="Services/Nasa.fs" />
-    <Compile Include="Services/News.fs" />
-    <Compile Include="Services/Reddit.fs" />
-    <Compile Include="Services/RiotGames.fs" />
-    <Compile Include="Services/Trivia.fs" />
-    <Compile Include="Services/UrbanDictionary.fs" />
-    <Compile Include="Services/Wikipedia.fs" />
+    <Compile Include="Application/Context.fs" />
+    <Compile Include="Application/CommandError.fs" />
+    <Compile Include="Application/CommandResponse.fs" />
+    <Compile Include="Application/Command.fs" />
+    <Compile Include="Application/CommandParser.fs" />
+    <Compile Include="Abstractions/Repositories/IAliasRepository.fs" />
+    <Compile Include="Abstractions/Repositories/IChannelRepository.fs" />
+    <Compile Include="Abstractions/Repositories/INewsFeedRepository.fs" />
+    <Compile Include="Abstractions/Repositories/IReminderRepository.fs" />
+    <Compile Include="Abstractions/Repositories/IRockPaperScissorsRepository.fs" />
+    <Compile Include="Abstractions/Repositories/IUsersRepository.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FSharpPlus" Version="1.8.0" />
-    <PackageReference Include="FsToolkit.ErrorHandling" Version="5.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.5" />
-    <PackageReference Include="System.ServiceModel.Syndication" Version="10.0.0" />
-    <PackageReference Include="TTVSharp.Helix" Version="0.4.0" />
   </ItemGroup>
 
   <ItemGroup>

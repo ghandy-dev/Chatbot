@@ -9,12 +9,12 @@ open Microsoft.Extensions.Logging
 open FSharpPlus
 open FsToolkit.ErrorHandling
 
+open Chatbot.Common
 open Chatbot.Connection
-open Chatbot.Core
-open Chatbot.Core.IRC
-open Chatbot.Core.IRC.Messages
+open Chatbot.Infrastructure.IRC
+open Chatbot.Infrastructure.IRC.Messages
+open Chatbot.Infrastructure.Services
 open RateLimiter
-open Chatbot.Core.Services.Twitch
 
 type ConnectionState =
     | Disconnected
@@ -63,7 +63,7 @@ let sendWhisper (twitchService: TwitchService) fromUserId toUserId message acces
 
 let parseMessage (message: string) =
     message.Split("\r\n")
-    |> Array.map (IRC.Parsing.parse >> IRC.Messages.Mapping.parse)
+    |> Array.map (Parsing.parse >> Messages.Mapping.parse)
     |> Array.choose id
 
 module Agent =

@@ -4,14 +4,13 @@ open System
 
 open Microsoft.Extensions.Logging
 
-open FSharpPlus
-
 open Chatbot.Agents
+open Chatbot.Core.Abstractions.Repositories
 open Chatbot.CompositionRoot
 open Chatbot.Configuration
-open Chatbot.Core.Domain.Messages
-open Chatbot.Core.Domain.Types
-open Chatbot.Core.Services.Twitch
+open Chatbot.Core.Domain
+open Chatbot.Infrastructure.Services
+open Chatbot.MessageMapping
 open Chatbot.Twitch
 
 let getChannels (channels: IChannelRepository) (twitchService: TwitchService) =

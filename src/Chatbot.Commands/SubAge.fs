@@ -6,9 +6,9 @@ module SubAge =
     open FsToolkit.ErrorHandling
 
     open Chatbot.Common
-    open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain
-    open Chatbot.Core.Services.Ivr
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Infrastructure.Services
 
     let subAge (ivrService: IvrService) context =
         asyncResult {

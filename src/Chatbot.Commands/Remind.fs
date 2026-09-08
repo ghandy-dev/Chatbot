@@ -9,11 +9,12 @@ module Remind =
     open FsToolkit.ErrorHandling
 
     open Chatbot.Common
+    open Chatbot.Core.Abstractions
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
     open Chatbot.Core.Domain
-    open Chatbot.Core.Domain.Types
-    open Chatbot.Core.Services.Twitch
+    open Chatbot.Core.Abstractions.Repositories
+    open Chatbot.Infrastructure.Services
 
     let private whenPattern username = sprintf @"^(%s) (in|at|on|tomorrow|next\s*)" username
 

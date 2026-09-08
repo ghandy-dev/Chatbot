@@ -5,10 +5,10 @@ module LeaveChannel =
 
     open FsToolkit.ErrorHandling
 
+    open Chatbot.Core.Abstractions.Repositories
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
-    open Chatbot.Core.Domain.Types
-    open Chatbot.Core.Services.Twitch
+    open Chatbot.Infrastructure.Services
 
     let leaveChannel (channels: IChannelRepository) (twitchService: TwitchService) context =
         asyncResult {

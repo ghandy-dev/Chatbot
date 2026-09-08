@@ -10,7 +10,7 @@ module Wikipedia =
     open Chatbot.Common
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
-    open Chatbot.Core.Services.Wikipedia
+    open Chatbot.Infrastructure.Services
 
     let wiki (wikiService: WikipediaService) context =
         asyncResult {

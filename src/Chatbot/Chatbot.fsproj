@@ -8,6 +8,7 @@
     <Compile Include="Types.fs" />
     <Compile Include="Configuration.fs" />
     <Compile Include="CompositionRoot.fs" />
+    <Compile Include="MessageMapping.fs" />
     <Compile Include="RateLimiter.fs" />
     <Compile Include="Connection.fs" />
     <Compile Include="TwitchChatClient.fs" />
@@ -37,6 +38,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Chatbot.Core\Chatbot.Core.fsproj" />
+    <ProjectReference Include="..\Chatbot.Core\Chatbot.Infrastructure.fsproj" />
     <ProjectReference Include="..\Chatbot.Common\Chatbot.Common.fsproj" />
     <ProjectReference Include="..\Chatbot.Commands\Chatbot.Commands.fsproj" />
     <ProjectReference Include="..\Chatbot.Database\Chatbot.Database.fsproj" />

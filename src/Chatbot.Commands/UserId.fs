@@ -6,7 +6,7 @@ module UserId =
     open FsToolkit.ErrorHandling
 
     open Chatbot.Core.Domain.Commands
-    open Chatbot.Core.Services.Twitch
+    open Chatbot.Infrastructure.Services
 
     let userId (twitchService: TwitchService) context =
         asyncResult {

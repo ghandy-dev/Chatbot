@@ -5,21 +5,33 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Operators.fs" />
+    <Compile Include="Serialization/NonCompliantDateTimeConverter.fs" />
+    <Compile Include="Serialization/UnixEpochDateTimeConverter.fs" />
     <Compile Include="Extensions/Seq.fs" />
     <Compile Include="Extensions/Array.fs" />
     <Compile Include="Extensions/List.fs" />
     <Compile Include="Extensions/String.fs" />
     <Compile Include="Utils.fs" />
-    <Compile Include="Utilities/DateTime.fs" />
-    <Compile Include="Utilities/KeyValueParser.fs" />
-    <Compile Include="Utilities/Parsing.fs" />
-    <Compile Include="Utilities/UrlBuilder.fs" />
-    <Compile Include="Utilities/Globalisation.fs" />
+    <Compile Include="DotEnv.fs" />
+    <Compile Include="Json.fs" />
+    <Compile Include="Http.fs" />
+    <Compile Include="IO.fs" />
+    <Compile Include="Caching.fs" />
+    <Compile Include="UrlBuilder.fs" />
+    <Compile Include="DateTime.fs" />
+    <Compile Include="Env.fs" />
+    <Compile Include="Parsing/KeyValueParser.fs" />
+    <Compile Include="Parsing/Parsing.fs" />
+    <Compile Include="Globalisation/Globalisation.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FSharpPlus" Version="1.8.0" />
+    <PackageReference Include="FsToolkit.ErrorHandling" Version="5.1.0" />
     <PackageReference Include="Microsoft.Recognizers.Text.DateTime" Version="1.8.13" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.5" />
   </ItemGroup>
 
 </Project>

@@ -10,7 +10,7 @@ module Logs =
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
     open Chatbot.Core.Domain
-    open Chatbot.Core.Services.Ivr
+    open Chatbot.Infrastructure.Services
 
     let private mapHttpError = fun err ->
         match err with

@@ -3,13 +3,11 @@ namespace Chatbot.Commands
 [<AutoOpen>]
 module AccountAge =
 
-    open System
-
     open FsToolkit.ErrorHandling
 
-    open Chatbot.Core.Domain.Commands
-    open Chatbot.Core.Services.Twitch
     open Chatbot.Common.Utils
+    open Chatbot.Core.Domain.Commands
+    open Chatbot.Infrastructure.Services
 
     let accountAge (twitchService: TwitchService) context =
         asyncResult {

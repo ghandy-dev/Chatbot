@@ -8,7 +8,7 @@ module Time =
     open FsToolkit.ErrorHandling
 
     open Chatbot.Core.Domain.Commands
-    open Chatbot.Core.Services.Geolocation
+    open Chatbot.Infrastructure.Services
 
     let [<Literal>] private DateTimeFormat = "yyyy/MM/dd HH:mm:ss"
 

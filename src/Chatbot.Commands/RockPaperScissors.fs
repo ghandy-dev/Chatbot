@@ -5,8 +5,9 @@ module RockPaperScissors =
 
     open FsToolkit.ErrorHandling
 
+    open Chatbot.Core.Abstractions.Repositories
+    open Chatbot.Core.Domain
     open Chatbot.Core.Domain.Commands
-    open Chatbot.Core.Domain.Types
 
     type private Shapes =
         | Rock

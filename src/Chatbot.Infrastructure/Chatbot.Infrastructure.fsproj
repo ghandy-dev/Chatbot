@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="IRC/Requests.fs" />
+    <Compile Include="IRC/Parsing.fs" />
+    <Compile Include="IRC/Messages.fs" />
+    <Compile Include="Services/AccessToken.fs" />
+    <Compile Include="Services/Twitch/Api.fs" />
+    <Compile Include="Services/CatFact/Types.fs" />
+    <Compile Include="Services/CatFact/Api.fs" />
+    <Compile Include="Services/Ivr/Types.fs" />
+    <Compile Include="Services/Ivr/Api.fs" />
+    <Compile Include="Services/Pastebin/Types.fs" />
+    <Compile Include="Services/Pastebin/Api.fs" />
+    <Compile Include="Services/Emotes/Types.fs" />
+    <Compile Include="Services/Emotes/Mapping.fs" />
+    <Compile Include="Services/Emotes/Api.fs" />
+    <Compile Include="Services/Weather/Types.fs" />
+    <Compile Include="Services/Weather/Api.fs" />
+    <Compile Include="Services/Geolocation/Types.fs" />
+    <Compile Include="Services/Geolocation/Api.fs" />
+    <Compile Include="Services/OpenAI/Types.fs" />
+    <Compile Include="Services/OpenAI/Api.fs" />
+    <Compile Include="Services/ImageUploader/Api.fs" />
+    <Compile Include="Services/FaceIt/Types.fs" />
+    <Compile Include="Services/FaceIt/Api.fs" />
+    <Compile Include="Services/Nasa/Types.fs" />
+    <Compile Include="Services/Nasa/Api.fs" />
+    <Compile Include="Services/News/Api.fs" />
+    <Compile Include="Services/Reddit/Types.fs" />
+    <Compile Include="Services/Reddit/Api.fs" />
+    <Compile Include="Services/RiotGames/Types.fs" />
+    <Compile Include="Services/RiotGames/Api.fs" />
+    <Compile Include="Services/Trivia/Types.fs" />
+    <Compile Include="Services/Trivia/Api.fs" />
+    <Compile Include="Services/UrbanDictionary/Types.fs" />
+    <Compile Include="Services/UrbanDictionary/Api.fs" />
+    <Compile Include="Services/Wikipedia/Types.fs" />
+    <Compile Include="Services/Wikipedia/Api.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FSharpPlus" Version="1.8.0" />
+    <PackageReference Include="FsToolkit.ErrorHandling" Version="5.1.0" />
+    <PackageReference Include="System.ServiceModel.Syndication" Version="10.0.0" />
+    <PackageReference Include="TTVSharp.Helix" Version="0.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chatbot.Core\Chatbot.Core.fsproj" />
+    <ProjectReference Include="..\Chatbot.Common\Chatbot.Common.fsproj" />
+  </ItemGroup>
+
+</Project>

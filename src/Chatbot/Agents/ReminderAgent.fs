@@ -1,15 +1,12 @@
 module Chatbot.Agents.Reminder
 
-open System
-
 open Microsoft.Extensions.Logging
 
 open Chatbot.Common
+open Chatbot.Core.Abstractions.Repositories
 open Chatbot.Core.Domain
-open Chatbot.Core.Domain.Types
-open Chatbot.Core.IRC
-open Chatbot.Core.Services.Pastebin
-open Chatbot.Core.Types
+open Chatbot.Infrastructure.IRC
+open Chatbot.Infrastructure.Services
 
 type ReminderMessage =
     | TwitchEvent of TwitchEvent

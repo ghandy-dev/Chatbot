@@ -5,9 +5,8 @@ open System
 open Microsoft.Extensions.Logging
 
 open Chatbot.Common
-open Chatbot.Core.IRC
+open Chatbot.Infrastructure.IRC
 open Chatbot.Core.Domain
-open Chatbot.Core.Types
 
 type TriviaMessage =
     | StartTrivia of config: Trivia
@@ -46,7 +45,7 @@ let create env (twitchChatClient: Chatbot.Twitch.TwitchClient) cancellationToken
                     | false -> return state
                 }
 
-            let update state =
+            let update (state : Map<string, Trivia>) =
                 if not <| (state |> Map.isEmpty) then
                     let state' =
                         (Map.empty, state)
@@ -74,7 +73,7 @@ let create env (twitchChatClient: Chatbot.Twitch.TwitchClient) cancellationToken
             let sendQuestion channel state =
                 async {
                     let resetHints state = { state with HintsSent = [] }
-                    let setStartTimestamp state = { state with Timestamp = utcNow() }
+                    let setStartTimestamp (state : Trivia) = { state with Timestamp = utcNow() }
 
                     match state |> Map.tryFind channel with
                     | Some config ->

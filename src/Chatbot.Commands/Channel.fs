@@ -6,7 +6,7 @@ module Channel =
     open FsToolkit.ErrorHandling
 
     open Chatbot.Core.Domain.Commands
-    open Chatbot.Core.Services.Twitch
+    open Chatbot.Infrastructure.Services
 
     let channel (twitchService: TwitchService) context =
         asyncResult {

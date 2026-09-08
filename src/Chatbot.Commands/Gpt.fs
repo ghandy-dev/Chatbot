@@ -13,8 +13,8 @@ module Gpt =
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
     open Chatbot.Core.Domain
-    open Chatbot.Core.Services.OpenAI
-    open Chatbot.Core.Services.OpenAI.Chat.Types
+    open Chatbot.Infrastructure.Services
+    open Chatbot.Infrastructure.Services.OpenAI.Types.Chat
 
     type MessageHistory = {
         LastMessageTimestamp: System.DateTimeOffset

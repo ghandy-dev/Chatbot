@@ -6,7 +6,7 @@ module CatFacts =
     open FsToolkit.ErrorHandling
 
     open Chatbot.Core.Domain.Commands
-    open Chatbot.Core.Services.CatFact
+    open Chatbot.Infrastructure.Services
 
     let catFact (catFactService: ICatFactService) context =
 

@@ -8,7 +8,7 @@ module CreatClip =
     open Chatbot.Core.Domain
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
-    open Chatbot.Core.Services.Twitch
+    open Chatbot.Infrastructure.Services
 
     let createClip (twitchService: TwitchService) context =
         asyncResult {

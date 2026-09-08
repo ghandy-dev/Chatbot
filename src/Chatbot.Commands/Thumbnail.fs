@@ -7,12 +7,9 @@ module StreamThumbnail =
 
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
-    open Chatbot.Core.Services.Twitch
-    open Chatbot.Core.Types
+    open Chatbot.Infrastructure.Services
 
-    let thumbnail env (twitchService: TwitchService) context =
-        let httpClient = env.HttpClient
-
+    let thumbnail (twitchService: TwitchService) context =
         asyncResult {
             let! channel =
                 match context.MessageArgs with

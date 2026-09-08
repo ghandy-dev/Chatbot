@@ -9,7 +9,8 @@ module FaceIt =
     open FsToolkit.ErrorHandling
 
     open Chatbot.Core.Domain.Commands
-    open Chatbot.Core.Services.FaceIt
+    open Chatbot.Infrastructure.Services
+    open Chatbot.Infrastructure.Services.FaceIt.Types
 
     let private stats (faceItService: FaceItService) playerName =
         asyncResult {
@@ -119,9 +120,9 @@ module FaceIt =
                     else
                         $"{team2.Nickname}"
 
-                let selectPlayerElo = fun (p: Types.Players.Player) -> p.Games["cs2"].FaceItElo |> float
-                let selectPlayers = fun (t: Types.Players.Team) -> t.Players
-                let lookUpPlayer = fun (p: Types.Players.TeamPlayer) -> faceItService.GetPlayerById p.PlayerId
+                let selectPlayerElo = fun (p: Players.Player) -> p.Games["cs2"].FaceItElo |> float
+                let selectPlayers = fun (t: Players.Team) -> t.Players
+                let lookUpPlayer = fun (p: Players.TeamPlayer) -> faceItService.GetPlayerById p.PlayerId
 
                 let calcTeamAverageElo =
                     selectPlayers

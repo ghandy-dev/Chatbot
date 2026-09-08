@@ -10,7 +10,7 @@ module RiotGames =
 
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
-    open Chatbot.Core.Services.RiotGames
+    open Chatbot.Infrastructure.Services
 
     let private regions =
         [

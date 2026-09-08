@@ -9,8 +9,8 @@ module Reddit =
     open Chatbot.Common
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
-    open Chatbot.Core.Services.Reddit
-    open Chatbot.Core.Services.Reddit.Types
+    open Chatbot.Infrastructure.Services
+    open Chatbot.Infrastructure.Services.Reddit.Types
 
     let private postFilter (p: Thing<T3>) =
         not <| p.Data.Over18 && not <| p.Data.IsSelf

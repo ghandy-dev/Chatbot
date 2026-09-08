@@ -8,7 +8,7 @@ module Vod =
     open Chatbot.Common
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
-    open Chatbot.Core.Services.Twitch
+    open Chatbot.Infrastructure.Services
 
     let vod (twitchService: TwitchService) context =
         asyncResult {

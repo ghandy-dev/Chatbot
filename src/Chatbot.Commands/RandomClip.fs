@@ -11,7 +11,7 @@ module RandomClip =
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
     open Chatbot.Core.Domain
-    open Chatbot.Core.Services.Twitch
+    open Chatbot.Infrastructure.Services
 
     let private getChannel (context: Context) =
         match context.MessageSource with

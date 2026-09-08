@@ -7,11 +7,9 @@ module Weather =
 
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
-    open Chatbot.Core.Services.Weather
-    open Chatbot.Core.Services.Weather.Types
-    open Chatbot.Core.Services.Geolocation
-    open Chatbot.Core.Services.Geolocation.Azure.Types
-    open Chatbot.Core.Services.Geolocation.Google.Types
+    open Chatbot.Infrastructure.Services
+    open Chatbot.Infrastructure.Services.Weather.Types
+    open Chatbot.Infrastructure.Services.Geolocation.Azure.Types
 
     let private weatherCodeToEmoji iconCode =
         match iconCode with

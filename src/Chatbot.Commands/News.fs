@@ -7,7 +7,7 @@ module News =
     open FsToolkit.ErrorHandling
 
     open Chatbot.Core.Domain.Commands
-    open Chatbot.Core.Services.News
+    open Chatbot.Infrastructure.Services
     open Chatbot.Common
 
     let keys = [ "category" ; "country" ]

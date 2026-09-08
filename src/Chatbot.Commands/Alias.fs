@@ -5,10 +5,11 @@ module Alias =
 
     open FsToolkit.ErrorHandling
 
+    open Chatbot.Core.Abstractions.Repositories
+    open Chatbot.Core.Domain
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
-    open Chatbot.Core.Domain.Types
-    open Chatbot.Core.Services.Twitch
+    open Chatbot.Infrastructure.Services
 
     let private validateCommand (command: string list) pipeSeparator (commands: Map<string, _>) =
         match

@@ -10,7 +10,7 @@ module FollowAge =
     open Chatbot.Common
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain
-    open Chatbot.Core.Services.Ivr
+    open Chatbot.Infrastructure.Services
 
     let followAge (ivrService: IvrService) context =
         asyncResult {

@@ -6,7 +6,7 @@ open System.Net.Sockets
 
 open FsToolkit.ErrorHandling
 
-open Chatbot.Core
+open Chatbot.Common
 
 type Connection(host: string, port: int) =
 

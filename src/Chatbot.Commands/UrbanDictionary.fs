@@ -8,7 +8,7 @@ module UrbanDictionary =
     open FsToolkit.ErrorHandling
 
     open Chatbot.Core.Domain.Commands
-    open Chatbot.Core.Services.UrbanDictionary
+    open Chatbot.Infrastructure.Services
 
     let urban (urbanDictionaryService: UrbanDictionaryService) context =
         asyncResult {

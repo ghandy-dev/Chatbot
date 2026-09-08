@@ -5,10 +5,11 @@ module JoinChannel =
 
     open FsToolkit.ErrorHandling
 
-    open Chatbot.Core.Domain.Types
+    open Chatbot.Core.Abstractions.Repositories
+    open Chatbot.Core.Domain
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
-    open Chatbot.Core.Services.Twitch
+    open Chatbot.Infrastructure.Services
 
     let joinChannel (channels: IChannelRepository) (twitchService: TwitchService) context =
         asyncResult {

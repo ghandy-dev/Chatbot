@@ -8,7 +8,8 @@ module NewsFeeds =
     open Dapper
     open Dapper.FSharp.SQLite
 
-    open Chatbot.Core.Domain.Types
+    open Chatbot.Core.Abstractions.Repositories
+    open Chatbot.Core.Domain
     open Chatbot.Database.Db
     open Chatbot.Database.DbModels
 

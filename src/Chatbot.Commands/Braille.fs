@@ -81,7 +81,7 @@ module Braille =
     open Chatbot.Core
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
-    open Chatbot.Core.Http
+    open Chatbot.Common.Http
     open Chatbot.Core.Domain
 
     let private offsets = [

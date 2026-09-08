@@ -13,7 +13,7 @@ module Trivia =
     open Chatbot.Core.Domain.Commands
     open Chatbot.Core.Domain.Commands.CommandError
     open Chatbot.Core.Domain
-    open Chatbot.Core.Services.Trivia
+    open Chatbot.Infrastructure.Services
 
     let private keys = [ "count" ; "exclude" ; "include" ; "hints" ]
 
