@@ -13,10 +13,11 @@ COPY "NuGet.config" "src/"
 COPY "libs" "src/libs"
 
 COPY "src/Chatbot/Chatbot.fsproj" "src/Chatbot/"
-COPY "src/Chatbot.Common/Chatbot.Common.fsproj" "src/Chatbot.Common/"
 COPY "src/Chatbot.Commands/Chatbot.Commands.fsproj" "src/Chatbot.Commands/"
+COPY "src/Chatbot.Common/Chatbot.Common.fsproj" "src/Chatbot.Common/"
 COPY "src/Chatbot.Core/Chatbot.Core.fsproj" "src/Chatbot.Core/"
 COPY "src/Chatbot.Database/Chatbot.Database.fsproj" "src/Chatbot.Database/"
+COPY "src/Chatbot.Infrastructure/Chatbot.Infrastructure.fsproj" "src/Chatbot.Infrastructure/"
 
 RUN dotnet restore "src/Chatbot/Chatbot.fsproj"
 
