@@ -32,7 +32,7 @@ let run (cancellationToken: Threading.CancellationToken) =
         let! channels = getChannels channels twitchService
         let channelSet = channels |> Seq.map snd |> Set.ofSeq
         let channelMap = Map.ofSeq channels
-        let twitchClient = new TwitchClient(uri.Host, uri.Port, configs.TwitchChatConfig, loggerFactory.CreateLogger<TwitchClient>(), twitchService, channelSet)
+        let twitchClient = new TwitchClient(uri.Host, uri.Port, configs.TwitchChatConfig, loggerFactory.CreateLogger<TwitchClient>(), twitchService, channelSet, cancellationToken)
 
         let reminderAgent = Reminder.create env reminders pastebinService twitchClient cancellationToken
         let triviaAgent = Trivia.create env twitchClient cancellationToken
