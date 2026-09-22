@@ -21,13 +21,14 @@ type Connection(host: string, port: int) =
                 |> Async.Catch
                 |> Async.map Result.ofChoice
 
-            result
-            |> Result.iter (fun _ ->
+
+            match result with
+            | Ok _ ->
                 let sslStream = new SslStream(client.GetStream())
-                do sslStream.AuthenticateAsClient(host)
+                do! sslStream.AuthenticateAsClientAsync(host) |> Async.AwaitTask
                 reader <- IO.createStreamReader sslStream
                 writer <- IO.createStreamWriter sslStream
-            )
+            | _ -> ()
 
             return result
         }
