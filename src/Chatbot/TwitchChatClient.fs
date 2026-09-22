@@ -23,6 +23,7 @@ type ConnectionState =
     | Ready
 
 type State = {
+    CancellationTokenSource: CancellationTokenSource
     Connection: Connection
     Channels: Set<string>
     ConnectionState: ConnectionState
@@ -76,15 +77,15 @@ module Agent =
         (channels: Set<string>)
         twitchService
         (onMessage: IrcMessage -> unit)
-        cancellationToken =
-
-        let mutable cancellationTokenSource: CancellationTokenSource option = None
+        (cancellationToken: CancellationToken)
+        =
 
         let chatRateLimiter = new RateLimiter(RateLimiter.MessageLimit_Chat, RateLimiter.ResetInterval_Chat)
 
         let whisperRateLimiter = new RateLimiter(RateLimiter.MessageLimit_Whispers, RateLimiter.ResetInterval_Whispers)
 
         let initial = {
+            CancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
             Connection = new Connection(host, port)
             Channels = channels
             ConnectionState = Disconnected
@@ -100,34 +101,34 @@ module Agent =
                 | _ -> pown 5 4
                 |> fun s -> TimeSpan.FromSeconds(int64 s)
 
-            let sendRequest (connection: Connection) request =
+            let sendRequest (connection: Connection) request token =
                 async {
                     let message = request |> Request.toString
                     logger.LogInformation("Sending: {message}", message)
 
-                    match! connection.SendAsync(message, cancellationToken) with
+                    match! connection.SendAsync(message, token) with
                     | Ok _ -> ()
                     | Error ex -> logger.LogWarning(ex, "Error occurred sending message")
                 }
 
-            let handleMessage connection message =
+            let handleMessage connection message token =
                 async {
                     match message with
                     | ConnectedMessage ->
                         mb.Post Authenticated
                         mb.Post JoinChannels
-                    | PingMessage m -> do! sendRequest connection (Request.pong m.Message)
+                    | PingMessage m -> do! sendRequest connection (Request.pong m.Message) token
                     | ReconnectMessage -> mb.Post (Reconnect 1)
                     | _ -> ()
                 }
 
-            let readerLoop (connection: Connection) =
+            let readerLoop (connection: Connection) token =
                 async {
                     logger.LogInformation "Reader starting..."
 
                     let rec loop () =
                         async {
-                            match! connection.ReadAsync cancellationToken with
+                            match! connection.ReadAsync token with
                             | Ok null ->
                                 logger.LogWarning("null message received")
                                 mb.Post ClientDisconnected
@@ -160,10 +161,10 @@ module Agent =
                     }
 
                     match result with
-                    | Ok (token, username) ->
-                        do! sendRequest state.Connection (Request.capReq configuration.Capabilities)
-                        do! sendRequest state.Connection (Request.pass token)
-                        do! sendRequest state.Connection (Request.nick username)
+                    | Ok (accessToken, username) ->
+                        do! sendRequest state.Connection (Request.capReq configuration.Capabilities) state.CancellationTokenSource.Token
+                        do! sendRequest state.Connection (Request.pass accessToken) state.CancellationTokenSource.Token
+                        do! sendRequest state.Connection (Request.nick username) state.CancellationTokenSource.Token
 
                         return { state with Username = Some username }
                     | Error err ->
@@ -174,18 +175,15 @@ module Agent =
             let joinChannels state =
                 async {
                     if not (state.Channels |> Set.isEmpty) then
-                        do! sendRequest state.Connection (Request.joinMultiple state.Channels)
+                        do! sendRequest state.Connection (Request.joinMultiple state.Channels) state.CancellationTokenSource.Token
                     else
                         logger.LogInformation("No channels set to join")
                 }
 
-            let start (connection: Connection) =
+            let start (connection: Connection) token =
                 async {
                     logger.LogInformation("Starting...")
-                    let cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
-                    cancellationTokenSource <- Some cts
-
-                    Async.Start(readerLoop connection, cts.Token)
+                    Async.Start(readerLoop connection token, token)
                 }
 
             let connect (connection: Connection) state =
@@ -195,7 +193,7 @@ module Agent =
 
                     match result with
                     | Ok _ ->
-                        do! start connection
+                        do! start connection state.CancellationTokenSource.Token
                         mb.Post Authenticate
                         return { state with ConnectionState = Connected }
                     | Error ex ->
@@ -208,26 +206,28 @@ module Agent =
                 async {
                     logger.LogInformation("Reconnecting...")
 
-                    cancellationTokenSource |> Option.iter (fun cts -> cts.Cancel() ; cts.Dispose() )
-
+                    state.CancellationTokenSource.Cancel()
+                    state.CancellationTokenSource.Dispose()
                     (state.Connection :> IDisposable).Dispose()
+
+                    let cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
 
                     let connection = new Connection(host, port)
 
                     let sleepTime = backoff attempt
                     do! Async.Sleep(sleepTime)
 
-                    let! result = connection.ConnectAsync cancellationToken
+                    let! result = connection.ConnectAsync cts.Token
 
                     match result with
                     | Ok _ ->
-                        do! start connection
+                        do! start connection cts.Token
                         mb.Post Authenticate
-                        return { state with ConnectionState = Connected ; Connection = connection }
+                        return { state with ConnectionState = Connected ; Connection = connection ; CancellationTokenSource = cts }
                     | Error ex ->
                         logger.LogWarning(ex, "Error trying to connect to host")
                         mb.Post (Reconnect (attempt+1))
-                        return { state with ConnectionState = Disconnected ; Connection = connection }
+                        return { state with ConnectionState = Disconnected ; Connection = connection ; CancellationTokenSource = cts }
                 }
 
             let rec flush (connection: Connection) (state: State) =
@@ -247,7 +247,7 @@ module Agent =
                                 Some request
 
                         match requestOpt with
-                        | Some r -> do! sendRequest connection r
+                        | Some r -> do! sendRequest connection r state.CancellationTokenSource.Token
                         | None -> ()
 
                         let channels =
@@ -283,14 +283,14 @@ module Agent =
                         return state
                 }
 
-            let messageReceived connection message =
+            let messageReceived connection message state =
                 async {
                     if not (message |> String.isEmpty) then
                         logger.LogInformation("Receieved: {message}", message)
                         let messages = message |> parseMessage
 
                         for message in messages do
-                            do! handleMessage connection message
+                            do! handleMessage connection message state.CancellationTokenSource.Token
                             do onMessage message
                 }
 
@@ -323,7 +323,7 @@ module Agent =
                         let! state' = reconnect attempt state
                         return! loop state'
                     | MessageReceived message ->
-                        do! messageReceived state.Connection message
+                        do! messageReceived state.Connection message state
                         return! loop state
                     | Send request ->
                         let state' = enqueue request state
@@ -342,12 +342,11 @@ module Agent =
             ), cancellationToken
         )
 
-type TwitchClient (host, port, configuration, logger, twitchService, channels) =
+type TwitchClient (host, port, configuration, logger, twitchService, channels, cancellationToken) =
 
-    let cancellationTokenSource = new CancellationTokenSource()
     let messageReceived = new Event<IrcMessage>()
 
-    let agent = Agent.create host port configuration logger channels twitchService (fun message -> messageReceived.Trigger message) cancellationTokenSource.Token
+    let agent = Agent.create host port configuration logger channels twitchService (fun message -> messageReceived.Trigger message) cancellationToken
 
     [<CLIEvent>]
     member _.MessageReceived = messageReceived.Publish
