@@ -51,6 +51,10 @@ type Connection(host: string, port: int) =
     interface IDisposable with
 
         member _.Dispose () =
-            reader.Dispose()
-            writer.Dispose()
+            if reader <> null then
+                reader.Dispose()
+
+            if writer <> null then
+                writer.Dispose()
+
             client.Dispose()
