@@ -130,14 +130,15 @@ module Agent =
                         async {
                             match! connection.ReadAsync token with
                             | Ok null ->
-                                logger.LogWarning("null message received")
+                                logger.LogWarning("Empty IRC message received")
                                 mb.Post ClientDisconnected
                                 return ()
                             | Ok data ->
+                                logger.LogInformation("IRC message received: {message}", data)
                                 mb.Post (MessageReceived data)
                                 return! loop ()
                             | Error ex ->
-                                logger.LogWarning(ex, "Reader loop error")
+                                logger.LogWarning(ex, "Reader read failed")
                                 mb.Post ClientDisconnected
                                 return ()
                         }
@@ -286,7 +287,6 @@ module Agent =
             let messageReceived connection message state =
                 async {
                     if not (message |> String.isEmpty) then
-                        logger.LogInformation("Receieved: {message}", message)
                         let messages = message |> parseMessage
 
                         for message in messages do
