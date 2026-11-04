@@ -388,8 +388,11 @@ i.e. 10 mins after sending no messages through the gpt command will wipe your ch
 {exampleArgs "gpt" "<prompt>"}
 {exampleArgs "gpt" "What are some of the rarest deep sea creatures?"}
 
-Retrieve more of a gpt response message when cut off due to 500 character limit on twitch messages
+Retrieve more of a gpt response message when cut off due to 500 character limit on twitch messages.
 {exampleArgs "gpt" "continue:true"}
+
+Use real-time web search results when chatting with ChatGPT.
+{exampleArgs "gpt" "websearch:true What are some trending news stories?"}
 """
         }
 
