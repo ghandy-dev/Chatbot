@@ -78,10 +78,31 @@
                 Add a new alias
               </div>
               <div>
-                alias add &lt;alias name&gt; &lt;commands&gt;
+                alias add &lt;alias name&gt; &lt;command&gt;
               </div>
               <div>
-                alias add forsenclip randomclip forsen
+                alias add &lt;alias name&gt; &quot;&lt;command1&gt; | &lt;command2&gt;&quot;
+              </div>
+              <div>
+                alias add forsenclip &quot;randomclip forsen&quot;
+              </div>
+              <div>
+                alias add tf &quot;randomquote | texttransform alternate&quot;
+              </div>
+            </div>
+            <br/>
+            <div>
+              <div>
+                Use custom positional arguments with {n}, indexed starting from {0}
+              </div>
+              <div>
+                e.g. {0} {1} {2}
+              </div>
+              <div>
+                alias add &lt;alias name&gt; &quot;{0}&quot;
+              </div>
+              <div>
+                alias add upper &quot;texttransform {0}&quot;
               </div>
             </div>
             <br/>
