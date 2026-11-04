@@ -13,6 +13,7 @@ module ChatSummary =
     open Chatbot.Core.Domain.Commands.CommandError
     open Chatbot.Core.Domain
     open Chatbot.Infrastructure.Services
+    open Chatbot.Infrastructure.Services.OpenAI.Types
     open Chatbot.Infrastructure.Services.OpenAI.Types.Chat
 
     type SummaryCache = {
@@ -25,10 +26,9 @@ module ChatSummary =
     let private systemMessage =
         {
             Role = "system"
-            Name = None
             Content = [
                 {
-                    Type = "text"
+                    Type = Constants.InputText
                     Text = "Provide a brief summary of the twitch chat message logs, focusing on what is being discussed. Ignore any moderator actions (such as timeouts/bans), and ignore automated messages from chat bots. Respond using plain text."
                 }
             ]
@@ -59,10 +59,9 @@ module ChatSummary =
                     let message = [
                         {
                             Role = "user"
-                            Name = None
                             Content = [
                                 {
-                                    Type = "text"
+                                    Type = Constants.InputText
                                     Text = chatMessages
                                 }
                             ]
@@ -76,10 +75,11 @@ module ChatSummary =
                         genAIService.SendGptMessage textGenerationMessages
                         |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "OpenAI")
                         |> AsyncResult.map (fun response ->
-                            match response.Choices with
-                            | [] -> "No response message..."
-                            | choice :: _ ->
-                                let message = choice.Message.Content |> stripMarkdownTags
+                            match response.Output with
+                            | [] -> "No response..."
+                            | { Content = [] } :: _ -> "No response message..."
+                            | { Content = message :: _ } :: _ ->
+                                let message = message.Text |> stripMarkdownTags
 
                                 chatSummaryHistory[historyKey] <- {
                                     LastMessage = utcNow()
@@ -94,10 +94,11 @@ module ChatSummary =
                         genAIService.SendGptMessage textGenerationMessages
                         |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "OpenAI")
                         |> AsyncResult.map (fun response ->
-                            match response.Choices with
-                            | [] -> "No response message..."
-                            | choice :: _ ->
-                                let message = choice.Message.Content |> stripMarkdownTags
+                            match response.Output |> List.tryLast with
+                            | None -> "No response..."
+                            | Some { Content = [] } -> "No response message..."
+                            | Some { Content = message :: _ } ->
+                                let message = message.Text |> stripMarkdownTags
 
                                 chatSummaryHistory[historyKey] <- {
                                     LastMessage = utcNow()

@@ -14,22 +14,21 @@ module Gpt =
     open Chatbot.Core.Domain.Commands.CommandError
     open Chatbot.Core.Domain
     open Chatbot.Infrastructure.Services
+    open Chatbot.Infrastructure.Services.OpenAI.Types
     open Chatbot.Infrastructure.Services.OpenAI.Types.Chat
 
     type MessageHistory = {
         LastMessageTimestamp: System.DateTimeOffset
-        Messages: TextGenerationMessage list
+        Messages: ResponseRequestInput list
         LastMessage: string
         ContinueMessageIndex: int
     }
 
-
     let private systemMessage = {
         Role = "system"
-        Name = None
         Content = [
             {
-                Type = "text"
+                Type = Constants.InputText
                 Text = "You are a friendly and knowledgeable assistant. Provide brief and clear responses. Respond using plaintext."
             }
         ]
@@ -67,10 +66,9 @@ module Gpt =
                             let message = [
                                 {
                                     Role = "user"
-                                    Name = None
                                     Content = [
                                         {
-                                            Type = "text"
+                                            Type = Constants.InputText
                                             Text = message
                                         }
                                     ]
@@ -90,28 +88,28 @@ module Gpt =
                             genAIService.SendGptMessage messages
                             |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "OpenAI")
                             |> AsyncResult.map (fun response ->
-                                match response.Choices with
-                                | [] -> "No response message..."
-                                | choice :: _ ->
-                                    let messages =
+                                match response.Output |> List.tryLast with
+                                | None -> "No response..."
+                                | Some { Content = [] } -> "No response message..."
+                                | Some { Content = message :: _ ; Role = role } ->
+                                    let messageReplay =
                                         List.append messages [
                                             {
-                                                Role = choice.Message.Role
-                                                Name = None
+                                                Role = role
                                                 Content = [
                                                     {
-                                                        Type = "text"
-                                                        Text = choice.Message.Content
+                                                        Type = message.Type
+                                                        Text = message.Text
                                                     }
                                                 ]
                                             }
                                         ]
 
-                                    let message = choice.Message.Content |> stripMarkdownTags |> String.replace "  " " "
+                                    let message = message.Text |> stripMarkdownTags |> String.replace "  " " "
 
                                     userChatHistory[chatHistoryKey] <- {
                                         LastMessageTimestamp = utcNow ()
-                                        Messages = messages
+                                        Messages = messageReplay
                                         ContinueMessageIndex = MessageInterval
                                         LastMessage = message
                                     }

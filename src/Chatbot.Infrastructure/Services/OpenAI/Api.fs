@@ -14,16 +14,16 @@ type OpenAIOptions = {
 
 type IGenAIService =
     abstract member GetImage: prompt: string -> Async<Result<GenerateImageResponse, int>>
-    abstract member SendGptMessage: messages: TextGenerationMessage list -> Async<Result<TextGenerationMessageResponse, int>>
+    abstract member SendGptMessage: messages: ResponseRequestInput list -> Async<Result<ResponseResult, int>>
 
 module OpenAIService =
 
     let create env config =
 
-        let apiUrl = "https://api.openai.com/v1"
+        let apiUrl = "https://api.openai.com"
 
-        let imageGenerationUrl = $"{apiUrl}/images/generations"
-        let chatCompletionUrl = $"{apiUrl}/chat/completions"
+        let imageGenerationUrl = $"{apiUrl}/v1/images/generations"
+        let responsesUrl = $"{apiUrl}/v1/responses"
 
         let apiKey = config.ApiKey
         let defaultImageModel = config.DefaultImageModel
@@ -56,20 +56,21 @@ module OpenAIService =
                     |> Result.mapError _.StatusCode
             }
 
-        let sendGptMessage (messages: TextGenerationMessage list) =
+        let sendGptMessage (messages: ResponseRequestInput list) =
             async {
                 let json =
                     {
                         Model = defaultChatModel
-                        Messages = messages
-                        n = 1
-                        Verbosity = "low"
-                        ReasoningEffort = "low"
+                        Reasoning = {
+                            Effort = "low"
+                        }
+                        Tools = []
+                        Input = messages
                     }
                     |> serializeJson
 
                 let request =
-                    Request.post chatCompletionUrl
+                    Request.post responsesUrl
                     |> Request.withHeaders [ Header.accept ContentType.ApplicationJson ; Header.authorization <| AuthenticationScheme.bearer apiKey ]
                     |> Request.withBody (Content.String json)
                     |> Request.withContentType ContentType.ApplicationJson
@@ -78,7 +79,7 @@ module OpenAIService =
 
                 return
                     response
-                    |> Response.toJsonResult<TextGenerationMessageResponse>
+                    |> Response.toJsonResult<ResponseResult>
                     |> Result.mapError _.StatusCode
             }
 
