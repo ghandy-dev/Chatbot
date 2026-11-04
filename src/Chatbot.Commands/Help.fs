@@ -386,7 +386,7 @@ Conversations are based on the context of the channel, and Gpt maintains a histo
 i.e. 10 mins after sending no messages through the gpt command will wipe your chatting history with it
 
 {exampleArgs "gpt" "<prompt>"}
-{exampleArgs "gpt" "What are the some of the rarest deep sea creatures?"}
+{exampleArgs "gpt" "What are some of the rarest deep sea creatures?"}
 
 Retrieve more of a gpt response message when cut off due to 500 character limit on twitch messages
 {exampleArgs "gpt" "continue:true"}
