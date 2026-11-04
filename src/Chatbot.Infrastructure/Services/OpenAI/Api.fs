@@ -14,7 +14,7 @@ type OpenAIOptions = {
 
 type IGenAIService =
     abstract member GetImage: prompt: string -> Async<Result<GenerateImageResponse, int>>
-    abstract member SendGptMessage: messages: ResponseRequestInput list -> Async<Result<ResponseResult, int>>
+    abstract member SendGptMessage: messages: ResponseRequestInput list -> useWebSearch: bool -> Async<Result<ResponseResult, int>>
 
 module OpenAIService =
 
@@ -56,7 +56,7 @@ module OpenAIService =
                     |> Result.mapError _.StatusCode
             }
 
-        let sendGptMessage (messages: ResponseRequestInput list) =
+        let sendGptMessage (messages: ResponseRequestInput list) (useWebSearch: bool) =
             async {
                 let json =
                     {
@@ -64,7 +64,7 @@ module OpenAIService =
                         Reasoning = {
                             Effort = "low"
                         }
-                        Tools = []
+                        Tools = [ if useWebSearch then { Type = "web_search" } ]
                         Input = messages
                     }
                     |> serializeJson
@@ -86,5 +86,5 @@ module OpenAIService =
         {
             new IGenAIService with
                 member _.GetImage prompt = getImage prompt
-                member _.SendGptMessage messages = sendGptMessage messages
+                member _.SendGptMessage messages useWebSearch = sendGptMessage messages useWebSearch
         }

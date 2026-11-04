@@ -36,7 +36,7 @@ module Gpt =
 
     let private userChatHistory = new ConcurrentDictionary<string, MessageHistory>()
 
-    let private keys = [ "continue" ]
+    let private keys = [ "continue" ; "websearch" ]
 
     let [<Literal>] private MessageInterval = 497
 
@@ -51,6 +51,12 @@ module Gpt =
                     parserResult.KeyValues
                     |> Map.tryFind "continue"
                     |> Option.bind tryParseBoolean
+
+                let useWebSearch =
+                    parserResult.KeyValues
+                    |> Map.tryFind "websearch"
+                    |> Option.bind tryParseBoolean
+                    |> Option.defaultValue false
 
                 let chatHistoryKey = $"{context.Username}_{channel}"
 
@@ -85,7 +91,7 @@ module Gpt =
                                 updatedMessages
 
                         let! responseMessage =
-                            genAIService.SendGptMessage messages
+                            genAIService.SendGptMessage messages useWebSearch
                             |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "OpenAI")
                             |> AsyncResult.map (fun response ->
                                 match response.Output |> List.tryLast with

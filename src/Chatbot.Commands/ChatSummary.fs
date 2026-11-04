@@ -72,7 +72,7 @@ module ChatSummary =
                     | None ->
                         let textGenerationMessages = systemMessage :: message
 
-                        genAIService.SendGptMessage textGenerationMessages
+                        genAIService.SendGptMessage textGenerationMessages false
                         |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "OpenAI")
                         |> AsyncResult.map (fun response ->
                             match response.Output with
@@ -91,7 +91,7 @@ module ChatSummary =
                     | Some messages when (utcNow() - messages.LastMessage).TotalMinutes > 10 ->
                         let textGenerationMessages = systemMessage :: message
 
-                        genAIService.SendGptMessage textGenerationMessages
+                        genAIService.SendGptMessage textGenerationMessages false
                         |> AsyncResult.mapError (CommandHttpError.fromHttpStatusCode "OpenAI")
                         |> AsyncResult.map (fun response ->
                             match response.Output |> List.tryLast with
